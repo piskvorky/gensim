@@ -1,10 +1,12 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_annoy.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_tutorials_run_annoy.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_annoy.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_tutorials_run_annoy.py:
 
 
 Fast Similarity Queries with Annoy and Word2Vec
@@ -20,6 +22,7 @@ Introduces the annoy library for similarity queries using a Word2Vec model.
     if LOGS:
         import logging
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 
 
@@ -73,6 +76,7 @@ Outline
 
 
 
+
 2. Train the Word2Vec model
 ---------------------------
 
@@ -110,6 +114,7 @@ For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
  .. code-block:: none
 
     Using model Word2Vec(vocab=71290, size=100, alpha=0.05)
+
 
 
 
@@ -169,30 +174,31 @@ Annoy – both support fast, approximate searches for similar vectors.
  .. code-block:: none
 
     Approximate Neighbors
-    ('science', 0.9998779296875)
-    ('actuarial', 0.5997203588485718)
-    ('multidisciplinary', 0.5991933047771454)
-    ('sciences', 0.5958340764045715)
-    ('scientific', 0.5955467224121094)
-    ('astrobiology', 0.5923857390880585)
-    ('popularizer', 0.5910311937332153)
-    ('nanomedicine', 0.5902301669120789)
-    ('astronautics', 0.5890269577503204)
-    ('poststructuralism', 0.5872606933116913)
-    ('crichton', 0.5863060653209686)
+    ('science', 1.0)
+    ('multidisciplinary', 0.608674556016922)
+    ('astrobiology', 0.5977040827274323)
+    ('interdisciplinary', 0.5937487781047821)
+    ('bioethics', 0.5934497117996216)
+    ('astronautics', 0.5890172123908997)
+    ('astrophysics', 0.58620685338974)
+    ('psychohistory', 0.5828591883182526)
+    ('sciences', 0.5820683240890503)
+    ('actuarial', 0.5794413983821869)
+    ('scientific', 0.578777939081192)
 
     Exact Neighbors
     ('science', 1.0)
-    ('fiction', 0.7604568004608154)
-    ('actuarial', 0.679552435874939)
-    ('multidisciplinary', 0.678708016872406)
-    ('sciences', 0.6732996702194214)
-    ('scientific', 0.672835111618042)
-    ('astrobiology', 0.6677011847496033)
-    ('popularizer', 0.6654890179634094)
-    ('nanomedicine', 0.6641773581504822)
-    ('astronautics', 0.6622022986412048)
-    ('poststructuralism', 0.6592925786972046)
+    ('fiction', 0.7297012209892273)
+    ('multidisciplinary', 0.6937288641929626)
+    ('astrobiology', 0.6763160228729248)
+    ('interdisciplinary', 0.6699198484420776)
+    ('bioethics', 0.6694337725639343)
+    ('vernor', 0.6654549837112427)
+    ('vinge', 0.6640741229057312)
+    ('astronautics', 0.6621862649917603)
+    ('astrophysics', 0.6575504541397095)
+    ('technology', 0.6531316637992859)
+
 
 
 
@@ -213,7 +219,8 @@ within the 10 most similar words.
     annoy_index = AnnoyIndexer(model, 100)
 
     # Dry run to make sure both indexes are fully in RAM
-    vector = model.wv.vectors_norm[0]
+    normed_vectors = model.wv.get_normed_vectors()
+    vector = normed_vectors[0]
     model.wv.most_similar([vector], topn=5, indexer=annoy_index)
     model.wv.most_similar([vector], topn=5)
 
@@ -224,7 +231,7 @@ within the 10 most similar words.
         """Average query time of a most_similar method over 1000 random queries."""
         total_time = 0
         for _ in range(queries):
-            rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv))]
+            rand_vec = normed_vectors[np.random.randint(0, len(model.wv))]
             start_time = time.process_time()
             model.wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
             total_time += time.process_time() - start_time
@@ -249,10 +256,11 @@ within the 10 most similar words.
 
  .. code-block:: none
 
-    Gensim (s/query):       0.00879
-    Annoy (s/query):        0.00036
+    Gensim (s/query):       0.00654
+    Annoy (s/query):        0.00055
 
-    Annoy is 24.36 times faster on average on this particular run
+    Annoy is 11.88 times faster on average on this particular run
+
 
 
 
@@ -323,17 +331,18 @@ loading an index, you will have to create an empty AnnoyIndexer object.
 
  .. code-block:: none
 
-    ('science', 0.9998779296875)
-    ('actuarial', 0.5997203588485718)
-    ('multidisciplinary', 0.5991933047771454)
-    ('sciences', 0.5958340764045715)
-    ('scientific', 0.5955467224121094)
-    ('astrobiology', 0.5923857390880585)
-    ('popularizer', 0.5910311937332153)
-    ('nanomedicine', 0.5902301669120789)
-    ('astronautics', 0.5890269577503204)
-    ('poststructuralism', 0.5872606933116913)
-    ('crichton', 0.5863060653209686)
+    ('science', 1.0)
+    ('multidisciplinary', 0.608674556016922)
+    ('astrobiology', 0.5977040827274323)
+    ('interdisciplinary', 0.5937487781047821)
+    ('bioethics', 0.5934497117996216)
+    ('astronautics', 0.5890172123908997)
+    ('astrophysics', 0.58620685338974)
+    ('psychohistory', 0.5828591883182526)
+    ('sciences', 0.5820683240890503)
+    ('actuarial', 0.5794413983821869)
+    ('scientific', 0.578777939081192)
+
 
 
 
@@ -370,6 +379,7 @@ memory-mapping. The second example uses less total RAM as it is shared.
 
 
 
+
 Bad example: two processes load the Word2vec model from disk and create their
 own Annoy index from that model.
 
@@ -396,6 +406,7 @@ own Annoy index from that model.
     p2 = Process(target=f, args=('2',))
     p2.start()
     p2.join()
+
 
 
 
@@ -438,6 +449,7 @@ and memory-map the index.
 
 
 
+
 7. Evaluate relationship of ``num_trees`` to initialization time and accuracy
 -----------------------------------------------------------------------------
 
@@ -453,6 +465,7 @@ and memory-map the index.
 
 
 
+
 Build dataset of Initialization times and accuracy measures:
 
 
@@ -460,7 +473,7 @@ Build dataset of Initialization times and accuracy measures:
 .. code-block:: default
 
 
-    exact_results = [element[0] for element in model.wv.most_similar([model.wv.vectors_norm[0]], topn=100)]
+    exact_results = [element[0] for element in model.wv.most_similar([normed_vectors[0]], topn=100)]
 
     x_values = []
     y_values_init = []
@@ -471,9 +484,10 @@ Build dataset of Initialization times and accuracy measures:
         start_time = time.time()
         annoy_index = AnnoyIndexer(model, x)
         y_values_init.append(time.time() - start_time)
-        approximate_results = model.wv.most_similar([model.wv.vectors_norm[0]], topn=100, indexer=annoy_index)
+        approximate_results = model.wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
         top_words = [result[0] for result in approximate_results]
         y_values_accuracy.append(len(set(top_words).intersection(exact_results)))
+
 
 
 
@@ -505,6 +519,7 @@ Plot results:
 
 
 .. image:: /auto_examples/tutorials/images/sphx_glr_run_annoy_001.png
+    :alt: num_trees vs initalization time, num_trees vs accuracy
     :class: sphx-glr-single-img
 
 
@@ -516,6 +531,7 @@ Plot results:
 
     /Volumes/work/workspace/vew/gensim3.6/lib/python3.6/site-packages/matplotlib/figure.py:445: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
       % get_backend())
+
 
 
 
@@ -594,33 +610,34 @@ software, or imported back into gensim as a ``KeyedVectors`` object.
  .. code-block:: none
 
     71290 100
-    the 0.040282175 0.2165622 -0.11749034 -0.07902362 0.051659793 -0.19823891 0.06806079 0.13111936 0.06739034 0.28645086 -0.05745192 -0.26289585 0.22901897 0.16851662 0.06712559 0.074796304 -0.035081368 -0.16047138 0.21728243 0.054436874 0.15153275 0.04205451 0.25825807 0.06590562 0.003011158 0.004102882 -0.100709945 -0.43598634 0.06541784 0.1916927 -0.031570192 0.29551303 -0.09695051 0.16501299 0.19717866 -0.058377385 -0.28637803 0.05174591 -0.16937277 0.059432484 -0.10389606 -0.20887667 -0.05919355 0.04137692 -0.15064004 -0.09648997 -0.22527762 0.033556122 -0.101461716 0.02389651 -0.08515353 0.042458646 -0.17026003 -0.08010368 -0.06399739 -0.078073114 -0.21165106 0.19857563 0.16560182 -0.17774524 -0.27337983 -0.05858462 0.3014273 0.25362 -0.19963813 0.03708622 0.2326357 0.1216157 -0.008749145 -0.036809318 -0.049642608 -0.15324257 0.05383394 0.47451496 -0.4227195 -0.31459892 -0.15150371 -0.14932543 0.063661754 -0.10880057 -0.021235414 0.02103542 -0.16286005 0.09865164 -0.02635211 0.11226083 -0.11042501 0.3655904 -0.12234078 -0.1566903 0.02300252 -0.030776313 0.22856043 0.0644399 0.11757082 -0.08796379 0.23301896 0.018121734 -0.060471278 0.013380485
-    of -0.117521346 0.25582337 0.099465266 -0.08187441 0.0003451583 -0.3138303 0.017125094 -0.02423271 0.008411589 0.23745868 -0.030340558 -0.0042213113 0.16474192 0.17288761 0.18377638 0.09036244 -0.20894344 -0.044563673 0.14401074 -0.0023740537 0.069194905 0.16009597 0.3646139 0.04876363 0.04529528 0.04463972 -0.11413204 -0.46372798 0.09147736 0.19938193 -0.0743411 0.3425023 -0.1404897 0.13559413 0.091858536 -0.046490498 -0.07325774 0.036205 -0.13261133 0.060684923 -0.2155932 -0.18659447 0.06216802 0.15724409 -0.0615914 -0.1047893 -0.21563342 0.03399876 -0.14627206 0.13622384 -0.038415514 0.040357746 -0.0950334 -0.1240751 -0.025667595 -0.0762319 -0.19063687 0.42665502 0.26953915 -0.095091894 0.033522405 -0.06997937 0.32336366 0.17219204 -0.17910816 -0.17552538 0.15011984 0.005003567 0.14006145 0.0067128018 -0.0964597 -0.15371965 0.07887949 0.38889432 -0.41947517 -0.14448255 -0.39335525 -0.14048906 0.05884099 -0.0022921925 -0.10194997 0.20200975 -0.20999992 0.12407939 -0.084994085 0.13595223 -0.16718066 0.3076714 -0.1003335 -0.13627231 0.15710355 -0.097152695 0.18041256 -0.013511332 -0.06089443 -0.02832937 0.1863955 0.094825216 0.073157795 0.030848853
+    the 0.16007873 -0.061821494 0.16403554 0.20444521 -0.33250368 -0.18388326 -0.11518438 0.26039606 -0.09880219 -0.114337094 -0.24393205 -0.16671345 0.010349793 0.22049113 0.014908477 -0.10886409 -0.050133377 0.014529925 0.0066863606 -0.14707142 0.0400251 0.07787519 -0.18831152 -0.13362508 0.282132 -0.050551824 0.13475767 -0.06569664 0.0031677599 0.07820668 -0.35095257 0.30480665 -0.033180837 -0.048362087 0.04275413 -0.05222876 -0.071952015 -0.035658896 0.07901254 -0.10421657 -0.10299242 0.06549932 0.24401794 -0.15140945 0.029012768 0.04028114 -0.22667517 -0.14450285 -0.23805015 0.08867654 -0.18326522 -0.04525019 0.106588475 -0.00038971985 0.2078292 -0.31376663 0.19781663 0.17066158 0.16820915 -0.047588248 0.20909792 -0.0993302 0.11492583 0.07690898 0.026019907 -0.24461384 -0.15658146 -0.097338416 0.13501963 0.038800433 -0.10874414 0.016372694 0.08403854 0.16431145 0.25076985 -0.10206646 -0.12634891 0.047575567 -0.04372017 0.056058753 -0.06418228 -0.1375621 0.14441249 -0.37270537 -0.12438262 -0.084386 -0.0616519 -0.04610768 -0.1488726 -0.2879129 0.02876804 -0.0783338 0.049880445 -0.2890527 0.052437592 -0.11808442 0.09637225 0.17164731 -0.03777877 0.10314265
+    of 0.12728788 -0.07128835 0.22709015 0.21735586 -0.26458326 -0.14139651 -0.21792462 0.08618337 0.08907982 -0.083991244 -0.11595708 -0.20405494 0.11473529 0.106475234 0.16436335 -0.16281348 -0.050799012 0.044015124 0.023081105 -0.08942257 0.12587656 0.17702717 -0.23259656 -0.0012328548 0.25392023 -0.0049020797 0.18065476 -0.15828626 -0.009485071 0.112988144 -0.3753395 0.060977582 0.018466623 0.09084287 -0.12861633 -0.059884362 -0.07544826 0.040726017 0.10942843 -0.21307503 0.00090036006 0.11597715 0.22929604 -0.11609176 0.035484787 0.00071995956 -0.32539764 -0.12604061 -0.005495456 0.04436327 -0.1105619 -0.12655294 0.045705166 -0.14065112 0.21226525 -0.4863211 0.09879361 0.07101748 0.20841932 -0.028169975 0.075062476 -0.26905793 0.057516105 0.031906158 0.1752423 -0.19624741 -0.20997943 -0.10417411 -0.004082244 0.029495642 -0.07799115 -0.061133463 0.028057387 0.06255617 0.25191864 -0.048677184 -0.40772855 -0.025113298 0.019805929 -0.010906071 0.029409314 -0.17279296 0.14616875 -0.44125536 -0.1683791 -0.39358017 -0.04599949 0.10306317 -0.10953343 -0.36125863 -0.103272185 0.09990804 0.026997609 -0.17567022 0.12559506 -0.014309327 0.015485785 0.170501 -0.13221653 0.04849726
     Approximate Neighbors
-    ('cat', 1.0)
-    ('polydactyl', 0.5950324535369873)
-    ('kitten', 0.5930328965187073)
-    ('sighthound', 0.5881928503513336)
-    ('leopardus', 0.585923820734024)
-    ('prionailurus', 0.5840010941028595)
-    ('pug', 0.5792734324932098)
-    ('cats', 0.5770905315876007)
-    ('eared', 0.5770178437232971)
-    ('badger', 0.5747911930084229)
-    ('albino', 0.5721485614776611)
+    ('cat', 0.9998273665260058)
+    ('leopardus', 0.594965249300003)
+    ('cats', 0.5882971882820129)
+    ('prionailurus', 0.5790365040302277)
+    ('proboscis', 0.5778042674064636)
+    ('eared', 0.5742282271385193)
+    ('dogs', 0.5695933997631073)
+    ('skunks', 0.5693343579769135)
+    ('albino', 0.56873419880867)
+    ('coyote', 0.5658003985881805)
+    ('ferret', 0.5657358169555664)
 
     Exact Neighbors
     ('cat', 1.0)
-    ('polydactyl', 0.6720025539398193)
-    ('kitten', 0.6687554717063904)
-    ('meow', 0.6622823476791382)
-    ('sighthound', 0.6608296632766724)
-    ('leopardus', 0.6570817828178406)
-    ('prionailurus', 0.6538898348808289)
-    ('pug', 0.6459784507751465)
-    ('proboscis', 0.6438583731651306)
-    ('cats', 0.6422951221466064)
-    ('eared', 0.6421721577644348)
+    ('leopardus', 0.6718936562538147)
+    ('felis', 0.6702097654342651)
+    ('cats', 0.6610016822814941)
+    ('lynxes', 0.6600459218025208)
+    ('meow', 0.6570931077003479)
+    ('prionailurus', 0.6455793380737305)
+    ('proboscis', 0.6435014605522156)
+    ('eared', 0.6374367475509644)
+    ('crustacean', 0.6350691914558411)
+    ('dogs', 0.6295004487037659)
+
 
 
 
@@ -642,9 +659,9 @@ of our word embeddings. To do so, we did the following steps:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 15 minutes  0.569 seconds)
+   **Total running time of the script:** ( 15 minutes  21.247 seconds)
 
-**Estimated memory usage:**  794 MB
+**Estimated memory usage:**  732 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_annoy.py:
@@ -657,13 +674,13 @@ of our word embeddings. To do so, we did the following steps:
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_annoy.py <run_annoy.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_annoy.ipynb <run_annoy.ipynb>`
 

@@ -139,7 +139,7 @@ Some of them are already built-in
     >>> vector.shape
     (100,)
     >>>
-    >>> vector = word_vectors.wv.get_vector('office', use_norm=True)
+    >>> vector = word_vectors.wv.get_vector('office', norm=True)
     >>> vector.shape
     (100,)
 
@@ -297,7 +297,7 @@ class KeyedVectors(utils.SaveLoad):
             self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
         else:
             self.vectors = np.zeros((target_count, self.vector_size), dtype=REAL)
-        self.vectors[0:min(prev_count, target_count), ] = prev_vectors[0:min(prev_count, target_count), ]
+        self.vectors[0 : min(prev_count, target_count), ] = prev_vectors[0 : min(prev_count, target_count), ]
         self.allocate_vecattrs()
         self.norms = None
         return range(prev_count, target_count)
@@ -310,8 +310,10 @@ class KeyedVectors(utils.SaveLoad):
         if indexes is None:
             indexes = range(0, len(self.vectors))
         for i in indexes:
-            self.vectors[i] = pseudorandom_weak_vector(self.vectors.shape[1],
-                                                       seed_string=(str(self.index_to_key[i]) + str(seed)))
+            self.vectors[i] = pseudorandom_weak_vector(
+                self.vectors.shape[1],
+                seed_string=str(self.index_to_key[i]) + str(seed),
+            )
         self.norms = None
 
     def __len__(self):
@@ -351,14 +353,14 @@ class KeyedVectors(utils.SaveLoad):
         else:
             raise KeyError("Key '%s' not present" % key)
 
-    def get_vector(self, key, use_norm=False):
+    def get_vector(self, key, norm=False):
         """Get the key's vector, as a 1D numpy array.
 
         Parameters
         ----------
         key : str or int
             Key for vector to return, or int slot
-        use_norm : bool, optional
+        norm : bool, optional
             If True - resulting vector will be L2-normalized (unit euclidean length).
 
         Returns
@@ -373,7 +375,7 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         index = self.get_index(key)
-        if use_norm:
+        if norm:
             self.fill_norms()
             result = self.vectors[index] / self.norms[index]
         else:
@@ -543,10 +545,6 @@ class KeyedVectors(utils.SaveLoad):
         if self.norms is None or force:
             self.norms = np.linalg.norm(self.vectors, axis=1)
 
-    @vectors_norm.setter
-    def vectors_norm(self, _):
-        pass  # no-op; shouldn't be set
-
     @property
     def index2entity(self):
         return self.index_to_key
@@ -681,7 +679,7 @@ class KeyedVectors(utils.SaveLoad):
             if isinstance(key, ndarray):
                 mean.append(weight * key)
             else:
-                mean.append(weight * self.get_vector(key, use_norm=True))
+                mean.append(weight * self.get_vector(key, norm=True))
                 if self.has_index_for(key):
                     all_keys.add(self.get_index(key))
         if not mean:
@@ -838,7 +836,7 @@ class KeyedVectors(utils.SaveLoad):
 
                 # Compute Euclidean distance between unit-normed word vectors.
                 distance_matrix[i, j] = distance_matrix[j, i] = np.sqrt(
-                    np_sum((self.get_vector(t1, use_norm=True) - self.get_vector(t2, use_norm=True))**2))
+                    np_sum((self.get_vector(t1, norm=True) - self.get_vector(t2, norm=True))**2))
 
         if np_sum(distance_matrix) == 0.0:
             # `emd` gets stuck if the distance matrix contains only zeros.
@@ -912,11 +910,11 @@ class KeyedVectors(utils.SaveLoad):
             }
 
         positive = [
-            self.get_vector(word, use_norm=True) if isinstance(word, str) else word
+            self.get_vector(word, norm=True) if isinstance(word, str) else word
             for word in positive
         ]
         negative = [
-            self.get_vector(word, use_norm=True) if isinstance(word, str) else word
+            self.get_vector(word, norm=True) if isinstance(word, str) else word
             for word in negative
         ]
 
@@ -960,7 +958,7 @@ class KeyedVectors(utils.SaveLoad):
             logger.warning("vectors for words %s are not present in the model, ignoring these words", ignored_words)
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
-        vectors = vstack([self.get_vector(word, use_norm=use_norm) for word in used_words]).astype(REAL)
+        vectors = vstack([self.get_vector(word, norm=use_norm) for word in used_words]).astype(REAL)
         mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words), reverse=True)

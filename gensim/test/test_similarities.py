@@ -590,7 +590,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertRaises(IOError, test_index.load, fname='test-index')
 
     def assertVectorIsSimilarToItself(self, wv, index):
-        vector = wv.vectors_norm[0]
+        vector = wv.get_normed_vectors()[0]
         label = wv.index2word[0]
         approx_neighbors = index.most_similar(vector, 1)
         word, similarity = approx_neighbors[0]
@@ -599,7 +599,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
-        vector = wv.vectors_norm[0]
+        vector = wv.get_normed_vectors()[0]
         approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
         exact_neighbors = model.most_similar(positive=[vector], topn=5)
 
@@ -609,7 +609,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(approx_words, exact_words)
 
     def assertAllSimilaritiesDisableIndexer(self, model, wv, index):
-        vector = wv.vectors_norm[0]
+        vector = wv.get_normed_vectors()[0]
         approx_similarities = model.most_similar([vector], topn=None, indexer=index)
         exact_similarities = model.most_similar(positive=[vector], topn=None)
 
@@ -649,7 +649,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
         self.model = doc2vec.Doc2Vec(SENTENCES, min_count=1)
         self.index = AnnoyIndexer(self.model, 300)
-        self.vector = self.model.dv.vectors_norm[0]
+        self.vector = self.model.dv.get_normed_vectors()[0]
 
     def testDocumentIsSimilarToItself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
@@ -747,7 +747,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertRaises(IOError, NmslibIndexer.load, fname='test-index')
 
     def assertVectorIsSimilarToItself(self, wv, index):
-        vector = wv.vectors_norm[0]
+        vector = wv.get_normed_vectors()[0]
         label = wv.index2word[0]
         approx_neighbors = index.most_similar(vector, 1)
         word, similarity = approx_neighbors[0]
@@ -756,7 +756,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
     def assertApproxNeighborsMatchExact(self, model, wv, index):
-        vector = wv.vectors_norm[0]
+        vector = wv.get_normed_vectors()[0]
         approx_neighbors = model.most_similar([vector], topn=5, indexer=index)
         exact_neighbors = model.most_similar([vector], topn=5)
 
@@ -797,7 +797,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
         self.model = doc2vec.Doc2Vec(SENTENCES, min_count=1)
         self.index = NmslibIndexer(self.model)
-        self.vector = self.model.dv.vectors_norm[0]
+        self.vector = self.model.dv.get_normed_vectors()[0]
 
     def test_document_is_similar_to_itself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)

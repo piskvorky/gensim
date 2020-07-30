@@ -589,7 +589,6 @@ class FastText(Word2Vec):
 
     def _clear_post_train(self):
         """Clear the model's internal structures after training has finished to free up RAM."""
-        self.wv.vectors_norm = None
         self.wv.adjust_vectors()  # ensure composite-word vecs reflect latest training
 
     def estimate_memory(self, vocab_size=None, report=None):
@@ -758,8 +757,8 @@ class FastText(Word2Vec):
         Precompute L2-normalized vectors. Obsoleted.
 
         If you need a single unit-normalized vector for some key, call
-        `:meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
-        ``fasttext_model.wv.get_vector(key, use_norm=True)``.
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``fasttext_model.wv.get_vector(key, norm=True)``.
 
         To refresh norms after you performed some atypical out-of-band vector tampering,
         call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
@@ -1264,14 +1263,14 @@ class FastTextKeyedVectors(KeyedVectors):
         kwargs['ignore'] = kwargs.get('ignore', ignore_attrs)
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
-    def get_vector(self, word, use_norm=False):
+    def get_vector(self, word, norm=False):
         """Get `word` representations in vector space, as a 1D numpy array.
 
         Parameters
         ----------
         word : str
             Input word
-        use_norm : bool, optional
+        norm : bool, optional
             If True - resulting vector will be L2-normalized (unit euclidean length).
 
         Returns
@@ -1286,7 +1285,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         if word in self.key_to_index:
-            return super(FastTextKeyedVectors, self).get_vector(word, use_norm)
+            return super(FastTextKeyedVectors, self).get_vector(word, norm=norm)
         elif self.bucket == 0:
             raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
@@ -1307,7 +1306,7 @@ class FastTextKeyedVectors(KeyedVectors):
             for nh in ngram_hashes:
                 word_vec += ngram_weights[nh]
             word_vec /= len(ngram_hashes)
-            if use_norm:
+            if norm:
                 return word_vec / np.linalg.norm(word_vec)
             else:
                 return word_vec

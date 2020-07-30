@@ -120,7 +120,8 @@ model.init_sims()
 annoy_index = AnnoyIndexer(model, 100)
 
 # Dry run to make sure both indexes are fully in RAM
-vector = model.wv.vectors_norm[0]
+normed_vectors = model.wv.get_normed_vectors()
+vector = normed_vectors[0]
 model.wv.most_similar([vector], topn=5, indexer=annoy_index)
 model.wv.most_similar([vector], topn=5)
 
@@ -131,7 +132,7 @@ def avg_query_time(annoy_index=None, queries=1000):
     """Average query time of a most_similar method over 1000 random queries."""
     total_time = 0
     for _ in range(queries):
-        rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv))]
+        rand_vec = normed_vectors[np.random.randint(0, len(model.wv))]
         start_time = time.process_time()
         model.wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
         total_time += time.process_time() - start_time
@@ -286,7 +287,7 @@ import matplotlib.pyplot as plt
 # Build dataset of Initialization times and accuracy measures:
 #
 
-exact_results = [element[0] for element in model.wv.most_similar([model.wv.vectors_norm[0]], topn=100)]
+exact_results = [element[0] for element in model.wv.most_similar([normed_vectors[0]], topn=100)]
 
 x_values = []
 y_values_init = []
@@ -297,7 +298,7 @@ for x in range(1, 300, 10):
     start_time = time.time()
     annoy_index = AnnoyIndexer(model, x)
     y_values_init.append(time.time() - start_time)
-    approximate_results = model.wv.most_similar([model.wv.vectors_norm[0]], topn=100, indexer=annoy_index)
+    approximate_results = model.wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
     top_words = [result[0] for result in approximate_results]
     y_values_accuracy.append(len(set(top_words).intersection(exact_results)))
 

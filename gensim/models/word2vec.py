@@ -817,8 +817,8 @@ class Word2Vec(utils.SaveLoad):
         Precompute L2-normalized vectors. Obsoleted.
 
         If you need a single unit-normalized vector for some key, call
-        `:meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
-        ``word2vec_model.wv.get_vector(key, use_norm=True)``.
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``word2vec_model.wv.get_vector(key, norm=True)``.
 
         To refresh norms after you performed some atypical out-of-band vector tampering,
         call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
