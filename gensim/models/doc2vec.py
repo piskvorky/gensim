@@ -745,14 +745,26 @@ class Doc2Vec(Word2Vec):
                 write_header=write_header, append=append,
                 sort_attr='doc_count')
 
+    @deprecated(
+        "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
+        "init_sims() is now obsoleted and will be completely removed in future versions."
+    )
     def init_sims(self, replace=False):
-        """Pre-compute L2-normalized vectors.
+        """
+        Precompute L2-normalized vectors. Obsoleted.
+
+        If you need a single unit-normalized vector for some key, call
+        `:meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``doc2vec_model.dv.get_vector(key, use_norm=True)``.
+
+        To refresh norms after you performed some atypical out-of-band vector tampering,
+        call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
 
         Parameters
         ----------
         replace : bool
-            If True - forget the original vectors and only keep the normalized ones to saved RAM (also you can't
-            continue training if call it with `replace=True`).
+            If True, forget the original trained vectors and only keep the normalized ones.
+            You lose information if you do this.
 
         """
         self.dv.init_sims(replace=replace)

@@ -807,21 +807,28 @@ class Word2Vec(utils.SaveLoad):
         # do not suppress learning for already learned words
         self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
+    @deprecated(
+        "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
+        "init_sims() is now obsoleted and will be completely removed in future versions."
+    )
     def init_sims(self, replace=False):
         """
-        Precompute L2-normalized vectors.
+        Precompute L2-normalized vectors. Obsoleted.
+
+        If you need a single unit-normalized vector for some key, call
+        `:meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``word2vec_model.wv.get_vector(key, use_norm=True)``.
+
+        To refresh norms after you performed some atypical out-of-band vector tampering,
+        call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
 
         Parameters
         ----------
         replace : bool
-            If True, forget the original vectors and only keep the normalized ones to save RAM.
+            If True, forget the original trained vectors and only keep the normalized ones.
+            You lose information if you do this.
 
         """
-        # init_sims() resides in KeyedVectors because it deals with input layer mainly, but because the
-        # hidden layer is not an attribute of KeyedVectors, it has to be deleted in this class.
-        # The normalizing of input layer happens inside of KeyedVectors.
-        if replace and hasattr(self, 'syn1'):
-            del self.syn1
         self.wv.init_sims(replace=replace)
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,

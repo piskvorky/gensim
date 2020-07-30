@@ -530,7 +530,7 @@ class KeyedVectors(utils.SaveLoad):
         Ensure per-vector norms are available.
 
         Any code which modifies vectors should ensure the accompanying norms are
-        either recalculated or 'None', to trigger full recalc later.
+        either recalculated or 'None', to trigger a full recalculation later.
 
         """
         if self.norms is None or force:
@@ -1345,7 +1345,7 @@ class KeyedVectors(utils.SaveLoad):
         self.log_evaluate_word_pairs(pearson, spearman, oov_ratio, pairs)
         return pearson, spearman, oov_ratio
 
-    @deprecated("use fill_norms instead")
+    @deprecated("use fill_norms() instead")
     def init_sims(self, replace=False):
         """Precompute data helpful for bulk similarity calculations.
 
@@ -1353,13 +1353,15 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
+
         replace : bool, optional
             If True - forget the original vectors and only keep the normalized ones.
 
         Warnings
         --------
+
         You **cannot sensibly continue training** after doing a replace on a model's
-        internal KeyedVectors, and a replace is no longer necessary to save RAM.
+        internal KeyedVectors, and a replace is no longer necessary to save RAM. Do not use this method.
 
         """
         self.fill_norms()

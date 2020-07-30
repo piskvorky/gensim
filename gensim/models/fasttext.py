@@ -286,6 +286,7 @@ import gensim.models._fasttext_bin
 from gensim.models.word2vec import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from gensim import utils
+from gensim.utils import deprecated
 try:
     from gensim.models.fasttext_inner import (  # noqa: F401
         train_batch_any,
@@ -747,22 +748,29 @@ class FastText(Word2Vec):
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self.wv.adjust_vectors()
 
+    @deprecated(
+        "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
+        "init_sims() is now obsoleted and will be completely removed in future versions."
+    )
     def init_sims(self, replace=False):
         """
-        Precompute L2-normalized vectors.
+        Precompute L2-normalized vectors. Obsoleted.
+
+        If you need a single unit-normalized vector for some key, call
+        `:meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``fasttext_model.wv.get_vector(key, use_norm=True)``.
+
+        To refresh norms after you performed some atypical out-of-band vector tampering,
+        call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
 
         Parameters
         ----------
         replace : bool
-            If True, forget the original vectors and only keep the normalized ones to save RAM.
+            If True, forget the original trained vectors and only keep the normalized ones.
+            You lose information if you do this.
 
         """
-        # init_sims() resides in KeyedVectors because it deals with input layer mainly, but because the
-        # hidden layer is not an attribute of KeyedVectors, it has to be deleted in this class.
-        # The normalizing of input layer happens inside of KeyedVectors.
-        if replace and hasattr(self, 'syn1'):
-            del self.syn1
-        self.wv.init_sims(replace)
+        self.wv.init_sims(replace=replace)
 
     def clear_sims(self):
         """Remove all L2-normalized word vectors from the model, to free up memory.
