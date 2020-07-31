@@ -142,7 +142,7 @@ Adopters
 Citing gensim
 ------------
 
-When [citing gensim in academic papers and theses], please use this
+When [citing gensim in academic papers and thesis], please use this
 BibTeX entry:
 
     @inproceedings{rehurek_lrec,
