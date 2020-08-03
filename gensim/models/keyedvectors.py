@@ -1605,17 +1605,23 @@ class KeyedVectors(utils.SaveLoad):
         Raises
         ------
         ImportError
-            If `Keras <https://pypi.org/project/Keras/>`_ not installed.
+            If `Keras <https://pypi.org/project/Keras/>`_ or
+            `TensorFlow 2.0+ <https://pypi.org/project/tensorflow/>`_ not installed.
 
         Warnings
         --------
-        Current method work only if `Keras <https://pypi.org/project/Keras/>`_ installed.
+        Current method work only if `Keras <https://pypi.org/project/Keras/>`_ or
+        `TensorFlow 2.0+ <https://pypi.org/project/tensorflow/>`_ installed.
 
         """
         try:
             from keras.layers import Embedding
         except ImportError:
-            raise ImportError("Please install Keras to use this function")
+            try:
+                from tensorflow.keras.layers import Embedding
+            except ImportError:
+                raise ImportError("Please install Keras or TensorFlow 2.0+ to use this function")
+
         weights = self.vectors
 
         # set `trainable` as `False` to use the pretrained word embedding
