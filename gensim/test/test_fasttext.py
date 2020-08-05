@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import division
 
 import gzip
@@ -10,7 +11,6 @@ import os
 import subprocess
 import struct
 import sys
-import six
 
 import numpy as np
 
@@ -19,6 +19,7 @@ from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, _unpack
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
+from gensim.test.test_word2vec import TestWord2VecModel
 import gensim.models._fasttext_bin
 from gensim.models.fasttext_inner import compute_ngrams, compute_ngrams_bytes, ft_hash_bytes
 
@@ -84,7 +85,7 @@ class TestFastTextModel(unittest.TestCase):
         self.model_sanity(model)
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.get_vector('graph', use_norm=True)
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -129,7 +130,7 @@ class TestFastTextModel(unittest.TestCase):
             self.model_sanity(model)
 
             # test querying for "most similar" by vector
-            graph_vector = model.wv.get_vector('graph', use_norm=True)
+            graph_vector = model.wv.get_vector('graph', norm=True)
             sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
             sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
             self.assertEqual(sims, sims2)
@@ -1146,9 +1147,6 @@ class FTHashResultsTest(unittest.TestCase):
 
 def hash_main(alg):
     """Generate hash values for test from standard input."""
-
-    assert six.PY3, 'this only works under Py3'
-
     hashmap = {
         'cy_bytes': ft_hash_bytes,
     }
@@ -1210,7 +1208,6 @@ def ngram_main():
     minn = int(sys.argv[2])
     maxn = int(sys.argv[3])
 
-    assert six.PY3, 'this only works under Py3'
     assert minn <= maxn, 'expected sane command-line parameters'
 
     hashmap = {
@@ -1371,6 +1368,7 @@ def _read_fb(fin):
 
 
 class ZeroBucketTest(unittest.TestCase):
+    """Test FastText with no buckets / no-ngrams: essentially FastText-as-Word2Vec."""
     def test_in_vocab(self):
         model = train_gensim(bucket=0)
         self.assertIsNotNone(model.wv['anarchist'])
@@ -1378,6 +1376,15 @@ class ZeroBucketTest(unittest.TestCase):
     def test_out_of_vocab(self):
         model = train_gensim(bucket=0)
         self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
+
+    def test_cbow_neg(self):
+        """See `gensim.test.test_word2vec.TestWord2VecModel.test_cbow_neg`."""
+        model = FT_gensim(
+            sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
+            min_count=5, epochs=10, workers=2, sample=0,
+            max_n=0  # force no char-ngram buckets
+        )
+        TestWord2VecModel.model_sanity(self, model)
 
 
 class UnicodeVocabTest(unittest.TestCase):

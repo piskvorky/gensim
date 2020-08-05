@@ -3,11 +3,10 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains functions to find keywords of the text and building graph on tokens from text.
+"""This module contains functions to find keywords within a text.
 
 Examples
 --------
-Extract keywords from text
 
 .. sourcecode:: pycon
 
@@ -20,19 +19,10 @@ Extract keywords from text
     >>> keywords(text).split('\\n')
     [u'natural language', u'machine', u'frequently']
 
-
-Notes
------
-Check tags in http://www.clips.ua.ac.be/pages/mbsp-tags and use only first two letters
-for `INCLUDING_FILTER` and `EXCLUDING_FILTER`
-
-Data:
------
-.. data:: WINDOW_SIZE - Size of window, number of consecutive tokens in processing.
-.. data:: INCLUDING_FILTER - Including part of speech filters.
-.. data:: EXCLUDING_FILTER - Excluding part of speech filters.
-
 """
+
+from itertools import combinations as _combinations
+from queue import Queue
 
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_word as _clean_text_by_word
@@ -40,14 +30,13 @@ from gensim.summarization.textcleaner import tokenize_by_word as _tokenize_by_wo
 from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.utils import to_unicode
-from itertools import combinations as _combinations
-from six.moves.queue import Queue as _Queue
-from six.moves import range
-from six import iteritems
 
 
+# Number of consecutive tokens in processing.
 WINDOW_SIZE = 2
 
+# POS tags from http://www.clips.ua.ac.be/pages/mbsp-tags
+# Use only the first two letters here.
 INCLUDING_FILTER = ['NN', 'JJ']
 EXCLUDING_FILTER = []
 
@@ -94,7 +83,7 @@ def _get_words_for_graph(tokens, pos_filter=None):
         raise ValueError("Can't use both include and exclude filters, should use only one")
 
     result = []
-    for word, unit in iteritems(tokens):
+    for word, unit in tokens.items():
         if exclude_filters and unit.tag in exclude_filters:
             continue
         if not include_filters or not unit.tag or unit.tag in include_filters:
@@ -176,7 +165,7 @@ def _init_queue(split_text):
         Initialized queue.
 
     """
-    queue = _Queue()
+    queue = Queue()
     first_window = _get_first_window(split_text)
     for word in first_window[1:]:
         queue.put(word)
@@ -321,7 +310,7 @@ def _lemmas_to_words(tokens):
 
     """
     lemma_to_word = {}
-    for word, unit in iteritems(tokens):
+    for word, unit in tokens.items():
         lemma = unit.token
         if lemma in lemma_to_word:
             lemma_to_word[lemma].append(word)
@@ -431,12 +420,12 @@ def _get_average_score(concept, _keywords):
     return total / word_counter
 
 
-def _format_results(_keywords, combined_keywords, split, scores):
-    """Formats, sorts and returns `combined_keywords` in desired format.
+def _format_results(keywords, combined_keywords, split, scores):
+    """Format, sort and return `combined_keywords`.
 
     Parameters
     ----------
-    _keywords : dict
+    keywords : dict
         Keywords as keys and its scores as values.
     combined_keywords : list of str
         Most ranked words and/or its combinations.
@@ -453,12 +442,12 @@ def _format_results(_keywords, combined_keywords, split, scores):
     result: list of str
         If `split`, keywords only **OR**
     result: str
-        Keywords, joined by endl.
+        Keywords, joined by newline character.
 
     """
-    combined_keywords.sort(key=lambda w: _get_average_score(w, _keywords), reverse=True)
+    combined_keywords.sort(key=lambda w: _get_average_score(w, keywords), reverse=True)
     if scores:
-        return [(word, _get_average_score(word, _keywords)) for word in combined_keywords]
+        return [(word, _get_average_score(word, keywords)) for word in combined_keywords]
     if split:
         return combined_keywords
     return "\n".join(combined_keywords)
@@ -466,7 +455,7 @@ def _format_results(_keywords, combined_keywords, split, scores):
 
 def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=('NN', 'JJ'),
              lemmatize=False, deacc=True):
-    """Get most ranked words of provided text and/or its combinations.
+    """Get the most ranked words of provided text and/or its combinations.
 
     Parameters
     ----------
@@ -522,7 +511,7 @@ def keywords(text, ratio=0.2, words=None, split=False, scores=False, pos_filter=
     # The results can be polluted by many variations of the same word
     if lemmatize:
         lemmas_to_word = {}
-        for word, unit in iteritems(tokens):
+        for word, unit in tokens.items():
             lemmas_to_word[unit.token] = [word]
     else:
         lemmas_to_word = _lemmas_to_words(tokens)

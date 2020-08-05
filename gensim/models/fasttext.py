@@ -5,13 +5,16 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Learn word representations via Fasttext: `Enriching Word Vectors with Subword Information
+"""
+Introduction
+------------
+Learn word representations via fastText: `Enriching Word Vectors with Subword Information
 <https://arxiv.org/abs/1607.04606>`_.
 
 This module allows training word embeddings from a training corpus with the additional ability to obtain word vectors
 for out-of-vocabulary words.
 
-This module contains a fast native C implementation of Fasttext with Python interfaces. It is **not** only a wrapper
+This module contains a fast native C implementation of fastText with Python interfaces. It is **not** only a wrapper
 around Facebook's implementation.
 
 This module supports loading models trained with Facebook's fastText implementation.
@@ -19,9 +22,6 @@ It also supports continuing training from such models.
 
 For a tutorial see `this notebook
 <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
-
-**Make sure you have a C compiler before installing Gensim, to use the optimized (compiled) Fasttext
-training routines.**
 
 Usage examples
 --------------
@@ -277,21 +277,16 @@ It consists of several important classes:
 
 import logging
 import os
+from collections.abc import Iterable
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL
-import six
-from collections.abc import Iterable
 
 import gensim.models._fasttext_bin
 from gensim.models.word2vec import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from gensim import utils
-from gensim.utils import deprecated, call_on_class_only
-
-
-logger = logging.getLogger(__name__)
-
+from gensim.utils import deprecated
 try:
     from gensim.models.fasttext_inner import (  # noqa: F401
         train_batch_any,
@@ -303,6 +298,9 @@ try:
     from gensim.models.fasttext_corpusfile import train_epoch_sg, train_epoch_cbow
 except ImportError:
     raise utils.NO_CYTHON
+
+
+logger = logging.getLogger(__name__)
 
 
 class FastText(Word2Vec):
@@ -446,8 +444,8 @@ class FastText(Word2Vec):
             ways. Check the module level docstring for some examples.
 
         """
-        self.load = call_on_class_only
-        self.load_fasttext_format = call_on_class_only
+        self.load = utils.call_on_class_only
+        self.load_fasttext_format = utils.call_on_class_only
         self.callbacks = callbacks
         if word_ngrams != 1:
             raise NotImplementedError("Gensim's FastText implementation does not yet support word_ngrams != 1.")
@@ -591,7 +589,6 @@ class FastText(Word2Vec):
 
     def _clear_post_train(self):
         """Clear the model's internal structures after training has finished to free up RAM."""
-        self.wv.vectors_norm = None
         self.wv.adjust_vectors()  # ensure composite-word vecs reflect latest training
 
     def estimate_memory(self, vocab_size=None, report=None):
@@ -750,22 +747,30 @@ class FastText(Word2Vec):
             queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
         self.wv.adjust_vectors()
 
+    @deprecated(
+        "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
+        "init_sims() is now obsoleted and will be completely removed in future versions. "
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+    )
     def init_sims(self, replace=False):
         """
-        Precompute L2-normalized vectors.
+        Precompute L2-normalized vectors. Obsoleted.
+
+        If you need a single unit-normalized vector for some key, call
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``fasttext_model.wv.get_vector(key, norm=True)``.
+
+        To refresh norms after you performed some atypical out-of-band vector tampering,
+        call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
 
         Parameters
         ----------
         replace : bool
-            If True, forget the original vectors and only keep the normalized ones to save RAM.
+            If True, forget the original trained vectors and only keep the normalized ones.
+            You lose information if you do this.
 
         """
-        # init_sims() resides in KeyedVectors because it deals with input layer mainly, but because the
-        # hidden layer is not an attribute of KeyedVectors, it has to be deleted in this class.
-        # The normalizing of input layer happens inside of KeyedVectors.
-        if replace and hasattr(self, 'syn1'):
-            del self.syn1
-        self.wv.init_sims(replace)
+        self.wv.init_sims(replace=replace)
 
     def clear_sims(self):
         """Remove all L2-normalized word vectors from the model, to free up memory.
@@ -776,7 +781,7 @@ class FastText(Word2Vec):
         self._clear_post_train()
 
     @classmethod
-    @deprecated(
+    @utils.deprecated(
         'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
         '(to continue training with the loaded full model, more RAM) instead'
     )
@@ -789,7 +794,7 @@ class FastText(Word2Vec):
         """
         return load_facebook_model(model_file, encoding=encoding)
 
-    @deprecated(
+    @utils.deprecated(
         'use load_facebook_vectors (to use pretrained embeddings) or load_facebook_model '
         '(to continue training with the loaded full model, more RAM) instead'
     )
@@ -803,7 +808,7 @@ class FastText(Word2Vec):
 
         """
         m = _load_fasttext_format(self.file_name, encoding=encoding)
-        for attr, val in six.iteritems(m.__dict__):
+        for attr, val in m.__dict__.items():
             setattr(self, attr, val)
 
     def save(self, *args, **kwargs):
@@ -1258,15 +1263,15 @@ class FastTextKeyedVectors(KeyedVectors):
         kwargs['ignore'] = kwargs.get('ignore', ignore_attrs)
         super(FastTextKeyedVectors, self).save(*args, **kwargs)
 
-    def get_vector(self, word, use_norm=False):
+    def get_vector(self, word, norm=False):
         """Get `word` representations in vector space, as a 1D numpy array.
 
         Parameters
         ----------
         word : str
-            Input word
-        use_norm : bool, optional
-            If True - resulting vector will be L2-normalized (unit euclidean length).
+            Input word.
+        norm : bool, optional
+            If True, resulting vector will be L2-normalized (unit Euclidean length).
 
         Returns
         -------
@@ -1276,11 +1281,11 @@ class FastTextKeyedVectors(KeyedVectors):
         Raises
         ------
         KeyError
-            If word and all ngrams not in vocabulary.
+            If word and all its ngrams not in vocabulary.
 
         """
         if word in self.key_to_index:
-            return super(FastTextKeyedVectors, self).get_vector(word, use_norm)
+            return super(FastTextKeyedVectors, self).get_vector(word, norm=norm)
         elif self.bucket == 0:
             raise KeyError('cannot calculate vector for OOV word without ngrams')
         else:
@@ -1301,7 +1306,7 @@ class FastTextKeyedVectors(KeyedVectors):
             for nh in ngram_hashes:
                 word_vec += ngram_weights[nh]
             word_vec /= len(ngram_hashes)
-            if use_norm:
+            if norm:
                 return word_vec / np.linalg.norm(word_vec)
             else:
                 return word_vec
@@ -1401,6 +1406,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         if self.bucket == 0:
+            self.vectors = self.vectors_vocab  # no ngrams influence
             return
 
         self.vectors = self.vectors_vocab[:].copy()
@@ -1522,19 +1528,8 @@ _MB_MASK = 0xC0
 _MB_START = 0x80
 
 
-def _byte_to_int_py3(b):
-    return b
-
-
-def _byte_to_int_py2(b):
-    return ord(b)
-
-
-_byte_to_int = _byte_to_int_py2 if six.PY2 else _byte_to_int_py3
-
-
 def _is_utf8_continue(b):
-    return _byte_to_int(b) & _MB_MASK == _MB_START
+    return b & _MB_MASK == _MB_START
 
 
 def ft_ngram_hashes(word, minn, maxn, num_buckets):

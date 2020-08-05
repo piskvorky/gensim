@@ -20,8 +20,6 @@ import gensim
 from gensim.corpora import Dictionary
 from gensim.utils import to_utf8
 from gensim.test.utils import get_tmpfile, common_texts
-from six import PY3
-from six.moves import zip
 
 
 class TestDictionary(unittest.TestCase):
@@ -337,12 +335,6 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(list(d.items()), list(d.iteritems()))
         self.assertEqual(list(d.keys()), list(d.iterkeys()))
         self.assertEqual(list(d.values()), list(d.itervalues()))
-
-        # XXX Do we want list results from the dict members in Py3 too?
-        if not PY3:
-            self.assertTrue(isinstance(d.items(), list))
-            self.assertTrue(isinstance(d.keys(), list))
-            self.assertTrue(isinstance(d.values(), list))
 
     def test_patch_with_special_tokens(self):
         special_tokens = {'pad': 0, 'space': 1, 'quake': 3}

@@ -30,7 +30,7 @@ NON_NEGATIVE_NORM_ASSERTION_MESSAGE = u"sparse documents must not contain any ex
 
 class TermSimilarityIndex(SaveLoad):
     """
-    Retrieves most similar terms for a given term.
+    Base class = common interface for retrieving the most similar terms for a given term.
 
     See Also
     --------
@@ -41,12 +41,12 @@ class TermSimilarityIndex(SaveLoad):
     def most_similar(self, term, topn=10):
         """Get most similar terms for a given term.
 
-        Return most similar terms for a given term along with the similarities.
+        Return the most similar terms for a given term along with their similarities.
 
         Parameters
         ----------
         term : str
-            Tne term for which we are retrieving `topn` most similar terms.
+            The term for which we are retrieving `topn` most similar terms.
         topn : int, optional
             The maximum number of most similar terms to `term` that will be retrieved.
 

@@ -5,36 +5,19 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Intro
------
-This module contains integration Annoy with :class:`~gensim.models.word2vec.Word2Vec`,
-:class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-:class:`~gensim.models.keyedvectors.KeyedVectors`.
+This module integrates Spotify's `Annoy <https://github.com/spotify/annoy>`_ (Approximate Nearest Neighbors Oh Yeah)
+library with Gensim's :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
+:class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.KeyedVectors` word embeddings.
 
 .. Important::
-    To use this module, you must have the ``annoy`` library install.
+    To use this module, you must have the ``annoy`` library installed.
     To install it, run ``pip install annoy``.
 
-
-What is Annoy
--------------
-Annoy (Approximate Nearest Neighbors Oh Yeah) is a C++ library with Python bindings to search for points in space
-that are close to a given query point. It also creates large read-only file-based data structures that are mmapped
-into memory so that many processes may share the same data.
-
-
-How it works
-------------
-Using `random projections <https://en.wikipedia.org/wiki/Locality-sensitive_hashing#Random_projection>`_
-and by building up a tree. At every intermediate node in the tree, a random hyperplane is chosen,
-which divides the space into two subspaces. This hyperplane is chosen by sampling two points from the subset
-and taking the hyperplane equidistant from them.
-
-More information about Annoy: `github repository <https://github.com/spotify/annoy>`_,
-`author in twitter <https://twitter.com/fulhack>`_
-and `annoy-user maillist <https://groups.google.com/forum/#!forum/annoy-user>`_.
-
 """
+
+# Avoid import collisions on py2: this module has the same name as the actual Annoy library.
+from __future__ import absolute_import
+
 import os
 
 try:
@@ -49,16 +32,14 @@ from gensim.models.fasttext import FastText
 from gensim.models import KeyedVectors
 
 
-_NOANNOY = ImportError(
-    "Annoy is not installed, if you wish to use the annoy "
-    "indexer, please run `pip install annoy`"
-)
+_NOANNOY = ImportError("Annoy not installed. To use the Annoy indexer, please run `pip install annoy`.")
 
 
-class AnnoyIndexer(object):
-    """This class allows to use `Annoy <https://github.com/spotify/annoy>`_ as indexer for `most_similar` method
-    from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
-    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` classes.
+class AnnoyIndexer():
+    """This class allows the use of `Annoy <https://github.com/spotify/annoy>`_ for fast (approximate)
+    vector retrieval in `most_similar()` calls of
+    :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
+    :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` models.
 
     """
 
@@ -66,8 +47,8 @@ class AnnoyIndexer(object):
         """
         Parameters
         ----------
-        model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`, optional
-            Model, that will be used as source for index.
+        model : trained model, optional
+            Use vectors from this model as the source for the index.
         num_trees : int, optional
             Number of trees for Annoy indexer.
 
@@ -75,7 +56,7 @@ class AnnoyIndexer(object):
         --------
         .. sourcecode:: pycon
 
-            >>> from gensim.similarities.index import AnnoyIndexer
+            >>> from gensim.similarities.annoy import AnnoyIndexer
             >>> from gensim.models import Word2Vec
             >>>
             >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
@@ -102,7 +83,7 @@ class AnnoyIndexer(object):
                 raise ValueError("Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used")
 
     def save(self, fname, protocol=2):
-        """Save AnnoyIndexer instance.
+        """Save AnnoyIndexer instance to disk.
 
         Parameters
         ----------
@@ -113,7 +94,7 @@ class AnnoyIndexer(object):
 
         Notes
         -----
-        This method save **only** index (**model isn't preserved**).
+        This method saves **only the index**. The trained model isn't preserved.
 
         """
         fname_dict = fname + '.d'
@@ -123,12 +104,12 @@ class AnnoyIndexer(object):
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
-        """Load AnnoyIndexer instance
+        """Load an AnnoyIndexer instance from disk.
 
         Parameters
         ----------
         fname : str
-            Path to dump with AnnoyIndexer.
+            The path as previously used by ``save()``.
 
         Examples
         --------
@@ -153,40 +134,37 @@ class AnnoyIndexer(object):
         fname_dict = fname + '.d'
         if not (os.path.exists(fname) and os.path.exists(fname_dict)):
             raise IOError(
-                "Can't find index files '%s' and '%s' - Unable to restore AnnoyIndexer state." % (fname, fname_dict)
+                "Can't find index files '%s' and '%s' - unable to restore AnnoyIndexer state." % (fname, fname_dict)
             )
-        else:
-            try:
-                from annoy import AnnoyIndex
-            except ImportError:
-                raise _NOANNOY
+        try:
+            from annoy import AnnoyIndex
+        except ImportError:
+            raise _NOANNOY
 
-            with utils.open(fname_dict, 'rb') as f:
-                d = _pickle.loads(f.read())
-            self.num_trees = d['num_trees']
-            self.index = AnnoyIndex(d['f'])
-            self.index.load(fname)
-            self.labels = d['labels']
+        with utils.open(fname_dict, 'rb') as f:
+            d = _pickle.loads(f.read())
+        self.num_trees = d['num_trees']
+        self.index = AnnoyIndex(d['f'], metric='angular')
+        self.index.load(fname)
+        self.labels = d['labels']
 
     def build_from_word2vec(self):
         """Build an Annoy index using word vectors from a Word2Vec model."""
-
-        self.model.init_sims()
-        return self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word, self.model.vector_size)
+        return self._build_from_model(
+            self.model.wv.get_normed_vectors(), self.model.wv.index2word, self.model.vector_size,
+        )
 
     def build_from_doc2vec(self):
         """Build an Annoy index using document vectors from a Doc2Vec model."""
-
         docvecs = self.model.docvecs
-        docvecs.init_sims()
-        labels = [docvecs.index_to_doctag(i) for i in range(0, docvecs.count)]
+        labels = [docvecs.index_to_doctag(i) for i in range(docvecs.count)]
         return self._build_from_model(docvecs.vectors_docs_norm, labels, self.model.vector_size)
 
     def build_from_keyedvectors(self):
         """Build an Annoy index using word vectors from a KeyedVectors model."""
-
-        self.model.init_sims()
-        return self._build_from_model(self.model.vectors_norm, self.model.index2word, self.model.vector_size)
+        return self._build_from_model(
+            self.model.get_normed_vectors(), self.model.index2word, self.model.vector_size,
+        )
 
     def _build_from_model(self, vectors, labels, num_features):
         try:
@@ -194,7 +172,7 @@ class AnnoyIndexer(object):
         except ImportError:
             raise _NOANNOY
 
-        index = AnnoyIndex(num_features)
+        index = AnnoyIndex(num_features, metric='angular')
 
         for vector_num, vector in enumerate(vectors):
             index.add_item(vector_num, vector)
@@ -204,7 +182,7 @@ class AnnoyIndexer(object):
         self.labels = labels
 
     def most_similar(self, vector, num_neighbors):
-        """Find the approximate `num_neighbors` most similar items.
+        """Find `num_neighbors` most similar items.
 
         Parameters
         ----------
@@ -219,7 +197,6 @@ class AnnoyIndexer(object):
             List of most similar items in format [(`item`, `cosine_distance`), ... ]
 
         """
-
         ids, distances = self.index.get_nns_by_vector(
             vector, num_neighbors, include_distances=True)
 

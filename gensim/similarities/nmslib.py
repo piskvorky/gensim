@@ -5,15 +5,17 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Intro
------
+This module integrates `NMSLIB <https://github.com/nmslib/nmslib>`_ fast similarity
+search with Gensim's :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
+:class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.KeyedVectors`
+vector embeddings.
 
-This module contains integration NMSLIB with :class:`~gensim.models.word2vec.Word2Vec`,
-:class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-:class:`~gensim.models.keyedvectors.KeyedVectors`.
-To use NMSLIB, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
-and pass the instance as the indexer parameter to your model's most_similar method
-(e.g. :py:func:`~gensim.models.doc2vec.most_similar`).
+.. Important::
+    To use this module, you must have the external ``nmslib`` library installed.
+    To install it, run ``pip install nmslib``.
+
+To use the integration, instantiate a :class:`~gensim.similarities.nmslib.NmslibIndexer` class
+and pass the instance as the `indexer` parameter to your model's `model.most_similar()` method.
 
 Example usage
 -------------
@@ -24,11 +26,11 @@ Example usage
     >>> from gensim.models import Word2Vec
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, seed=1)
+    >>> model = Word2Vec(sentences, min_count=1, iter=10, seed=2)
     >>>
     >>> indexer = NmslibIndexer(model)
-    >>> model.most_similar("cat", topn=2, indexer=indexer)
-    [('cat', 1.0), ('meow', 0.5595494508743286)]
+    >>> model.wv.most_similar("cat", topn=2, indexer=indexer)
+    [('cat', 1.0), ('meow', 0.16398882865905762)]
 
 Load and save example
 ---------------------
@@ -40,14 +42,14 @@ Load and save example
     >>> from tempfile import mkstemp
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, seed=1, iter=10)
+    >>> model = Word2Vec(sentences, min_count=1, seed=2, iter=10)
     >>>
     >>> indexer = NmslibIndexer(model)
     >>> _, temp_fn = mkstemp()
     >>> indexer.save(temp_fn)
     >>>
     >>> new_indexer = NmslibIndexer.load(temp_fn)
-    >>> model.most_similar("cat", topn=2, indexer=new_indexer)
+    >>> model.wv.most_similar("cat", topn=2, indexer=new_indexer)
     [('cat', 1.0), ('meow', 0.5595494508743286)]
 
 What is NMSLIB
@@ -60,35 +62,36 @@ More information about NMSLIB: `github repository <https://github.com/nmslib/nms
 Why use NMSIB?
 --------------
 
-The current implementation for finding k nearest neighbors in a vector space in gensim has linear complexity
-via brute force in the number of indexed documents, although with extremely low constant factors.
+Gensim's native :py:class:`~gensim.similarities.Similarity` for finding the `k` nearest neighbors to a vector
+uses brute force and has linear complexity, albeit with extremely low constant factors.
+
 The retrieved results are exact, which is an overkill in many applications:
 approximate results retrieved in sub-linear time may be enough.
-NMSLIB can find approximate nearest neighbors much faster.
-Compared to Annoy, NMSLIB has more parameters to control the build and query time and accuracy.
-NMSLIB can achieve faster and more accurate nearest neighbors search than annoy.
+
+NMSLIB can find approximate nearest neighbors much faster, similar to Spotify's Annoy library.
+Compared to :py:class:`~gensim.similarities.annoy.Annoy`, NMSLIB has more parameters to
+control the build and query time and accuracy. NMSLIB often achieves faster and more accurate
+nearest neighbors search than Annoy.
+
 """
+
+# Avoid import collisions on py2: this module has the same name as the actual NMSLIB library.
+from __future__ import absolute_import
+import pickle as _pickle
 
 from smart_open import open
 try:
-    import cPickle as _pickle
+    import nmslib
 except ImportError:
-    import pickle as _pickle
+    raise ImportError("NMSLIB not installed. To use the NMSLIB indexer, please run `pip install nmslib`.")
 
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
 from gensim.models import KeyedVectors
 
-try:
-    import nmslib
-except ImportError:
-    raise ImportError(
-        "NMSLIB not installed. To use the NMSLIB indexer, please run `pip install nmslib`."
-    )
 
-
-class NmslibIndexer(object):
+class NmslibIndexer():
     """This class allows to use `NMSLIB <https://github.com/nmslib/nmslib>`_ as indexer for `most_similar` method
     from :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
     :class:`~gensim.models.fasttext.FastText` and :class:`~gensim.models.keyedvectors.Word2VecKeyedVectors` classes.
@@ -102,9 +105,13 @@ class NmslibIndexer(object):
         model : :class:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel`
             Model, that will be used as source for index.
         index_params : dict, optional
-            index_params for NMSLIB indexer.
+            Indexing parameters passed through to NMSLIB:
+            https://github.com/nmslib/nmslib/blob/master/manual/methods.md#graph-based-search-methods-sw-graph-and-hnsw
+
+            If not specified, defaults to `{'M': 100, 'indexThreadQty': 1, 'efConstruction': 100, 'post': 0}`.
         query_time_params : dict, optional
             query_time_params for NMSLIB indexer.
+            If not specified, defaults to `{'efSearch': 100}`.
 
         """
         if index_params is None:
@@ -158,12 +165,12 @@ class NmslibIndexer(object):
 
     @classmethod
     def load(cls, fname):
-        """Load a NmslibIndexer instance from a file
+        """Load a NmslibIndexer instance from a file.
 
         Parameters
         ----------
         fname : str
-            Path to dump with NmslibIndexer.
+            Path previously used in `save()`.
 
         """
         fname_dict = fname + '.d'
@@ -172,7 +179,7 @@ class NmslibIndexer(object):
         index_params = d['index_params']
         query_time_params = d['query_time_params']
         nmslib_instance = cls(model=None, index_params=index_params, query_time_params=query_time_params)
-        index = nmslib.init()
+        index = nmslib.init(method='hnsw', space='cosinesimil')
         index.loadIndex(fname)
         nmslib_instance.index = index
         nmslib_instance.labels = d['labels']
@@ -180,23 +187,20 @@ class NmslibIndexer(object):
 
     def _build_from_word2vec(self):
         """Build an NMSLIB index using word vectors from a Word2Vec model."""
-
-        self._build_from_model(self.model.wv.vectors_norm, self.model.wv.index2word)
+        self._build_from_model(self.model.wv.get_normed_vectors(), self.model.wv.index2word)
 
     def _build_from_doc2vec(self):
         """Build an NMSLIB index using document vectors from a Doc2Vec model."""
-
         docvecs = self.model.dv
         labels = docvecs.index_to_key
-        self._build_from_model(docvecs.vectors_norm, labels)
+        self._build_from_model(docvecs.get_normed_vectors(), labels)
 
     def _build_from_keyedvectors(self):
         """Build an NMSLIB index using word vectors from a KeyedVectors model."""
-
-        self._build_from_model(self.model.vectors_norm, self.model.index2word)
+        self._build_from_model(self.model.get_normed_vectors(), self.model.index2word)
 
     def _build_from_model(self, vectors, labels):
-        index = nmslib.init()
+        index = nmslib.init(method='hnsw', space='cosinesimil')
         index.addDataPointBatch(vectors)
 
         index.createIndex(self.index_params, print_progress=True)
@@ -211,16 +215,18 @@ class NmslibIndexer(object):
         Parameters
         ----------
         vector : numpy.array
-            Vector for word/document.
+            Vector for a word or document.
         num_neighbors : int
-            Number of most similar items
+            How many most similar items to look for?
 
         Returns
         -------
         list of (str, float)
-            List of most similar items in format [(`item`, `cosine_distance`), ... ]
+            List of most similar items in the format `[(item, cosine_similarity), ... ]`.
 
         """
         ids, distances = self.index.knnQueryBatch(vector.reshape(1, -1), k=num_neighbors)[0]
 
-        return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]
+        # NMSLIB returns cosine distance (not similarity), which is simply `dist = 1 - cossim`.
+        # So, convert back to similarities here.
+        return [(self.labels[id_], 1.0 - distance) for id_, distance in zip(ids, distances)]
