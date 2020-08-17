@@ -639,6 +639,10 @@ class WikiCorpus(TextCorpus):
         else:
             self.dictionary = dictionary
 
+    @property
+    def input(self):
+        return self.fname
+
     def get_texts(self):
         """Iterate over the dump, yielding a list of tokens for each article that passed
         the length and namespace filtering.
