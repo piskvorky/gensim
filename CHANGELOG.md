@@ -5,16 +5,27 @@ Changes
 
 This release contains a major refactoring.
 
+### :red_circle: Bug fixes
+
+* Fix doc2vec crash for large sets of doc-vectors (PR [#2907](https://github.com/RaRe-Technologies/gensim/pull/2907), __[@gojomo](https://github.com/gojomo)__)
+* Fix similarity bug in NMSLIB indexer + documentation fixes (PR [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
+* Fix FastText word-vectors w/ ngrams/buckets off (PR [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891), __[@gojomo](https://github.com/gojomo)__)
+* Fix for Python 3.9/3.10: remove xml.etree.cElementTree (PR [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846), __[@hugovk](https://github.com/hugovk)__)
+
 ### :+1: Improvements
 
-* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
+* KeyedVectors & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
 * No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
   (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
 * Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
+* Expose `max_final_vocab` parameter in FastText constructor (PR [#2867](https://github.com/RaRe-Technologies/gensim/pull/2867), __[@mpenkov](https://github.com/mpenkov)__)
+* Replace numpy.random.RandomState with SFC64 - for speed (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
 
 ### :books: Tutorial and doc improvements
 
  * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
+* Update Hoffman paper link for Online LDA (PR [#2897](https://github.com/RaRe-Technologies/gensim/pull/2897), __[@xh2](https://github.com/xh2)__)
+* Make docs clearer on `alpha` parameter in LDA model (PR [#2896](https://github.com/RaRe-Technologies/gensim/pull/2896), __[@xh2](https://github.com/xh2)__)
 
 ## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 
