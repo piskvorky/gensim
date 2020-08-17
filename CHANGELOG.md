@@ -7,6 +7,7 @@ This release contains a major refactoring.
 
 ### :red_circle: Bug fixes
 
+* Fix AttributeError in WikiCorpus (PR [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901), __[@jenishah](https://github.com/jenishah)__)
 * Fix doc2vec crash for large sets of doc-vectors (PR [#2907](https://github.com/RaRe-Technologies/gensim/pull/2907), __[@gojomo](https://github.com/gojomo)__)
 * Fix similarity bug in NMSLIB indexer + documentation fixes (PR [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
 * Fix FastText word-vectors w/ ngrams/buckets off (PR [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891), __[@gojomo](https://github.com/gojomo)__)
