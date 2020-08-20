@@ -34,7 +34,7 @@ cimport numpy as np
 
 from libc.math cimport exp
 from libc.math cimport log
-from libc.string cimport memset
+from libc.string cimport memcpy, memset
 
 
 #
@@ -69,6 +69,12 @@ cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
 
 cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
+
+
+cdef inline void our_hadamard_product(const int N, const float alpha, const float *X, const float *Y, float *Z) nogil:
+    cdef int i
+    for i from 0 <= i < N by 1:
+        Z[i] += alpha * X[i] * Y[i]
 
 
 cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
@@ -222,6 +228,88 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
 
 cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) nogil:
     """Perform CBOW training with negative sampling.
+    Parameters
+    ----------
+    c : FastTextConfig *
+        A pointer to a fully initialized and populated struct.
+    i : int
+        The index of a word inside the current window.
+    j : int
+        The start of the current window.
+    k : int
+        The end of the current window.  Essentially, j <= i < k.
+    Notes
+    -----
+    Modifies c.next_random as a side-effect.
+    """
+
+    cdef long long row2
+    cdef unsigned long long modulo = 281474976710655ULL
+    cdef REAL_t f, g, count, inv_count = 1.0, label, f_dot
+    cdef np.uint32_t target_index, word_index
+    cdef int d, m
+
+    word_index = c.indexes[i]
+
+    memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
+    count = <REAL_t>0.0
+    for m in range(j, k):
+        if m == i:
+            continue
+        count += ONEF
+        our_saxpy(&c.size, &ONEF, &c.syn0_vocab[c.indexes[m] * c.size], &ONE, c.neu1, &ONE)
+        for d in range(c.subwords_idx_len[m]):
+            count += ONEF
+            our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[c.subwords_idx[m][d] * c.size], &ONE, c.neu1, &ONE)
+
+    if count > (<REAL_t>0.5):
+        inv_count = ONEF / count
+    if c.cbow_mean:
+        sscal(&c.size, &inv_count, c.neu1, &ONE)
+
+    memset(c.work, 0, c.size * cython.sizeof(REAL_t))
+
+    for d in range(c.negative+1):
+        if d == 0:
+            target_index = word_index
+            label = ONEF
+        else:
+            target_index = bisect_left(c.cum_table, (c.next_random >> 16) % c.cum_table[c.cum_table_len-1], 0, c.cum_table_len)
+            c.next_random = (c.next_random * <unsigned long long>25214903917ULL + 11) & modulo
+            if target_index == word_index:
+                continue
+            label = <REAL_t>0.0
+
+        row2 = target_index * c.size
+        f_dot = our_dot(&c.size, c.neu1, &ONE, &c.syn1neg[row2], &ONE)
+        if f_dot <= -MAX_EXP:
+            f = 0.0
+        elif f_dot >= MAX_EXP:
+            f = 1.0
+        else:
+            f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * c.alpha
+
+        our_saxpy(&c.size, &g, &c.syn1neg[row2], &ONE, c.work, &ONE)
+        our_saxpy(&c.size, &g, c.neu1, &ONE, &c.syn1neg[row2], &ONE)
+
+    if not c.cbow_mean:  # divide error over summed window vectors
+        sscal(&c.size, &inv_count, c.work, &ONE)
+
+    for m in range(j,k):
+        if m == i:
+            continue
+        our_saxpy(
+            &c.size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len], c.work, &ONE,
+            &c.syn0_vocab[c.indexes[m]*c.size], &ONE)
+        for d in range(c.subwords_idx_len[m]):
+            our_saxpy(
+                &c.size, &c.ngrams_lockf[c.subwords_idx[m][d] % c.ngrams_lockf_len], c.work, &ONE,
+                &c.syn0_ngrams[c.subwords_idx[m][d]*c.size], &ONE)
+
+
+cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, int k) nogil:
+    """Perform CBOW training with negative sampling and position-dependent weighting.
 
     Parameters
     ----------
@@ -255,18 +343,18 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
         if m == i:
             continue
         count += ONEF
-        if c.pdw:
-            for d in range(c.size):  # TODO make into a Hadamard product using a BLAS primitive: DSBMV, followed by SAXPY
-                c.neu1[d] += c.syn0_vocab[c.indexes[m] * c.size + d] * c.syn0_positions[n * c.size + d]
-            for o in range(c.subwords_idx_len[m]):
-                count += ONEF
-                for d in range(c.size):  # TODO make into a Hadamard product using a BLAS primitive: DSBMV, followed by SAXPY
-                    c.neu1[d] += c.syn0_ngrams[c.subwords_idx[m][o] * c.size + d] * c.syn0_positions[n * c.size + d]
-        else:
-            our_saxpy(&c.size, &ONEF, &c.syn0_vocab[c.indexes[m] * c.size], &ONE, c.neu1, &ONE)
-            for o in range(c.subwords_idx_len[m]):
-                count += ONEF
-                our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[c.subwords_idx[m][o] * c.size], &ONE, c.neu1, &ONE)
+        our_hadamard_product(
+            c.size, ONEF,
+            &c.syn0_positions[n * c.size],
+            &c.syn0_vocab[c.indexes[m] * c.size],
+            c.neu1)
+        for o in range(c.subwords_idx_len[m]):
+            count += ONEF
+            our_hadamard_product(
+                c.size, ONEF,
+                &c.syn0_positions[n * c.size],
+                &c.syn0_ngrams[c.subwords_idx[m][o] * c.size],
+                c.neu1)
         n += 1
 
     if count > (<REAL_t>0.5):
@@ -303,28 +391,35 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
     if not c.cbow_mean:  # divide error over summed window vectors
         sscal(&c.size, &inv_count, c.work, &ONE)
 
+    inv_count = ONEF / c.size
+
     n = j - i + c.window
     for m in range(j, k):
         if m == i:
             continue
-        if c.pdw:
-            for d in range(c.size):  # TODO make into a Hadamard product using a BLAS primitive: DSBMV, followed by SAXPY
-                positional_feature = c.syn0_positions[n * c.size + d]
-                c.syn0_positions[n * c.size + d] += c.work[d] * c.syn0_vocab[c.indexes[m] * c.size + d]
-                c.syn0_vocab[c.indexes[m] * c.size + d] += c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len] * c.work[d] * positional_feature
-            for o in range(c.subwords_idx_len[m]):
-                for d in range(c.size):  # TODO make into two Hadamard products using a BLAS primitive: DSBMV, followed by SAXPY
-                    positional_feature = c.syn0_positions[n * c.size + d]
-                    c.syn0_positions[n * c.size + d] += c.work[d] * c.syn0_ngrams[c.subwords_idx[m][o] * c.size + d]
-                    c.syn0_ngrams[c.subwords_idx[m][o] * c.size + d] += c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len] * c.work[d] * positional_feature
-        else:
-            our_saxpy(
-                &c.size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len], c.work, &ONE,
-                &c.syn0_vocab[c.indexes[m] * c.size], &ONE)
-            for o in range(c.subwords_idx_len[m]):
-                our_saxpy(
-                    &c.size, &c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len], c.work, &ONE,
-                    &c.syn0_ngrams[c.subwords_idx[m][o] * c.size], &ONE)
+        memcpy(c.neu1, &c.syn0_positions[n * c.size], c.size * cython.sizeof(REAL_t))
+        our_hadamard_product(
+            c.size, inv_count,
+            &c.syn0_vocab[c.indexes[m] * c.size],
+            c.work,
+            c.neu1)
+        our_hadamard_product(
+            c.size, c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len],
+            &c.syn0_positions[n * c.size],
+            c.work,
+            &c.syn0_vocab[c.indexes[m] * c.size])
+        for o in range(c.subwords_idx_len[m]):
+            our_hadamard_product(
+                c.size, inv_count,
+                &c.syn0_ngrams[c.subwords_idx[m][o] * c.size],
+                c.work,
+                c.neu1)
+            our_hadamard_product(
+                c.size, c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len],
+                &c.syn0_positions[n * c.size],
+                c.work,
+                &c.syn0_ngrams[c.subwords_idx[m][o] * c.size])
+        memcpy(&c.syn0_positions[n * c.size], c.neu1, c.size * cython.sizeof(REAL_t))
         n += 1
 
 
@@ -580,7 +675,10 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences) nogil:
                 if c.hs:
                     fasttext_fast_sentence_cbow_hs(c, i, window_start, window_end)
                 if c.negative:
-                    fasttext_fast_sentence_cbow_neg(c, i, window_start, window_end)
+                    if c.pdw:
+                        fasttext_fast_sentence_cbow_neg_pdw(c, i, window_start, window_end)
+                    else:
+                        fasttext_fast_sentence_cbow_neg(c, i, window_start, window_end)
             else:
                 for j in range(window_start, window_end):
                     if j == i:

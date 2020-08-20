@@ -493,7 +493,7 @@ class FastText(Word2Vec):
         if not update:
             self.wv.init_ngrams_weights(self.seed)
             if self.position_dependent_weights:
-                self.wv.init_positional_weights(self.seed, self.window)
+                self.wv.init_positional_weights(self.window)
             # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
             # advanced users should directly resize/adjust as necessary
             self.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
@@ -586,7 +586,7 @@ class FastText(Word2Vec):
         if not update:
             self.wv.init_ngrams_weights(self.seed)
             if self.position_dependent_weights:
-                self.wv.init_positional_weights(self.seed, self.window)
+                self.wv.init_positional_weights(self.window)
         elif not len(self.wv):
             raise RuntimeError(
                 "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
@@ -1358,24 +1358,20 @@ class FastTextKeyedVectors(KeyedVectors):
         #
         self.vectors_ngrams = rand_obj.uniform(lo, hi, ngrams_shape).astype(REAL)
 
-    def init_positional_weights(self, seed, window):
+    def init_positional_weights(self, window):
         """Initialize the positional weights prior to training.
 
         Creates the weight matrix and initializes it with uniform random values.
 
         Parameters
         ----------
-        seed : float
-            The seed for the PRNG.
         window : int
             The size of the window used during the training.
 
         """
-        rand_obj = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
 
-        lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
         positional_shape = (2 * window, self.vector_size)
-        self.vectors_positions = rand_obj.uniform(lo, hi, positional_shape).astype(REAL)
+        self.vectors_positions = np.ones(positional_shape, dtype=REAL)
 
     def update_ngrams_weights(self, seed, old_vocab_len):
         """Update the vocabulary weights for training continuation.

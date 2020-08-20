@@ -144,6 +144,9 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil
 cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) nogil
 
 
+cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, int k) nogil
+
+
 cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil
 
 
