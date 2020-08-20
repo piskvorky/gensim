@@ -46,7 +46,7 @@ cdef struct FastTextConfig:
     #
     # Model parameters.  These get copied as-is from the Python model.
     #
-    int sg, hs, pdw, negative, sample, size, window, cbow_mean, workers
+    int sg, hs, pdw, pdw_size, negative, sample, size, window, cbow_mean, workers
     REAL_t alpha
 
     #

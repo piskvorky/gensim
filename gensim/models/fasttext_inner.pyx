@@ -330,11 +330,12 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
 
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
-    cdef REAL_t f, g, count, inv_count = 1.0, label, f_dot, positional_feature
+    cdef REAL_t f, g, count, inv_count = 1.0, label, f_dot
     cdef np.uint32_t target_index, word_index
-    cdef int d, m, n, o
+    cdef int d, m, n, o, nonpositional_size
 
     word_index = c.indexes[i]
+    nonpositional_size = c.size - c.pdw_size
 
     memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
@@ -344,17 +345,27 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
             continue
         count += ONEF
         our_hadamard_product(
-            c.size, ONEF,
-            &c.syn0_positions[n * c.size],
+            c.pdw_size, ONEF,
+            &c.syn0_positions[n * c.pdw_size],
             &c.syn0_vocab[c.indexes[m] * c.size],
             c.neu1)
+        if nonpositional_size:
+            our_saxpy(
+                &nonpositional_size, &ONEF,
+                &c.syn0_vocab[c.indexes[m] * c.size + c.pdw_size], &ONE,
+                &c.neu1[c.pdw_size], &ONE)
         for o in range(c.subwords_idx_len[m]):
             count += ONEF
             our_hadamard_product(
-                c.size, ONEF,
-                &c.syn0_positions[n * c.size],
+                c.pdw_size, ONEF,
+                &c.syn0_positions[n * c.pdw_size],
                 &c.syn0_ngrams[c.subwords_idx[m][o] * c.size],
                 c.neu1)
+            if nonpositional_size:
+                our_saxpy(
+                    &nonpositional_size, &ONEF,
+                    &c.syn0_ngrams[c.subwords_idx[m][o] * c.size + c.pdw_size], &ONE,
+                    &c.neu1[c.pdw_size], &ONE)
         n += 1
 
     if count > (<REAL_t>0.5):
@@ -364,7 +375,7 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
 
     memset(c.work, 0, c.size * cython.sizeof(REAL_t))
 
-    for d in range(c.negative+1):
+    for d in range(c.negative + 1):
         if d == 0:
             target_index = word_index
             label = ONEF
@@ -397,29 +408,39 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
     for m in range(j, k):
         if m == i:
             continue
-        memcpy(c.neu1, &c.syn0_positions[n * c.size], c.size * cython.sizeof(REAL_t))
+        memcpy(c.neu1, &c.syn0_positions[n * c.pdw_size], c.pdw_size * cython.sizeof(REAL_t))
         our_hadamard_product(
-            c.size, inv_count,
+            c.pdw_size, inv_count,
             &c.syn0_vocab[c.indexes[m] * c.size],
             c.work,
             c.neu1)
         our_hadamard_product(
-            c.size, c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len],
-            &c.syn0_positions[n * c.size],
+            c.pdw_size, c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len],
+            &c.syn0_positions[n * c.pdw_size],
             c.work,
             &c.syn0_vocab[c.indexes[m] * c.size])
+        if nonpositional_size:
+            our_saxpy(
+                &nonpositional_size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len],
+                &c.work[c.pdw_size], &ONE,
+                &c.syn0_vocab[c.indexes[m] * c.size + c.pdw_size], &ONE)
         for o in range(c.subwords_idx_len[m]):
             our_hadamard_product(
-                c.size, inv_count,
+                c.pdw_size, inv_count,
                 &c.syn0_ngrams[c.subwords_idx[m][o] * c.size],
                 c.work,
                 c.neu1)
             our_hadamard_product(
-                c.size, c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len],
-                &c.syn0_positions[n * c.size],
+                c.pdw_size, c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len],
+                &c.syn0_positions[n * c.pdw_size],
                 c.work,
                 &c.syn0_ngrams[c.subwords_idx[m][o] * c.size])
-        memcpy(&c.syn0_positions[n * c.size], c.neu1, c.size * cython.sizeof(REAL_t))
+            if nonpositional_size:
+                our_saxpy(
+                    &nonpositional_size, &c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len],
+                    &c.work[c.pdw_size], &ONE,
+                    &c.syn0_ngrams[c.subwords_idx[m][o] * c.size + c.pdw_size], &ONE)
+        memcpy(&c.syn0_positions[n * c.pdw_size], c.neu1, c.pdw_size * cython.sizeof(REAL_t))
         n += 1
 
 
@@ -531,6 +552,7 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
 
     c.alpha = alpha
     c.size = model.wv.vector_size
+    c.pdw_size = model.wv.position_dependent_vector_size
 
     if c.hs:
         c.syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))

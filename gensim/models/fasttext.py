@@ -312,7 +312,7 @@ class FastText(Word2Vec):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
-                 max_final_vocab=None, position_dependent_weights=0):
+                 max_final_vocab=None, position_dependent_weights=0, position_dependent_vector_size=None):
         """Train, use and evaluate word representations learned using the method
         described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
         aka FastText.
@@ -424,6 +424,10 @@ class FastText(Word2Vec):
         position_dependent_weights : {1,0}, optional
             If position vectors should be computed beside word and n-gram vectors, and used to weight the
             context words during the training (1), or if all context words should be uniformly weighted (0).
+        position_dependent_vector_size : int or None, optional
+            How many features of the trained vector features should be position-dependent. Decreasing the
+            number of position-dependent features speeds up the training and may benefit task performance.
+            If None, then all features will be position-dependent.
 
         Notes
         -----
@@ -462,13 +466,23 @@ class FastText(Word2Vec):
         if position_dependent_weights and (sg or hs):
             raise NotImplementedError("Gensim's FastText implementation does not yet support position-dependent "
                 "weighting with SG or hierarchical softmax")
-        self.position_dependent_weights = position_dependent_weights
+        if position_dependent_vector_size is None:
+            position_dependent_vector_size = vector_size
+        if position_dependent_vector_size > vector_size:
+            raise ValueError('Number of position-dependent features may not exceed the total number of features')
+        if position_dependent_vector_size < 0:
+            raise ValueError('Number of position-dependent features must be positive')
+        if not position_dependent_vector_size:
+            logger.warning('Switched off position-dependent weighting: zero position-dependent features were requested')
+            self.position_dependent_weights = False  # fka pdw
+        else:
+            self.position_dependent_weights = position_dependent_weights  # fka pdw
         self.word_ngrams = word_ngrams
         if max_n < min_n:
             # with no eligible char-ngram lengths, no buckets need be allocated
             bucket = 0
 
-        self.wv = FastTextKeyedVectors(vector_size, min_n, max_n, bucket)
+        self.wv = FastTextKeyedVectors(vector_size, position_dependent_vector_size, min_n, max_n, bucket)
         self.wv.bucket = bucket
 
         super(FastText, self).__init__(
@@ -1158,7 +1172,7 @@ def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_
 
 
 class FastTextKeyedVectors(KeyedVectors):
-    def __init__(self, vector_size, min_n, max_n, bucket):
+    def __init__(self, vector_size, position_dependent_vector_size, min_n, max_n, bucket):
         """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
 
         Implements significant parts of the FastText algorithm.  For example,
@@ -1174,6 +1188,10 @@ class FastTextKeyedVectors(KeyedVectors):
         ----------
         vector_size : int
             The dimensionality of all vectors.
+        position_dependent_vector_size : int
+            How many features of the trained vector features should be
+            position-dependent. Decreasing the number of position-dependent
+            features speeds up the training and may benefit task performance.
         min_n : int
             The minimum number of characters in an ngram
         max_n : int
@@ -1204,6 +1222,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
+        self.position_dependent_vector_size = position_dependent_vector_size  # fka pdw_size
         self.vectors_vocab = None  # fka syn0_vocab
         self.vectors_ngrams = None  # fka syn0_ngrams
         self.buckets_word = None
@@ -1370,7 +1389,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
 
-        positional_shape = (2 * window, self.vector_size)
+        positional_shape = (2 * window, self.position_dependent_vector_size)
         self.vectors_positions = np.ones(positional_shape, dtype=REAL)
 
     def update_ngrams_weights(self, seed, old_vocab_len):
