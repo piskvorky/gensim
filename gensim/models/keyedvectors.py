@@ -209,7 +209,7 @@ class Vocab(object):
 
     def __str__(self):
         vals = ['%s:%r' % (key, self.__dict__[key]) for key in sorted(self.__dict__) if not key.startswith('_')]
-        return "%s(%s)" % (self.__class__.__name__, ', '.join(vals))
+        return "%s<%s>" % (self.__class__.__name__, ', '.join(vals))
 
 
 class BaseKeyedVectors(utils.SaveLoad):
