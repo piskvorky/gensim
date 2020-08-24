@@ -170,11 +170,11 @@ except ImportError:
     CORPUSFILE_VERSION = -1
 
     def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                       _work, _neu1, compute_loss):
+                       _work, _neu1):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
     def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         _work, _neu1, compute_loss):
+                         _work, _neu1):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
 
@@ -182,7 +182,7 @@ class Word2Vec(utils.SaveLoad):
     def __init__(self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
-                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
+                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
                  comment=None, max_final_vocab=None):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
@@ -282,9 +282,6 @@ class Word2Vec(utils.SaveLoad):
             Target size (in words) for batches of examples passed to worker threads (and
             thus cython routines).(Larger batches will be passed if individual
             texts are longer than 10000 words, but the standard cython code truncates to that maximum.)
-        compute_loss: bool, optional
-            If True, computes and stores loss value which can be retrieved using
-            :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
 
@@ -325,8 +322,7 @@ class Word2Vec(utils.SaveLoad):
         self.negative = int(negative)
         self.ns_exponent = ns_exponent
         self.cbow_mean = int(cbow_mean)
-        self.compute_loss = bool(compute_loss)
-        self.running_training_loss = 0
+        self.epoch_loss = 0.0
         self.min_alpha_yet_reached = float(alpha)
         self.corpus_count = 0
         self.corpus_total_words = 0
@@ -380,7 +376,7 @@ class Word2Vec(utils.SaveLoad):
         self.train(
             corpus_iterable=corpus_iterable, corpus_file=corpus_file, total_examples=self.corpus_count,
             total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
-            end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks)
+            end_alpha=self.min_alpha, callbacks=callbacks)
 
     def build_vocab(self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
                     keep_raw_vocab=False, trim_rule=None, **kwargs):
@@ -838,10 +834,10 @@ class Word2Vec(utils.SaveLoad):
 
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1, self.compute_loss)
+                                                        total_examples, total_words, work, neu1)
         else:
             examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1, self.compute_loss)
+                                                          total_examples, total_words, work, neu1)
 
         return examples, tally, raw_tally
 
@@ -866,9 +862,9 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
+            tally += train_batch_sg(self, sentences, alpha, work)
         else:
-            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1)
         return tally, self._raw_word_count(sentences)
 
     def _clear_post_train(self):
@@ -877,7 +873,7 @@ class Word2Vec(utils.SaveLoad):
 
     def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
               epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(),
+              queue_factor=2, report_delay=1.0, callbacks=(),
               **kwargs):
         """Update the model's neural weights from a sequence of sentences.
 
@@ -931,9 +927,6 @@ class Word2Vec(utils.SaveLoad):
             Multiplier for size of queue (number of workers * queue_factor).
         report_delay : float, optional
             Seconds to wait before reporting progress.
-        compute_loss: bool, optional
-            If True, computes and stores loss value which can be retrieved using
-            :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
 
@@ -959,8 +952,7 @@ class Word2Vec(utils.SaveLoad):
             total_examples=total_examples,
             total_words=total_words)
 
-        self.compute_loss = compute_loss
-        self.running_training_loss = 0.0
+        self.epoch_loss = 0.0
 
         for callback in callbacks:
             callback.on_train_begin(self)
@@ -1819,17 +1811,6 @@ class Word2Vec(utils.SaveLoad):
         # don't bother storing recalculable table
         kwargs['ignore'] = kwargs.get('ignore', []) + ['cum_table', ]
         super(Word2Vec, self).save(*args, **kwargs)
-
-    def get_latest_training_loss(self):
-        """Get current value of the training loss.
-
-        Returns
-        -------
-        float
-            Current training loss.
-
-        """
-        return self.running_training_loss
 
     @classmethod
     def load(cls, *args, rethrow=False, **kwargs):

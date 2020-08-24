@@ -49,8 +49,9 @@ cdef our_saxpy_ptr our_saxpy
 
 
 cdef struct Word2VecConfig:
-    int hs, negative, sample, compute_loss, size, window, cbow_mean, workers
-    REAL_t running_training_loss, alpha
+    int hs, negative, sample, size, window, cbow_mean, workers
+    REAL_t alpha
+    np.float64_t minibatch_loss
 
     REAL_t *syn0
     REAL_t *words_lockf
@@ -96,7 +97,7 @@ cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil
 
 
 cdef unsigned long long w2v_fast_sentence_sg_neg(
@@ -104,7 +105,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil
 
 
 cdef void w2v_fast_sentence_cbow_hs(
@@ -112,7 +113,7 @@ cdef void w2v_fast_sentence_cbow_hs(
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil
 
 
 cdef unsigned long long w2v_fast_sentence_cbow_neg(
@@ -120,7 +121,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil
 
 
-cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)
+cdef init_w2v_config(Word2VecConfig *c, model, alpha, _work, _neu1=*)

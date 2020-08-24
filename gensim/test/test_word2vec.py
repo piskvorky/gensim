@@ -1010,11 +1010,11 @@ class TestWord2VecModel(unittest.TestCase):
         model.reset_from(other_model)
         self.assertEqual(model.wv.key_to_index, other_model.wv.key_to_index)
 
-    def test_compute_training_loss(self):
+    def test_epoch_loss(self):
         model = word2vec.Word2Vec(min_count=1, sg=1, negative=5, hs=1)
         model.build_vocab(sentences)
-        model.train(sentences, compute_loss=True, total_examples=model.corpus_count, epochs=model.epochs)
-        training_loss_val = model.get_latest_training_loss()
+        model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
+        training_loss_val = model.epoch_loss
         self.assertTrue(training_loss_val > 0.0)
 
 

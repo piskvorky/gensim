@@ -75,7 +75,7 @@ cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil:
     """Train on a single effective word from the current batch, using the Skip-Gram model.
 
     In this model we are using a given word to predict a context word (a word that is
@@ -104,9 +104,7 @@ cdef void w2v_fast_sentence_sg_hs(
         Private working memory for each worker.
     words_lockf
         Lock factors for each word. A value of 0 will block training.
-    _compute_loss
-        Whether or not the loss should be computed at this step.
-    _running_training_loss_param
+    minibatch_loss_ptr
         Running loss, used to debug or inspect how training progresses.
 
     """
@@ -124,13 +122,13 @@ cdef void w2v_fast_sentence_sg_hs(
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
 
-        if _compute_loss == 1:
-            sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
-            lprob = -1*sgn*f_dot
-            if lprob <= -MAX_EXP or lprob >= MAX_EXP:
-                continue
-            lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            _running_training_loss_param[0] = _running_training_loss_param[0] - lprob
+        # tally loss
+        sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
+        lprob = -1*sgn*f_dot
+        if lprob <= -MAX_EXP or lprob >= MAX_EXP:
+            continue
+        lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        minibatch_loss_ptr[0] = minibatch_loss_ptr[0] - lprob
 
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1[row2], &ONE)
@@ -161,7 +159,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil:
     """Train on a single effective word from the current batch, using the Skip-Gram model.
 
     In this model we are using a given word to predict a context word (a word that is
@@ -195,9 +193,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
         Seed to produce the index for the next word to be randomly sampled.
     words_lockf
         Lock factors for each word. A value of 0 will block training.
-    _compute_loss
-        Whether or not the loss should be computed at this step.
-    _running_training_loss_param
+    minibatch_loss_ptr
         Running loss, used to debug or inspect how training progresses.
 
     Returns
@@ -232,12 +228,12 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
 
-        if _compute_loss == 1:
-            f_dot = (f_dot if d == 0  else -f_dot)
-            if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
-                continue
-            log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            _running_training_loss_param[0] = _running_training_loss_param[0] - log_e_f_dot
+        # tally loss
+        f_dot = (f_dot if d == 0  else -f_dot)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
+            continue
+        log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        minibatch_loss_ptr[0] = minibatch_loss_ptr[0] - log_e_f_dot
 
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
@@ -252,7 +248,7 @@ cdef void w2v_fast_sentence_cbow_hs(
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *words_lockf, const np.uint32_t lockf_len,
-    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    np.float64_t *minibatch_loss_ptr) nogil:
     """Train on a single effective word from the current batch, using the CBOW method.
 
     Using this method we train the trainable neural network by attempting to predict a
@@ -291,9 +287,7 @@ cdef void w2v_fast_sentence_cbow_hs(
         If 0, use the sum of the context word vectors as the prediction. If 1, use the mean.
     words_lockf
         Lock factors for each word. A value of 0 will block training.
-    _compute_loss
-        Whether or not the loss should be computed at this step.
-    _running_training_loss_param
+    minibatch_loss_ptr
         Running loss, used to debug or inspect how training progresses.
 
     """
@@ -324,13 +318,13 @@ cdef void w2v_fast_sentence_cbow_hs(
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (1 - word_code[b] - f) * alpha
 
-        if _compute_loss == 1:
-            sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
-            lprob = -1*sgn*f_dot
-            if lprob <= -MAX_EXP or lprob >= MAX_EXP:
-                continue
-            lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            _running_training_loss_param[0] = _running_training_loss_param[0] - lprob
+        # tally loss
+        sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
+        lprob = -1*sgn*f_dot
+        if lprob <= -MAX_EXP or lprob >= MAX_EXP:
+            continue
+        lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        minibatch_loss_ptr[0] = minibatch_loss_ptr[0] - lprob
 
         our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
@@ -350,7 +344,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const np.uint32_t lockf_len, np.float64_t *minibatch_loss_ptr) nogil:
     """Train on a single effective word from the current batch, using the CBOW method.
 
     Using this method we train the trainable neural network by attempting to predict a
@@ -394,9 +388,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
         Seed for the drawing the predicted word for the next iteration of the same routine.
     words_lockf
         Lock factors for each word. A value of 0 will block training.
-    _compute_loss
-        Whether or not the loss should be computed at this step.
-    _running_training_loss_param
+    minibatch_loss_ptr
         Running loss, used to debug or inspect how training progresses.
 
     """
@@ -442,12 +434,12 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
         g = (label - f) * alpha
 
-        if _compute_loss == 1:
-            f_dot = (f_dot if d == 0  else -f_dot)
-            if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
-                continue
-            log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-            _running_training_loss_param[0] = _running_training_loss_param[0] - log_e_f_dot
+        # tally loss
+        f_dot = (f_dot if d == 0  else -f_dot)
+        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
+            continue
+        log_e_f_dot = LOG_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        minibatch_loss_ptr[0] = minibatch_loss_ptr[0] - log_e_f_dot
 
         our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
         our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
@@ -464,7 +456,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     return next_random
 
 
-cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=None):
+cdef init_w2v_config(Word2VecConfig *c, model, alpha, _work, _neu1=None):
     c[0].hs = model.hs
     c[0].negative = model.negative
     c[0].sample = (model.sample != 0)
@@ -472,8 +464,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
     c[0].window = model.window
     c[0].workers = model.workers
 
-    c[0].compute_loss = (1 if compute_loss else 0)
-    c[0].running_training_loss = model.running_training_loss
+    c[0].minibatch_loss = 0.0
 
     c[0].syn0 = <REAL_t *>(np.PyArray_DATA(model.wv.vectors))
     c[0].words_lockf = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_lockf))
@@ -498,7 +489,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-def train_batch_sg(model, sentences, alpha, _work, compute_loss):
+def train_batch_sg(model, sentences, alpha, _work):
     """Update skip-gram model by training on a batch of sentences.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -513,8 +504,6 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
         The learning rate
     _work : np.ndarray
         Private working memory for each worker.
-    compute_loss : bool
-        Whether or not the training loss should be computed in this batch.
 
     Returns
     -------
@@ -529,7 +518,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     cdef int sent_idx, idx_start, idx_end
     cdef np.uint32_t *vocab_sample_ints
 
-    init_w2v_config(&c, model, alpha, compute_loss, _work)
+    init_w2v_config(&c, model, alpha, _work)
     if c.sample:
         vocab_sample_ints = <np.uint32_t *>np.PyArray_DATA(model.wv.expandos['sample_int'])
     if c.hs:
@@ -585,15 +574,14 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
                     if j == i:
                         continue
                     if c.hs:
-                        w2v_fast_sentence_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.alpha, c.work, c.words_lockf, c.words_lockf_len, c.compute_loss, &c.running_training_loss)
+                        w2v_fast_sentence_sg_hs(c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j], c.alpha, c.work, c.words_lockf, c.words_lockf_len, &c.minibatch_loss)
                     if c.negative:
-                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.words_lockf, c.words_lockf_len, c.compute_loss, &c.running_training_loss)
-
-    model.running_training_loss = c.running_training_loss
+                        c.next_random = w2v_fast_sentence_sg_neg(c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size, c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.words_lockf, c.words_lockf_len, &c.minibatch_loss)
+    model.epoch_loss += c.minibatch_loss
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
+def train_batch_cbow(model, sentences, alpha, _work, _neu1):
     """Update CBOW model by training on a batch of sentences.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -610,8 +598,6 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
         Private working memory for each worker.
     _neu1 : np.ndarray
         Private working memory for each worker.
-    compute_loss : bool
-        Whether or not the training loss should be computed in this batch.
 
     Returns
     -------
@@ -625,7 +611,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     cdef int sent_idx, idx_start, idx_end
     cdef np.uint32_t *vocab_sample_ints
 
-    init_w2v_config(&c, model, alpha, compute_loss, _work, _neu1)
+    init_w2v_config(&c, model, alpha, _work, _neu1)
     if c.sample:
         vocab_sample_ints = <np.uint32_t *>np.PyArray_DATA(model.wv.expandos['sample_int'])
     if c.hs:
@@ -678,11 +664,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
                 if k > idx_end:
                     k = idx_end
                 if c.hs:
-                    w2v_fast_sentence_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.words_lockf, c.words_lockf_len, c.compute_loss, &c.running_training_loss)
+                    w2v_fast_sentence_cbow_hs(c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.words_lockf, c.words_lockf_len, &c.minibatch_loss)
                 if c.negative:
-                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.words_lockf, c.words_lockf_len, c.compute_loss, &c.running_training_loss)
+                    c.next_random = w2v_fast_sentence_cbow_neg(c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0, c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean, c.next_random, c.words_lockf, c.words_lockf_len, &c.minibatch_loss)
 
-    model.running_training_loss = c.running_training_loss
+    model.epoch_loss += c.minibatch_loss
     return effective_words
 
 
