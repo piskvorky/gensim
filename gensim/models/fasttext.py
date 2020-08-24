@@ -1038,6 +1038,12 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         window=m.ws,
         epochs=m.epoch,
         negative=m.neg,
+        # FIXME: these next 2 lines read in unsupported FB FT modes (loss=3 softmax or loss=4 onevsall,
+        # or model=3 supervised) possibly creating inconsistent gensim model likely to fail later. Displaying
+        # clear error/warning with explanatory message would be far better - even if there might be some reason
+        # to continue with the load - such as providing read-only access to word-vectors trained those ways. (See:
+        # https://github.com/facebookresearch/fastText/blob/2cc7f54ac034ae320a9af784b8145c50cc68965c/src/args.h#L19
+        # for FB FT mode definitions.)
         hs=int(m.loss == 1),
         sg=int(m.model == 2),
         bucket=m.bucket,
