@@ -604,7 +604,7 @@ class DtmModel(utils.SaveLoad):
         """
         coherence_topics = []
         for topic_no in range(0, self.num_topics):
-            topic = self.show_topic(topicid=topic_no, time=time, num_words=num_words)
+            topic = self.show_topic(topicid=topic_no, time=time, topn=num_words)
             coherence_topic = []
             for prob, word in topic:
                 coherence_topic.append(word)
