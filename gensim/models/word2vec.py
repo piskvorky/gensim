@@ -323,6 +323,7 @@ class Word2Vec(utils.SaveLoad):
         self.ns_exponent = ns_exponent
         self.cbow_mean = int(cbow_mean)
         self.epoch_loss = 0.0
+        self.epoch_loss_history = []
         self.min_alpha_yet_reached = float(alpha)
         self.corpus_count = 0
         self.corpus_total_words = 0
@@ -952,7 +953,7 @@ class Word2Vec(utils.SaveLoad):
             total_examples=total_examples,
             total_words=total_words)
 
-        self.epoch_loss = 0.0
+        self.epoch_loss_history = []
 
         for callback in callbacks:
             callback.on_train_begin(self)
@@ -963,6 +964,7 @@ class Word2Vec(utils.SaveLoad):
         job_tally = 0
 
         for cur_epoch in range(self.epochs):
+            self.epoch_loss = 0.0
             for callback in callbacks:
                 callback.on_epoch_begin(self)
 
@@ -980,6 +982,7 @@ class Word2Vec(utils.SaveLoad):
             raw_word_count += raw_word_count_epoch
             job_tally += job_tally_epoch
 
+            self.epoch_loss_history.append(self.epoch_loss)
             for callback in callbacks:
                 callback.on_epoch_end(self)
 
