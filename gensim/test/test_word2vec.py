@@ -654,7 +654,7 @@ class TestWord2VecModel(unittest.TestCase):
                 method_fn(ranks=ranks)
             except Exception as ex:
                 print('%s failed: %s' % (method_name, ex))
-                failures = failures + 1
+                failures += 1
         print(ranks)
         print(np.mean(ranks))
         self.assertEquals(failures, 0, "too many failures")
