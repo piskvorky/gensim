@@ -1129,7 +1129,7 @@ class Word2Vec(utils.SaveLoad):
                     # words-based decay
                     pushed_words += self._raw_word_count(job_batch)
                     epoch_progress = 1.0 * pushed_words / total_words
-                next_alpha = self._update_alpha(epoch_progress, cur_epoch)
+                next_alpha = self._update_alpha(next_alpha, epoch_progress, cur_epoch)
 
                 # add the sentence that didn't fit as the first item of a new job
                 job_batch, batch_size = [data], data_length
@@ -1359,11 +1359,13 @@ class Word2Vec(utils.SaveLoad):
         alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
         return alpha
 
-    def _update_alpha(self, epoch_progress, cur_epoch):
+    def _update_alpha(self, alpha, epoch_progress, cur_epoch):
         """Get the correct learning rate for the next iteration.
 
         Parameters
         ----------
+        alpha : float
+            UNUSED.
         epoch_progress : float
             Ratio of finished work in the current epoch.
         cur_epoch : int
