@@ -251,7 +251,7 @@ cdef REAL_t get_next_alpha(
 
 
 def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                   _neu1, compute_loss):
+                   _neu1):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -268,8 +268,6 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
         Private working memory for each worker.
     _neu1 : np.ndarray
         Private working memory for each worker.
-    compute_loss : bool
-        Whether or not the training loss should be computed in this batch.
 
     Returns
     -------
@@ -297,7 +295,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_w2v_config(&c, model, _alpha, compute_loss, _work)
+    init_w2v_config(&c, model, _alpha, _work)
 
     cdef vector[vector[string]] sentences
 
@@ -330,14 +328,14 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                         if c.hs:
                             w2v_fast_sentence_sg_hs(
                                 c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j],
-                                c.alpha, c.work, c.words_lockf, c.words_lockf_len, c.compute_loss,
-                                &c.running_training_loss)
+                                c.alpha, c.work, c.words_lockf, c.words_lockf_len,
+                                &c.minibatch_loss)
                         if c.negative:
                             c.next_random = w2v_fast_sentence_sg_neg(
                                 c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size,
                                 c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random,
                                 c.words_lockf, c.words_lockf_len,
-                                c.compute_loss, &c.running_training_loss)
+                                &c.minibatch_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
@@ -346,12 +344,12 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                 start_alpha, end_alpha, total_sentences, total_words,
                 expected_examples, expected_words, cur_epoch, num_epochs)
 
-    model.running_training_loss = c.running_training_loss
+    model.epoch_loss += c.minibatch_loss
     return total_sentences, total_effective_words, total_words
 
 
 def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                     _neu1, compute_loss):
+                     _neu1):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -368,8 +366,6 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
         Private working memory for each worker.
     _neu1 : np.ndarray
         Private working memory for each worker.
-    compute_loss : bool
-        Whether or not the training loss should be computed in this batch.
 
     Returns
     -------
@@ -397,7 +393,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
 
-    init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)
+    init_w2v_config(&c, model, _alpha, _work, _neu1)
 
     cdef vector[vector[string]] sentences
 
@@ -427,15 +423,15 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                     if c.hs:
                         w2v_fast_sentence_cbow_hs(
                             c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha,
-                            c.work, i, j, k, c.cbow_mean, c.words_lockf, c.words_lockf_len, c.compute_loss,
-                            &c.running_training_loss)
+                            c.work, i, j, k, c.cbow_mean, c.words_lockf, c.words_lockf_len,
+                            &c.minibatch_loss)
 
                     if c.negative:
                         c.next_random = w2v_fast_sentence_cbow_neg(
                             c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0,
                             c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean,
-                            c.next_random, c.words_lockf, c.words_lockf_len, c.compute_loss,
-                            &c.running_training_loss)
+                            c.next_random, c.words_lockf, c.words_lockf_len,
+                            &c.minibatch_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words
@@ -444,7 +440,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                 start_alpha, end_alpha, total_sentences, total_words,
                 expected_examples, expected_words, cur_epoch, num_epochs)
 
-    model.running_training_loss = c.running_training_loss
+    model.epoch_loss += c.minibatch_loss
     return total_sentences, total_effective_words, total_words
 
 
