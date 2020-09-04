@@ -1105,7 +1105,7 @@ class Word2Vec(utils.SaveLoad):
         """
         job_batch, batch_size = [], 0
         pushed_words, pushed_examples = 0, 0
-        next_alpha = self._get_current_alpha(cur_epoch)
+        next_alpha = self._get_next_alpha(0.0, cur_epoch)
         job_no = 0
 
         for data_idx, data in enumerate(data_iterator):
@@ -1129,7 +1129,7 @@ class Word2Vec(utils.SaveLoad):
                     # words-based decay
                     pushed_words += self._raw_word_count(job_batch)
                     epoch_progress = 1.0 * pushed_words / total_words
-                next_alpha = self._update_alpha(next_alpha, epoch_progress, cur_epoch)
+                next_alpha = self._get_next_alpha(epoch_progress, cur_epoch)
 
                 # add the sentence that didn't fit as the first item of a new job
                 job_batch, batch_size = [data], data_length
@@ -1342,30 +1342,11 @@ class Word2Vec(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def _get_current_alpha(self, cur_epoch):
-        """Get the learning rate used in the current epoch.
-
-        Parameters
-        ----------
-        cur_epoch : int
-            Current iteration through the corpus
-
-        Returns
-        -------
-        float
-            The learning rate for this epoch (it is linearly reduced with epochs from `self.alpha` to `self.min_alpha`).
-
-        """
-        alpha = self.alpha - ((self.alpha - self.min_alpha) * float(cur_epoch) / self.epochs)
-        return alpha
-
-    def _update_alpha(self, alpha, epoch_progress, cur_epoch):
+    def _get_next_alpha(self, epoch_progress, cur_epoch):
         """Get the correct learning rate for the next iteration.
 
         Parameters
         ----------
-        alpha : float
-            UNUSED.
         epoch_progress : float
             Ratio of finished work in the current epoch.
         cur_epoch : int
