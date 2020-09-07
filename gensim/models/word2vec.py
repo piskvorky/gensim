@@ -1819,7 +1819,7 @@ class Word2Vec(utils.SaveLoad):
         super(Word2Vec, self).save(*args, **kwargs)
 
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
-        """Arrange any special handling for the gensim.utils.SaveLoad protocol"""
+        """Arrange any special handling for the `gensim.utils.SaveLoad` protocol."""
         # don't save properties that are merely calculated from others
         ignore = set(it.chain(ignore, ('cum_table',)))
         return super(Word2Vec, self)._save_specials(

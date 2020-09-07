@@ -1218,8 +1218,10 @@ class FastTextKeyedVectors(KeyedVectors):
         if not isinstance(self, FastTextKeyedVectors):
             raise TypeError("Loaded object of type %s, not expected FastTextKeyedVectors" % type(self))
         if not hasattr(self, 'compatible_hash') or self.compatible_hash is False:
-            raise TypeError("Pre-gensim-3.8.x Fasttext models with nonstandard hashing are no longer compatible."
-                            "Loading into gensim-3.8.3 & re-saving may create a compatible model.")
+            raise TypeError(
+                "Pre-gensim-3.8.x fastText models with nonstandard hashing are no longer compatible. "
+                "Loading your old model into gensim-3.8.3 & re-saving may create a model compatible with gensim 4.x."
+            )
         if not hasattr(self, 'vectors_vocab_lockf') and hasattr(self, 'vectors_vocab'):
             self.vectors_vocab_lockf = ones(1, dtype=REAL)
         if not hasattr(self, 'vectors_ngrams_lockf') and hasattr(self, 'vectors_ngrams'):
