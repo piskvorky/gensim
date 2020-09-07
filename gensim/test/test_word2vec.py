@@ -11,6 +11,7 @@ from __future__ import division
 
 import logging
 import unittest
+import pytest
 import os
 import bz2
 import sys
@@ -355,7 +356,7 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True)
         norm_only_model.unit_normalize_all()
         self.assertFalse(np.allclose(model.wv['human'], norm_only_model['human']))
-        self.assertTrue(np.allclose(model.wv.get_vector('human', use_norm=True), norm_only_model['human']))
+        self.assertTrue(np.allclose(model.wv.get_vector('human', norm=True), norm_only_model['human']))
         limited_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, binary=True, limit=3)
         self.assertEqual(len(limited_model_kv.vectors), 3)
         half_precision_model_kv = keyedvectors.KeyedVectors.load_word2vec_format(
@@ -401,7 +402,7 @@ class TestWord2VecModel(unittest.TestCase):
         norm_only_model.unit_normalize_all()
         self.assertFalse(np.allclose(model.wv['human'], norm_only_model['human'], atol=1e-6))
         self.assertTrue(np.allclose(
-            model.wv.get_vector('human', use_norm=True), norm_only_model['human'], atol=1e-4
+            model.wv.get_vector('human', norm=True), norm_only_model['human'], atol=1e-4
         ))
 
     def testPersistenceWord2VecFormatWithVocab(self):
@@ -489,7 +490,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -516,7 +517,7 @@ class TestWord2VecModel(unittest.TestCase):
             # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
             # test querying for "most similar" by vector
-            graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+            graph_vector = model.wv.get_vector('graph', norm=True)
             sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
             sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
             self.assertEqual(sims, sims2)
@@ -589,7 +590,7 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertTrue(0.1 < spearman < 1.0, "spearman %f not between 0.1 and 1.0" % spearman)
             self.assertTrue(0.0 <= oov < 90.0, "oov %f not between 0.0 and 90.0" % oov)
 
-    def model_sanity(self, model, train=True, with_corpus_file=False):
+    def model_sanity(self, model, train=True, with_corpus_file=False, ranks=None):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
         # run extra before/after training tests if train=True
         if train:
@@ -603,14 +604,18 @@ class TestWord2VecModel(unittest.TestCase):
             else:
                 model.train(lee_corpus_list, total_examples=model.corpus_count, epochs=model.epochs)
             self.assertFalse((orig0 == model.wv.vectors[1]).all())  # vector should vary after training
-        sims = model.wv.most_similar('war', topn=len(model.wv.index2word))
-        t_rank = [word for word, score in sims].index('terrorism')
+        query_word = 'attacks'
+        expected_word = 'bombings'
+        sims = model.wv.most_similar(query_word, topn=len(model.wv.index2word))
+        t_rank = [word for word, score in sims].index(expected_word)
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
+        if ranks is not None:
+            ranks.append(t_rank)  # tabulate trial rank if requested
         self.assertLess(t_rank, 50)
-        war_vec = model.wv['war']
-        sims2 = model.wv.most_similar([war_vec], topn=51)
-        self.assertTrue('war' in [word for word, score in sims2])
-        self.assertTrue('terrorism' in [word for word, score in sims2])
+        query_vec = model.wv[query_word]
+        sims2 = model.wv.most_similar([query_vec], topn=51)
+        self.assertTrue(query_word in [word for word, score in sims2])
+        self.assertTrue(expected_word in [word for word, score in sims2])
 
     def test_sg_hs(self):
         """Test skipgram w/ hierarchical softmax"""
@@ -632,29 +637,51 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, epochs=10, workers=2)
         self.model_sanity(model, with_corpus_file=True)
 
-    def test_cbow_hs(self):
+    @pytest.mark.skipif('BULK_TEST_REPS' not in os.environ, reason="bulk test only occasionally run locally")
+    def test_method_in_bulk(self):
+        """Not run by default testing, but can be run locally to help tune stochastic aspects of tests
+        to very-very-rarely fail. EG:
+        % BULK_TEST_REPS=200 METHOD_NAME=test_cbow_hs pytest test_word2vec.py -k "test_method_in_bulk"
+        Method must accept `ranks` keyword-argument, empty list into which salient internal result can be reported.
+        """
+        failures = 0
+        ranks = []
+        reps = int(os.environ['BULK_TEST_REPS'])
+        method_name = os.environ.get('METHOD_NAME', 'test_cbow_hs')  # by default test that specially-troublesome one
+        method_fn = getattr(self, method_name)
+        for i in range(reps):
+            try:
+                method_fn(ranks=ranks)
+            except Exception as ex:
+                print('%s failed: %s' % (method_name, ex))
+                failures += 1
+        print(ranks)
+        print(np.mean(ranks))
+        self.assertEquals(failures, 0, "too many failures")
+
+    def test_cbow_hs(self, ranks=None):
         """Test CBOW w/ hierarchical softmax"""
         model = word2vec.Word2Vec(
-            sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
-            min_count=5, epochs=20, workers=2, batch_words=1000
+            sg=0, cbow_mean=1, alpha=0.1, window=2, hs=1, negative=0,
+            min_count=5, epochs=60, workers=2, batch_words=1000
         )
-        self.model_sanity(model)
+        self.model_sanity(model, ranks=ranks)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_cbow_hs_fromfile(self):
         model = word2vec.Word2Vec(
-            sg=0, cbow_mean=1, alpha=0.05, window=8, hs=1, negative=0,
-            min_count=5, epochs=20, workers=2, batch_words=1000
+            sg=0, cbow_mean=1, alpha=0.1, window=2, hs=1, negative=0,
+            min_count=5, epochs=60, workers=2, batch_words=1000
         )
         self.model_sanity(model, with_corpus_file=True)
 
-    def test_cbow_neg(self):
+    def test_cbow_neg(self, ranks=None):
         """Test CBOW w/ negative sampling"""
         model = word2vec.Word2Vec(
             sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
             min_count=5, epochs=10, workers=2, sample=0
         )
-        self.model_sanity(model)
+        self.model_sanity(model, ranks=ranks)
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_cbow_neg_fromfile(self):
@@ -670,7 +697,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar_cosmul(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -689,7 +716,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -712,7 +739,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)
@@ -735,7 +762,7 @@ class TestWord2VecModel(unittest.TestCase):
         # self.assertTrue(sims[0][0] == 'trees', sims)  # most similar
 
         # test querying for "most similar" by vector
-        graph_vector = model.wv.vectors_norm[model.wv.get_index('graph')]
+        graph_vector = model.wv.get_vector('graph', norm=True)
         sims2 = model.wv.most_similar(positive=[graph_vector], topn=11)
         sims2 = [(w, sim) for w, sim in sims2 if w != 'graph']  # ignore 'graph' itself
         self.assertEqual(sims, sims2)

@@ -50,6 +50,7 @@ Modules:
     models/_fasttext_bin
     models/phrases
     models/poincare
+    viz/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
@@ -63,7 +64,8 @@ Modules:
     models/wrappers/varembed
     similarities/docsim
     similarities/termsim
-    similarities/index
+    similarities/annoy
+    similarities/nmslib
     sklearn_api/atmodel
     sklearn_api/d2vmodel
     sklearn_api/hdp
@@ -102,4 +104,3 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
-    viz/poincare

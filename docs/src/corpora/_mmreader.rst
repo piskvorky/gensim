@@ -1,5 +1,5 @@
-:mod:`corpora._mmreader` -- Reader for corpus in the Matrix Market format.
-==========================================================================
+:mod:`corpora._mmreader` -- Read corpus in the Matrix Market format
+===================================================================
 
 .. automodule:: gensim.corpora._mmreader
     :synopsis: Reader for corpus in the Matrix Market format.
