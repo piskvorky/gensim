@@ -133,21 +133,15 @@ from types import GeneratorType
 import threading
 import itertools as it
 import copy
-
-from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
-from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
-
-try:
-    from queue import Queue, Empty
-except ImportError:
-    from Queue import Queue, Empty
+from queue import Queue, Empty
 
 from numpy import float32 as REAL
 import numpy as np
 
-from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from six import iteritems, itervalues, string_types
-from six.moves import range
+from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
+from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
+from gensim import utils, matutils
+
 
 logger = logging.getLogger(__name__)
 
@@ -371,7 +365,7 @@ class Word2Vec(utils.SaveLoad):
     def build_vocab_and_train(self, corpus_iterable=None, corpus_file=None, trim_rule=None, callbacks=None):
         if not (corpus_iterable is None) ^ (corpus_file is None):
             raise ValueError("You must provide only one of corpus_iterable or corpus_file arguments.")
-        if corpus_file is not None and not isinstance(corpus_file, string_types):
+        if corpus_file is not None and not isinstance(corpus_file, str):
             raise TypeError("You must pass string as the corpus_file argument.")
         elif isinstance(corpus_iterable, GeneratorType):
             raise TypeError("You can't pass a generator as the sentences argument. Try a sequence.")
@@ -464,7 +458,7 @@ class Word2Vec(utils.SaveLoad):
         raw_vocab = word_freq
         logger.info(
             "collected %i different raw word, with total frequency of %i",
-            len(raw_vocab), sum(itervalues(raw_vocab))
+            len(raw_vocab), sum(raw_vocab.values()),
         )
 
         # Since no sentences are provided, this is to control the corpus_count.
@@ -484,11 +478,11 @@ class Word2Vec(utils.SaveLoad):
         checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
-                if isinstance(sentence, string_types):
+                if isinstance(sentence, str):
                     logger.warning(
                         "Each 'sentences' item should be a list of words (usually unicode strings). "
                         "First item here is instead plain %s.",
-                        type(sentence)
+                        type(sentence),
                     )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
@@ -570,7 +564,7 @@ class Word2Vec(utils.SaveLoad):
                 self.sample = sample
                 self.wv.key_to_index = {}
 
-            for word, v in iteritems(self.raw_vocab):
+            for word, v in self.raw_vocab.items():
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     retain_words.append(word)
                     retain_total += v
@@ -600,7 +594,7 @@ class Word2Vec(utils.SaveLoad):
             logger.info("Updating model with new vocabulary")
             new_total = pre_exist_total = 0
             new_words = pre_exist_words = []
-            for word, v in iteritems(self.raw_vocab):
+            for word, v in self.raw_vocab.items():
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     if self.wv.has_index_for(word):
                         pre_exist_words.append(word)
