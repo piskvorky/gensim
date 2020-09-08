@@ -45,7 +45,14 @@ Initialize a model with e.g.:
     >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
     >>> model.save("word2vec.model")
 
-`common_texts` is a list of lists of strings, where each list is a document.
+
+The training is streamed, so `sentences` can be an iterable, reading input data
+from disk on-the-fly. This lets you avoid loading the entire corpus into RAM.
+However, note that because the iterable must be re-startable, `sentences` must
+not be a generator. For an example of an appropriate iterator see
+:class:`~gensim.models.word2vec.BrownCorpus`,
+:class:`~gensim.models.word2vec.Text8Corpus` or
+:class:`~gensim.models.word2vec.LineSentence`.
 
 If you save the model you can continue training it later:
 
