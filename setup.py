@@ -280,13 +280,6 @@ core_testenv = [
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req + ['pyemd', ]
-if sys.version_info >= (3, 7):
-    # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
-    # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
-    linux_testenv += [
-        'tensorflow',
-        'keras==2.3.1',
-    ]
 
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
