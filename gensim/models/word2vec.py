@@ -39,18 +39,15 @@ Initialize a model with e.g.:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.test.utils import common_texts
     >>> from gensim.models import Word2Vec
-    >>>
-    >>> path = get_tmpfile("word2vec.model")
     >>>
     >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
     >>> model.save("word2vec.model")
 
-The training is streamed, meaning `sentences` can be a generator, reading input data
-from disk on-the-fly, without loading the entire corpus into RAM.
+`common_texts` is a list of lists of strings, where each list is a document.
 
-It also means you can continue training the model later:
+If you save the model you can continue training it later:
 
 .. sourcecode:: pycon
 
