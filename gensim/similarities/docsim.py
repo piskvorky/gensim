@@ -931,13 +931,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             A term similarity index that computes cosine similarities between word embeddings.
 
         """
-        if scipy.sparse.issparse(similarity_matrix):
-            logger.warn(
-                "Support for passing an unencapsulated sparse matrix will be removed in 4.0.0, pass "
-                "a SparseTermSimilarityMatrix instance instead")
-            self.similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix)
-        else:
-            self.similarity_matrix = similarity_matrix
+        self.similarity_matrix = similarity_matrix
 
         self.corpus = corpus
         self.num_best = num_best

@@ -457,8 +457,6 @@ class SparseTermSimilarityMatrix(SaveLoad):
         sparse term similarity matrix. If None, then no limit will be imposed.
     dtype : numpy.dtype, optional
         The data type of the sparse term similarity matrix.
-    positive_definite: bool or None, optional
-        A deprecated alias for dominant.
 
     Attributes
     ----------
@@ -472,14 +470,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
     """
     def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,
-            nonzero_limit=100, dtype=np.float32, positive_definite=None):
-
-        if positive_definite is not None:
-            warnings.warn(
-                'Parameter positive_definite will be removed in 4.0.0, use dominant instead',
-                category=DeprecationWarning,
-            )
-            dominant = positive_definite
+            nonzero_limit=100, dtype=np.float32):
 
         if not sparse.issparse(source):
             index = source
@@ -528,14 +519,6 @@ class SparseTermSimilarityMatrix(SaveLoad):
         """
         if not X or not Y:
             return self.matrix.dtype.type(0.0)
-
-        if normalized in (True, False):
-            warnings.warn(
-                'Boolean parameter normalized will be removed in 4.0.0, use '
-                'normalized=(%s, %s) instead of normalized=%s' % tuple([normalized] * 3),
-                category=DeprecationWarning,
-            )
-            normalized = (normalized, normalized)
 
         normalized_X, normalized_Y = normalized
         valid_normalized_values = (True, False, 'maintain')
