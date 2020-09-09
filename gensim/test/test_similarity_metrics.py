@@ -13,7 +13,7 @@ import logging
 import unittest
 
 from gensim import matutils
-from scipy.sparse import csr_matrix, csc_matrix
+from scipy.sparse import csr_matrix
 import numpy as np
 import math
 from gensim.corpora.mmcorpus import MmCorpus

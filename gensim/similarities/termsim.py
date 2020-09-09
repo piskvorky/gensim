@@ -12,7 +12,6 @@ from array import array
 from itertools import chain
 import logging
 from math import sqrt
-import warnings
 
 import numpy as np
 from six.moves import range

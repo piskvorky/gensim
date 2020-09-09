@@ -9,12 +9,10 @@
 from __future__ import with_statement
 
 
-from itertools import chain
 import logging
 import math
 
 from gensim import utils
-from gensim.utils import deprecated
 
 import numpy as np
 import scipy.sparse

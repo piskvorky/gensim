@@ -77,7 +77,6 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from .termsim import SparseTermSimilarityMatrix
 from six.moves import map, range, zip
 
 
