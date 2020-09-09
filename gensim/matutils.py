@@ -191,9 +191,9 @@ def pad(mat, padrow, padcol):
     if padcol < 0:
         padcol = 0
     rows, cols = mat.shape
-    return np.bmat([
-        [mat, np.matrix(np.zeros((rows, padcol)))],
-        [np.matrix(np.zeros((padrow, cols + padcol)))],
+    return np.block([
+        [mat, np.zeros((rows, padcol))],
+        [np.zeros((padrow, cols + padcol))],
     ])
 
 

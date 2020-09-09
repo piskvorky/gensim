@@ -1475,7 +1475,7 @@ class KeyedVectors(utils.SaveLoad):
                 row = self[key]
                 if binary:
                     row = row.astype(REAL)
-                    fout.write(utils.to_utf8(prefix + str(key)) + b" " + row.tostring())
+                    fout.write(utils.to_utf8(prefix + str(key)) + b" " + row.tobytes())
                 else:
                     fout.write(utils.to_utf8("%s%s %s\n" % (prefix, str(key), ' '.join(repr(val) for val in row))))
 

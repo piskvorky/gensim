@@ -236,7 +236,7 @@ class PhrasesCommon:
         bigram1_seen = False
         bigram2_seen = False
 
-        for s in self.bigram[np.array(self.sentences)]:
+        for s in self.bigram[np.array(self.sentences, dtype=object)]:
             if not bigram1_seen and self.bigram1 in s:
                 bigram1_seen = True
             if not bigram2_seen and self.bigram2 in s:

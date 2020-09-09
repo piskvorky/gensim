@@ -254,8 +254,7 @@ class Wordrank(KeyedVectors):
             If 1 - use ensemble of word and context vectors.
 
         """
-        glove2word2vec(model_file, model_file + '.w2vformat')
-        model = cls.load_word2vec_format('%s.w2vformat' % model_file)
+        model = cls.load_word2vec_format(model_file, binary=False, no_header=True)
         if ensemble and context_file:
             model.ensemble_embedding(model_file, context_file)
         if sorted_vocab and vocab_file:
