@@ -661,7 +661,8 @@ class Word2Vec(utils.SaveLoad):
         else:
             logger.info("Updating model with new vocabulary")
             new_total = pre_exist_total = 0
-            new_words = pre_exist_words = []
+            new_words = []
+            pre_exist_words = []
             for word, v in self.raw_vocab.items():
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     if self.wv.has_index_for(word):
