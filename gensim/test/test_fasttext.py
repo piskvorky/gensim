@@ -701,6 +701,18 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         self.assertEqual(len(model_neg.wv), 14)
 
+    def test_online_learning_through_ft_format_saves(self):
+        tmpf = get_tmpfile('gensim_ft_format.tst')
+        model = FT_gensim(sentences, vector_size=12, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
+        gensim.models.fasttext.save_facebook_model(model, tmpf)
+        model_reload = gensim.models.fasttext.load_facebook_model(tmpf)
+        self.assertTrue(len(model_reload.wv), 12)
+        model_reload.build_vocab(new_sentences, update=True)  # update vocab
+        model_reload.train(new_sentences, total_examples=model_reload.corpus_count, epochs=model_reload.epochs)
+        self.assertEqual(len(model_reload.wv), 14)
+        tmpf2 = get_tmpfile('gensim_ft_format2.tst')
+        gensim.models.fasttext.save_facebook_model(model_reload, tmpf2)
+
     def test_online_learning_after_save_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
