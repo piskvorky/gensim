@@ -18,7 +18,8 @@ from gensim import utils
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, _unpack
 from gensim.models.keyedvectors import KeyedVectors
-from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
+from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences, \
+    lee_corpus_list as list_corpus
 from gensim.test.test_word2vec import TestWord2VecModel
 import gensim.models._fasttext_bin
 from gensim.models.fasttext_inner import compute_ngrams, compute_ngrams_bytes, ft_hash_bytes
@@ -43,15 +44,6 @@ BUCKET = 10000
 FT_HOME = os.environ.get("FT_HOME")
 FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
 
-
-class LeeCorpus(object):
-    def __iter__(self):
-        with open(datapath('lee_background.cor')) as f:
-            for line in f:
-                yield utils.simple_preprocess(line)
-
-
-list_corpus = list(LeeCorpus())
 
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],
