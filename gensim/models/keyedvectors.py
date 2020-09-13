@@ -395,9 +395,8 @@ class KeyedVectors(utils.SaveLoad):
         Warning: using this repeatedly is inefficient, requiring a full reallocation & copy,
         if this instance hasn't been preallocated to be ready fro such incremental additions.
 
-        returns: actual index used TODO: other param docs
+        returns: actual index used FIXME: other param docs
         """
-
         target_index = self.next_index
         if target_index >= len(self) or self.index_to_key[target_index] is not None:
             # must append at end by expanding existing structures
@@ -1588,47 +1587,8 @@ class KeyedVectors(utils.SaveLoad):
                         self.vectors_lockf[self.get_index(word)] = lockf  # lock-factor: 0.0=no changes
         logger.info("merged %d vectors into %s matrix from %s", overlap_count, self.wv.vectors.shape, fname)
 
-    def get_keras_embedding(self, train_embeddings=False):
-        """Get a Keras 'Embedding' layer with weights set as the Word2Vec model's learned word embeddings.
-
-        Parameters
-        ----------
-        train_embeddings : bool
-            If False, the weights are frozen and stopped from being updated.
-            If True, the weights can/will be further trained/updated.
-
-        Returns
-        -------
-        `keras.layers.Embedding`
-            Embedding layer.
-
-        Raises
-        ------
-        ImportError
-            If `Keras <https://pypi.org/project/Keras/>`_ not installed.
-
-        Warnings
-        --------
-        Current method work only if `Keras <https://pypi.org/project/Keras/>`_ installed.
-
-        """
-        try:
-            from keras.layers import Embedding
-        except ImportError:
-            raise ImportError("Please install Keras to use this function")
-        weights = self.vectors
-
-        # set `trainable` as `False` to use the pretrained word embedding
-        # No extra mem usage here as `Embedding` layer doesn't create any new matrix for weights
-        layer = Embedding(
-            input_dim=weights.shape[0], output_dim=weights.shape[1],
-            weights=[weights], trainable=train_embeddings
-        )
-        return layer
-
     def _upconvert_old_d2vkv(self):
         """Convert a deserialized older Doc2VecKeyedVectors instance to latest generic KeyedVectors"""
-
         self.vocab = self.doctags
         self._upconvert_old_vocab()  # destroys 'vocab', fills 'key_to_index' & 'extras'
         for k in self.key_to_index.keys():
@@ -1636,7 +1596,7 @@ class KeyedVectors(utils.SaveLoad):
             true_index = old_offset + self.max_rawint + 1
             self.key_to_index[k] = true_index
         del self.expandos['offset']  # no longer needed
-        if(self.max_rawint > -1):
+        if self.max_rawint > -1:
             self.index_to_key = list(range(0, self.max_rawint + 1)) + self.offset2doctag
         else:
             self.index_to_key = self.offset2doctag
