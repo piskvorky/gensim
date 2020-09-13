@@ -395,9 +395,8 @@ class KeyedVectors(utils.SaveLoad):
         Warning: using this repeatedly is inefficient, requiring a full reallocation & copy,
         if this instance hasn't been preallocated to be ready fro such incremental additions.
 
-        returns: actual index used TODO: other param docs
+        returns: actual index used FIXME: other param docs
         """
-
         target_index = self.next_index
         if target_index >= len(self) or self.index_to_key[target_index] is not None:
             # must append at end by expanding existing structures
