@@ -286,6 +286,9 @@ class Doc2Vec(Word2Vec):
 
         self.vector_size = vector_size
         self.dv = dv or KeyedVectors(self.vector_size, mapfile_path=dv_mapfile)
+        # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+        # advanced users should directly resize/adjust as desired after any vocab growth
+        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
         super(Doc2Vec, self).__init__(
             sentences=corpus_iterable,
@@ -330,11 +333,9 @@ class Doc2Vec(Word2Vec):
         self.wv.norms = None
         self.dv.norms = None
 
-    def reset_weights(self):
-        super(Doc2Vec, self).reset_weights()
-        self.dv.resize_vectors()
-        self.dv.randomly_initialize_vectors()
-        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
+    def init_weights(self):
+        super(Doc2Vec, self).init_weights()
+        self.dv.resize_vectors(seed=self.seed)
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
@@ -359,7 +360,7 @@ class Doc2Vec(Word2Vec):
         self.dv.key_to_index = other_model.dv.key_to_index
         self.dv.index_to_key = other_model.dv.index_to_key
         self.dv.expandos = other_model.dv.expandos
-        self.reset_weights()
+        self.init_weights()
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):

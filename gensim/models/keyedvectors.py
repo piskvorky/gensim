@@ -337,34 +337,16 @@ class KeyedVectors(utils.SaveLoad):
         index = self.get_index(key)
         return self.expandos[attr][index]
 
-    def resize_vectors(self):
-        """Make underlying vectors match index_to_key size."""
-        target_count = len(self.index_to_key)
-        prev_count = len(self.vectors)
-        if prev_count == target_count:
-            return ()
-        prev_vectors = self.vectors
-        if hasattr(self, 'mapfile_path') and self.mapfile_path:
-            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
-        else:
-            self.vectors = np.zeros((target_count, self.vector_size), dtype=REAL)
-        self.vectors[0: min(prev_count, target_count), ] = prev_vectors[0: min(prev_count, target_count), ]
+    def resize_vectors(self, seed=0):
+        """Make underlying vectors match index_to_key size; random-initialize any new rows."""
+
+        target_shape = (len(self.index_to_key), self.vector_size)
+        self.vectors = prep_vectors(target_shape, prior_vectors=self.vectors, seed=seed)
+        # TODO: support memmap?
+#        if hasattr(self, 'mapfile_path') and self.mapfile_path:
+#            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
+
         self.allocate_vecattrs()
-        self.norms = None
-        return range(prev_count, target_count)
-
-    def randomly_initialize_vectors(self, indexes=None, seed=0):
-        """Initialize vectors with low-magnitude random vectors, as is typical for pre-trained
-        Word2Vec and related models.
-
-        """
-        if indexes is None:
-            indexes = range(0, len(self.vectors))
-        for i in indexes:
-            self.vectors[i] = pseudorandom_weak_vector(
-                self.vectors.shape[1],
-                seed_string=str(self.index_to_key[i]) + str(seed),
-            )
         self.norms = None
 
     def __len__(self):
@@ -1918,3 +1900,18 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
     else:
         once = utils.default_prng
     return (once.random(size).astype(REAL) - 0.5) / size
+
+
+def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
+    """Return a numpy array of the given shape. Reuse prior_vectors values instance or values
+    to extent possible. Initialize new values randomly if requested."""
+    if prior_vectors is None:
+        prior_vectors = np.zeros((0, 0))
+    if prior_vectors.shape == target_shape:
+        return prior_vectors
+    target_count, vector_size = target_shape
+    rng = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
+    new_vectors = rng.uniform(-1.0, 1.0, target_shape).astype(dtype)
+    new_vectors /= vector_size
+    new_vectors[0:prior_vectors.shape[0], 0:prior_vectors.shape[1]] = prior_vectors
+    return new_vectors

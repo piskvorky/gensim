@@ -399,6 +399,9 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self, 'wv'):  # set unless subclass already set (eg: FastText)
             self.wv = KeyedVectors(vector_size)
+        # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+        # advanced users should directly resize/adjust as desired after any vocab growth
+        self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
         self.hashfxn = hashfxn
         self.seed = seed
@@ -826,7 +829,7 @@ class Word2Vec(utils.SaveLoad):
         """Build tables and model weights based on final vocabulary settings."""
         # set initial input/projection and hidden weights
         if not update:
-            self.reset_weights()
+            self.init_weights()
         else:
             self.update_weights()
 
@@ -834,41 +837,34 @@ class Word2Vec(utils.SaveLoad):
     def seeded_vector(self, seed_string, vector_size):
         return pseudorandom_weak_vector(vector_size, seed_string=seed_string, hashfxn=self.hashfxn)
 
-    def reset_weights(self):
+    def init_weights(self):
         """Reset all projection weights to an initial (untrained) state, but keep the existing vocabulary."""
         logger.info("resetting layer weights")
-        self.wv.resize_vectors()
-        self.wv.randomly_initialize_vectors(seed=self.seed)
+        self.wv.resize_vectors(seed=self.seed)
+
         if self.hs:
             self.syn1 = np.zeros((len(self.wv), self.layer1_size), dtype=REAL)
         if self.negative:
             self.syn1neg = np.zeros((len(self.wv), self.layer1_size), dtype=REAL)
 
-        self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
-
     def update_weights(self):
         """Copy all the existing weights, and reset the weights for the newly added vocabulary."""
         logger.info("updating layer weights")
-        new_range = self.wv.resize_vectors()
-        gained_vocab = len(new_range)
-        self.wv.randomly_initialize_vectors(indexes=new_range)
-
         # Raise an error if an online update is run before initial training on a corpus
         if not len(self.wv.vectors):
             raise RuntimeError(
                 "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
                 "First build the vocabulary of your model with a corpus before doing an online update."
             )
+        preresize_count = len(self.wv.vectors)
+        self.wv.resize_vectors(seed=self.seed)
+        gained_vocab = len(self.wv.vectors) - preresize_count
 
         if self.hs:
             self.syn1 = np.vstack([self.syn1, np.zeros((gained_vocab, self.layer1_size), dtype=REAL)])
         if self.negative:
             pad = np.zeros((gained_vocab, self.layer1_size), dtype=REAL)
             self.syn1neg = np.vstack([self.syn1neg, pad])
-        self.wv.norms = None
-
-        # do not suppress learning for already learned words
-        self.wv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
@@ -1834,7 +1830,11 @@ class Word2Vec(utils.SaveLoad):
             * Cumulative frequency table (used for negative sampling)
             * Cached corpus length
 
-        Useful when testing multiple models on the same corpus in parallel.
+        Useful when testing multiple models on the same corpus in parallel. However, as the models
+        then share all vocabulary-related structures other than vectors, neither should then
+        expand their vocabulary (which could leave the other in an inconsistent, broken state).
+        And, any changes to any per-word 'vecattr' will affect both models.
+
 
         Parameters
         ----------
@@ -1842,13 +1842,13 @@ class Word2Vec(utils.SaveLoad):
             Another model to copy the internal structures from.
 
         """
-        self.wv.key_to_index = other_model.wv.key_to_index
+        self.wv = KeyedVectors(self.vector_size)
         self.wv.index_to_key = other_model.wv.index_to_key
+        self.wv.key_to_index = other_model.wv.key_to_index
         self.wv.expandos = other_model.wv.expandos
-        self.wv.norms = None
         self.cum_table = other_model.cum_table
         self.corpus_count = other_model.corpus_count
-        self.reset_weights()
+        self.init_weights()
 
     def __str__(self):
         """Human readable representation of the model's state.
