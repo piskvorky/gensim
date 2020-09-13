@@ -707,9 +707,13 @@ class TestFastTextModel(unittest.TestCase):
         gensim.models.fasttext.save_facebook_model(model, tmpf)
         model_reload = gensim.models.fasttext.load_facebook_model(tmpf)
         self.assertTrue(len(model_reload.wv), 12)
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors))
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors_vocab))
         model_reload.build_vocab(new_sentences, update=True)  # update vocab
         model_reload.train(new_sentences, total_examples=model_reload.corpus_count, epochs=model_reload.epochs)
         self.assertEqual(len(model_reload.wv), 14)
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors))
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors_vocab))
         tmpf2 = get_tmpfile('gensim_ft_format2.tst')
         gensim.models.fasttext.save_facebook_model(model_reload, tmpf2)
 
