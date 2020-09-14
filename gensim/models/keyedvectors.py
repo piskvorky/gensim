@@ -423,7 +423,7 @@ class KeyedVectors(utils.SaveLoad):
         Parameters
         ----------
         keys : list of (str or int)
-            keys specified by string or int ids.
+            Keys specified by string or int ids.
         weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
@@ -582,7 +582,7 @@ class KeyedVectors(utils.SaveLoad):
         if not len(self):
             return  # noop if empty
         count_sorted_indexes = np.argsort(self.expandos['count'])[::-1]
-        self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
+        self.index_to_key = [self.index_to_key[idx] for idx in count_sorted_indexes]
         self.allocate_vecattrs()
         for k in self.expandos:
             # Use numpy's "fancy indexing" to permutate the entire array in one step.
@@ -697,8 +697,10 @@ class KeyedVectors(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_keys), reverse=True)
         # ignore (don't return) keys from the input
-        result = [(self.index_to_key[sim + clip_start], float(dists[sim]))
-                  for sim in best if (sim + clip_start) not in all_keys]
+        result = [
+            (self.index_to_key[sim + clip_start], float(dists[sim]))
+            for sim in best if (sim + clip_start) not in all_keys
+        ]
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
