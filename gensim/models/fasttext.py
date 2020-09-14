@@ -253,8 +253,6 @@ And on word analogies:
 """
 
 import logging
-import os
-from collections.abc import Iterable
 
 import numpy as np
 from numpy import ones, vstack, float32 as REAL
@@ -466,7 +464,8 @@ class FastText(Word2Vec):
         self.layer1_size = vector_size
 
     def _clear_post_train(self):
-        """Clear the model's internal structures after training has finished to free up RAM."""
+        """Clear any cached values that training may have invalidated."""
+        super(FastText, self)._clear_post_train()
         self.wv.adjust_vectors()  # ensure composite-word vecs reflect latest training
 
     def estimate_memory(self, vocab_size=None, report=None):
@@ -539,92 +538,6 @@ class FastText(Word2Vec):
 
         return tally, self._raw_word_count(sentences)
 
-    def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(), **kwargs):
-        """Update the model's neural weights from a sequence of sentences (can be a once-only generator stream).
-        For FastText, each sentence must be a list of unicode strings.
-
-        To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
-        progress-percentage logging, either `total_examples` (count of sentences) or `total_words` (count of
-        raw words in sentences) **MUST** be provided. If `sentences` is the same corpus
-        that was provided to :meth:`~gensim.models.fasttext.FastText.build_vocab` earlier,
-        you can simply use `total_examples=self.corpus_count`.
-
-        To avoid common mistakes around the model's ability to do multiple training passes itself, an
-        explicit `epochs` argument **MUST** be provided. In the common and recommended case
-        where :meth:`~gensim.models.fasttext.FastText.train` is only called once, you can set `epochs=self.iter`.
-
-        Parameters
-        ----------
-        sentences : iterable of list of str, optional
-            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
-            consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
-        corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
-            If you use this argument instead of `sentences`, you must provide `total_words` argument as well. Only one
-            of `sentences` or `corpus_file` arguments need to be passed (not both of them).
-        total_examples : int
-            Count of sentences.
-        total_words : int
-            Count of raw words in sentences.
-        epochs : int
-            Number of iterations (epochs) over the corpus.
-        start_alpha : float, optional
-            Initial learning rate. If supplied, replaces the starting `alpha` from the constructor,
-            for this one call to :meth:`~gensim.models.fasttext.FastText.train`.
-            Use only if making multiple calls to :meth:`~gensim.models.fasttext.FastText.train`, when you want to manage
-            the alpha learning-rate yourself (not recommended).
-        end_alpha : float, optional
-            Final learning rate. Drops linearly from `start_alpha`.
-            If supplied, this replaces the final `min_alpha` from the constructor, for this one call to
-            :meth:`~gensim.models.fasttext.FastText.train`.
-            Use only if making multiple calls to :meth:`~gensim.models.fasttext.FastText.train`, when you want to manage
-            the alpha learning-rate yourself (not recommended).
-        word_count : int
-            Count of words already trained. Set this to 0 for the usual
-            case of training on all words in sentences.
-        queue_factor : int
-            Multiplier for size of queue (number of workers * queue_factor).
-        report_delay : float
-            Seconds to wait before reporting progress.
-        callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`
-            List of callbacks that need to be executed/run at specific stages during training.
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.models import FastText
-            >>> sentences = [["cat", "say", "meow"], ["dog", "say", "woof"]]
-            >>>
-            >>> model = FastText(min_count=1)
-            >>> model.build_vocab(sentences)
-            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)
-
-        """
-
-        if corpus_file is None and corpus_iterable is None:
-            raise TypeError("Either one of corpus_file or corpus_iterable value must be provided")
-
-        if corpus_file is not None and corpus_iterable is not None:
-            raise TypeError("Both corpus_file and corpus_iterable must not be provided at the same time")
-
-        if corpus_iterable is None and not os.path.isfile(corpus_file):
-            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
-
-        if corpus_iterable is not None and not isinstance(corpus_iterable, Iterable):
-            raise TypeError("sentences must be an iterable of list, got %r instead" % corpus_iterable)
-
-        super(FastText, self).train(
-            corpus_iterable=corpus_iterable, corpus_file=corpus_file,
-            total_examples=total_examples, total_words=total_words,
-            epochs=epochs, start_alpha=start_alpha, end_alpha=end_alpha, word_count=word_count,
-            queue_factor=queue_factor, report_delay=report_delay, callbacks=callbacks)
-        self.wv.adjust_vectors()
-
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
         "init_sims() is now obsoleted and will be completely removed in future versions. "
@@ -649,14 +562,6 @@ class FastText(Word2Vec):
 
         """
         self.wv.init_sims(replace=replace)
-
-    def clear_sims(self):
-        """Remove all L2-normalized word vectors from the model, to free up memory.
-
-        You can recompute them later again using the :meth:`~gensim.models.fasttext.FastText.init_sims` method.
-
-        """
-        self._clear_post_train()
 
     @classmethod
     @utils.deprecated(

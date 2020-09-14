@@ -186,6 +186,7 @@ import os
 import heapq
 from timeit import default_timer
 from collections import defaultdict, namedtuple
+from collections.abc import Iterable
 from types import GeneratorType
 import threading
 import itertools
@@ -413,8 +414,12 @@ class Word2Vec(utils.SaveLoad):
         self.load = call_on_class_only
 
         if corpus_iterable is not None or corpus_file is not None:
-            self.build_vocab_and_train(corpus_iterable=corpus_iterable, corpus_file=corpus_file,
-                                       trim_rule=trim_rule, callbacks=callbacks)
+            self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=(epochs + 1))
+            self.build_vocab(corpus_iterable=corpus_iterable, corpus_file=corpus_file, trim_rule=trim_rule)
+            self.train(
+                corpus_iterable=corpus_iterable, corpus_file=corpus_file, total_examples=self.corpus_count,
+                total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
+                end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -428,24 +433,10 @@ class Word2Vec(utils.SaveLoad):
                     "The callbacks provided in this initialization without triggering train will "
                     "be ignored.")
 
-    def build_vocab_and_train(self, corpus_iterable=None, corpus_file=None, trim_rule=None, callbacks=None):
-        if not (corpus_iterable is None) ^ (corpus_file is None):
-            raise ValueError("You must provide only one of corpus_iterable or corpus_file arguments.")
-        if corpus_file is not None and not isinstance(corpus_file, str):
-            raise TypeError("You must pass string as the corpus_file argument.")
-        elif isinstance(corpus_iterable, GeneratorType):
-            raise TypeError("You can't pass a generator as the sentences argument. Try a sequence.")
-        # TODO: test for restartable?
-        self.build_vocab(corpus_iterable=corpus_iterable, corpus_file=corpus_file, trim_rule=trim_rule)
-        self.train(
-            corpus_iterable=corpus_iterable, corpus_file=corpus_file, total_examples=self.corpus_count,
-            total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
-            end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks)
-
     def build_vocab(
             self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
             keep_raw_vocab=False, trim_rule=None, **kwargs,
-        ):
+    ):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -483,6 +474,7 @@ class Word2Vec(utils.SaveLoad):
             Key word arguments propagated to `self.prepare_vocab`
 
         """
+        self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=1)
         total_words, corpus_count = self.scan_vocab(
             corpus_iterable=corpus_iterable, corpus_file=corpus_file, progress_per=progress_per, trim_rule=trim_rule)
         self.corpus_count = corpus_count
@@ -933,7 +925,7 @@ class Word2Vec(utils.SaveLoad):
         return tally, self._raw_word_count(sentences)
 
     def _clear_post_train(self):
-        """Clear any cached vector lengths from the model."""
+        """Clear any cached values that training may have invalidated."""
         self.wv.norms = None
 
     def train(
@@ -1017,10 +1009,15 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = end_alpha or self.min_alpha
         self.epochs = epochs
 
-        self._check_training_sanity(
-            epochs=epochs,
-            total_examples=total_examples,
-            total_words=total_words)
+        self._check_training_sanity(epochs=epochs, total_examples=total_examples, total_words=total_words)
+        self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=epochs)
+
+        logger.info(
+            "training model with %i workers on %i vocabulary and %i features, "
+            "using sg=%s hs=%s sample=%s negative=%s window=%s",
+            self.workers, len(self.wv), self.layer1_size, self.sg,
+            self.hs, self.sample, self.negative, self.window
+        )
 
         self.compute_loss = compute_loss
         self.running_training_loss = 0.0
@@ -1465,17 +1462,27 @@ class Word2Vec(utils.SaveLoad):
         """
         return sum(len(sentence) for sentence in job)
 
-    def _check_training_sanity(self, epochs=None, total_examples=None, total_words=None, **kwargs):
-        """Checks whether the training parameters make sense.
+    def _check_corpus_sanity(self, corpus_iterable=None, corpus_file=None, passes=1):
+        """Checks whether the corpus parameters make sense."""
+        if corpus_file is None and corpus_iterable is None:
+            raise TypeError("Either one of corpus_file or corpus_iterable value must be provided")
+        if corpus_file is not None and corpus_iterable is not None:
+            raise TypeError("Both corpus_file and corpus_iterable must not be provided at the same time")
+        if corpus_iterable is None and not os.path.isfile(corpus_file):
+            raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
+        if corpus_iterable is not None and not isinstance(corpus_iterable, Iterable):
+            raise TypeError("The corpus_iterable must be an iterable of list, got %r instead" % corpus_iterable)
+        if corpus_iterable is not None and isinstance(corpus_iterable, GeneratorType) and passes > 1:
+            raise TypeError(
+                f"Using a generator as corpus_iterable can't support {passes} passes. Try a re-iterable sequence.")
 
-        Called right before training starts in :meth:`~gensim.models.base_any2vec.BaseWordEmbeddingsModel.train`
-        and raises warning or errors depending on the severity of the issue in case an inconsistent parameter
-        combination is detected.
+    def _check_training_sanity(self, epochs=0, total_examples=None, total_words=None, **kwargs):
+        """Checks whether the training parameters make sense.
 
         Parameters
         ----------
-        epochs : int, optional
-            Number of training epochs. Must have a (non None) value.
+        epochs : int
+            Number of training epochs. Must have a positive value to pass check.
         total_examples : int, optional
             Number of documents in the corpus. Either `total_examples` or `total_words` **must** be supplied.
         total_words : int, optional
@@ -1499,27 +1506,15 @@ class Word2Vec(utils.SaveLoad):
         if not len(self.wv.vectors):
             raise RuntimeError("you must initialize vectors before training the model")
 
-        if not hasattr(self, 'corpus_count'):
-            raise ValueError(
-                "The number of examples in the training corpus is missing. "
-                "Please make sure this is set inside `build_vocab` function."
-                "Call the `build_vocab` function before calling `train`."
-            )
-
         if total_words is None and total_examples is None:
             raise ValueError(
-                "You must specify either total_examples or total_words, for proper job parameters updation"
+                "You must specify either total_examples or total_words, for proper learning-rate "
                 "and progress calculations. "
-                "The usual value is total_examples=model.corpus_count."
+                "If you've just built the vocabulary using the same corpus, using the count cached "
+                "in the model is sufficient: total_examples=model.corpus_count."
             )
-        if epochs is None:
-            raise ValueError("You must specify an explict epochs count. The usual value is epochs=model.epochs.")
-        logger.info(
-            "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s negative=%s window=%s",
-            self.workers, len(self.wv), self.layer1_size, self.sg,
-            self.hs, self.sample, self.negative, self.window
-        )
+        if epochs is None or epochs <= 0:
+            raise ValueError("You must specify an explicit epochs count. The usual value is epochs=model.epochs.")
 
     def _log_progress(
             self, job_queue, progress_queue, cur_epoch, example_count, total_examples,

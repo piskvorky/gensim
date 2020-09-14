@@ -98,11 +98,12 @@ class TestFastTextModel(unittest.TestCase):
         model = FT_gensim(vector_size=12, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(corpus_iterable=sentences)
 
-        self.assertRaises(TypeError, model.train, corpus_file=11111)
-        self.assertRaises(TypeError, model.train, corpus_iterable=11111)
-        self.assertRaises(TypeError, model.train, corpus_iterable=sentences, corpus_file='test')
-        self.assertRaises(TypeError, model.train, corpus_iterable=None, corpus_file=None)
-        self.assertRaises(TypeError, model.train, corpus_file=sentences)
+        self.assertRaises(TypeError, model.train, corpus_file=11111, total_examples=1, epochs=1)
+        self.assertRaises(TypeError, model.train, corpus_iterable=11111, total_examples=1, epochs=1)
+        self.assertRaises(
+            TypeError, model.train, corpus_iterable=sentences, corpus_file='test', total_examples=1, epochs=1)
+        self.assertRaises(TypeError, model.train, corpus_iterable=None, corpus_file=None, total_examples=1, epochs=1)
+        self.assertRaises(TypeError, model.train, corpus_file=sentences, total_examples=1, epochs=1)
 
     def test_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
