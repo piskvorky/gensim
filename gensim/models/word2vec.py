@@ -1471,7 +1471,8 @@ class Word2Vec(utils.SaveLoad):
         if corpus_iterable is None and not os.path.isfile(corpus_file):
             raise TypeError("Parameter corpus_file must be a valid path to a file, got %r instead" % corpus_file)
         if corpus_iterable is not None and not isinstance(corpus_iterable, Iterable):
-            raise TypeError("The corpus_iterable must be an iterable of list, got %r instead" % corpus_iterable)
+            raise TypeError(
+                "The corpus_iterable must be an iterable of lists of strings, got %r instead" % corpus_iterable)
         if corpus_iterable is not None and isinstance(corpus_iterable, GeneratorType) and passes > 1:
             raise TypeError(
                 f"Using a generator as corpus_iterable can't support {passes} passes. Try a re-iterable sequence.")
@@ -1482,7 +1483,7 @@ class Word2Vec(utils.SaveLoad):
         Parameters
         ----------
         epochs : int
-            Number of training epochs. Must have a positive value to pass check.
+            Number of training epochs. A positive integer.
         total_examples : int, optional
             Number of documents in the corpus. Either `total_examples` or `total_words` **must** be supplied.
         total_words : int, optional
