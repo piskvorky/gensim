@@ -14,25 +14,8 @@ env:
 
 matrix:
   include:
-    - python: '3.6'
-      env: TOXENV="flake8,flake8-docs"
-
-    - python: '3.8'
-      env:
-        - TOXENV="py38-linux"
-      dist: bionic
-
-    - python: '3.7'
-      env:
-        - TOXENV="py37-linux"
-      # The following two lines used to be necessary because Travis left files lying around in ~/.aws/,
-      # messing up our tests. Now fixed since https://github.com/travis-ci/travis-ci/issues/7940
-        # - BOTO_CONFIG="/dev/null"
-      #sudo: true
-      dist: xenial
-
-    - python: '3.6'
-      env: TOXENV="py36-linux"
+    - python: '3.5'
+      env: TOXENV="py35-linux"
 
 
 install:
