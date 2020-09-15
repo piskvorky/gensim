@@ -679,8 +679,8 @@ class FastText(Word2Vec):
 
         Parameters
         ----------
-        sentences : iterable of list of str, optional
-            The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
+        corpus_iterable : iterable of list of str, optional
+            The `corpus_iterable` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
