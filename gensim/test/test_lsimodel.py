@@ -66,7 +66,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     def testCorpusTransform(self):
         """Test lsi[corpus] transformation."""
         model = self.model
-        got = np.vstack(matutils.sparse2full(doc, 2) for doc in model[self.corpus])
+        got = np.vstack([matutils.sparse2full(doc, 2) for doc in model[self.corpus]])
         expected = np.array([
             [0.65946639, 0.14211544],
             [2.02454305, -0.42088759],
