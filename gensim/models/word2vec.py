@@ -46,7 +46,7 @@ Initialize a model with e.g.:
     >>> model.save("word2vec.model")
 
 
-The training is streamed, so `sentences` can be an iterable, reading input data
+The training is streamed, so ``sentences`` can be an iterable, reading input data
 from disk on-the-fly. This lets you avoid loading the entire corpus into RAM.
 However, note that because the iterable must be re-startable, `sentences` must
 not be a generator. For an example of an appropriate iterator see
