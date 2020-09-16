@@ -39,18 +39,22 @@ Initialize a model with e.g.:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_texts, get_tmpfile
+    >>> from gensim.test.utils import common_texts
     >>> from gensim.models import Word2Vec
-    >>>
-    >>> path = get_tmpfile("word2vec.model")
     >>>
     >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
     >>> model.save("word2vec.model")
 
-The training is streamed, meaning `sentences` can be a generator, reading input data
-from disk on-the-fly, without loading the entire corpus into RAM.
 
-It also means you can continue training the model later:
+The training is streamed, so ``sentences`` can be an iterable, reading input data
+from disk on-the-fly. This lets you avoid loading the entire corpus into RAM.
+However, note that because the iterable must be re-startable, `sentences` must
+not be a generator. For an example of an appropriate iterator see
+:class:`~gensim.models.word2vec.BrownCorpus`,
+:class:`~gensim.models.word2vec.Text8Corpus` or
+:class:`~gensim.models.word2vec.LineSentence`.
+
+If you save the model you can continue training it later:
 
 .. sourcecode:: pycon
 
