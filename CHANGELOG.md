@@ -12,6 +12,7 @@ This release contains a major refactoring.
   (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
 * Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
 * Remove Keras dependency (PR [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__)
+* Bump minimum Python version to 3.6 (PR [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__)
 
 ### :books: Tutorial and doc improvements
 
