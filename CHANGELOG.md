@@ -11,11 +11,14 @@ This release contains a major refactoring.
 * No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
   (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
 * Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
+* Fix deprecations in SoftCosineSimilarity (PR [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__)
 * Remove Keras dependency (PR [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__)
+* Bump minimum Python version to 3.6 (PR [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__)
 
 ### :books: Tutorial and doc improvements
 
  * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
+ * Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
 
 ## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 

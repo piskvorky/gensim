@@ -1375,7 +1375,8 @@ class ZeroBucketTest(unittest.TestCase):
 
     def test_out_of_vocab(self):
         model = train_gensim(bucket=0)
-        self.assertRaises(KeyError, model.wv.word_vec, 'streamtrain')
+        with self.assertRaises(KeyError):
+            model.wv.get_vector('streamtrain')
 
     def test_cbow_neg(self):
         """See `gensim.test.test_word2vec.TestWord2VecModel.test_cbow_neg`."""
