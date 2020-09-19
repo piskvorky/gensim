@@ -429,7 +429,7 @@ class KeyedVectors(utils.SaveLoad):
         """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()."""
         return self.get_vector(*args, **kwargs)
 
-    def add_new_vector(self, key, vector):
+    def add_vector(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
 
         Warning: using this repeatedly is inefficient, requiring a full reallocation & copy,
@@ -1718,7 +1718,7 @@ def _add_word_to_kv(kv, counts, word, weights, vocab_size):
     if kv.has_index_for(word):
         logger.warning("duplicate word '%s' in word2vec file, ignoring all but first", word)
         return
-    word_id = kv.add_new_vector(word, weights)
+    word_id = kv.add_vector(word, weights)
 
     if counts is None:
         # Most common scenario: no vocab file given. Just make up some bogus counts, in descending order.
