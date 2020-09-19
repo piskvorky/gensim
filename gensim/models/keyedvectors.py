@@ -103,14 +103,14 @@ Some of them are already built-in
     >>>
     >>> # Check the "most similar words", using the default "cosine similarity" measure.
     >>> result = word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
-    >>> most_similar_key, similarity = result[0]  # look at the first value
-    >>> print(f"{most_similar_key}: {similarity:.4f}"
+    >>> most_similar_key, similarity = result[0]  # look at the first match
+    >>> print(f"{most_similar_key}: {similarity:.4f}")
     queen: 0.7699
     >>>
     >>> # Use a different similarity measure: "cosmul".
     >>> result = word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
-    >>> most_similar_key, similarity = result[0]  # look at the first value
-    >>> print(f"{most_similar_key}: {similarity:.4f}"
+    >>> most_similar_key, similarity = result[0]  # look at the first match
+    >>> print(f"{most_similar_key}: {similarity:.4f}")
     queen: 0.8965
     >>>
     >>> print(word_vectors.doesnt_match("breakfast cereal dinner lunch".split()))
@@ -121,8 +121,8 @@ Some of them are already built-in
     True
     >>>
     >>> result = word_vectors.similar_by_word("cat")
-    >>> most_similar_key, similarity = result[0]  # look at the first value
-    >>> print(f"{most_similar_key}: {similarity:.4f}"
+    >>> most_similar_key, similarity = result[0]  # look at the first match
+    >>> print(f"{most_similar_key}: {similarity:.4f}")
     dog: 0.8798
     >>>
     >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
@@ -458,7 +458,7 @@ class KeyedVectors(utils.SaveLoad):
                 "Adding single vectors to a KeyedVectors which grows by one each time can be costly. "
                 "Consider adding in batches or preallocating to the required size.",
                 UserWarning)
-            self.add([key], [vector])
+            self.add_vectors([key], [vector])
             self.allocate_vecattrs()  # grow any adjunct arrays
             self.next_index = target_index + 1
         else:
@@ -469,7 +469,7 @@ class KeyedVectors(utils.SaveLoad):
             self.next_index += 1
         return target_index
 
-    def add(self, keys, weights, extras=None, replace=False):
+    def add_vectors(self, keys, weights, extras=None, replace=False):
         """Append keys and their vectors in a manual way.
         If some key is already in the vocabulary, the old vector is kept unless `replace` flag is True.
 
@@ -536,7 +536,7 @@ class KeyedVectors(utils.SaveLoad):
             keys = [keys]
             weights = weights.reshape(1, -1)
 
-        self.add(keys, weights, replace=True)
+        self.add_vectors(keys, weights, replace=True)
 
     def has_index_for(self, key):
         """Can this model return a single index for this key?
@@ -582,10 +582,7 @@ class KeyedVectors(utils.SaveLoad):
 
     @vectors_norm.setter
     def vectors_norm(self, _):
-        raise AttributeError(
-            "Vector norms are computed dynamically since Gensim 4.0.0 to save memory, you cannot set them. "
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
-        )
+        pass   # ignored but must remain for backward serialization compatibility
 
     def get_normed_vectors(self):
         """Get all embedding vectors normalized to unit L2 length (euclidean), as a 2D numpy array.
@@ -623,10 +620,7 @@ class KeyedVectors(utils.SaveLoad):
 
     @index2entity.setter
     def index2entity(self, value):
-        raise AttributeError(
-            "The index2entity attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
-        )
+        self.index_to_key = value  # must remain for backward serialization compatibility
 
     @property
     def index2word(self):
@@ -637,10 +631,7 @@ class KeyedVectors(utils.SaveLoad):
 
     @index2word.setter
     def index2word(self, value):
-        raise AttributeError(
-            "The index2word attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
-        )
+        self.index_to_key = value  # must remain for backward serialization compatibility
 
     @property
     def vocab(self):
@@ -668,7 +659,7 @@ class KeyedVectors(utils.SaveLoad):
         if len(self.vectors):
             logger.warning("sorting after vectors have been allocated is expensive & error-prone")
             self.vectors = self.vectors[count_sorted_indexes]
-        self.key_to_index = {word : i for i, word in enumerate(self.index_to_key)}
+        self.key_to_index = {word: i for i, word in enumerate(self.index_to_key)}
 
     def save(self, *args, **kwargs):
         """Save KeyedVectors to a file.
@@ -1896,15 +1887,15 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
 
 def load_word2vec_format(*args, **kwargs):
-    """Alias for `KeyedVectors.load_word2vec_format(...)`."""
+    """Alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.load_word2vec_format`."""
     return KeyedVectors.load_word2vec_format(*args, **kwargs)
 
 
 def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
-    """Get a 'random' vector (but deterministically derived from seed_string if supplied).
+    """Get a random vector, derived deterministically from `seed_string` if supplied.
 
-    Useful for initializing KeyedVectors that will be the starting
-    projection/input layers of _2Vec models.
+    Useful for initializing KeyedVectors that will be the starting projection/input layers of _2Vec models.
+
     """
     if seed_string:
         once = np.random.Generator(np.random.SFC64(hashfxn(seed_string) & 0xffffffff))
