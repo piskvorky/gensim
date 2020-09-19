@@ -167,21 +167,27 @@ except ImportError:
     # file-based word2vec is not supported
     CORPUSFILE_VERSION = -1
 
-    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                       _work, _neu1, compute_loss):
+    def train_epoch_sg(
+            model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+            _work, _neu1, compute_loss,
+        ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
-    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         _work, _neu1, compute_loss):
+    def train_epoch_cbow(
+            model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+            _work, _neu1, compute_loss,
+        ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
 
 class Word2Vec(utils.SaveLoad):
-    def __init__(self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
-                 max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
-                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 comment=None, max_final_vocab=None):
+    def __init__(
+            self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
+            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+            sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
+            comment=None, max_final_vocab=None,
+        ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
         Once you're finished training a model (=no more updates, only querying)
@@ -380,8 +386,10 @@ class Word2Vec(utils.SaveLoad):
             total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
             end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks)
 
-    def build_vocab(self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
-                    keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(
+            self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
+            keep_raw_vocab=False, trim_rule=None, **kwargs,
+        ):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -427,7 +435,9 @@ class Word2Vec(utils.SaveLoad):
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.prepare_weights(update=update)
 
-    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
+    def build_vocab_from_freq(
+            self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False,
+        ):
         """Build vocabulary from a dictionary of word frequencies.
 
         Parameters
@@ -522,7 +532,8 @@ class Word2Vec(utils.SaveLoad):
 
     def prepare_vocab(
             self, update=False, keep_raw_vocab=False, trim_rule=None,
-            min_count=None, sample=None, dry_run=False):
+            min_count=None, sample=None, dry_run=False,
+        ):
         """Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
 
@@ -830,8 +841,10 @@ class Word2Vec(utils.SaveLoad):
         """
         self.wv.init_sims(replace=replace)
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, **kwargs):
+    def _do_train_epoch(
+            self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+            total_examples=None, total_words=None, **kwargs,
+        ):
         work, neu1 = thread_private_mem
 
         if self.sg:
@@ -873,10 +886,12 @@ class Word2Vec(utils.SaveLoad):
         """Clear any cached vector lengths from the model."""
         self.wv.norms = None
 
-    def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(),
-              **kwargs):
+    def train(
+            self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
+            epochs=None, start_alpha=None, end_alpha=None, word_count=0,
+            queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(),
+            **kwargs,
+        ):
         """Update the model's neural weights from a sequence of sentences.
 
         Notes
@@ -891,7 +906,7 @@ class Word2Vec(utils.SaveLoad):
         --------
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
         explicit `epochs` argument **MUST** be provided. In the common and recommended case
-        where :meth:`~gensim.models.word2vec.Word2Vec.train` is only called once, you can set `epochs=self.iter`.
+        where :meth:`~gensim.models.word2vec.Word2Vec.train` is only called once, you can set `epochs=self.epochs`.
 
         Parameters
         ----------
@@ -944,7 +959,7 @@ class Word2Vec(utils.SaveLoad):
             >>>
             >>> model = Word2Vec(min_count=1)
             >>> model.build_vocab(sentences)  # prepare the model vocabulary
-            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)  # train word vectors
             (1, 30)
 
         """
@@ -1000,8 +1015,10 @@ class Word2Vec(utils.SaveLoad):
             callback.on_train_end(self)
         return trained_word_count, raw_word_count
 
-    def _worker_loop_corpusfile(self, corpus_file, thread_id, offset, cython_vocab, progress_queue, cur_epoch=0,
-                                total_examples=None, total_words=None, **kwargs):
+    def _worker_loop_corpusfile(
+            self, corpus_file, thread_id, offset, cython_vocab, progress_queue, cur_epoch=0,
+            total_examples=None, total_words=None, **kwargs,
+        ):
         """Train the model on a `corpus_file` in LineSentence format.
 
         This function will be called in parallel by multiple workers (threads or processes) to make
@@ -1147,8 +1164,10 @@ class Word2Vec(utils.SaveLoad):
             job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
-    def _log_epoch_progress(self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
-                            total_words=None, report_delay=1.0, is_corpus_file_mode=None):
+    def _log_epoch_progress(
+            self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
+            total_words=None, report_delay=1.0, is_corpus_file_mode=None,
+        ):
         """Get the progress report for a single training epoch.
 
         Parameters
@@ -1220,7 +1239,8 @@ class Word2Vec(utils.SaveLoad):
         return trained_word_count, raw_word_count, job_tally
 
     def _train_epoch_corpusfile(
-        self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, callbacks=(), **kwargs):
+            self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, callbacks=(), **kwargs,
+        ):
         """Train the model for a single epoch.
 
         Parameters
@@ -1283,8 +1303,10 @@ class Word2Vec(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None, total_words=None,
-                     queue_factor=2, report_delay=1.0, callbacks=()):
+    def _train_epoch(
+            self, data_iterable, cur_epoch=0, total_examples=None, total_words=None,
+            queue_factor=2, report_delay=1.0, callbacks=(),
+        ):
         """Train the model for a single epoch.
 
         Parameters
@@ -1449,8 +1471,10 @@ class Word2Vec(utils.SaveLoad):
             self.hs, self.sample, self.negative, self.window
         )
 
-    def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
-                      raw_word_count, total_words, trained_word_count, elapsed):
+    def _log_progress(
+            self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
+            raw_word_count, total_words, trained_word_count, elapsed
+        ):
         """Callback used to log progress for long running jobs.
 
         Parameters
@@ -1500,8 +1524,10 @@ class Word2Vec(utils.SaveLoad):
                 -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
-    def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed, is_corpus_file_mode):
+    def _log_epoch_end(
+            self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
+            trained_word_count, elapsed, is_corpus_file_mode
+        ):
         """Callback used to log the end of a training epoch.
 
         Parameters
@@ -1800,7 +1826,7 @@ class Word2Vec(utils.SaveLoad):
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
         """Arrange any special handling for the `gensim.utils.SaveLoad` protocol."""
         # don't save properties that are merely calculated from others
-        ignore = set(it.chain(ignore, ('cum_table',)))
+        ignore = set(ignore).union(['cum_table', ])
         return super(Word2Vec, self)._save_specials(
             fname, separately, sep_limit, ignore, pickle_protocol, compress, subname)
 
