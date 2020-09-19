@@ -549,7 +549,7 @@ def _dict_save(fout, model, encoding):
     # prunedidx_size_=-1, -1 value denotes no prunning index (prunning is only supported in supervised mode)
     fout.write(np.int64(-1))
 
-    for word in model.wv.index2word:
+    for word in model.wv.index_to_key:
         word_count = model.wv.get_vecattr(word, 'count')
         fout.write(word.encode(encoding))
         fout.write(_END_OF_WORD_MARKER)

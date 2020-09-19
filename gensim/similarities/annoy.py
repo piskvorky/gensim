@@ -151,7 +151,7 @@ class AnnoyIndexer():
     def build_from_word2vec(self):
         """Build an Annoy index using word vectors from a Word2Vec model."""
         return self._build_from_model(
-            self.model.wv.get_normed_vectors(), self.model.wv.index2word, self.model.vector_size,
+            self.model.wv.get_normed_vectors(), self.model.wv.index_to_key, self.model.vector_size,
         )
 
     def build_from_doc2vec(self):
@@ -163,7 +163,7 @@ class AnnoyIndexer():
     def build_from_keyedvectors(self):
         """Build an Annoy index using word vectors from a KeyedVectors model."""
         return self._build_from_model(
-            self.model.get_normed_vectors(), self.model.index2word, self.model.vector_size,
+            self.model.get_normed_vectors(), self.model.index_to_key, self.model.vector_size,
         )
 
     def _build_from_model(self, vectors, labels, num_features):
