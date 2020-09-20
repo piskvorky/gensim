@@ -273,7 +273,7 @@ core_testenv = [
     'nmslib',
     'pyemd',
     'testfixtures',
-    'Morfessor==2.0.2a4',
+    'Morfessor>=2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'scikit-learn',
 ]
