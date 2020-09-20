@@ -66,22 +66,25 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
 
 .. sourcecode:: pycon
 
-    >>> vector = model.wv['computer']  # numpy vector of a word
+    >>> vector = model.wv['computer']  # get numpy vector of a word
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
-need the full model state any more (don't need to continue training), the state can discarded,
-resulting in a much smaller and faster object that can be mmapped for lightning
+need the full model state any more (don't need to continue training), the state can discarded.
+This results in a much smaller and faster object that can be mmapped for lightning
 fast loading and sharing the vectors in RAM between processes:
 
 .. sourcecode:: pycon
 
     >>> from gensim.models import KeyedVectors
     >>>
-    >>> path = get_tmpfile("wordvectors.kv")
+    >>> # Store just the words + their trained embeddings.
+    >>> word_vectors = model.wv
+    >>> word_vectors.save("word2vec.wordvectors")
     >>>
-    >>> model.wv.save(path)
-    >>> wv = KeyedVectors.load("model.wv", mmap='r')
-    >>> vector = wv['computer']  # numpy vector of a word
+    >>> # Load back with memory-mapping = read-only, shared across processes.
+    >>> wv = KeyedVectors.load("word2vec.wordvectors", mmap='r')
+    >>>
+    >>> vector = wv['computer']  # Get numpy vector of a word
 
 Gensim can also load word vectors in the "word2vec C format", as a
 :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
@@ -90,8 +93,10 @@ Gensim can also load word vectors in the "word2vec C format", as a
 
     >>> from gensim.test.utils import datapath
     >>>
-    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
-    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
+    >>> # Load a word2vec model stored in the C *text* format.
+    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)
+    >>> # Load a word2vec model stored in the C *binary* format.
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)
 
 It is impossible to continue training the vectors loaded from the C format because the hidden weights,
 vocabulary frequencies and the binary tree are missing. To continue training, you'll need the
@@ -150,7 +155,7 @@ from gensim import utils, matutils
 logger = logging.getLogger(__name__)
 
 try:
-    from gensim.models.word2vec_inner import (  # noqa: F401
+    from gensim.models.word2vec_inner import (
         train_batch_sg,
         train_batch_cbow,
         score_sentence_sg,
