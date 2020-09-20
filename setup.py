@@ -272,7 +272,7 @@ core_testenv = [
     'mock',
     'cython',
     'testfixtures',
-    'Morfessor==2.0.2a4',
+    'Morfessor>=2.0.2a4',
 ]
 
 if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
