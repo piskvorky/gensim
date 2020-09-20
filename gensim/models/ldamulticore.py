@@ -160,7 +160,8 @@ class LdaMulticore(LdaModel):
         minimum_probability : float, optional
             Topics with a probability lower than this threshold will be filtered out.
         random_state : {np.random.RandomState, int}, optional
-            Either a randomState object or a seed to generate one. Useful for reproducibility. Note, that results can
+            Either a randomState object or a seed to generate one. Useful for reproducibility.
+            Note that results can still vary due to non-determinism in OS scheduling of the worker processes.
             vary slightly due to the order in which results arrive from the processes.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
