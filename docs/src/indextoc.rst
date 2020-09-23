@@ -4,6 +4,7 @@
 
    intro
    distributed
+   auto_examples/index
    support
    wiki
    apiref

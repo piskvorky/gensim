@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- General configuration -----------------------------------------------------
 
-html_theme = 'gensim_theme'
+html_theme = 'sphinx_rtd_theme'
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -54,7 +54,7 @@ html_additional_pages = {'index': './_templates/indexcontent.html'}
 
 # General information about the project.
 project = u'gensim'
-copyright = u'2009-now, Radim Řehůřek <me@radimrehurek.com>'
+copyright = u'2009-now, Radim Řehůřek.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -156,6 +156,15 @@ html_favicon = '_static/favicon.ico'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+# html_css_files = [
+#     'erp/css/global.css',
+#     'erp/css/structure.css',
+#     'erp/css/erp2.css',
+#     'erp/css/custom.css',
+# ]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
