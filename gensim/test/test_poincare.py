@@ -278,7 +278,7 @@ class TestPoincareKeyedVectors(unittest.TestCase):
 
     def test_most_similar_restrict_vocab(self):
         """Test most_similar returns handles restrict_vocab correctly."""
-        expected = set(self.vectors.index2word[:5])
+        expected = set(self.vectors.index_to_key[:5])
         predicted = set(result[0] for result in self.vectors.most_similar('dog.n.01', topn=5, restrict_vocab=5))
         self.assertEqual(expected, predicted)
 

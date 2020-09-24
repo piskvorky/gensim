@@ -591,7 +591,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
 
     def assertVectorIsSimilarToItself(self, wv, index):
         vector = wv.get_normed_vectors()[0]
-        label = wv.index2word[0]
+        label = wv.index_to_key[0]
         approx_neighbors = index.most_similar(vector, 1)
         word, similarity = approx_neighbors[0]
 
@@ -748,7 +748,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
 
     def assertVectorIsSimilarToItself(self, wv, index):
         vector = wv.get_normed_vectors()[0]
-        label = wv.index2word[0]
+        label = wv.index_to_key[0]
         approx_neighbors = index.most_similar(vector, 1)
         word, similarity = approx_neighbors[0]
 

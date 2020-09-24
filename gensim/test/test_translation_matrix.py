@@ -19,10 +19,11 @@ class TestTranslationMatrix(unittest.TestCase):
         self.source_word_vec_file = datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
         self.target_word_vec_file = datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt")
 
-        self.word_pairs = [("one", "uno"), ("two", "due"), ("three", "tre"),
+        self.word_pairs = [
+            ("one", "uno"), ("two", "due"), ("three", "tre"),
             ("four", "quattro"), ("five", "cinque"), ("seven", "sette"), ("eight", "otto"),
             ("dog", "cane"), ("pig", "maiale"), ("fish", "cavallo"), ("birds", "uccelli"),
-            ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana")
+            ("apple", "mela"), ("orange", "arancione"), ("grape", "acino"), ("banana", "banana"),
         ]
 
         self.test_word_pairs = [("ten", "dieci"), ("cat", "gatto")]
@@ -53,7 +54,7 @@ class TestTranslationMatrix(unittest.TestCase):
 
         test_source_word, test_target_word = zip(*self.test_word_pairs)
         translated_words = model.translate(
-            test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec
+            test_source_word, topn=5, source_lang_vec=self.source_word_vec, target_lang_vec=self.target_word_vec,
         )
 
         for idx, item in enumerate(self.test_word_pairs):
@@ -96,7 +97,7 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
 
     def test_translation_matrix(self):
         model = translation_matrix.BackMappingTranslationMatrix(
-            self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
+            self.source_doc_vec, self.target_doc_vec, self.train_docs[:5],
         )
         transmat = model.train(self.train_docs[:5])
         self.assertEqual(transmat.shape, (8, 8))
@@ -108,7 +109,7 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         replaces a nonsensical test.
         """
         model = translation_matrix.BackMappingTranslationMatrix(
-            self.source_doc_vec, self.target_doc_vec, self.train_docs[:5]
+            self.source_doc_vec, self.target_doc_vec, self.train_docs[:5],
         )
         model.train(self.train_docs[:5])
         backmapped_vec = model.infer_vector(self.target_doc_vec.dv[self.train_docs[5].tags])
