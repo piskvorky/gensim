@@ -280,7 +280,6 @@ import os
 from collections.abc import Iterable
 
 import numpy as np
-import itertools as it
 from numpy import ones, vstack, float32 as REAL
 
 import gensim.models._fasttext_bin
@@ -1287,7 +1286,7 @@ class FastTextKeyedVectors(KeyedVectors):
     def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
         """Arrange any special handling for the gensim.utils.SaveLoad protocol"""
         # don't save properties that are merely calculated from others
-        ignore = set(it.chain(ignore, ('buckets_word', 'vectors')))
+        ignore = set(ignore).union(['buckets_word', 'vectors', ])
         return super(FastTextKeyedVectors, self)._save_specials(
             fname, separately, sep_limit, ignore, pickle_protocol, compress, subname)
 

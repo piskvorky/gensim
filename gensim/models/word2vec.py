@@ -188,7 +188,7 @@ from timeit import default_timer
 from collections import defaultdict, namedtuple
 from types import GeneratorType
 import threading
-import itertools as it
+import itertools
 import copy
 from queue import Queue, Empty
 
@@ -2054,7 +2054,7 @@ class LineSentence(object):
             # Assume it is a file-like object and try treating it as such
             # Things that don't have seek will trigger an exception
             self.source.seek(0)
-            for line in it.islice(self.source, self.limit):
+            for line in itertools.islice(self.source, self.limit):
                 line = utils.to_unicode(line).split()
                 i = 0
                 while i < len(line):
@@ -2063,7 +2063,7 @@ class LineSentence(object):
         except AttributeError:
             # If it didn't work like a file, use it as a string filename
             with utils.open(self.source, 'rb') as fin:
-                for line in it.islice(fin, self.limit):
+                for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
@@ -2117,7 +2117,7 @@ class PathLineSentences(object):
         for file_name in self.input_files:
             logger.info('reading file %s', file_name)
             with utils.open(file_name, 'rb') as fin:
-                for line in it.islice(fin, self.limit):
+                for line in itertools.islice(fin, self.limit):
                     line = utils.to_unicode(line).split()
                     i = 0
                     while i < len(line):
@@ -2126,12 +2126,12 @@ class PathLineSentences(object):
 
 
 class Word2VecVocab(utils.SaveLoad):
-    """Obsolete class retained for now as load-compatibility state capture"""
+    """Obsolete class retained for now as load-compatibility state capture."""
     pass
 
 
 class Word2VecTrainables(utils.SaveLoad):
-    """Obsolete class retained for now as load-compatibility state capture"""
+    """Obsolete class retained for now as load-compatibility state capture."""
     pass
 
 
