@@ -1,21 +1,24 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_annoy.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_tutorials_run_annoy.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_annoy.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_tutorials_run_annoy.py:
 
 
-Similarity Queries with Annoy and Word2Vec
-==========================================
+Fast Similarity Queries with Annoy and Word2Vec
+===============================================
 
 Introduces the annoy library for similarity queries using a Word2Vec model.
+
 
 .. code-block:: default
 
 
-    LOGS = False
+    LOGS = False  # Set to True if you want to see progress in logs.
     if LOGS:
         import logging
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -26,7 +29,8 @@ Introduces the annoy library for similarity queries using a Word2Vec model.
 
 
 
-The `Annoy Approximate Nearest Neighbors Oh Yeah
+
+The `Annoy "Approximate Nearest Neighbors Oh Yeah"
 <https://github.com/spotify/annoy>`_ library enables similarity queries with
 a Word2Vec model.  The current implementation for finding k nearest neighbors
 in a vector space in gensim has linear complexity via brute force in the
@@ -56,10 +60,19 @@ Outline
 
     import gensim.downloader as api
     text8_path = api.load('text8', return_path=True)
-    text8_path
+    print("Using corpus from", text8_path)
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Using corpus from /Users/kofola3/gensim-data/text8/text8.gz
 
 
 
@@ -78,9 +91,9 @@ For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
     # Using params from Word2Vec_FastText_Comparison
     params = {
         'alpha': 0.05,
-        'size': 100,
+        'vector_size': 100,
         'window': 5,
-        'iter': 5,
+        'epochs': 5,
         'min_count': 5,
         'sample': 1e-4,
         'sg': 1,
@@ -88,7 +101,7 @@ For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
         'negative': 5
     }
     model = Word2Vec(Text8Corpus(text8_path), **params)
-    print(model)
+    print("Using model", model)
 
 
 
@@ -100,41 +113,45 @@ For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
 
  .. code-block:: none
 
-    Word2Vec(vocab=71290, size=100, alpha=0.05)
+    Using model Word2Vec(vocab=71290, size=100, alpha=0.05)
+
+
 
 
 3. Construct AnnoyIndex with model & make a similarity query
 ------------------------------------------------------------
 
-An instance of ``AnnoyIndexer`` needs to be created in order to use Annoy in gensim. The ``AnnoyIndexer`` class is located in ``gensim.similarities.index``
+An instance of ``AnnoyIndexer`` needs to be created in order to use Annoy in gensim. The ``AnnoyIndexer`` class is located in ``gensim.similarities.annoy``.
 
 ``AnnoyIndexer()`` takes two parameters:
 
-* **model**: A ``Word2Vec`` or ``Doc2Vec`` model
+* **model**: A ``Word2Vec`` or ``Doc2Vec`` model.
 * **num_trees**: A positive integer. ``num_trees`` effects the build
   time and the index size. **A larger value will give more accurate results,
   but larger indexes**. More information on what trees in Annoy do can be found
   `here <https://github.com/spotify/annoy#how-does-it-work>`__. The relationship
   between ``num_trees``\ , build time, and accuracy will be investigated later
-  in the tutorial. 
+  in the tutorial.
 
 Now that we are ready to make a query, lets find the top 5 most similar words
 to "science" in the Text8 corpus. To make a similarity query we call
 ``Word2Vec.most_similar`` like we would traditionally, but with an added
-parameter, ``indexer``. The only supported indexer in gensim as of now is
-Annoy. 
+parameter, ``indexer``.
+
+Apart from Annoy, Gensim also supports the NMSLIB indexer. NMSLIB is a similar library to
+Annoy – both support fast, approximate searches for similar vectors.
 
 
 
 .. code-block:: default
 
-    from gensim.similarities.index import AnnoyIndexer
+    from gensim.similarities.annoy import AnnoyIndexer
 
     # 100 trees are being used in this example
     annoy_index = AnnoyIndexer(model, 100)
     # Derive the vector for the word "science" in our model
     vector = model.wv["science"]
-    # The instance of AnnoyIndexer we just created is passed 
+    # The instance of AnnoyIndexer we just created is passed
     approximate_neighbors = model.wv.most_similar([vector], topn=11, indexer=annoy_index)
     # Neatly print the approximate_neighbors and their corresponding cosine similarity values
     print("Approximate Neighbors")
@@ -142,7 +159,7 @@ Annoy.
         print(neighbor)
 
     normal_neighbors = model.wv.most_similar([vector], topn=11)
-    print("\nNormal (not Annoy-indexed) Neighbors")
+    print("\nExact Neighbors")
     for neighbor in normal_neighbors:
         print(neighbor)
 
@@ -157,30 +174,32 @@ Annoy.
  .. code-block:: none
 
     Approximate Neighbors
-    ('science', 1.0)
-    ('astrobiology', 0.5924032926559448)
-    ('transhumanist', 0.5916061401367188)
-    ('bimonthly', 0.5861886739730835)
-    ('sciences', 0.5851120948791504)
-    ('robotics', 0.5844891369342804)
-    ('nanomedicine', 0.5836333632469177)
-    ('protoscience', 0.5796476304531097)
-    ('biostatistics', 0.5791448056697845)
-    ('astronautics', 0.5787959098815918)
-    ('scientific', 0.5772265493869781)
+    ('science', 0.9998273665260058)
+    ('astrobiology', 0.5996885895729065)
+    ('psychohistory', 0.5911669135093689)
+    ('actuarial', 0.5909044742584229)
+    ('sciences', 0.587712824344635)
+    ('astronautics', 0.5794282257556915)
+    ('scientific', 0.5745473206043243)
+    ('nanomedicine', 0.5686345398426056)
+    ('climatologists', 0.5657966732978821)
+    ('buzan', 0.565343976020813)
+    ('sensationalism', 0.5640498399734497)
 
-    Normal (not Annoy-indexed) Neighbors
-    ('science', 1.0)
-    ('fiction', 0.7320358157157898)
-    ('popularizer', 0.6709892153739929)
-    ('astrobiology', 0.6677298545837402)
-    ('transhumanist', 0.6664289236068726)
-    ('technology', 0.660341739654541)
-    ('bimonthly', 0.6575203537940979)
-    ('sciences', 0.655735969543457)
-    ('multidisciplinary', 0.6556889414787292)
-    ('robotics', 0.6547014713287354)
-    ('nanomedicine', 0.6532777547836304)
+    Exact Neighbors
+    ('science', 1.0000001192092896)
+    ('fiction', 0.7536318302154541)
+    ('astrobiology', 0.6795015335083008)
+    ('psychohistory', 0.665710985660553)
+    ('actuarial', 0.6652816534042358)
+    ('vinge', 0.6611783504486084)
+    ('sciences', 0.6600385904312134)
+    ('popularizer', 0.6583578586578369)
+    ('xenobiology', 0.6504358053207397)
+    ('vernor', 0.6491150259971619)
+    ('astronautics', 0.6462388634681702)
+
+
 
 
 The closer the cosine similarity of a vector is to 1, the more similar that
@@ -196,11 +215,11 @@ within the 10 most similar words.
 
 
     # Set up the model and vector that we are using in the comparison
-    model.init_sims()
     annoy_index = AnnoyIndexer(model, 100)
 
-    # Dry run to make sure both indices are fully in RAM
-    vector = model.wv.vectors_norm[0]
+    # Dry run to make sure both indexes are fully in RAM
+    normed_vectors = model.wv.get_normed_vectors()
+    vector = normed_vectors[0]
     model.wv.most_similar([vector], topn=5, indexer=annoy_index)
     model.wv.most_similar([vector], topn=5)
 
@@ -208,19 +227,16 @@ within the 10 most similar words.
     import numpy as np
 
     def avg_query_time(annoy_index=None, queries=1000):
-        """
-        Average query time of a most_similar method over 1000 random queries,
-        uses annoy if given an indexer
-        """
+        """Average query time of a most_similar method over 1000 random queries."""
         total_time = 0
         for _ in range(queries):
-            rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv.vocab))]
+            rand_vec = normed_vectors[np.random.randint(0, len(model.wv))]
             start_time = time.process_time()
             model.wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
             total_time += time.process_time() - start_time
         return total_time / queries
 
-    queries = 10000
+    queries = 1000
 
     gensim_time = avg_query_time(queries=queries)
     annoy_time = avg_query_time(annoy_index, queries=queries)
@@ -239,10 +255,12 @@ within the 10 most similar words.
 
  .. code-block:: none
 
-    Gensim (s/query):       0.02169
-    Annoy (s/query):        0.00034
+    Gensim (s/query):       0.00635
+    Annoy (s/query):        0.00054
 
-    Annoy is 63.71 times faster on average on this particular run
+    Annoy is 11.75 times faster on average on this particular run
+
+
 
 
 **This speedup factor is by no means constant** and will vary greatly from
@@ -299,7 +317,7 @@ loading an index, you will have to create an empty AnnoyIndexer object.
     approximate_neighbors2 = model.wv.most_similar([vector], topn=11, indexer=annoy_index2)
     for neighbor in approximate_neighbors2:
         print(neighbor)
-    
+
     assert approximate_neighbors == approximate_neighbors2
 
 
@@ -312,24 +330,26 @@ loading an index, you will have to create an empty AnnoyIndexer object.
 
  .. code-block:: none
 
-    ('science', 1.0)
-    ('astrobiology', 0.5924032926559448)
-    ('transhumanist', 0.5916061401367188)
-    ('bimonthly', 0.5861886739730835)
-    ('sciences', 0.5851120948791504)
-    ('robotics', 0.5844891369342804)
-    ('nanomedicine', 0.5836333632469177)
-    ('protoscience', 0.5796476304531097)
-    ('biostatistics', 0.5791448056697845)
-    ('astronautics', 0.5787959098815918)
-    ('scientific', 0.5772265493869781)
+    ('science', 0.9998273665260058)
+    ('astrobiology', 0.5996885895729065)
+    ('psychohistory', 0.5911669135093689)
+    ('actuarial', 0.5909044742584229)
+    ('sciences', 0.587712824344635)
+    ('astronautics', 0.5794282257556915)
+    ('scientific', 0.5745473206043243)
+    ('nanomedicine', 0.5686345398426056)
+    ('climatologists', 0.5657966732978821)
+    ('buzan', 0.565343976020813)
+    ('sensationalism', 0.5640498399734497)
+
+
 
 
 Be sure to use the same model at load that was used originally, otherwise you
 will get unexpected behaviors.
 
 
-6. Save memory via memory-mapping indices saved to disk
+6. Save memory via memory-mapping indexes saved to disk
 -------------------------------------------------------
 
 Annoy library has a useful feature that indices can be memory-mapped from
@@ -358,8 +378,9 @@ memory-mapping. The second example uses less total RAM as it is shared.
 
 
 
-Bad example: two processes load the Word2vec model from disk and create there
-own Annoy indices from that model.
+
+Bad example: two processes load the Word2vec model from disk and create their
+own Annoy index from that model.
 
 
 
@@ -391,8 +412,9 @@ own Annoy indices from that model.
 
 
 
+
 Good example: two processes load both the Word2vec model and index from disk
-and memory-map the index
+and memory-map the index.
 
 
 
@@ -426,6 +448,7 @@ and memory-map the index
 
 
 
+
 7. Evaluate relationship of ``num_trees`` to initialization time and accuracy
 -----------------------------------------------------------------------------
 
@@ -441,6 +464,7 @@ and memory-map the index
 
 
 
+
 Build dataset of Initialization times and accuracy measures:
 
 
@@ -448,7 +472,7 @@ Build dataset of Initialization times and accuracy measures:
 .. code-block:: default
 
 
-    exact_results = [element[0] for element in model.wv.most_similar([model.wv.vectors_norm[0]], topn=100)]
+    exact_results = [element[0] for element in model.wv.most_similar([normed_vectors[0]], topn=100)]
 
     x_values = []
     y_values_init = []
@@ -459,9 +483,10 @@ Build dataset of Initialization times and accuracy measures:
         start_time = time.time()
         annoy_index = AnnoyIndexer(model, x)
         y_values_init.append(time.time() - start_time)
-        approximate_results = model.wv.most_similar([model.wv.vectors_norm[0]], topn=100, indexer=annoy_index)
+        approximate_results = model.wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
         top_words = [result[0] for result in approximate_results]
         y_values_accuracy.append(len(set(top_words).intersection(exact_results)))
+
 
 
 
@@ -493,7 +518,18 @@ Plot results:
 
 
 .. image:: /auto_examples/tutorials/images/sphx_glr_run_annoy_001.png
+    :alt: num_trees vs initalization time, num_trees vs accuracy
     :class: sphx-glr-single-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /Volumes/work/workspace/vew/gensim3.6/lib/python3.6/site-packages/matplotlib/figure.py:445: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
+      % get_backend())
 
 
 
@@ -504,7 +540,7 @@ from corpus to corpus, in the graph above the lee corpus was used
 
 Furthermore, in this dataset, the accuracy seems logarithmically related to
 the number of trees. We see an improvement in accuracy with more trees, but
-the relationship is nonlinear. 
+the relationship is nonlinear.
 
 
 7. Work with Google word2vec files
@@ -525,7 +561,7 @@ software, or imported back into gensim as a ``KeyedVectors`` object.
     from smart_open import open
     # View the first 3 lines of the exported file
 
-    # The first line has the total number of entries and the vector dimension count. 
+    # The first line has the total number of entries and the vector dimension count.
     # The next lines have a key (a string) followed by its vector.
     with open('/tmp/vectors.txt') as myfile:
         for i in range(3):
@@ -558,7 +594,7 @@ software, or imported back into gensim as a ``KeyedVectors`` object.
         print(neighbor)
 
     normal_neighbors = wv.most_similar([vector], topn=11)
-    print("\nNormal (not Annoy-indexed) Neighbors")
+    print("\nExact Neighbors")
     for neighbor in normal_neighbors:
         print(neighbor)
 
@@ -573,33 +609,35 @@ software, or imported back into gensim as a ``KeyedVectors`` object.
  .. code-block:: none
 
     71290 100
-    the -0.086056426 0.15772334 -0.14391488 -0.10746263 -0.0036995178 -0.117373854 0.03937252 -0.14037031 -0.1252817 0.07694562 -0.021327982 0.007244886 0.16763417 -0.1226697 0.21137153 -0.063393526 -0.032362897 -0.0059070205 0.020281527 0.12367236 -0.025050493 -0.09774958 -0.24607891 -0.0064472477 -0.03055981 -0.4010833 -0.27916044 0.029562823 -0.071846716 -0.014671225 0.1420381 -0.053756475 -0.0855766 -0.090253495 0.60468906 0.09920296 0.35082236 -0.14631268 0.26485506 -0.08550774 0.09919222 -0.12538795 0.03159077 0.083675735 -0.13480936 0.043789566 -0.08674448 -0.079143874 0.05721798 0.023238886 -0.34467545 0.1550529 -0.18082479 -0.18602926 -0.18052024 0.074512914 0.15894942 -0.09034081 0.011110278 -0.15301983 -0.07879341 0.0013416538 -0.04413061 0.042708833 0.07895842 0.276121 0.11723857 0.18091062 0.07765438 0.023454918 0.07083069 0.001930411 0.2261552 -0.053920075 -0.14016616 -0.09455421 0.056401417 -0.06034534 -0.012578158 0.08775011 -0.089770935 -0.111630015 0.11005583 -0.091560066 0.0717941 -0.19018368 -0.049423326 0.29770434 0.17694262 -0.14268364 -0.1372601 0.14867909 -0.12172974 -0.07506602 0.09508915 -0.10644571 0.16355318 -0.1895201 0.04572383 -0.05629312
-    of -0.24958447 0.33094105 -0.067723416 -0.15613635 0.15851182 -0.20777571 0.067617305 -0.14223038 -0.19351995 0.17955166 -0.01125617 -0.11227111 0.22649609 -0.07805858 0.08556426 0.10083455 -0.19243951 0.14512464 0.01395792 0.17216091 -0.008735538 -0.037496135 -0.3364987 0.03891899 0.036126327 -0.23090963 -0.22778185 0.09917219 0.12856483 0.0838603 0.17832059 0.021860743 -0.07048738 -0.18962148 0.5110143 0.07669086 0.2822584 -0.12050834 0.25681993 -0.021447591 0.21239889 -0.14476615 0.11061543 0.05422637 -0.02524366 0.08702608 -0.16577256 -0.20307428 0.011992565 -0.060010254 -0.3261019 0.2446808 -0.16701153 -0.079560414 -0.18528645 0.068947345 0.012339692 -0.06444969 -0.2089124 0.05786413 0.123009294 0.061585456 -0.042849902 0.16915381 0.03432279 0.13971788 0.25727242 0.09388416 0.1682245 -0.094005674 0.07307955 0.1292721 0.3170865 0.07673286 -0.07462851 -0.10278059 0.23569265 0.035961017 -0.06366512 0.034729835 -0.1799267 -0.12194269 0.19733816 -0.07210646 0.19601586 -0.09816554 -0.13614751 0.35114622 0.08043916 -0.10852109 -0.16087142 0.1783411 0.0321268 -0.14652534 0.026698181 -0.11104949 0.15343753 -0.28783563 0.08911155 -0.17888589
+    the 0.0024114326 -0.01658697 -0.03555953 -0.10153896 0.18787915 -0.1635462 -0.28673044 -0.041369613 -0.19595902 0.07011118 0.056620464 0.02271993 -0.11009094 0.04158417 0.020375583 -0.084979765 -0.07266931 -0.076348744 -0.025672905 0.0014125895 0.049288113 -0.113621734 -0.054461427 -0.3548957 -0.16930902 0.14919026 -0.1359916 0.11747352 -0.10112707 -0.10097838 0.03537573 -0.11102786 0.09662876 0.23934129 0.03430543 0.031142373 -0.10773377 0.18936938 0.16569573 -0.12907895 0.19478081 -0.031971604 -0.22358014 0.010947946 0.22119588 -0.034503784 -0.10515277 -0.0149329 0.03839723 -0.08875417 0.020486698 0.121592954 0.22152981 0.35021618 0.015179496 0.18801002 -0.08069974 0.38830653 0.20972545 0.027219895 0.09098711 -0.15508457 0.20050901 -0.083856024 -0.092396446 -0.004771586 0.16696249 -0.20392004 -0.021265335 0.05848724 0.042290248 -0.23386984 0.10066098 0.24922445 0.33556217 -0.16766794 0.057491954 0.18030043 0.009967926 -0.03610459 -0.18041357 0.08075151 -0.10740809 -0.07137133 -0.06789198 -0.035547882 -0.2261159 -0.11013532 0.144337 -0.11964697 0.052678265 0.08476612 -0.09595462 -0.06770006 0.07560474 -0.4369961 -0.08699813 -0.24849728 -0.13127735 0.10296198
+    of 0.15834092 0.06914118 -0.10107699 -0.118953355 0.23389126 -0.10860545 -0.22906052 -0.14216071 -0.12289489 -0.0012629399 0.074761786 -0.06659 -0.1430411 -0.014833263 -0.16868858 -0.007957721 -0.14431834 -0.057504084 -0.10158825 -0.09107199 -0.05050294 -0.17399603 -0.104178846 -0.37724152 -0.17095697 0.045356687 -0.1641648 0.049223717 -0.00488149 -0.020546727 0.10161075 -0.09690393 -0.06261461 0.22022204 -0.0804387 0.055082984 -0.10739114 0.23073868 0.1234579 0.09754846 0.18950391 -0.12133284 -0.369799 0.11367094 0.076141596 -0.21988852 -0.016046293 0.05841635 0.13228759 -0.09812193 0.015954286 0.2045245 0.27682808 0.26974434 -0.03128133 0.15385458 -0.26725027 0.2796234 0.24427672 0.026197268 -0.10170346 -0.16725655 0.16234653 -0.015511761 -0.14291462 0.042616863 0.16123989 -0.24213533 0.108378075 0.16561604 -0.07071194 -0.14839227 0.032803435 0.3410274 0.36961436 -0.01081987 -0.094509445 0.17811705 0.061423916 0.12526047 -0.21204133 0.04394304 -0.002062126 -0.05939061 0.08941769 -0.10346588 -0.1656505 0.0004983001 0.09247532 -0.09488792 0.17639682 -0.013249175 -0.22949116 -0.1667382 0.050704297 -0.46825656 -0.059015192 -0.23415534 0.10704609 -0.032225966
     Approximate Neighbors
     ('cat', 1.0)
-    ('cats', 0.5971987545490265)
-    ('felis', 0.5874168574810028)
-    ('albino', 0.5703404247760773)
-    ('marten', 0.5679939687252045)
-    ('leopardus', 0.5678345859050751)
-    ('barsoomian', 0.5672095417976379)
-    ('prionailurus', 0.567060798406601)
-    ('ferret', 0.5667355954647064)
-    ('eared', 0.566079169511795)
-    ('sighthound', 0.5649237632751465)
+    ('purr', 0.5825351476669312)
+    ('prionailurus', 0.5775779187679291)
+    ('cats', 0.5702914297580719)
+    ('meow', 0.5674391090869904)
+    ('rabbits', 0.5620074272155762)
+    ('sighthound', 0.561018168926239)
+    ('saimiri', 0.5574325621128082)
+    ('kitten', 0.5556513369083405)
+    ('eared', 0.5553555190563202)
+    ('badger', 0.5542813241481781)
 
-    Normal (not Annoy-indexed) Neighbors
-    ('cat', 0.9999998807907104)
-    ('cats', 0.6755023002624512)
-    ('felis', 0.6595503091812134)
-    ('albino', 0.6307852268218994)
-    ('marten', 0.6267415881156921)
-    ('leopardus', 0.6264660954475403)
-    ('barsoomian', 0.6253848075866699)
-    ('prionailurus', 0.6251273155212402)
-    ('ferret', 0.6245640516281128)
-    ('eared', 0.6234253644943237)
-    ('sighthound', 0.6214173436164856)
+    Exact Neighbors
+    ('cat', 0.9999999403953552)
+    ('leopardus', 0.6718246340751648)
+    ('purr', 0.6514462232589722)
+    ('felis', 0.6486470103263855)
+    ('prionailurus', 0.6431191563606262)
+    ('cats', 0.6307010054588318)
+    ('asinus', 0.6302586197853088)
+    ('meow', 0.6257820129394531)
+    ('oncifelis', 0.6220626831054688)
+    ('rabbits', 0.6163250207901001)
+    ('lynxes', 0.6148800253868103)
+
+
 
 
 Recap
@@ -620,9 +658,9 @@ of our word embeddings. To do so, we did the following steps:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 11 minutes  41.168 seconds)
+   **Total running time of the script:** ( 14 minutes  40.672 seconds)
 
-**Estimated memory usage:**  807 MB
+**Estimated memory usage:**  753 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_annoy.py:
@@ -635,13 +673,13 @@ of our word embeddings. To do so, we did the following steps:
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_annoy.py <run_annoy.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_annoy.ipynb <run_annoy.ipynb>`
 
@@ -650,4 +688,4 @@ of our word embeddings. To do so, we did the following steps:
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

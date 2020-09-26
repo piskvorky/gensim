@@ -1,4 +1,5 @@
 import os
+import logging
 import unittest
 import numpy
 import codecs
@@ -521,7 +522,8 @@ class TestLsiWrapper(unittest.TestCase):
 class TestLdaSeqWrapper(unittest.TestCase):
     def setUp(self):
         self.model = LdaSeqTransformer(
-            id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim'
+            id2word=dictionary_ldaseq, num_topics=2, time_slice=[10, 10, 11], initialize='gensim',
+            passes=2, lda_inference_max_iter=10, em_min_iter=1, em_max_iter=4
         )
         self.model.fit(corpus_ldaseq)
 
@@ -549,7 +551,10 @@ class TestLdaSeqWrapper(unittest.TestCase):
         test_target = data.target[0:2]
         id2word = Dictionary([x.split() for x in test_data])
         corpus = [id2word.doc2bow(i.split()) for i in test_data]
-        model = LdaSeqTransformer(id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim')
+        model = LdaSeqTransformer(
+            id2word=id2word, num_topics=2, time_slice=[1, 1, 1], initialize='gensim',
+            passes=2, lda_inference_max_iter=10, em_min_iter=1, em_max_iter=4
+        )
         clf = linear_model.LogisticRegression(penalty='l2', C=0.1)
         text_ldaseq = Pipeline([('features', model,), ('classifier', clf)])
         text_ldaseq.fit(corpus, test_target)
@@ -582,7 +587,10 @@ class TestLdaSeqWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        ldaseq_wrapper = LdaSeqTransformer(num_topics=2)
+        ldaseq_wrapper = LdaSeqTransformer(
+            num_topics=2,
+            passes=2, lda_inference_max_iter=10, em_min_iter=1, em_max_iter=4
+        )
         doc = list(corpus_ldaseq)[0]
         self.assertRaises(NotFittedError, ldaseq_wrapper.transform, doc)
 
@@ -658,7 +666,7 @@ class TestRpWrapper(unittest.TestCase):
 class TestWord2VecWrapper(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(0)
-        self.model = W2VTransformer(size=10, min_count=0, seed=42)
+        self.model = W2VTransformer(vector_size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
     def testTransform(self):
@@ -667,21 +675,21 @@ class TestWord2VecWrapper(unittest.TestCase):
         words = words + texts[0]
         matrix = self.model.transform(words)
         self.assertEqual(matrix.shape[0], 3)
-        self.assertEqual(matrix.shape[1], self.model.size)
+        self.assertEqual(matrix.shape[1], self.model.vector_size)
 
         # tranform one word
         word = texts[0][0]
         matrix = self.model.transform(word)
         self.assertEqual(matrix.shape[0], 1)
-        self.assertEqual(matrix.shape[1], self.model.size)
+        self.assertEqual(matrix.shape[1], self.model.vector_size)
 
     def testConsistencyWithGensimModel(self):
         # training a W2VTransformer
-        self.model = W2VTransformer(size=10, min_count=0, seed=42)
+        self.model = W2VTransformer(vector_size=10, min_count=0, seed=42)
         self.model.fit(texts)
 
         # training a Gensim Word2Vec model with the same params
-        gensim_w2vmodel = models.Word2Vec(texts, size=10, min_count=0, seed=42)
+        gensim_w2vmodel = models.Word2Vec(texts, vector_size=10, min_count=0, seed=42)
 
         word = texts[0][0]
         vec_transformer_api = self.model.transform(word)  # vector returned by W2VTransformer
@@ -691,7 +699,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
-        model = W2VTransformer(size=10, min_count=1)
+        model = W2VTransformer(vector_size=10, min_count=1)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
@@ -728,7 +736,7 @@ class TestWord2VecWrapper(unittest.TestCase):
 
         # sanity check for transformation operation
         self.assertEqual(loaded_transformed_vecs.shape[0], 1)
-        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.vector_size)
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(word)
@@ -736,7 +744,7 @@ class TestWord2VecWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        w2vmodel_wrapper = W2VTransformer(size=10, min_count=0, seed=42)
+        w2vmodel_wrapper = W2VTransformer(vector_size=10, min_count=0, seed=42)
         word = texts[0][0]
         self.assertRaises(NotFittedError, w2vmodel_wrapper.transform, word)
 
@@ -835,13 +843,13 @@ class TestD2VTransformer(unittest.TestCase):
         docs = [w2v_texts[0], w2v_texts[1], w2v_texts[2]]
         matrix = self.model.transform(docs)
         self.assertEqual(matrix.shape[0], 3)
-        self.assertEqual(matrix.shape[1], self.model.size)
+        self.assertEqual(matrix.shape[1], self.model.vector_size)
 
         # tranform one document
         doc = w2v_texts[0]
         matrix = self.model.transform(doc)
         self.assertEqual(matrix.shape[0], 1)
-        self.assertEqual(matrix.shape[1], self.model.size)
+        self.assertEqual(matrix.shape[1], self.model.vector_size)
 
     def testFitTransform(self):
         model = D2VTransformer(min_count=1)
@@ -850,13 +858,13 @@ class TestD2VTransformer(unittest.TestCase):
         docs = [w2v_texts[0], w2v_texts[1], w2v_texts[2]]
         matrix = model.fit_transform(docs)
         self.assertEqual(matrix.shape[0], 3)
-        self.assertEqual(matrix.shape[1], model.size)
+        self.assertEqual(matrix.shape[1], model.vector_size)
 
         # fit and transform one document
         doc = w2v_texts[0]
         matrix = model.fit_transform(doc)
         self.assertEqual(matrix.shape[0], 1)
-        self.assertEqual(matrix.shape[1], model.size)
+        self.assertEqual(matrix.shape[1], model.vector_size)
 
     def testSetGetParams(self):
         # updating only one param
@@ -896,7 +904,7 @@ class TestD2VTransformer(unittest.TestCase):
 
         # sanity check for transformation operation
         self.assertEqual(loaded_transformed_vecs.shape[0], 1)
-        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.vector_size)
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(doc)
@@ -1301,9 +1309,9 @@ class TestPhrasesTransformerCustomScorer(unittest.TestCase):
         self.assertRaises(NotFittedError, phrases_transformer.transform, phrases_sentences[0])
 
 
-class TestFastTextWrapper(unittest.TestCase):
+class TestFTTransformer(unittest.TestCase):
     def setUp(self):
-        self.model = FTTransformer(size=10, min_count=0, seed=42, bucket=5000)
+        self.model = FTTransformer(vector_size=10, min_count=0, seed=42, bucket=5000)
         self.model.fit(texts)
 
     def testTransform(self):
@@ -1312,30 +1320,30 @@ class TestFastTextWrapper(unittest.TestCase):
         words = words + texts[0]
         matrix = self.model.transform(words)
         self.assertEqual(matrix.shape[0], 3)
-        self.assertEqual(matrix.shape[1], self.model.size)
+        self.assertEqual(matrix.shape[1], self.model.vector_size)
 
         # tranform one word
         word = texts[0][0]
         matrix = self.model.transform(word)
         self.assertEqual(matrix.shape[0], 1)
-        self.assertEqual(matrix.shape[1], self.model.size)
+        self.assertEqual(matrix.shape[1], self.model.vector_size)
 
         # verify oov-word vector retrieval
         invocab_vec = self.model.transform("computer")  # invocab word
         self.assertEqual(invocab_vec.shape[0], 1)
-        self.assertEqual(invocab_vec.shape[1], self.model.size)
+        self.assertEqual(invocab_vec.shape[1], self.model.vector_size)
 
         oov_vec = self.model.transform('compute')  # oov word
         self.assertEqual(oov_vec.shape[0], 1)
-        self.assertEqual(oov_vec.shape[1], self.model.size)
+        self.assertEqual(oov_vec.shape[1], self.model.vector_size)
 
     def testConsistencyWithGensimModel(self):
         # training a FTTransformer
-        self.model = FTTransformer(size=10, min_count=0, seed=42, workers=1, bucket=5000)
+        self.model = FTTransformer(vector_size=10, min_count=0, seed=42, workers=1, bucket=5000)
         self.model.fit(texts)
 
         # training a Gensim FastText model with the same params
-        gensim_ftmodel = models.FastText(texts, size=10, min_count=0, seed=42, workers=1, bucket=5000)
+        gensim_ftmodel = models.FastText(texts, vector_size=10, min_count=0, seed=42, workers=1, bucket=5000)
 
         # vectors returned by FTTransformer
         vecs_transformer_api = self.model.transform(
@@ -1353,7 +1361,7 @@ class TestFastTextWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testPipeline(self):
-        model = FTTransformer(size=10, min_count=1, bucket=5000)
+        model = FTTransformer(vector_size=10, min_count=1, bucket=5000)
         model.fit(w2v_texts)
 
         class_dict = {'mathematics': 1, 'physics': 0}
@@ -1391,7 +1399,7 @@ class TestFastTextWrapper(unittest.TestCase):
 
         # sanity check for transformation operation
         self.assertEqual(loaded_transformed_vecs.shape[0], len(words))
-        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.size)
+        self.assertEqual(loaded_transformed_vecs.shape[1], model_load.vector_size)
 
         # comparing the original and loaded models
         original_transformed_vecs = self.model.transform(words)
@@ -1399,10 +1407,11 @@ class TestFastTextWrapper(unittest.TestCase):
         self.assertTrue(passed)
 
     def testModelNotFitted(self):
-        ftmodel_wrapper = FTTransformer(size=10, min_count=0, seed=42, bucket=5000)
+        ftmodel_wrapper = FTTransformer(vector_size=10, min_count=0, seed=42, bucket=5000)
         word = texts[0][0]
         self.assertRaises(NotFittedError, ftmodel_wrapper.transform, word)
 
 
 if __name__ == '__main__':
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

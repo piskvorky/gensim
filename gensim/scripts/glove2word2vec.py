@@ -62,6 +62,8 @@ import logging
 import argparse
 
 from gensim import utils
+from gensim.utils import deprecated
+from gensim.models.keyedvectors import KeyedVectors
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +89,7 @@ def get_glove_info(glove_file_name):
     return num_lines, num_dims
 
 
+@deprecated("KeyedVectors.load_word2vec_format(.., binary=False, no_header=True) loads GLoVE text vectors.")
 def glove2word2vec(glove_input_file, word2vec_output_file):
     """Convert `glove_input_file` in GloVe format to word2vec format and write it to `word2vec_output_file`.
 
@@ -103,13 +106,11 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
         Number of vectors (lines) of input file and its dimension.
 
     """
-    num_lines, num_dims = get_glove_info(glove_input_file)
+    glovekv = KeyedVectors.load_word2vec_format(glove_input_file, binary=False, no_header=True)
+
+    num_lines, num_dims = len(glovekv), glovekv.vector_size
     logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
-    with utils.open(word2vec_output_file, 'wb') as fout:
-        fout.write("{0} {1}\n".format(num_lines, num_dims).encode('utf-8'))
-        with utils.open(glove_input_file, 'rb') as fin:
-            for line in fin:
-                fout.write(line)
+    glovekv.save_word2vec_format(word2vec_output_file, binary=False)
     return num_lines, num_dims
 
 

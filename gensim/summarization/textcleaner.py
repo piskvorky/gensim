@@ -6,26 +6,14 @@
 """This module contains functions and processors used for processing text,
 extracting sentences from text, working with acronyms and abbreviations.
 
-Data
-----
-
-.. data:: SEPARATOR - Special separator used in abbreviations.
-.. data:: RE_SENTENCE - Pattern to split text to sentences.
-.. data:: AB_SENIOR - Pattern for detecting abbreviations (example: Sgt. Pepper).
-.. data:: AB_ACRONYM - Pattern for detecting acronyms.
-.. data:: AB_ACRONYM_LETTERS - Pattern for detecting acronyms (example: P.S. I love you).
-.. data:: UNDO_AB_SENIOR - Pattern like AB_SENIOR but with SEPARATOR between abbreviation and next word.
-.. data:: UNDO_AB_ACRONYM - Pattern like AB_ACRONYM but with SEPARATOR between abbreviation and next word.
-
 """
 
+import re
+import logging
 
 from gensim.summarization.syntactic_unit import SyntacticUnit
 from gensim.parsing.preprocessing import preprocess_documents
 from gensim.utils import tokenize, has_pattern
-from six.moves import range
-import re
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +21,25 @@ HAS_PATTERN = has_pattern()
 if HAS_PATTERN:
     from pattern.en import tag
 
+# Special separator used in abbreviations.
 SEPARATOR = r'@'
+
+# Pattern to split text to sentences.
 RE_SENTENCE = re.compile(r'(\S.+?[.!?])(?=\s+|$)|(\S.+?)(?=[\n]|$)', re.UNICODE)
+
+# Pattern for detecting abbreviations (example: Sgt. Pepper).
 AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)\s(\w)', re.UNICODE)
+
+# Pattern for detecting acronyms.
 AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)\s(\w)', re.UNICODE)
+
+# Pattern for detecting acronyms (example: P.S. I love you).
 AB_ACRONYM_LETTERS = re.compile(r'([a-zA-Z])\.([a-zA-Z])\.', re.UNICODE)
+
+# Like AB_SENIOR but with SEPARATOR between abbreviation and next word.
 UNDO_AB_SENIOR = re.compile(r'([A-Z][a-z]{1,2}\.)' + SEPARATOR + r'(\w)', re.UNICODE)
+
+# Like AB_ACRONYM but with SEPARATOR between abbreviation and next word.
 UNDO_AB_ACRONYM = re.compile(r'(\.[a-zA-Z]\.)' + SEPARATOR + r'(\w)', re.UNICODE)
 
 

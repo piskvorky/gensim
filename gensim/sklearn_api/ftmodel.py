@@ -18,7 +18,7 @@ Examples
     >>> from gensim.sklearn_api import FTTransformer
     >>>
     >>> # Create a model to represent each word by a 10 dimensional vector.
-    >>> model = FTTransformer(size=10, min_count=1, seed=1)
+    >>> model = FTTransformer(vector_size=10, min_count=1, seed=1)
     >>>
     >>> # What is the vector representations of the word 'graph' and 'system'?
     >>> wordvecs = model.fit(common_texts).transform(['graph', 'system'])
@@ -56,10 +56,10 @@ class FTTransformer(TransformerMixin, BaseEstimator):
     Information <https://arxiv.org/abs/1607.04606>`_.
 
     """
-    def __init__(self, sg=0, hs=0, size=100, alpha=0.025, window=5, min_count=5,
+    def __init__(self, sg=0, hs=0, vector_size=100, alpha=0.025, window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1,
                  workers=3, min_alpha=0.0001, negative=5, ns_exponent=0.75,
-                 cbow_mean=1, hashfxn=hash, iter=5, null_word=0, min_n=3,
+                 cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3,
                  max_n=6, sorted_vocab=1, bucket=2000000, trim_rule=None,
                  batch_words=10000):
         """
@@ -71,7 +71,7 @@ class FTTransformer(TransformerMixin, BaseEstimator):
         hs : {1,0}, optional
             If 1, hierarchical softmax will be used for model training.
             If set to 0, and `negative` is non-zero, negative sampling will be used.
-        size : int, optional
+        vector_size : int, optional
             Dimensionality of the word vectors.
         alpha : float, optional
             The initial learning rate.
@@ -113,7 +113,7 @@ class FTTransformer(TransformerMixin, BaseEstimator):
             If 0, use the sum of the context word vectors. If 1, use the mean, only applies when cbow is used.
         hashfxn : function, optional
             Hash function to use to randomly initialize weights, for increased training reproducibility.
-        iter : int, optional
+        epochs : int, optional
             Number of iterations (epochs) over the corpus.
         min_n : int, optional
             Minimum length of char n-grams to be used for training word representations.
@@ -148,7 +148,7 @@ class FTTransformer(TransformerMixin, BaseEstimator):
         self.gensim_model = None
         self.sg = sg
         self.hs = hs
-        self.size = size
+        self.vector_size = vector_size
         self.alpha = alpha
         self.window = window
         self.min_count = min_count
@@ -162,7 +162,7 @@ class FTTransformer(TransformerMixin, BaseEstimator):
         self.ns_exponent = ns_exponent
         self.cbow_mean = cbow_mean
         self.hashfxn = hashfxn
-        self.iter = iter
+        self.epochs = epochs
         self.null_word = null_word
         self.min_n = min_n
         self.max_n = max_n
@@ -189,13 +189,13 @@ class FTTransformer(TransformerMixin, BaseEstimator):
 
         """
         self.gensim_model = models.FastText(
-                sentences=X, sg=self.sg, hs=self.hs, size=self.size,
+                sentences=X, sg=self.sg, hs=self.hs, vector_size=self.vector_size,
                 alpha=self.alpha, window=self.window, min_count=self.min_count,
                 max_vocab_size=self.max_vocab_size, word_ngrams=self.word_ngrams,
                 sample=self.sample, seed=self.seed, workers=self.workers,
                 min_alpha=self.min_alpha, negative=self.negative,
                 ns_exponent=self.ns_exponent, cbow_mean=self.cbow_mean,
-                hashfxn=self.hashfxn, iter=self.iter, null_word=self.null_word,
+                hashfxn=self.hashfxn, epochs=self.epochs, null_word=self.null_word,
                 min_n=self.min_n, max_n=self.max_n, sorted_vocab=self.sorted_vocab,
                 bucket=self.bucket, trim_rule=self.trim_rule,
                 batch_words=self.batch_words
@@ -212,7 +212,7 @@ class FTTransformer(TransformerMixin, BaseEstimator):
 
         Returns
         -------
-        np.ndarray of shape [`len(words)`, `size`]
+        np.ndarray of shape [`len(words)`, `vector_size`]
             A 2D array where each row is the vector of one word.
 
         """
@@ -225,4 +225,4 @@ class FTTransformer(TransformerMixin, BaseEstimator):
         if isinstance(words, six.string_types):
             words = [words]
         vectors = [self.gensim_model.wv[word] for word in words]
-        return np.reshape(np.array(vectors), (len(words), self.size))
+        return np.reshape(np.array(vectors), (len(words), self.vector_size))

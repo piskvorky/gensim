@@ -25,6 +25,7 @@ See Also
     Internal functions for pipelines.
 
 """
+
 import logging
 import multiprocessing as mp
 from collections import namedtuple
@@ -33,9 +34,11 @@ import numpy as np
 
 from gensim import interfaces, matutils
 from gensim import utils
-from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
+from gensim.topic_coherence import (
+    segmentation, probability_estimation,
+    direct_confirmation_measure, indirect_confirmation_measure,
+    aggregation,
+)
 from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
 
 logger = logging.getLogger(__name__)

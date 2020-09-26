@@ -62,7 +62,6 @@ from six.moves import zip, range
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
-
 from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)

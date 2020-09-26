@@ -13,7 +13,7 @@ Run with::
 import distutils.cmd
 import distutils.log
 import itertools
-import os.path
+import os
 import platform
 import shutil
 import sys
@@ -25,7 +25,6 @@ c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
     'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
     'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
-    'gensim.models._utils_any2vec': 'gensim/models/_utils_any2vec.c',
     'gensim._matutils': 'gensim/_matutils.c',
     'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
 }
@@ -42,7 +41,9 @@ def need_cython():
     """Return True if we need Cython to translate any of the extensions.
 
     If the extensions have already been translated to C/C++, then we don't need
-    to install Cython and perform the translation."""
+    to install Cython and perform the translation.
+
+    """
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
     return any([not os.path.isfile(f) for f in expected])
 
@@ -51,7 +52,14 @@ def make_c_ext(use_cython=False):
     for module, source in c_extensions.items():
         if use_cython:
             source = source.replace('.c', '.pyx')
-        yield Extension(module, sources=[source], language='c')
+        extra_args = []
+#        extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
+        yield Extension(
+            module,
+            sources=[source],
+            language='c',
+            extra_compile_args=extra_args,
+        )
 
 
 def make_cpp_ext(use_cython=False):
@@ -62,7 +70,7 @@ def make_cpp_ext(use_cython=False):
         extra_args.append('-std=c++11')
     elif system == 'Darwin':
         extra_args.extend(['-stdlib=libc++', '-std=c++11'])
-
+#    extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
     for module, source in cpp_extensions.items():
         if use_cython:
             source = source.replace('.cpp', '.pyx')
@@ -164,7 +172,7 @@ Target audience is the *natural language processing* (NLP) and *information retr
 Features
 ---------
 
-* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core),
+* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core)
 * **Intuitive interfaces**
 
   * easy to plug in your own input corpus/datastream (simple streaming API)
@@ -199,7 +207,7 @@ Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.
 
 For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.5, 3.6, 3.7 and 3.8.
+Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.6, 3.7 and 3.8.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 
@@ -254,7 +262,10 @@ Copyright (c) 2009-now Radim Rehurek
 
 distributed_env = ['Pyro4 >= 4.27']
 
-win_testenv = [
+visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
+
+# packages included for build-testing everywhere
+core_testenv = [
     'pytest',
     'pytest-rerunfailures',
     'mock',
@@ -265,13 +276,17 @@ win_testenv = [
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
     'scikit-learn',
-    # The following packages are commented out because they don't install on Windows. So skip the
-    # related tests in AppVeyor. We still test them in Linux via Travis, see linux_testenv below.
-    # See https://github.com/RaRe-Technologies/gensim/pull/2814
-    # 'tensorflow',
-    # 'keras',
 ]
 
+# Add additional requirements for testing on Linux that are skipped on Windows.
+linux_testenv = core_testenv[:] + visdom_req + ['pyemd', ]
+
+# Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
+# We still test them in Linux via Travis, see linux_testenv above.
+# See https://github.com/RaRe-Technologies/gensim/pull/2814
+win_testenv = core_testenv[:]
+
+#
 # This list partially duplicates requirements_docs.txt.
 # The main difference is that we don't include version pins here unless
 # absolutely necessary, whereas requirements_docs.txt includes pins for
@@ -281,8 +296,8 @@ win_testenv = [
 #
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
-visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
-docs_testenv = win_testenv + distributed_env + visdom_req + [
+
+docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
@@ -306,17 +321,6 @@ docs_testenv = win_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-# Add additional requirements for testing on Linux. We skip some tests on Windows,
-# because the libraries below are too tricky to install there.
-linux_testenv = win_testenv[:] + visdom_req
-if sys.version_info >= (3, 7):
-    # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
-    # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
-    linux_testenv += [
-        'tensorflow',
-        'keras==2.3.1',
-    ]
-
 NUMPY_STR = 'numpy >= 1.11.3'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
@@ -330,6 +334,7 @@ install_requires = [
     'scipy >= 0.18.1',
     'six >= 1.5.0',
     'smart_open >= 1.8.1',
+    "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
 
 setup_requires = [NUMPY_STR]
@@ -340,7 +345,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='3.8.1',
+    version='4.0.0.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -354,7 +359,7 @@ setup(
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
 
-    license='LGPLv2.1',
+    license='LGPL-2.1-only',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
@@ -369,9 +374,7 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -382,7 +385,7 @@ setup(
     ],
 
     test_suite="gensim.test",
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,

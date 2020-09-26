@@ -51,7 +51,7 @@ def poincare_2d_visualization(model, tree, figure_title, num_nodes=50, show_node
     if vectors.shape[1] != 2:
         raise ValueError('Can only plot 2-D vectors')
 
-    node_labels = model.kv.index2word
+    node_labels = model.kv.index_to_key
     nodes_x = list(vectors[:, 0])
     nodes_y = list(vectors[:, 1])
     nodes = go.Scatter(
