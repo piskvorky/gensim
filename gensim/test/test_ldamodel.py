@@ -54,8 +54,10 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # properly continues training on the new state
         self.model.random_state = np.random.RandomState(0)
         model2.random_state = np.random.RandomState(0)
-        self.model.update(self.corpus, passes=1)
-        model2.update(self.corpus, passes=1)
+        self.model.passes = 1
+        model2.passes = 1
+        self.model.update(self.corpus)
+        model2.update(self.corpus)
 
         assert_allclose(self.model.get_term_topics(2), model2.get_term_topics(2), rtol=1e-5)
         assert_allclose(self.model.get_topics(), model2.get_topics(), rtol=1e-5)
