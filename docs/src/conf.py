@@ -54,7 +54,7 @@ html_additional_pages = {'index': './_templates/indexcontent.html'}
 
 # General information about the project.
 project = u'gensim'
-copyright = u'2009-now, Radim Řehůřek.'
+copyright = u'2009-now Radim Řehůřek, https://radimrehurek.com.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

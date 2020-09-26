@@ -62,7 +62,7 @@ Some honorable mentions are included in the `CHANGELOG.txt <https://github.com/R
 Academic citing
 ---------------
 
-Gensim has been used in `over a thousand research paper and student theses <https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C>`_.
+Gensim has been used in `over two thousand research papers and student theses <https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C>`_.
 
 When citing Gensim, please use `this BibTeX entry <bibtex_gensim.bib>`_::
 
