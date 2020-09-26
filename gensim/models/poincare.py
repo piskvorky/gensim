@@ -50,15 +50,13 @@ import time
 
 import numpy as np
 from collections import defaultdict, Counter
-from numpy import random as np_random
+from numpy import random as np_random, float32 as REAL
 from scipy.stats import spearmanr
 from six import string_types
 from six.moves import zip, range
 
 from gensim import utils, matutils
-from gensim.models.keyedvectors import Vocab, BaseKeyedVectors
-from gensim.models.utils_any2vec import _save_word2vec_format, _load_word2vec_format
-from numpy import float32 as REAL
+from gensim.models.keyedvectors import KeyedVectors
 
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
@@ -151,7 +149,7 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self.train_data = train_data
-        self.kv = PoincareKeyedVectors(size)
+        self.kv = PoincareKeyedVectors(size, 0)
         self.all_relations = []
         self.node_relations = defaultdict(set)
         self._negatives_buffer = NegativesBuffer([])
@@ -208,51 +206,49 @@ class PoincareModel(utils.SaveLoad):
             >>> model.train(epochs=50)
 
         """
-        old_index2word_len = len(self.kv.index2word)
+        old_index_to_key_len = len(self.kv.index_to_key)
 
         logger.info("loading relations from train data..")
         for relation in relations:
             if len(relation) != 2:
                 raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
             for item in relation:
-                if item in self.kv.vocab:
-                    self.kv.vocab[item].count += 1
+                if item in self.kv.key_to_index:
+                    self.kv.set_vecattr(item, 'count', self.kv.get_vecattr(item, 'count') + 1)
                 else:
-                    self.kv.vocab[item] = Vocab(count=1, index=len(self.kv.index2word))
-                    self.kv.index2word.append(item)
+                    self.kv.key_to_index[item] = len(self.kv.index_to_key)
+                    self.kv.index_to_key.append(item)
+                    self.kv.set_vecattr(item, 'count', 1)
+
             node_1, node_2 = relation
-            node_1_index, node_2_index = self.kv.vocab[node_1].index, self.kv.vocab[node_2].index
+            node_1_index, node_2_index = self.kv.key_to_index[node_1], self.kv.key_to_index[node_2]
             self.node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             self.all_relations.append(relation)
-        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv.vocab))
-        self.indices_set = set(range(len(self.kv.index2word)))  # Set of all node indices
-        self.indices_array = np.fromiter(range(len(self.kv.index2word)), dtype=int)  # Numpy array of all node indices
+        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv))
+        self.indices_set = set(range(len(self.kv.index_to_key)))  # Set of all node indices
+        self.indices_array = np.fromiter(range(len(self.kv.index_to_key)), dtype=int)  # Numpy array of all node indices
         self._init_node_probabilities()
 
         if not update:
             self._init_embeddings()
         else:
-            self._update_embeddings(old_index2word_len)
+            self._update_embeddings(old_index_to_key_len)
 
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
-        shape = (len(self.kv.index2word), self.size)
-        self.kv.syn0 = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        shape = (len(self.kv.index_to_key), self.size)
+        self.kv.vectors = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
 
-    def _update_embeddings(self, old_index2word_len):
+    def _update_embeddings(self, old_index_to_key_len):
         """Randomly initialize vectors for the items in the additional vocab."""
-        shape = (len(self.kv.index2word) - old_index2word_len, self.size)
+        shape = (len(self.kv.index_to_key) - old_index_to_key_len, self.size)
         v = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
-        self.kv.syn0 = np.concatenate([self.kv.syn0, v])
+        self.kv.vectors = np.concatenate([self.kv.vectors, v])
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
-        counts = np.fromiter((
-                self.kv.vocab[self.kv.index2word[i]].count
-                for i in range(len(self.kv.index2word))
-            ),
-            dtype=np.float64, count=len(self.kv.index2word))
+        counts = self.kv.expandos['count'].astype(np.float64)
         self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
 
@@ -290,14 +286,14 @@ class PoincareModel(utils.SaveLoad):
 
         """
         node_relations = self.node_relations[node_index]
-        num_remaining_nodes = len(self.kv.vocab) - len(node_relations)
+        num_remaining_nodes = len(self.kv) - len(node_relations)
         if num_remaining_nodes < self.negative:
             raise ValueError(
                 'Cannot sample %d negative nodes from a set of %d negative nodes for %s' %
-                (self.negative, num_remaining_nodes, self.kv.index2word[node_index])
+                (self.negative, num_remaining_nodes, self.kv.index_to_key[node_index])
             )
 
-        positive_fraction = float(len(node_relations)) / len(self.kv.vocab)
+        positive_fraction = float(len(node_relations)) / len(self.kv)
         if positive_fraction < 0.01:
             # If number of positive relations is a small fraction of total nodes
             # re-sample till no positively connected nodes are chosen
@@ -461,8 +457,8 @@ class PoincareModel(utils.SaveLoad):
             indices_v.append(v)
             indices_v.extend(negatives)
 
-        vectors_u = self.kv.syn0[indices_u]
-        vectors_v = self.kv.syn0[indices_v].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_u = self.kv.vectors[indices_u]
+        vectors_v = self.kv.vectors[indices_v].reshape((batch_size, 1 + self.negative, self.size))
         vectors_v = vectors_v.swapaxes(0, 1).swapaxes(1, 2)
         batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v, self.regularization_coeff)
         batch.compute_all()
@@ -499,7 +495,7 @@ class PoincareModel(utils.SaveLoad):
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
             auto_gradients = self._loss_grad(
-                np.vstack((self.kv.syn0[u], self.kv.syn0[[v] + negatives])), self.regularization_coeff)
+                np.vstack((self.kv.vectors[u], self.kv.vectors[[v] + negatives])), self.regularization_coeff)
             computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
@@ -594,16 +590,16 @@ class PoincareModel(utils.SaveLoad):
         u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
         self._handle_duplicates(u_updates, indices_u)
 
-        self.kv.syn0[indices_u] -= u_updates
-        self.kv.syn0[indices_u] = self._clip_vectors(self.kv.syn0[indices_u], self.epsilon)
+        self.kv.vectors[indices_u] -= u_updates
+        self.kv.vectors[indices_u] = self._clip_vectors(self.kv.vectors[indices_u], self.epsilon)
 
         v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
         self._handle_duplicates(v_updates, indices_v)
 
-        self.kv.syn0[indices_v] -= v_updates
-        self.kv.syn0[indices_v] = self._clip_vectors(self.kv.syn0[indices_v], self.epsilon)
+        self.kv.vectors[indices_v] -= v_updates
+        self.kv.vectors[indices_v] = self._clip_vectors(self.kv.vectors[indices_v], self.epsilon)
 
     def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
         """Train Poincare embeddings using loaded data and model parameters.
@@ -860,148 +856,38 @@ class PoincareBatch(object):
         self._loss_computed = True
 
 
-class PoincareKeyedVectors(BaseKeyedVectors):
+class PoincareKeyedVectors(KeyedVectors):
     """Vectors and vocab for the :class:`~gensim.models.poincare.PoincareModel` training class.
 
     Used to perform operations on the vectors such as vector lookup, distance calculations etc.
 
+    (May be used to save/load final vectors in the plain word2vec format, via the inherited
+    methods save_word2vec_format() and load_word2vec_format().)
+
+    Examples
+    --------
+    .. sourcecode:: pycon
+
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> # Read the sample relations file and train the model
+        >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
+        >>> model = PoincareModel(train_data=relations)
+        >>> model.train(epochs=50)
+        >>>
+        >>> # Query the trained model.
+        >>> wv = model.kv.get_vector('kangaroo.n.01')
+
     """
-    def __init__(self, vector_size):
-        super(PoincareKeyedVectors, self).__init__(vector_size)
+    def __init__(self, vector_size, vector_count, dtype=REAL):
+        super(PoincareKeyedVectors, self).__init__(vector_size, vector_count, dtype=dtype)
         self.max_distance = 0
-        self.index2word = []
-        self.vocab = {}
 
-    @property
-    def vectors(self):
-        return self.syn0
-
-    @vectors.setter
-    def vectors(self, value):
-        self.syn0 = value
-
-    @property
-    def index2entity(self):
-        return self.index2word
-
-    @index2entity.setter
-    def index2entity(self, value):
-        self.index2word = value
-
-    def word_vec(self, word):
-        """Get the word's representations in vector space, as a 1D numpy array.
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>>
-            >>> # Read the sample relations file and train the model
-            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-            >>> model = PoincareModel(train_data=relations)
-            >>> model.train(epochs=50)
-            >>>
-            >>> # Query the trained model.
-            >>> wv = model.kv.word_vec('kangaroo.n.01')
-
-        """
-        return super(PoincareKeyedVectors, self).get_vector(word)
-
-    def words_closer_than(self, w1, w2):
-        """Get all words that are closer to `w1` than `w2` is to `w1`.
-
-        Parameters
-        ----------
-        w1 : str
-            Input word.
-        w2 : str
-            Input word.
-
-        Returns
-        -------
-        list (str)
-            List of words that are closer to `w1` than `w2` is to `w1`.
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>>
-            >>> # Read the sample relations file and train the model
-            >>> relations = PoincareRelations(file_path=datapath('poincare_hypernyms_large.tsv'))
-            >>> model = PoincareModel(train_data=relations)
-            >>> model.train(epochs=50)
-            >>>
-            >>> # Which term is closer to 'kangaroo' than 'metatherian' is to 'kangaroo'?
-            >>> model.kv.words_closer_than('kangaroo.n.01', 'metatherian.n.01')
-            [u'marsupial.n.01', u'phalanger.n.01']
-
-        """
-        return super(PoincareKeyedVectors, self).closer_than(w1, w2)
-
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None):
-        """Store the input-hidden weight matrix in the same format used by the original
-        C word2vec-tool, for compatibility, using :func:`~gensim.models.utils_any2vec._save_word2vec_format`.
-
-        Parameters
-        ----------
-        fname : str
-            Path to file that will be used for storing.
-        fvocab : str, optional
-            File path used to save the vocabulary.
-        binary : bool, optional
-            If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
-        total_vec : int, optional
-            Explicitly specify total number of vectors
-            (in case word vectors are appended with document vectors afterwards).
-
-        """
-        _save_word2vec_format(fname, self.vocab, self.syn0, fvocab=fvocab, binary=binary, total_vec=total_vec)
-
-    @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL):
-        """Load the input-hidden weight matrix from the original C word2vec-tool format.
-        Use :func:`~gensim.models.utils_any2vec._load_word2vec_format`.
-
-        Note that the information stored in the file is incomplete (the binary tree is missing),
-        so while you can query for word similarity etc., you cannot continue training
-        with a model loaded this way.
-
-        Parameters
-        ----------
-        fname : str
-            The file path to the saved word2vec-format file.
-        fvocab : str, optional
-            File path to the vocabulary.Word counts are read from `fvocab` filename, if set
-            (this is the file generated by `-save-vocab` flag of the original C tool).
-        binary : bool, optional
-            If True, indicates whether the data is in binary word2vec format.
-        encoding : str, optional
-            If you trained the C model using non-utf8 encoding for words, specify that encoding in `encoding`.
-        unicode_errors : str, optional
-            default 'strict', is a string suitable to be passed as the `errors`
-            argument to the unicode() (Python 2.x) or str() (Python 3.x) function. If your source
-            file may include word tokens truncated in the middle of a multibyte unicode character
-            (as is common from the original word2vec.c tool), 'ignore' or 'replace' may help.
-        limit : int, optional
-            Sets a maximum number of word-vectors to read from the file. The default,
-            None, means read all.
-        datatype : type, optional
-            (Experimental) Can coerce dimensions to a non-default float type (such as `np.float16`) to save memory.
-            Such types may result in much slower bulk operations or incompatibility with optimized routines.)
-
-        Returns
-        -------
-        :class:`~gensim.models.poincare.PoincareModel`
-            Loaded Poincare model.
-
-        """
-        return _load_word2vec_format(
-            cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
-            limit=limit, datatype=datatype)
+    def _load_specials(self, *args, **kwargs):
+        super(PoincareKeyedVectors, self)._load_specials(*args, **kwargs)
+        # fixup rename of syn0
+        if not hasattr(self, 'vectors'):
+            self.vectors = self.__dict__.pop('syn0')
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
@@ -1064,14 +950,14 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         """
         all_distances = self.distances(node)
-        all_norms = np.linalg.norm(self.syn0, axis=1)
-        node_norm = all_norms[self.vocab[node].index]
+        all_norms = np.linalg.norm(self.vectors, axis=1)
+        node_norm = all_norms[self.get_index(node)]
         mask = node_norm >= all_norms
         if mask.all():  # No nodes lower in the hierarchy
             return None
         all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
-        return self.index2word[closest_child_index]
+        return self.index_to_key[closest_child_index]
 
     def closest_parent(self, node):
         """Get the node closest to `node` that is higher in the hierarchy than `node`.
@@ -1089,14 +975,14 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         """
         all_distances = self.distances(node)
-        all_norms = np.linalg.norm(self.syn0, axis=1)
-        node_norm = all_norms[self.vocab[node].index]
+        all_norms = np.linalg.norm(self.vectors, axis=1)
+        node_norm = all_norms[self.get_index(node)]
         mask = node_norm <= all_norms
         if mask.all():  # No nodes higher in the hierarchy
             return None
         all_distances = np.ma.array(all_distances, mask=mask)
         closest_child_index = np.ma.argmin(all_distances)
-        return self.index2word[closest_child_index]
+        return self.index_to_key[closest_child_index]
 
     def descendants(self, node, max_depth=5):
         """Get the list of recursively closest children from the given node, up to a max depth of `max_depth`.
@@ -1181,8 +1067,8 @@ class PoincareKeyedVectors(BaseKeyedVectors):
             If either of `w1` and `w2` is absent from vocab.
 
         """
-        vector_1 = self.word_vec(w1)
-        vector_2 = self.word_vec(w2)
+        vector_1 = self.get_vector(w1)
+        vector_2 = self.get_vector(w2)
         return self.vector_distance(vector_1, vector_2)
 
     def similarity(self, w1, w2):
@@ -1267,11 +1153,11 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         if not restrict_vocab:
             all_distances = self.distances(node_or_vector)
         else:
-            nodes_to_use = self.index2word[:restrict_vocab]
+            nodes_to_use = self.index_to_key[:restrict_vocab]
             all_distances = self.distances(node_or_vector, nodes_to_use)
 
         if isinstance(node_or_vector, string_types + (int,)):
-            node_index = self.vocab[node_or_vector].index
+            node_index = self.get_index(node_or_vector)
         else:
             node_index = None
         if not topn:
@@ -1279,7 +1165,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
         else:
             closest_indices = matutils.argsort(all_distances, topn=1 + topn)
         result = [
-            (self.index2word[index], float(all_distances[index]))
+            (self.index_to_key[index], float(all_distances[index]))
             for index in closest_indices if (not node_index or index != node_index)  # ignore the input node
         ]
         if topn:
@@ -1329,14 +1215,14 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         """
         if isinstance(node_or_vector, string_types):
-            input_vector = self.word_vec(node_or_vector)
+            input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
         if not other_nodes:
-            other_vectors = self.syn0
+            other_vectors = self.vectors
         else:
-            other_indices = [self.vocab[node].index for node in other_nodes]
-            other_vectors = self.syn0[other_indices]
+            other_indices = [self.get_index(node) for node in other_nodes]
+            other_vectors = self.vectors[other_indices]
         return self.vector_distance_batch(input_vector, other_vectors)
 
     def norm(self, node_or_vector):
@@ -1374,7 +1260,7 @@ class PoincareKeyedVectors(BaseKeyedVectors):
 
         """
         if isinstance(node_or_vector, string_types):
-            input_vector = self.word_vec(node_or_vector)
+            input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
         return np.linalg.norm(input_vector)
@@ -1461,7 +1347,7 @@ class PoincareRelations(object):
             if sys.version_info[0] < 3:
                 lines = file_obj
             else:
-                lines = (l.decode(self.encoding) for l in file_obj)
+                lines = (line.decode(self.encoding) for line in file_obj)
             # csv.reader requires bytestring input in python2, unicode input in python3
             reader = csv.reader(lines, delimiter=self.delimiter)
             for row in reader:
@@ -1536,14 +1422,13 @@ class ReconstructionEvaluation(object):
 
         """
         items = set()
-        embedding_vocab = embedding.vocab
         relations = defaultdict(set)
         with utils.open(file_path, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for row in reader:
                 assert len(row) == 2, 'Hypernym pair has more than two items'
-                item_1_index = embedding_vocab[row[0]].index
-                item_2_index = embedding_vocab[row[1]].index
+                item_1_index = embedding.get_index(row[0])
+                item_2_index = embedding.get_index(row[1])
                 relations[item_1_index].add(item_2_index)
                 items.update([item_1_index, item_2_index])
         self.items = items
@@ -1614,7 +1499,7 @@ class ReconstructionEvaluation(object):
             if item not in self.relations:
                 continue
             item_relations = list(self.relations[item])
-            item_term = self.embedding.index2word[item]
+            item_term = self.embedding.index_to_key[item]
             item_distances = self.embedding.distances(item_term)
             positive_relation_ranks, avg_precision = \
                 self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
@@ -1642,7 +1527,6 @@ class LinkPredictionEvaluation(object):
 
         """
         items = set()
-        embedding_vocab = embedding.vocab
         relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
         data_files = {'known': train_path, 'unknown': test_path}
         for relation_type, data_file in data_files.items():
@@ -1650,8 +1534,8 @@ class LinkPredictionEvaluation(object):
                 reader = csv.reader(f, delimiter='\t')
                 for row in reader:
                     assert len(row) == 2, 'Hypernym pair has more than two items'
-                    item_1_index = embedding_vocab[row[0]].index
-                    item_2_index = embedding_vocab[row[1]].index
+                    item_1_index = embedding.get_index(row[0])
+                    item_2_index = embedding.get_index(row[1])
                     relations[relation_type][item_1_index].add(item_2_index)
                     items.update([item_1_index, item_2_index])
         self.items = items
@@ -1726,7 +1610,7 @@ class LinkPredictionEvaluation(object):
                 continue
             unknown_relations = list(self.relations['unknown'][item])
             known_relations = list(self.relations['known'][item])
-            item_term = self.embedding.index2word[item]
+            item_term = self.embedding.index_to_key[item]
             item_distances = self.embedding.distances(item_term)
             unknown_relation_ranks, avg_precision = \
                 self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
@@ -1792,7 +1676,7 @@ class LexicalEntailmentEvaluation(object):
                     min_term_1, min_term_2 = term_1, term_2
                     min_distance = distance
         assert min_term_1 is not None and min_term_2 is not None
-        vector_1, vector_2 = embedding.word_vec(min_term_1), embedding.word_vec(min_term_2)
+        vector_1, vector_2 = embedding.get_vector(min_term_1), embedding.get_vector(min_term_2)
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
         return -1 * (1 + self.alpha * (norm_2 - norm_1)) * min_distance
 
@@ -1839,7 +1723,7 @@ class LexicalEntailmentEvaluation(object):
                 'pygtrie could not be imported, please install pygtrie in order to use LexicalEntailmentEvaluation')
 
         vocab_trie = Trie()
-        for key in embedding.vocab:
+        for key in embedding.key_to_index:
             vocab_trie[key] = True
         return vocab_trie
 

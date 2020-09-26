@@ -22,8 +22,8 @@ Also, please check the [Gensim FAQ](https://github.com/RaRe-Technologies/gensim/
 6. Check that everything's OK in your branch:
    - Check it for PEP8: `tox -e flake8`
    - Build its documentation (works only for MacOS/Linux): `tox -e docs` (documentation stored in `docs/src/_build`)
-   - Run unit tests: `tox -e py{version}-{os}`, for example `tox -e py27-linux` or `tox -e py36-win` where
-      - `{version}` is one of `27`, `35`, `36`
+   - Run unit tests: `tox -e py{version}-{os}`, for example `tox -e py35-linux` or `tox -e py36-win` where
+      - `{version}` is one of `35`, `36`
       - `{os}` is either `win` or `linux`
 7. Add files, commit and push: `git add ... ; git commit -m "my commit message"; git push origin my-feature`
 8. [Create a PR](https://help.github.com/articles/creating-a-pull-request/) on Github. Write a **clear description** for your PR, including all the context and relevant information, such as:

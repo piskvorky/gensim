@@ -7,16 +7,16 @@
 
 """Optimized Cython functions for training a :class:`~gensim.models.fasttext.FastText` model.
 
-The main entry points are :func:`~gensim.models.fasttext_inner.train_batch_sg`
-and :func:`~gensim.models.fasttext_inner.train_batch_cbow`.  They may be
-called directly from Python code.
+The main entry point is :func:`~gensim.models.fasttext_inner.train_batch_any`
+which may be called directly from Python code.
 
 Notes
 -----
 The implementation of the above functions heavily depends on the
 FastTextConfig struct defined in :file:`gensim/models/fasttext_inner.pxd`.
 
-The FAST_VERSION constant determines what flavor of BLAS we're currently using:
+The gensim.models.word2vec.FAST_VERSION value reports what flavor of BLAS
+we're currently using:
 
     0: double
     1: float
@@ -36,12 +36,6 @@ from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
 
-# scipy <= 0.15
-try:
-    from scipy.linalg.blas import fblas
-except ImportError:
-    # in scipy > 0.15, fblas function has been removed
-    import scipy.linalg.blas as fblas
 
 #
 # We make use of the following BLAS functions (or their analogs, if BLAS is
@@ -59,20 +53,16 @@ except ImportError:
 #
 # The increments (inc_x and inc_y) are usually 1 in our case.
 #
+# The versions are as chosen in word2vec_inner.pyx, and aliased to `our_` functions
 
-#
-# FIXME: why are we importing EXP_TABLE and then redefining it?
-#
-from word2vec_inner cimport bisect_left, random_int32, scopy, saxpy, dsdot, sscal, \
-     REAL_t, EXP_TABLE, our_dot, our_saxpy, our_dot_double, our_dot_float, our_dot_noblas, our_saxpy_noblas
-
-REAL = np.float32
+from word2vec_inner cimport bisect_left, random_int32, scopy, sscal, \
+     REAL_t, our_dot, our_saxpy
 
 DEF MAX_SENTENCE_LEN = 10000
 DEF MAX_SUBWORDS = 1000
 
-DEF EXP_TABLE_SIZE = 1000
-DEF MAX_EXP = 6
+DEF EXP_TABLE_SIZE = 512
+DEF MAX_EXP = 8
 
 cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 cdef REAL_t[EXP_TABLE_SIZE] LOG_TABLE
@@ -101,41 +91,22 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
 
     """
 
-    #
-    # Unpack the struct, extracting only the required parts into separate
-    # variables.  This is here for historical reasons.  We could bypass these
-    # declarations and use parts of the struct directly, but that would be
-    # somewhat more verbose.
-    #
     cdef:
-        int negative = c.negative
-        np.uint32_t *cum_table = c.cum_table
-        unsigned long long cum_table_len = c.cum_table_len
-        REAL_t *syn0_vocab = c.syn0_vocab
-        REAL_t *syn0_ngrams = c.syn0_ngrams
-        REAL_t *syn1neg = c.syn1neg
-        int size = c.size
         np.uint32_t word_index = c.indexes[j]
         np.uint32_t word2_index = c.indexes[i]
         np.uint32_t *subwords_index = c.subwords_idx[i]
         np.uint32_t subwords_len = c.subwords_idx_len[i]
-        REAL_t alpha = c.alpha
-        REAL_t *work = c.work
-        REAL_t *l1 = c.neu1
-        unsigned long long next_random = c.next_random
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
 
-    cdef long long row1 = word2_index * size, row2
+    cdef long long row1 = word2_index * c.size, row2
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label, f_dot
     cdef np.uint32_t target_index
     cdef int d
 
-    memset(work, 0, size * cython.sizeof(REAL_t))
-    memset(l1, 0, size * cython.sizeof(REAL_t))
+    memset(c.work, 0, c.size * cython.sizeof(REAL_t))
+    memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
 
-    scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
+    scopy(&c.size, &c.syn0_vocab[row1], &ONE, c.neu1, &ONE)
 
     #
     # Avoid division by zero.
@@ -143,34 +114,34 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
     cdef REAL_t norm_factor
     if subwords_len:
         for d in range(subwords_len):
-            our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_index[d] * size], &ONE, l1, &ONE)
+            our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[subwords_index[d] * c.size], &ONE, c.neu1, &ONE)
         norm_factor = ONEF / subwords_len
-        sscal(&size, &norm_factor, l1 , &ONE)
+        sscal(&c.size, &norm_factor, c.neu1, &ONE)
 
-    for d in range(negative+1):
+    for d in range(c.negative+1):
         if d == 0:
             target_index = word_index
             label = ONEF
         else:
-            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
-            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+            target_index = bisect_left(
+                c.cum_table, (c.next_random >> 16) % c.cum_table[c.cum_table_len-1], 0, c.cum_table_len)
+            c.next_random = (c.next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
 
-        row2 = target_index * size
-        f_dot = our_dot(&size, l1, &ONE, &syn1neg[row2], &ONE)
+        row2 = target_index * c.size
+        f_dot = our_dot(&c.size, c.neu1, &ONE, &c.syn1neg[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        g = (label - f) * alpha
-        our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
-        our_saxpy(&size, &g, l1, &ONE, &syn1neg[row2], &ONE)
-    our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
+        g = (label - f) * c.alpha
+        our_saxpy(&c.size, &g, &c.syn1neg[row2], &ONE, c.work, &ONE)
+        our_saxpy(&c.size, &g, c.neu1, &ONE, &c.syn1neg[row2], &ONE)
+    our_saxpy(&c.size, &c.vocab_lockf[word2_index % c.vocab_lockf_len], c.work, &ONE, &c.syn0_vocab[row1], &ONE)
     for d in range(subwords_len):
-        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[subwords_index[d]*size], &ONE)
-
-    c.next_random = next_random
+        our_saxpy(&c.size, &c.ngrams_lockf[subwords_index[d] % c.ngrams_lockf_len],
+                  c.work, &ONE, &c.syn0_ngrams[subwords_index[d]*c.size], &ONE)
 
 
 cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
@@ -192,18 +163,9 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
         np.uint32_t *word_point = c.points[j]
         np.uint8_t *word_code = c.codes[j]
         int codelen = c.codelens[j]
-        REAL_t *syn0_vocab = c.syn0_vocab
-        REAL_t *syn0_ngrams = c.syn0_ngrams
-        REAL_t *syn1 = c.syn1
-        int size = c.size
         np.uint32_t word2_index = c.indexes[i]
         np.uint32_t *subwords_index = c.subwords_idx[i]
         np.uint32_t subwords_len = c.subwords_idx_len[i]
-        REAL_t alpha = c.alpha
-        REAL_t *work = c.work
-        REAL_t *l1 = c.neu1
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
 
     #
     # b : long long
@@ -220,13 +182,13 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
     #   ?
     #
     cdef long long b
-    cdef long long row1 = word2_index * size, row2
+    cdef long long row1 = word2_index * c.size, row2
     cdef REAL_t f, g, f_dot
 
-    memset(work, 0, size * cython.sizeof(REAL_t))
-    memset(l1, 0, size * cython.sizeof(REAL_t))
+    memset(c.work, 0, c.size * cython.sizeof(REAL_t))
+    memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
 
-    scopy(&size, &syn0_vocab[row1], &ONE, l1, &ONE)
+    scopy(&c.size, &c.syn0_vocab[row1], &ONE, c.neu1, &ONE)
 
     #
     # Avoid division by zero.
@@ -234,26 +196,28 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
     cdef REAL_t norm_factor
     if subwords_len:
         for d in range(subwords_len):
-            row2 = subwords_index[d] * size
-            our_saxpy(&size, &ONEF, &syn0_ngrams[row2], &ONE, l1, &ONE)
+            row2 = subwords_index[d] * c.size
+            our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[row2], &ONE, c.neu1, &ONE)
         norm_factor = ONEF / subwords_len
-        sscal(&size, &norm_factor, l1 , &ONE)
+        sscal(&c.size, &norm_factor, c.neu1, &ONE)
 
     for b in range(codelen):
-        row2 = word_point[b] * size
-        f_dot = our_dot(&size, l1, &ONE, &syn1[row2], &ONE)
+        row2 = word_point[b] * c.size
+        f_dot = our_dot(&c.size, c.neu1, &ONE, &c.syn1[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        g = (1 - word_code[b] - f) * alpha
+        g = (1 - word_code[b] - f) * c.alpha
 
-        our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
-        our_saxpy(&size, &g, l1, &ONE, &syn1[row2], &ONE)
+        our_saxpy(&c.size, &g, &c.syn1[row2], &ONE, c.work, &ONE)
+        our_saxpy(&c.size, &g, c.neu1, &ONE, &c.syn1[row2], &ONE)
 
-    our_saxpy(&size, &word_locks_vocab[word2_index], work, &ONE, &syn0_vocab[row1], &ONE)
+    our_saxpy(&c.size, &c.vocab_lockf[word2_index % c.vocab_lockf_len], c.work, &ONE, &c.syn0_vocab[row1], &ONE)
     for d in range(subwords_len):
-        row2 = subwords_index[d] * size
-        our_saxpy(&size, &word_locks_ngrams[subwords_index[d]], work, &ONE, &syn0_ngrams[row2], &ONE)
+        row2 = subwords_index[d] * c.size
+        our_saxpy(
+            &c.size, &c.ngrams_lockf[subwords_index[d] % c.ngrams_lockf_len], c.work, &ONE,
+            &c.syn0_ngrams[row2], &ONE)
 
 
 cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) nogil:
@@ -276,84 +240,69 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
 
     """
 
-    cdef:
-        int negative = c.negative
-        np.uint32_t *cum_table = c.cum_table
-        unsigned long long cum_table_len = c.cum_table_len
-        # int *codelens = c.codelens
-        REAL_t *neu1 = c.neu1
-        REAL_t *syn0_vocab = c.syn0_vocab
-        REAL_t *syn0_ngrams = c.syn0_ngrams
-        REAL_t *syn1neg = c.syn1neg
-        int size = c.size
-        np.uint32_t *indexes = c.indexes
-        np.uint32_t **subwords_idx = c.subwords_idx
-        int *subwords_idx_len = c.subwords_idx_len
-        REAL_t alpha = c.alpha
-        REAL_t *work = c.work
-        int cbow_mean = c.cbow_mean
-        unsigned long long next_random = c.next_random
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
-
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, count, inv_count = 1.0, label, f_dot
     cdef np.uint32_t target_index, word_index
     cdef int d, m
 
-    word_index = indexes[i]
+    word_index = c.indexes[i]
 
-    memset(neu1, 0, size * cython.sizeof(REAL_t))
+    memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
     for m in range(j, k):
         if m == i:
             continue
         count += ONEF
-        our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
-        for d in range(subwords_idx_len[m]):
+        our_saxpy(&c.size, &ONEF, &c.syn0_vocab[c.indexes[m] * c.size], &ONE, c.neu1, &ONE)
+        for d in range(c.subwords_idx_len[m]):
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
+            our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[c.subwords_idx[m][d] * c.size], &ONE, c.neu1, &ONE)
 
     if count > (<REAL_t>0.5):
         inv_count = ONEF / count
-    if cbow_mean:
-        sscal(&size, &inv_count, neu1, &ONE)
+    if c.cbow_mean:
+        sscal(&c.size, &inv_count, c.neu1, &ONE)
 
-    memset(work, 0, size * cython.sizeof(REAL_t))
+    memset(c.work, 0, c.size * cython.sizeof(REAL_t))
 
-    for d in range(negative+1):
+    for d in range(c.negative+1):
         if d == 0:
             target_index = word_index
             label = ONEF
         else:
-            target_index = bisect_left(cum_table, (next_random >> 16) % cum_table[cum_table_len-1], 0, cum_table_len)
-            next_random = (next_random * <unsigned long long>25214903917ULL + 11) & modulo
+            target_index = bisect_left(c.cum_table, (c.next_random >> 16) % c.cum_table[c.cum_table_len-1], 0, c.cum_table_len)
+            c.next_random = (c.next_random * <unsigned long long>25214903917ULL + 11) & modulo
             if target_index == word_index:
                 continue
             label = <REAL_t>0.0
 
-        row2 = target_index * size
-        f_dot = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
-        if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
-            continue
-        f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        g = (label - f) * alpha
+        row2 = target_index * c.size
+        f_dot = our_dot(&c.size, c.neu1, &ONE, &c.syn1neg[row2], &ONE)
+        if f_dot <= -MAX_EXP:
+            f = 0.0
+        elif f_dot >= MAX_EXP:
+            f = 1.0
+        else:
+            f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
+        g = (label - f) * c.alpha
 
-        our_saxpy(&size, &g, &syn1neg[row2], &ONE, work, &ONE)
-        our_saxpy(&size, &g, neu1, &ONE, &syn1neg[row2], &ONE)
+        our_saxpy(&c.size, &g, &c.syn1neg[row2], &ONE, c.work, &ONE)
+        our_saxpy(&c.size, &g, c.neu1, &ONE, &c.syn1neg[row2], &ONE)
 
-    if not cbow_mean:  # divide error over summed window vectors
-        sscal(&size, &inv_count, work, &ONE)
+    if not c.cbow_mean:  # divide error over summed window vectors
+        sscal(&c.size, &inv_count, c.work, &ONE)
 
     for m in range(j,k):
         if m == i:
             continue
-        our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
-        for d in range(subwords_idx_len[m]):
-            our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
-
-    c.next_random = next_random
+        our_saxpy(
+            &c.size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len], c.work, &ONE,
+            &c.syn0_vocab[c.indexes[m]*c.size], &ONE)
+        for d in range(c.subwords_idx_len[m]):
+            our_saxpy(
+                &c.size, &c.ngrams_lockf[c.subwords_idx[m][d] % c.ngrams_lockf_len], c.work, &ONE,
+                &c.syn0_ngrams[c.subwords_idx[m][d]*c.size], &ONE)
 
 
 cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil:
@@ -375,62 +324,52 @@ cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k)
     cdef:
         np.uint32_t *word_point = c.points[i]
         np.uint8_t *word_code = c.codes[i]
-        int *codelens = c.codelens
-        REAL_t *neu1 = c.neu1
-        REAL_t *syn0_vocab = c.syn0_vocab
-        REAL_t *syn0_ngrams = c.syn0_ngrams
-        REAL_t *syn1 = c.syn1
-        int size = c.size
-        np.uint32_t *indexes = c.indexes
-        np.uint32_t **subwords_idx = c.subwords_idx
-        int *subwords_idx_len = c.subwords_idx_len
-        REAL_t alpha = c.alpha
-        REAL_t *work = c.work
-        int cbow_mean = c.cbow_mean
-        REAL_t *word_locks_vocab = c.word_locks_vocab
-        REAL_t *word_locks_ngrams = c.word_locks_ngrams
 
     cdef long long b
     cdef long long row2
     cdef REAL_t f, g, count, inv_count = 1.0, f_dot
     cdef int m
 
-    memset(neu1, 0, size * cython.sizeof(REAL_t))
+    memset(c.neu1, 0, c.size * cython.sizeof(REAL_t))
     count = <REAL_t>0.0
     for m in range(j, k):
         if m == i:
             continue
         count += ONEF
-        our_saxpy(&size, &ONEF, &syn0_vocab[indexes[m] * size], &ONE, neu1, &ONE)
-        for d in range(subwords_idx_len[m]):
+        our_saxpy(&c.size, &ONEF, &c.syn0_vocab[c.indexes[m] * c.size], &ONE, c.neu1, &ONE)
+        for d in range(c.subwords_idx_len[m]):
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0_ngrams[subwords_idx[m][d] * size], &ONE, neu1, &ONE)
+            our_saxpy(&c.size, &ONEF, &c.syn0_ngrams[c.subwords_idx[m][d] * c.size], &ONE, c.neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF / count
-    if cbow_mean:
-        sscal(&size, &inv_count, neu1, &ONE)
+    if c.cbow_mean:
+        sscal(&c.size, &inv_count, c.neu1, &ONE)
 
-    memset(work, 0, size * cython.sizeof(REAL_t))
-    for b in range(codelens[i]):
-        row2 = word_point[b] * size
-        f_dot = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
+    memset(c.work, 0, c.size * cython.sizeof(REAL_t))
+    for b in range(c.codelens[i]):
+        row2 = word_point[b] * c.size
+        f_dot = our_dot(&c.size, c.neu1, &ONE, &c.syn1[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
         f = EXP_TABLE[<int>((f_dot + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
-        g = (1 - word_code[b] - f) * alpha
+        g = (1 - word_code[b] - f) * c.alpha
 
-        our_saxpy(&size, &g, &syn1[row2], &ONE, work, &ONE)
-        our_saxpy(&size, &g, neu1, &ONE, &syn1[row2], &ONE)
+        our_saxpy(&c.size, &g, &c.syn1[row2], &ONE, c.work, &ONE)
+        our_saxpy(&c.size, &g, c.neu1, &ONE, &c.syn1[row2], &ONE)
 
-    if not cbow_mean:  # divide error over summed window vectors
-        sscal(&size, &inv_count, work, &ONE)
+    if not c.cbow_mean:  # divide error over summed window vectors
+        sscal(&c.size, &inv_count, c.work, &ONE)
 
     for m in range(j,k):
         if m == i:
             continue
-        our_saxpy(&size, &word_locks_vocab[indexes[m]], work, &ONE, &syn0_vocab[indexes[m]*size], &ONE)
-        for d in range(subwords_idx_len[m]):
-            our_saxpy(&size, &word_locks_ngrams[subwords_idx[m][d]], work, &ONE, &syn0_ngrams[subwords_idx[m][d]*size], &ONE)
+        our_saxpy(
+            &c.size, &c.vocab_lockf[c.indexes[m] % c.vocab_lockf_len], c.work, &ONE,
+            &c.syn0_vocab[c.indexes[m]*c.size], &ONE)
+        for d in range(c.subwords_idx_len[m]):
+            our_saxpy(
+                &c.size, &c.ngrams_lockf[c.subwords_idx[m][d] % c.ngrams_lockf_len], c.work, &ONE,
+                &c.syn0_ngrams[c.subwords_idx[m][d]*c.size], &ONE)
 
 
 cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
@@ -452,28 +391,33 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
         Private working memory for each worker.
 
     """
+    c.sg = model.sg
     c.hs = model.hs
     c.negative = model.negative
-    c.sample = (model.vocabulary.sample != 0)
+    c.sample = (model.sample != 0)
     c.cbow_mean = model.cbow_mean
     c.window = model.window
     c.workers = model.workers
 
     c.syn0_vocab = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab))
-    c.word_locks_vocab = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_vocab_lockf))
     c.syn0_ngrams = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams))
-    c.word_locks_ngrams = <REAL_t *>(np.PyArray_DATA(model.trainables.vectors_ngrams_lockf))
+
+    # EXPERIMENTAL lockf scaled suppression/enablement of training
+    c.vocab_lockf = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_vocab_lockf))
+    c.vocab_lockf_len = len(model.wv.vectors_vocab_lockf)
+    c.ngrams_lockf = <REAL_t *>(np.PyArray_DATA(model.wv.vectors_ngrams_lockf))
+    c.ngrams_lockf_len = len(model.wv.vectors_ngrams_lockf)
 
     c.alpha = alpha
     c.size = model.wv.vector_size
 
     if c.hs:
-        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1))
+        c.syn1 = <REAL_t *>(np.PyArray_DATA(model.syn1))
 
     if c.negative:
-        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.trainables.syn1neg))
-        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.vocabulary.cum_table))
-        c.cum_table_len = len(model.vocabulary.cum_table)
+        c.syn1neg = <REAL_t *>(np.PyArray_DATA(model.syn1neg))
+        c.cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
+        c.cum_table_len = len(model.cum_table)
     if c.negative or c.sample:
         c.next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
@@ -482,7 +426,7 @@ cdef void init_ft_config(FastTextConfig *c, model, alpha, _work, _neu1):
     c.neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences):
+cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
     """Prepare C structures so we can go "full C" and release the Python GIL.
 
     We create indices over the sentences.  We also perform some calculations for
@@ -494,10 +438,10 @@ cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences
     ----------
     c : FastTextConfig*
         A pointer to the struct that will contain the populated indices.
-    vocab : dict
+    wv : FastTextKeyedVectors
         The vocabulary
-    buckets_word : dict
-        A map containing the buckets each word appears in
+    buckets_word : list
+        A list containing the buckets each word appears in
     sentences : iterable
         The sentences to read
 
@@ -520,25 +464,35 @@ cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences
     """
     cdef int effective_words = 0
     cdef int effective_sentences = 0
+    cdef np.uint32_t *vocab_sample_ints
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
+
+    if c.sample:
+        vocab_sample_ints = <np.uint32_t *>np.PyArray_DATA(wv.expandos['sample_int'])
+    if c.hs:
+        vocab_codes = wv.expandos['code']
+        vocab_points = wv.expandos['point']
     for sent in sentences:
         if not sent:
             continue  # ignore empty sentences; leave effective_sentences unchanged
         for token in sent:
-            word = vocab[token] if token in vocab else None
-            if word is None:
+            word_index = wv.key_to_index.get(token, None)
+            if word_index is None:
                 continue  # leaving `effective_words` unchanged = shortening the sentence = expanding the window
-            if c.sample and word.sample_int < random_int32(&c.next_random):
+            if c.sample and vocab_sample_ints[word_index] < random_int32(&c.next_random):
                 continue
-            c.indexes[effective_words] = word.index
+            c.indexes[effective_words] = word_index
 
-            c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word.index]))
-            c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word.index])
+            if wv.bucket:
+                c.subwords_idx_len[effective_words] = <int>(len(buckets_word[word_index]))
+                c.subwords_idx[effective_words] = <np.uint32_t *>np.PyArray_DATA(buckets_word[word_index])
+            else:
+                c.subwords_idx_len[effective_words] = 0
 
             if c.hs:
-                c.codelens[effective_words] = <int>len(word.code)
-                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(word.code)
-                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(word.point)
+                c.codelens[effective_words] = <int>len(vocab_codes[word_index])
+                c.codes[effective_words] = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word_index])
+                c.points[effective_words] = <np.uint32_t *>np.PyArray_DATA(vocab_points[word_index])
 
             effective_words += 1
             if effective_words == MAX_SENTENCE_LEN:
@@ -555,7 +509,7 @@ cdef object populate_ft_config(FastTextConfig *c, vocab, buckets_word, sentences
     return effective_words, effective_sentences
 
 
-cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil:
+cdef void fasttext_train_any(FastTextConfig *c, int num_sentences) nogil:
     """Performs training on a fully initialized and populated configuration.
 
     Parameters
@@ -564,8 +518,6 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
         A pointer to the configuration struct.
     num_sentences : int
         The number of sentences to train.
-    sg : int
-        1 for skipgram, 0 for CBOW.
 
     """
     cdef:
@@ -598,7 +550,7 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
             # window_start = max(sentence_start, i - c.window + c.reduced_windows[i])
             # window_end = min(sentence_end, i + c.window + 1 - c.reduced_windows[i])
             #
-            if sg == 0:
+            if c.sg == 0:
                 if c.hs:
                     fasttext_fast_sentence_cbow_hs(c, i, window_start, window_end)
                 if c.negative:
@@ -606,10 +558,7 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
             else:
                 for j in range(window_start, window_end):
                     if j == i:
-                        #
-                        # TODO: why do we ignore the token at the "center" of
-                        # the window?
-                        #
+                        # no reason to train a center word as predicting itself
                         continue
                     if c.hs:
                         fasttext_fast_sentence_sg_hs(c, i, j)
@@ -617,52 +566,8 @@ cdef void fasttext_train_any(FastTextConfig *c, int num_sentences, int sg) nogil
                         fasttext_fast_sentence_sg_neg(c, i, j)
 
 
-def train_batch_sg(model, sentences, alpha, _work, _l1):
-    """Update skip-gram model by training on a sequence of sentences.
-
-    Each sentence is a list of string tokens, which are looked up in the model's
-    vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
-
-    Parameters
-    ----------
-    model : :class:`~gensim.models.fasttext.FastText`
-        Model to be trained.
-    sentences : iterable of list of str
-        A single batch: part of the corpus streamed directly from disk/network.
-    alpha : float
-        Learning rate.
-    _work : np.ndarray
-        Private working memory for each worker.
-    _l1 : np.ndarray
-        Private working memory for each worker.
-
-    Returns
-    -------
-    int
-        Effective number of words trained.
-
-    """
-    cdef:
-        FastTextConfig c
-        int num_words = 0
-        int num_sentences = 0
-
-    init_ft_config(&c, model, alpha, _work, _l1)
-
-    num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
-
-    # precompute "reduced window" offsets in a single randint() call
-    for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
-        c.reduced_windows[i] = randint
-
-    with nogil:
-        fasttext_train_any(&c, num_sentences, 1)
-
-    return num_words
-
-
-def train_batch_cbow(model, sentences, alpha, _work, _neu1):
-    """Update the CBOW model by training on a sequence of sentences.
+def train_batch_any(model, sentences, alpha, _work, _neu1):
+    """Update the model by training on a sequence of sentences.
 
     Each sentence is a list of string tokens, which are looked up in the model's
     vocab dictionary. Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
@@ -693,7 +598,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
 
     init_ft_config(&c, model, alpha, _work, _neu1)
 
-    num_words, num_sentences = populate_ft_config(&c, model.wv.vocab, model.wv.buckets_word, sentences)
+    num_words, num_sentences = populate_ft_config(&c, model.wv, model.wv.buckets_word, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
     for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
@@ -701,33 +606,123 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1):
 
     # release GIL & train on all sentences in the batch
     with nogil:
-        fasttext_train_any(&c, num_sentences, 0)
+        fasttext_train_any(&c, num_sentences)
 
     return num_words
+
+
+cpdef ft_hash_bytes(bytes bytez):
+    """Calculate hash based on `bytez`.
+    Reproduce `hash method from Facebook fastText implementation
+    <https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc>`_.
+
+    Parameters
+    ----------
+    bytez : bytes
+        The string whose hash needs to be calculated, encoded as UTF-8.
+
+    Returns
+    -------
+    unsigned int
+        The hash of the string.
+
+    """
+    cdef np.uint32_t h = 2166136261
+    cdef char b
+
+    for b in bytez:
+        h = h ^ <np.uint32_t>(<np.int8_t>b)
+        h = h * 16777619
+    return h
+
+
+cpdef compute_ngrams(word, unsigned int min_n, unsigned int max_n):
+    """Get the list of all possible ngrams for a given word.
+
+    Parameters
+    ----------
+    word : str
+        The word whose ngrams need to be computed.
+    min_n : unsigned int
+        Minimum character length of the ngrams.
+    max_n : unsigned int
+        Maximum character length of the ngrams.
+
+    Returns
+    -------
+    list of str
+        Sequence of character ngrams.
+
+    """
+    cdef unicode extended_word = f'<{word}>'
+    ngrams = []
+    for ngram_length in range(min_n, min(len(extended_word), max_n) + 1):
+        for i in range(0, len(extended_word) - ngram_length + 1):
+            ngrams.append(extended_word[i:i + ngram_length])
+    return ngrams
+
+#
+# UTF-8 bytes that begin with 10 are subsequent bytes of a multi-byte sequence,
+# as opposed to a new character.
+#
+cdef unsigned char _MB_MASK = 0xC0
+cdef unsigned char _MB_START = 0x80
+
+
+cpdef compute_ngrams_bytes(word, unsigned int min_n, unsigned int max_n):
+    """Computes ngrams for a word.
+
+    Ported from the original FB implementation.
+
+    Parameters
+    ----------
+    word : str
+        A unicode string.
+    min_n : unsigned int
+        The minimum ngram length.
+    max_n : unsigned int
+        The maximum ngram length.
+
+    Returns:
+    --------
+    list of str
+        A list of ngrams, where each ngram is a list of **bytes**.
+
+    See Also
+    --------
+    `Original implementation <https://github.com/facebookresearch/fastText/blob/7842495a4d64c7a3bb4339d45d6e64321d002ed8/src/dictionary.cc#L172>`__
+
+    """
+    cdef bytes utf8_word = ('<%s>' % word).encode("utf-8")
+    cdef const unsigned char *bytez = utf8_word
+    cdef size_t num_bytes = len(utf8_word)
+    cdef size_t j, i, n
+
+    ngrams = []
+    for i in range(num_bytes):
+        if bytez[i] & _MB_MASK == _MB_START:
+            continue
+
+        j, n = i, 1
+        while j < num_bytes and n <= max_n:
+            j += 1
+            while j < num_bytes and (bytez[j] & _MB_MASK) == _MB_START:
+                j += 1
+            if n >= min_n and not (n == 1 and (i == 0 or j == num_bytes)):
+                ngram = bytes(bytez[i:j])
+                ngrams.append(ngram)
+            n += 1
+    return ngrams
 
 
 def init():
     """Precompute function `sigmoid(x) = 1 / (1 + exp(-x))`, for x values discretized into table EXP_TABLE.
     Also calculate log(sigmoid(x)) into LOG_TABLE.
 
-    Returns
-    -------
-    {0, 1, 2}
-        Enumeration to signify underlying data type returned by the BLAS dot product calculation.
-        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
-        instead of BLAS.
-
+    We recalc, rather than re-use the table from word2vec_inner, because Facebook's FastText
+    code uses a 512-slot table rather than the 1000 precedent of word2vec.c.
     """
-    global our_dot
-    global our_saxpy
-
     cdef int i
-    cdef float *x = [<float>10.0]
-    cdef float *y = [<float>0.01]
-    cdef float expected = <float>0.1
-    cdef int size = 1
-    cdef double d_res
-    cdef float *p_res
 
     # build the sigmoid table
     for i in range(EXP_TABLE_SIZE):
@@ -735,23 +730,6 @@ def init():
         EXP_TABLE[i] = <REAL_t>(EXP_TABLE[i] / (EXP_TABLE[i] + 1))
         LOG_TABLE[i] = <REAL_t>log( EXP_TABLE[i] )
 
-    # check whether sdot returns double or float
-    d_res = dsdot(&size, x, &ONE, y, &ONE)
-    p_res = <float *>&d_res
-    if abs(d_res - expected) < 0.0001:
-        our_dot = our_dot_double
-        our_saxpy = saxpy
-        return 0  # double
-    elif abs(p_res[0] - expected) < 0.0001:
-        our_dot = our_dot_float
-        our_saxpy = saxpy
-        return 1  # float
-    else:
-        # neither => use cython loops, no BLAS
-        # actually, the BLAS is so messed up we'll probably have segfaulted above and never even reach here
-        our_dot = our_dot_noblas
-        our_saxpy = our_saxpy_noblas
-        return 2
 
-FAST_VERSION = init()  # initialize the module
+init()  # initialize the module
 MAX_WORDS_IN_BATCH = MAX_SENTENCE_LEN

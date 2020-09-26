@@ -11,6 +11,7 @@ Automated tests for VarEmbed wrapper.
 """
 
 import logging
+import os
 import sys
 
 import numpy as np
@@ -29,7 +30,10 @@ except ImportError:
 varembed_model_vector_file = datapath('varembed_vectors.pkl')
 varembed_model_morfessor_file = datapath('varembed_morfessor.bin')
 
+AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
+
+@unittest.skipIf(AZURE, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
 class TestVarembed(unittest.TestCase):
     def testLoadVarembedFormat(self):
         """Test storing/loading the entire model."""
@@ -44,7 +48,7 @@ class TestVarembed(unittest.TestCase):
     def model_sanity(self, model):
         """Check vocabulary and vector size"""
         self.assertEqual(model.vectors.shape, (model.vocab_size, model.vector_size))
-        self.assertTrue(model.vectors.shape[0] == len(model.vocab))
+        self.assertTrue(model.vectors.shape[0] == len(model))
 
     @unittest.skipIf(sys.version_info < (2, 7), 'Supported only on Python 2.7 and above')
     def testAddMorphemesToEmbeddings(self):

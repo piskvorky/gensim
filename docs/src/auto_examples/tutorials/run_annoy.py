@@ -1,17 +1,17 @@
 r"""
-Similarity Queries with Annoy and Word2Vec
-==========================================
+Fast Similarity Queries with Annoy and Word2Vec
+===============================================
 
 Introduces the annoy library for similarity queries using a Word2Vec model.
 """
 
-LOGS = False
+LOGS = False  # Set to True if you want to see progress in logs.
 if LOGS:
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ###############################################################################
-# The `Annoy Approximate Nearest Neighbors Oh Yeah
+# The `Annoy "Approximate Nearest Neighbors Oh Yeah"
 # <https://github.com/spotify/annoy>`_ library enables similarity queries with
 # a Word2Vec model.  The current implementation for finding k nearest neighbors
 # in a vector space in gensim has linear complexity via brute force in the
@@ -19,10 +19,10 @@ if LOGS:
 # The retrieved results are exact, which is an overkill in many applications:
 # approximate results retrieved in sub-linear time may be enough. Annoy can
 # find approximate nearest neighbors much faster.
-# 
+#
 # Outline
 # -------
-# 
+#
 # 1. Download Text8 Corpus
 # 2. Train the Word2Vec model
 # 3. Construct AnnoyIndex with model & make a similarity query
@@ -31,14 +31,14 @@ if LOGS:
 # 6. Save memory by via memory-mapping indices saved to disk
 # 7. Evaluate relationship of ``num_trees`` to initialization time and accuracy
 # 8. Work with Google's word2vec C formats
-# 
+#
 
 ###############################################################################
 # 1. Download Text8 corpus
 # ------------------------
 import gensim.downloader as api
 text8_path = api.load('text8', return_path=True)
-text8_path
+print("Using corpus from", text8_path)
 
 ###############################################################################
 # 2. Train the Word2Vec model
@@ -51,9 +51,9 @@ from gensim.models.word2vec import Text8Corpus
 # Using params from Word2Vec_FastText_Comparison
 params = {
     'alpha': 0.05,
-    'size': 100,
+    'vector_size': 100,
     'window': 5,
-    'iter': 5,
+    'epochs': 5,
     'min_count': 5,
     'sample': 1e-4,
     'sg': 1,
@@ -61,37 +61,39 @@ params = {
     'negative': 5
 }
 model = Word2Vec(Text8Corpus(text8_path), **params)
-print(model)
+print("Using model", model)
 
 ###############################################################################
 # 3. Construct AnnoyIndex with model & make a similarity query
 # ------------------------------------------------------------
-# 
-# An instance of ``AnnoyIndexer`` needs to be created in order to use Annoy in gensim. The ``AnnoyIndexer`` class is located in ``gensim.similarities.index``
-# 
+#
+# An instance of ``AnnoyIndexer`` needs to be created in order to use Annoy in gensim. The ``AnnoyIndexer`` class is located in ``gensim.similarities.annoy``.
+#
 # ``AnnoyIndexer()`` takes two parameters:
-# 
-# * **model**: A ``Word2Vec`` or ``Doc2Vec`` model
+#
+# * **model**: A ``Word2Vec`` or ``Doc2Vec`` model.
 # * **num_trees**: A positive integer. ``num_trees`` effects the build
 #   time and the index size. **A larger value will give more accurate results,
 #   but larger indexes**. More information on what trees in Annoy do can be found
 #   `here <https://github.com/spotify/annoy#how-does-it-work>`__. The relationship
 #   between ``num_trees``\ , build time, and accuracy will be investigated later
-#   in the tutorial. 
-# 
+#   in the tutorial.
+#
 # Now that we are ready to make a query, lets find the top 5 most similar words
 # to "science" in the Text8 corpus. To make a similarity query we call
 # ``Word2Vec.most_similar`` like we would traditionally, but with an added
-# parameter, ``indexer``. The only supported indexer in gensim as of now is
-# Annoy. 
-# 
-from gensim.similarities.index import AnnoyIndexer
+# parameter, ``indexer``.
+#
+# Apart from Annoy, Gensim also supports the NMSLIB indexer. NMSLIB is a similar library to
+# Annoy – both support fast, approximate searches for similar vectors.
+#
+from gensim.similarities.annoy import AnnoyIndexer
 
 # 100 trees are being used in this example
 annoy_index = AnnoyIndexer(model, 100)
 # Derive the vector for the word "science" in our model
 vector = model.wv["science"]
-# The instance of AnnoyIndexer we just created is passed 
+# The instance of AnnoyIndexer we just created is passed
 approximate_neighbors = model.wv.most_similar([vector], topn=11, indexer=annoy_index)
 # Neatly print the approximate_neighbors and their corresponding cosine similarity values
 print("Approximate Neighbors")
@@ -99,7 +101,7 @@ for neighbor in approximate_neighbors:
     print(neighbor)
 
 normal_neighbors = model.wv.most_similar([vector], topn=11)
-print("\nNormal (not Annoy-indexed) Neighbors")
+print("\nExact Neighbors")
 for neighbor in normal_neighbors:
     print(neighbor)
 
@@ -114,11 +116,11 @@ for neighbor in normal_neighbors:
 # -------------------------------------
 
 # Set up the model and vector that we are using in the comparison
-model.init_sims()
 annoy_index = AnnoyIndexer(model, 100)
 
-# Dry run to make sure both indices are fully in RAM
-vector = model.wv.vectors_norm[0]
+# Dry run to make sure both indexes are fully in RAM
+normed_vectors = model.wv.get_normed_vectors()
+vector = normed_vectors[0]
 model.wv.most_similar([vector], topn=5, indexer=annoy_index)
 model.wv.most_similar([vector], topn=5)
 
@@ -126,19 +128,16 @@ import time
 import numpy as np
 
 def avg_query_time(annoy_index=None, queries=1000):
-    """
-    Average query time of a most_similar method over 1000 random queries,
-    uses annoy if given an indexer
-    """
+    """Average query time of a most_similar method over 1000 random queries."""
     total_time = 0
     for _ in range(queries):
-        rand_vec = model.wv.vectors_norm[np.random.randint(0, len(model.wv.vocab))]
+        rand_vec = normed_vectors[np.random.randint(0, len(model.wv))]
         start_time = time.process_time()
         model.wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
         total_time += time.process_time() - start_time
     return total_time / queries
 
-queries = 10000
+queries = 1000
 
 gensim_time = avg_query_time(queries=queries)
 annoy_time = avg_query_time(annoy_index, queries=queries)
@@ -152,7 +151,7 @@ print ("\nAnnoy is {0:.2f} times faster on average on this particular run".forma
 # run to run and is particular to this data set, BLAS setup, Annoy
 # parameters(as tree size increases speedup factor decreases), machine
 # specifications, among other factors.
-# 
+#
 # .. Important::
 #    Initialization time for the annoy indexer was not included in the times.
 #    The optimal knn algorithm for you to use will depend on how many queries
@@ -162,7 +161,7 @@ print ("\nAnnoy is {0:.2f} times faster on average on this particular run".forma
 #    results. If you are making many queries however, the time it takes to
 #    initialize the annoy indexer will be made up for by the incredibly fast
 #    retrieval times for queries once the indexer has been initialized
-# 
+#
 # .. Important::
 #    Gensim's 'most_similar' method is using numpy operations in the form of
 #    dot product whereas Annoy's method isnt. If 'numpy' on your machine is
@@ -171,17 +170,17 @@ print ("\nAnnoy is {0:.2f} times faster on average on this particular run".forma
 #    Cookbook
 #    <http://scipy-cookbook.readthedocs.io/items/ParallelProgramming.html>`_
 #    for more details.
-# 
+#
 
 ###############################################################################
 # 5. Persisting indices to disk
 # -----------------------------
-# 
+#
 # You can save and load your indexes from/to disk to prevent having to
 # construct them each time. This will create two files on disk, *fname* and
 # *fname.d*. Both files are needed to correctly restore all attributes. Before
 # loading an index, you will have to create an empty AnnoyIndexer object.
-# 
+#
 fname = '/tmp/mymodel.index'
 
 # Persist index to disk
@@ -199,25 +198,25 @@ vector = model.wv["science"]
 approximate_neighbors2 = model.wv.most_similar([vector], topn=11, indexer=annoy_index2)
 for neighbor in approximate_neighbors2:
     print(neighbor)
-    
+
 assert approximate_neighbors == approximate_neighbors2
 
 ###############################################################################
 # Be sure to use the same model at load that was used originally, otherwise you
 # will get unexpected behaviors.
-# 
+#
 
 ###############################################################################
-# 6. Save memory via memory-mapping indices saved to disk
+# 6. Save memory via memory-mapping indexes saved to disk
 # -------------------------------------------------------
-# 
+#
 # Annoy library has a useful feature that indices can be memory-mapped from
 # disk. It saves memory when the same index is used by several processes.
-# 
+#
 # Below are two snippets of code. First one has a separate index for each
 # process. The second snipped shares the index between two processes via
 # memory-mapping. The second example uses less total RAM as it is shared.
-# 
+#
 
 # Remove verbosity from code below (if logging active)
 if LOGS:
@@ -228,9 +227,9 @@ import os
 import psutil
 
 ###############################################################################
-# Bad example: two processes load the Word2vec model from disk and create there
-# own Annoy indices from that model.
-# 
+# Bad example: two processes load the Word2vec model from disk and create their
+# own Annoy index from that model.
+#
 
 model.save('/tmp/mymodel.pkl')
 
@@ -253,8 +252,8 @@ p2.join()
 
 ###############################################################################
 # Good example: two processes load both the Word2vec model and index from disk
-# and memory-map the index
-# 
+# and memory-map the index.
+#
 
 model.save('/tmp/mymodel.pkl')
 
@@ -280,14 +279,14 @@ p2.join()
 ###############################################################################
 # 7. Evaluate relationship of ``num_trees`` to initialization time and accuracy
 # -----------------------------------------------------------------------------
-# 
+#
 import matplotlib.pyplot as plt
 
 ###############################################################################
 # Build dataset of Initialization times and accuracy measures:
-# 
+#
 
-exact_results = [element[0] for element in model.wv.most_similar([model.wv.vectors_norm[0]], topn=100)]
+exact_results = [element[0] for element in model.wv.most_similar([normed_vectors[0]], topn=100)]
 
 x_values = []
 y_values_init = []
@@ -298,7 +297,7 @@ for x in range(1, 300, 10):
     start_time = time.time()
     annoy_index = AnnoyIndexer(model, x)
     y_values_init.append(time.time() - start_time)
-    approximate_results = model.wv.most_similar([model.wv.vectors_norm[0]], topn=100, indexer=annoy_index)
+    approximate_results = model.wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
     top_words = [result[0] for result in approximate_results]
     y_values_accuracy.append(len(set(top_words).intersection(exact_results)))
 
@@ -323,20 +322,20 @@ plt.show()
 # From the above, we can see that the initialization time of the annoy indexer
 # increases in a linear fashion with num_trees. Initialization time will vary
 # from corpus to corpus, in the graph above the lee corpus was used
-# 
+#
 # Furthermore, in this dataset, the accuracy seems logarithmically related to
 # the number of trees. We see an improvement in accuracy with more trees, but
-# the relationship is nonlinear. 
-# 
+# the relationship is nonlinear.
+#
 
 ###############################################################################
 # 7. Work with Google word2vec files
 # ----------------------------------
-# 
+#
 # Our model can be exported to a word2vec C format. There is a binary and a
 # plain text word2vec format. Both can be read with a variety of other
 # software, or imported back into gensim as a ``KeyedVectors`` object.
-# 
+#
 
 # To export our model as text
 model.wv.save_word2vec_format('/tmp/vectors.txt', binary=False)
@@ -344,7 +343,7 @@ model.wv.save_word2vec_format('/tmp/vectors.txt', binary=False)
 from smart_open import open
 # View the first 3 lines of the exported file
 
-# The first line has the total number of entries and the vector dimension count. 
+# The first line has the total number of entries and the vector dimension count.
 # The next lines have a key (a string) followed by its vector.
 with open('/tmp/vectors.txt') as myfile:
     for i in range(3):
@@ -377,17 +376,17 @@ for neighbor in approximate_neighbors:
     print(neighbor)
 
 normal_neighbors = wv.most_similar([vector], topn=11)
-print("\nNormal (not Annoy-indexed) Neighbors")
+print("\nExact Neighbors")
 for neighbor in normal_neighbors:
     print(neighbor)
 
 ###############################################################################
 # Recap
 # -----
-# 
+#
 # In this notebook we used the Annoy module to build an indexed approximation
 # of our word embeddings. To do so, we did the following steps:
-# 
+#
 # 1. Download Text8 Corpus
 # 2. Train Word2Vec Model
 # 3. Construct AnnoyIndex with model & make a similarity query
@@ -395,4 +394,4 @@ for neighbor in normal_neighbors:
 # 5. Save memory by via memory-mapping indices saved to disk
 # 6. Evaluate relationship of ``num_trees`` to initialization time and accuracy
 # 7. Work with Google's word2vec C formats
-# 
+#

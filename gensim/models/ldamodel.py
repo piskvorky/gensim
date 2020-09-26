@@ -14,7 +14,8 @@ for online training.
 
 The core estimation code is based on the `onlineldavb.py script
 <https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+Online Learning for Latent Dirichlet Allocation, NIPS 2010
+<https://scholar.google.com/citations?hl=en&user=IeHKeGYAAAAJ&view_op=list_works>`_.
 
 The algorithm:
 
@@ -354,8 +355,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
+            If you have a CSC in-memory matrix, you can convert it to a
+            streamed corpus with the help of gensim.matutils.Sparse2Corpus.
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -377,7 +380,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Default; uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
@@ -534,7 +538,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If `name` == 'alpha', then the prior can be:
 
                 * an 1D array of length equal to the number of expected topics,
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
@@ -555,11 +560,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(prior, six.string_types):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
             elif prior == 'asymmetric':
-                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
@@ -626,7 +635,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         collect_sstats : bool, optional
             If set to True, also collect (and return) sufficient statistics needed to update the model's topic-word
@@ -725,7 +734,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         state : :class:`~gensim.models.ldamodel.LdaState`, optional
             The state to be updated with the newly accumulated sufficient statistics. If none, the models
@@ -803,7 +812,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         total_docs : int, optional
             Number of docs used for evaluation of the perplexity.
@@ -845,8 +854,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
@@ -1060,8 +1069,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to estimate the
             variational bounds.
         gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.

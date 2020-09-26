@@ -363,7 +363,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         num_topics : int, optional
             Number of requested factors (latent dimensions)
         id2word : dict of {int: str}, optional

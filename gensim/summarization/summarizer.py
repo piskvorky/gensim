@@ -10,13 +10,6 @@ ranks of text sentences using a variation of the TextRank algorithm [1]_.
        Variations of the Similarity Function of TextRank for Automated Summarization,
        https://arxiv.org/abs/1602.03606
 
-
-Data
-----
-
-.. data:: INPUT_MIN_LENGTH - Minimal number of sentences in text
-.. data:: WEIGHT_THRESHOLD - Minimal weight of edge between graph nodes. Smaller weights set to zero.
-
 Example
 -------
 
@@ -53,6 +46,8 @@ Example
 """
 
 import logging
+from math import log10 as _log10
+
 from gensim.utils import deprecated
 from gensim.summarization.pagerank_weighted import pagerank_weighted as _pagerank
 from gensim.summarization.textcleaner import clean_text_by_sentences as _clean_text_by_sentences
@@ -60,12 +55,11 @@ from gensim.summarization.commons import build_graph as _build_graph
 from gensim.summarization.commons import remove_unreachable_nodes as _remove_unreachable_nodes
 from gensim.summarization.bm25 import iter_bm25_bow as _bm25_weights
 from gensim.corpora import Dictionary
-from math import log10 as _log10
-from six.moves import range
 
-
+# Minimum number of sentences in a text. Smaller texts will log a warning.
 INPUT_MIN_LENGTH = 10
 
+# Minimal weight of edge between graph nodes. Smaller weights set to zero.
 WEIGHT_THRESHOLD = 1.e-3
 
 logger = logging.getLogger(__name__)

@@ -41,11 +41,6 @@ Examples
     >>> model = Wordrank.train(path_to_wordrank_binary, corpus_file='text8', out_name='wr_model')
     >>>
     >>> print(model["hello"])  # prints vector for given words
-
-Warnings
---------
-Note that the wrapper might not work in a docker container for large datasets due to memory limits (caused by MPI).
-
 """
 
 from __future__ import division
@@ -259,8 +254,7 @@ class Wordrank(KeyedVectors):
             If 1 - use ensemble of word and context vectors.
 
         """
-        glove2word2vec(model_file, model_file + '.w2vformat')
-        model = cls.load_word2vec_format('%s.w2vformat' % model_file)
+        model = cls.load_word2vec_format(model_file, binary=False, no_header=True)
         if ensemble and context_file:
             model.ensemble_embedding(model_file, context_file)
         if sorted_vocab and vocab_file:

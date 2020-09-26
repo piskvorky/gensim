@@ -34,6 +34,7 @@ Understanding this functionality is vital for using gensim effectively.
 .. only:: html
 
  .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_core_concepts_thumb.png
+     :alt: Core Concepts
 
      :ref:`sphx_glr_auto_examples_core_run_core_concepts.py`
 
@@ -54,6 +55,7 @@ Understanding this functionality is vital for using gensim effectively.
 .. only:: html
 
  .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_corpora_and_vector_spaces_thumb.png
+     :alt: Corpora and Vector Spaces
 
      :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`
 
@@ -74,6 +76,7 @@ Understanding this functionality is vital for using gensim effectively.
 .. only:: html
 
  .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_topics_and_transformations_thumb.png
+     :alt: Topics and Transformations
 
      :ref:`sphx_glr_auto_examples_core_run_topics_and_transformations.py`
 
@@ -94,6 +97,7 @@ Understanding this functionality is vital for using gensim effectively.
 .. only:: html
 
  .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_similarity_queries_thumb.png
+     :alt: Similarity Queries
 
      :ref:`sphx_glr_auto_examples_core_run_similarity_queries.py`
 
@@ -128,6 +132,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_word2vec_thumb.png
+     :alt: Word2Vec Model
 
      :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`
 
@@ -148,6 +153,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
+     :alt: Doc2Vec Model
 
      :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
 
@@ -168,6 +174,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
+     :alt: FastText Model
 
      :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
 
@@ -188,6 +195,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
+     :alt: Fast Similarity Queries with Annoy and Word2Vec
 
      :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
 
@@ -208,6 +216,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
+     :alt: LDA Model
 
      :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
 
@@ -228,6 +237,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_distance_metrics_thumb.png
+     :alt: Distance Metrics
 
      :ref:`sphx_glr_auto_examples_tutorials_run_distance_metrics.py`
 
@@ -248,6 +258,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
+     :alt: Word Movers' Distance
 
      :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
 
@@ -268,6 +279,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_summarization_thumb.png
+     :alt: Text Summarization
 
      :ref:`sphx_glr_auto_examples_tutorials_run_summarization.py`
 
@@ -288,6 +300,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
+     :alt: Pivoted Document Length Normalization
 
      :ref:`sphx_glr_auto_examples_tutorials_run_pivoted_doc_norm.py`
 
@@ -322,6 +335,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. only:: html
 
  .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_downloader_api_thumb.png
+     :alt: How to download pre-trained models and corpora
 
      :ref:`sphx_glr_auto_examples_howtos_run_downloader_api.py`
 
@@ -342,6 +356,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. only:: html
 
  .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc_thumb.png
+     :alt: How to Author Gensim Documentation
 
      :ref:`sphx_glr_auto_examples_howtos_run_doc.py`
 
@@ -362,6 +377,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. only:: html
 
  .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
+     :alt: How to Apply Doc2Vec to Reproduce the 'Paragraph Vector' paper
 
      :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
 
@@ -382,6 +398,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. only:: html
 
  .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_compare_lda_thumb.png
+     :alt: How to Compare LDA Models
 
      :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py`
 
@@ -450,15 +467,15 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
     :class: sphx-glr-footer-gallery
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//Users/a.loosley/Alex/Repos/gensim/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//Volumes/work/workspace/gensim/trunk/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Users/a.loosley/Alex/Repos/gensim/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Volumes/work/workspace/gensim/trunk/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html

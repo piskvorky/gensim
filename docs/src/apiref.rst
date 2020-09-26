@@ -52,11 +52,10 @@ Modules:
     models/_fasttext_bin
     models/phrases
     models/poincare
+    viz/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
-    models/utils_any2vec
-    models/_utils_any2vec
     models/word2vec_inner
     models/doc2vec_inner
     models/fasttext_inner
@@ -65,16 +64,10 @@ Modules:
     models/wrappers/ldavowpalwabbit.rst
     models/wrappers/wordrank
     models/wrappers/varembed
-    models/wrappers/fasttext
-    models/deprecated/doc2vec
-    models/deprecated/fasttext
-    models/deprecated/word2vec
-    models/deprecated/keyedvectors
-    models/deprecated/fasttext_wrapper
-    models/base_any2vec
     similarities/docsim
     similarities/termsim
-    similarities/index
+    similarities/annoy
+    similarities/nmslib
     sklearn_api/atmodel
     sklearn_api/d2vmodel
     sklearn_api/hdp
@@ -113,4 +106,3 @@ Modules:
     summarization/summariser
     summarization/syntactic_unit
     summarization/textcleaner
-    viz/poincare

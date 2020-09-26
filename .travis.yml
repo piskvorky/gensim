@@ -25,9 +25,11 @@ matrix:
     - python: '3.7'
       env:
         - TOXENV="py37-linux"
-        - BOTO_CONFIG="/dev/null"
+      # The following two lines used to be necessary because Travis left files lying around in ~/.aws/,
+      # messing up our tests. Now fixed since https://github.com/travis-ci/travis-ci/issues/7940
+        # - BOTO_CONFIG="/dev/null"
+      #sudo: true
       dist: xenial
-      sudo: true
 
     - python: '3.6'
       env: TOXENV="py36-linux"
@@ -35,11 +37,11 @@ matrix:
 
 install:
   - pip install tox
-  - sudo apt-get install -y gdb  # install gdb
+  - sudo apt-get install -y gdb
 
 
 before_script:
-  - ulimit -c unlimited -S       # enable core dumps
+  - ulimit -c unlimited -S  # enable core dumps
 
 
 script: tox -vv
@@ -47,5 +49,5 @@ script: tox -vv
 
 after_failure:
   - pwd
-  - COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1) # find core file
+  - COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
   - if [[ -f "$COREFILE" ]]; then EXECFILE=$(gdb -c "$COREFILE" -batch | grep "Core was generated" | tr -d "\`" | cut -d' ' -f5); file "$COREFILE"; gdb -c "$COREFILE" "$EXECFILE" -x continuous_integration/debug.gdb -batch; fi

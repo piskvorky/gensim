@@ -41,15 +41,19 @@ cdef class CythonVocab:
     def __init__(self, wv, hs=0, fasttext=0):
         cdef VocabItem word
 
-        for py_token, vocab_item in iteritems(wv.vocab):
+        vocab_sample_ints = wv.expandos['sample_int']
+        if hs:
+            vocab_codes = wv.expandos['code']
+            vocab_points = wv.expandos['point']
+        for py_token in wv.key_to_index.keys():
             token = any2utf8(py_token)
-            word.index = vocab_item.index
-            word.sample_int = vocab_item.sample_int
+            word.index = wv.get_index(py_token)
+            word.sample_int = vocab_sample_ints[word.index]
 
             if hs:
-                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-                word.code_len = <int>len(vocab_item.code)
-                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
+                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word.index])
+                word.code_len = <int>len(vocab_codes[word.index])
+                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_points[word.index])
 
             # subwords information, used only in FastText model
             if fasttext:
@@ -326,11 +330,13 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                         if c.hs:
                             w2v_fast_sentence_sg_hs(
                                 c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j],
-                                c.alpha, c.work, c.word_locks, c.compute_loss, &c.running_training_loss)
+                                c.alpha, c.work, c.words_lockf, c.words_lockf_len, c.compute_loss,
+                                &c.running_training_loss)
                         if c.negative:
                             c.next_random = w2v_fast_sentence_sg_neg(
                                 c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size,
-                                c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks,
+                                c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random,
+                                c.words_lockf, c.words_lockf_len,
                                 c.compute_loss, &c.running_training_loss)
 
             total_sentences += sentences.size()
@@ -421,13 +427,15 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                     if c.hs:
                         w2v_fast_sentence_cbow_hs(
                             c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha,
-                            c.work, i, j, k, c.cbow_mean, c.word_locks, c.compute_loss, &c.running_training_loss)
+                            c.work, i, j, k, c.cbow_mean, c.words_lockf, c.words_lockf_len, c.compute_loss,
+                            &c.running_training_loss)
 
                     if c.negative:
                         c.next_random = w2v_fast_sentence_cbow_neg(
                             c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0,
                             c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean,
-                            c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
+                            c.next_random, c.words_lockf, c.words_lockf_len, c.compute_loss,
+                            &c.running_training_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words

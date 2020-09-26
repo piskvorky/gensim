@@ -9,12 +9,10 @@
 from __future__ import with_statement
 
 
-from itertools import chain
 import logging
 import math
 
 from gensim import utils
-from gensim.utils import deprecated
 
 import numpy as np
 import scipy.sparse
@@ -193,9 +191,9 @@ def pad(mat, padrow, padcol):
     if padcol < 0:
         padcol = 0
     rows, cols = mat.shape
-    return np.bmat([
-        [mat, np.matrix(np.zeros((rows, padcol)))],
-        [np.matrix(np.zeros((padrow, cols + padcol)))],
+    return np.block([
+        [mat, np.zeros((rows, padcol))],
+        [np.zeros((padrow, cols + padcol))],
     ])
 
 
@@ -817,81 +815,6 @@ def cossim(vec1, vec2):
     result = sum(value * vec2.get(index, 0.0) for index, value in iteritems(vec1))
     result /= vec1len * vec2len  # rescale by vector lengths
     return result
-
-
-@deprecated(
-    "Function will be removed in 4.0.0, use "
-    "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
-def softcossim(vec1, vec2, similarity_matrix):
-    """Get Soft Cosine Measure between two vectors given a term similarity matrix.
-
-    Return Soft Cosine Measure between two sparse vectors given a sparse term similarity matrix
-    in the :class:`scipy.sparse.csc_matrix` format. The similarity is a number between `<-1.0, 1.0>`,
-    higher is more similar.
-
-    Notes
-    -----
-    Soft Cosine Measure was perhaps first defined by `Grigori Sidorov et al.,
-    "Soft Similarity and Soft Cosine Measure: Similarity of Features in Vector Space Model"
-    <http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921>`_.
-
-    Parameters
-    ----------
-    vec1 : list of (int, float)
-        A query vector in the BoW format.
-    vec2 : list of (int, float)
-        A document vector in the BoW format.
-    similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
-        A term similarity matrix. If the matrix is :class:`scipy.sparse.csr_matrix`, it is going
-        to be transposed. If you rely on the fact that there is at most a constant number of
-        non-zero elements in a single column, it is your responsibility to ensure that the matrix
-        is symmetric.
-
-    Returns
-    -------
-    `similarity_matrix.dtype`
-        The Soft Cosine Measure between `vec1` and `vec2`.
-
-    Raises
-    ------
-    ValueError
-        When the term similarity matrix is in an unknown format.
-
-    See Also
-    --------
-    :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
-        A term similarity matrix produced from term embeddings.
-    :class:`gensim.similarities.docsim.SoftCosineSimilarity`
-        A class for performing corpus-based similarity queries with Soft Cosine Measure.
-
-    """
-    if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
-        if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
-            similarity_matrix = similarity_matrix.T
-        else:
-            raise ValueError('unknown similarity matrix format')
-
-    if not vec1 or not vec2:
-        return 0.0
-
-    vec1 = dict(vec1)
-    vec2 = dict(vec2)
-    word_indices = sorted(set(chain(vec1, vec2)))
-    dtype = similarity_matrix.dtype
-    vec1 = np.fromiter((vec1[i] if i in vec1 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
-    vec2 = np.fromiter((vec2[i] if i in vec2 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
-    dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
-    vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
-    vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
-
-    assert \
-        vec1len > 0.0 and vec2len > 0.0, \
-        u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
-        u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
-
-    result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
-    result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
-    return np.clip(result, -1.0, 1.0)
 
 
 def isbow(vec):
