@@ -10,7 +10,7 @@ import numpy as np
 import scipy
 
 
-def mz_keywords(text, blocksize=1024, scores=False, split=False, weighted=True, threshold=0.0):
+def mz_keywords(text, blocksize=128, scores=False, split=False, weighted=True, threshold=0.0):
     """Extract keywords from text using the Montemurro and Zanette entropy algorithm. [1]_
 
     Parameters

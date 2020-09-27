@@ -271,7 +271,7 @@ class TestSummarizationTest(unittest.TestCase):
         with utils.open(os.path.join(pre_path, "head500.noblanks.cor"), 'rb') as f:
             text = utils.to_unicode(f.read())
         text = u' '.join(text.split()[:10240])
-        kwds = mz_keywords(text)
+        kwds = mz_keywords(text, 1024)
         self.assertTrue(kwds.startswith('autism'))
         self.assertTrue(kwds.endswith('uk'))
         self.assertTrue(len(kwds.splitlines()))
