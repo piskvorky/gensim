@@ -197,9 +197,10 @@ class KeyedVectors(utils.SaveLoad):
 
         Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
 
-        To support the needs of specific models and other downstream uses, each key may also have
-        additional attributes set and read via the `set_vecattr(key, attr, value)` and `get_vecattr(key, attr)`
-        methods. Note that all such attributes under the same `attr` name must have compatible `numpy`
+        To support the needs of specific models and other downstream uses, you can also set
+        additional attributes via the :meth:`~gensim.models.keyedvectors.KeyedVectors.set_vecattr`
+        and :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vecattr` methods.
+        Note that all such attributes under the same `attr` name must have compatible `numpy`
         types, as the type and storage array for such attributes is established by the 1st time such
         `attr` is set.
 
@@ -210,10 +211,16 @@ class KeyedVectors(utils.SaveLoad):
         self.next_index = 0  # pointer to where next new entry will land
         self.key_to_index = {}
 
-        self.vectors = zeros((count, vector_size), dtype=dtype)  # fka (formerly known as) syn0
+        self.vectors = zeros((count, vector_size), dtype=dtype)  # formerly known as syn0
         self.norms = None
 
-        self.expandos = {}  # dynamically-expandable per-vector named, numpy-typed attributes
+        # "expandos" are extra attributes stored for each key: {attribute_name} => numpy array of values of
+        # this attribute, with one array value for each vector key.
+        # The same information used to be stored in a structure called Vocab in Gensim <4.0.0, but
+        # with different indexing: {vector key} => Vocab object containing all attributes for the given vector key.
+        #
+        # Don't modify expandos directly; call set_vecattr()/get_vecattr() instead.
+        self.expandos = {}
 
         self.mapfile_path = mapfile_path
 
@@ -267,12 +274,16 @@ class KeyedVectors(utils.SaveLoad):
         for attr, t in zip(attrs, types):
             if t is int:
                 t = np.int64  # ensure 'int' type 64-bit (numpy-on-Windows https://github.com/numpy/numpy/issues/9464)
+            if t is str:
+                # Avoid typing numpy arrays as strings, because numpy would use its fixed-width `dtype=np.str_`
+                # dtype, which uses too much memory!
+                t = object
             if attr not in self.expandos:
                 self.expandos[attr] = np.zeros(target_size, dtype=t)
                 continue
             prev_expando = self.expandos[attr]
             if not np.issubdtype(t, prev_expando.dtype):
-                raise TypeError(f"can't allocate {t} for existing {prev_expando.dtype}")
+                raise TypeError(f"Can't allocate type {t} for attribute {attr}, conflicts with its existing type {prev_expando.dtype}")
             if len(prev_expando) == target_size:
                 continue  # no resizing necessary
             prev_count = len(prev_expando)
@@ -522,7 +533,9 @@ class KeyedVectors(utils.SaveLoad):
     def __setitem__(self, keys, weights):
         """Add keys and theirs vectors in a manual way.
         If some key is already in the vocabulary, old vector is replaced with the new one.
-        This method is alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.add` with `replace=True`.
+
+        This method is an alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.add_vectors`
+        with `replace=True`.
 
         Parameters
         ----------
