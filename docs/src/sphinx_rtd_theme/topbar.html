@@ -29,16 +29,16 @@
                 <a href="{{ pathto("index") }}"><span>Home</span></a>
               </li>
               <li{% if pagename == "auto_examples/index" %} class="current-menu-item"{% endif %}>
-                <a href="{{ pathto("auto_examples/index") }}"><span>Documentation</span></a>
+                <a href="{{ pathto("auto_examples/index") }}#documentation"><span>Documentation</span></a>
               </li>
               <li{% if pagename == "support" %} class="current-menu-item"{% endif %}>
-                <a href="{{ pathto("support") }}"><span>Support</span></a>
+                <a href="{{ pathto("support") }}#support"><span>Support</span></a>
               </li>
               <li{% if pagename == "apiref" %} class="current-menu-item"{% endif %}>
-                <a href="{{ pathto("apiref") }}"><span>API</span></a>
+                <a href="{{ pathto("apiref") }}#api-reference"><span>API</span></a>
               </li>
-              <li{% if pagename == "about" %} class="current-menu-item"{% endif %}>
-                <a href="{{ pathto("about") }}"><span>About</span></a>
+              <li{% if pagename == "intro" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("intro") }}#what-is-gensim"><span>About</span></a>
               </li>
             </ul>
           </nav>

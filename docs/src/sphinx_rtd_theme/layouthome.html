@@ -100,7 +100,7 @@
               <h3>Gensim Support</h3>
               <hr class="no_line" style="margin:0 auto 30px">
               <!--<h4 style="display: inline-block; font-weight: 300; margin-right: 10px; color: #000;"><i class="icon-mobile themecolor" style></i> +61 (0) 383 766 284</h4>-->
-              <h4 style="display: inline-block; font-weight: 300; color: #000;">See the <a href="{{ pathto('support') }}">Gensim support page</a> for how to get open source and commercial support.</h4>
+              <h4 style="display: inline-block; font-weight: 300; color: #000;">See the <a href="{{ pathto('support') }}">Gensim support page</a> for how to ask for open source and commercial support.</h4>
             </div>
           </aside>
         </div>
@@ -123,10 +123,10 @@
               {%- if hasdoc('copyright') %}
                 {% set path = pathto('copyright') %}
                 {% set copyright = copyright|e %}
-                &copy; <a href="{{ path }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright }}
+                &copy; <a href="{{ path }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright }}, <a href="https://radimrehurek.com">Radim Řehůřek</a>.
               {%- else %}
                 {% set copyright = copyright|e %}
-                &copy; {% trans %}Copyright{% endtrans %} {{ copyright }}
+                &copy; {% trans %}Copyright{% endtrans %} {{ copyright }}, <a href="https://radimrehurek.com">Radim Řehůřek</a>.
               {%- endif %}
             {%- endif %}
 

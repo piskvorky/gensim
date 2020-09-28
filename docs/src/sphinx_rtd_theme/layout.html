@@ -234,10 +234,10 @@
               {%- if hasdoc('copyright') %}
                 {% set path = pathto('copyright') %}
                 {% set copyright = copyright|e %}
-                &copy; <a href="{{ path }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright }}
+                &copy; <a href="{{ path }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright }}, <a href="https://radimrehurek.com">Radim Řehůřek</a>.
               {%- else %}
                 {% set copyright = copyright|e %}
-                &copy; {% trans %}Copyright{% endtrans %} {{ copyright }}
+                &copy; {% trans %}Copyright{% endtrans %} {{ copyright }}, <a href="https://radimrehurek.com">Radim Řehůřek</a>.
               {%- endif %}
             {%- endif %}
 
@@ -257,11 +257,6 @@
                         {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
                       </span>
             {%- endif %}
-            <br>
-            <a target="_blank" rel="nofollow" href="https://radimrehurek.com/"> Radim Řehůřek – Machine learing and data
-              mining expert</a>
-            <br>
-            <a target="_blank" rel="nofollow" href="https://edgy.digital/"> Created by edgy.digital</a>
           </div>
           <nav id="social-menu" class="menu-footer-container">
           </nav>
