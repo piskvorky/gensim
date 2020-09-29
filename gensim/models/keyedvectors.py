@@ -283,7 +283,10 @@ class KeyedVectors(utils.SaveLoad):
                 continue
             prev_expando = self.expandos[attr]
             if not np.issubdtype(t, prev_expando.dtype):
-                raise TypeError(f"Can't allocate type {t} for attribute {attr}, conflicts with its existing type {prev_expando.dtype}")
+                raise TypeError(
+                    f"Can't allocate type {t} for attribute {attr}, "
+                    f"conflicts with its existing type {prev_expando.dtype}"
+                )
             if len(prev_expando) == target_size:
                 continue  # no resizing necessary
             prev_count = len(prev_expando)
