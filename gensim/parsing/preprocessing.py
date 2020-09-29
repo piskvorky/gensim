@@ -94,7 +94,7 @@ def remove_stopwords(s):
 
 
 def strip_punctuation(s):
-    """Replace punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
+    """Replace ASCII punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
 
     Parameters
     ----------
