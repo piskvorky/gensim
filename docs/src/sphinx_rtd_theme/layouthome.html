@@ -80,38 +80,25 @@
     {% endblock %}
   {% endblock %}
   <footer id="Footer" class="clearfix">
-    <div class="widgets_wrapper">
+    <div class="widgets_wrapper" style="background-color:#f7f9fa;">
       <div class="container">
-        <div class="column one-fourth">
-          <aside class="widget_text widget widget_custom_html">
-            <div class="textwidget custom-html-widget">
-              <div class="image_frame image_item no_link scale-with-grid aligncenter no_border">
-                <div class="image_wrapper">
-                  <img class="scale-with-grid" src="{{ pathto('_static/images/erp2-footer-pic1.png', 1) }}">
-                </div>
-              </div>
+        <aside class="widget_text widget widget_custom_html">
+          <div class="textwidget custom-html-widget" style="text-align: center">
+            <h3>
+              Stay informed via <a href="https://groups.google.com/group/gensim" class="googlegroups">gensim mailing list</a>
+            </h3>
+            <hr class="no_line" style="margin:0 auto 30px">
+            <form action="https://groups.google.com/group/gensim/boxsubscribe">
+              <input type="text" name="email" placeholder="your@email.com" size="28" style="display: inline-block;">
+              <input type="submit" name="sub" value="Subscribe" class="subscribe_btn">
+            </form>
+            <div class="social_icons">
+              <a href="https://groups.google.com/group/gensim" target="_blank"><img src="{{ pathto('_static/images/icons/groups.png', 1) }}" alt="Google groups" width="64"></a>
+              <a href="https://twitter.com/gensim_py#" target="_blank"><img src="{{ pathto('_static/images/icons/twitter.png', 1) }}" alt="Twitter" width="64"></a>
+              <a href="https://github.com/RaRe-Technologies/gensim" target="_blank"><img src="{{ pathto('_static/images/icons/github.png', 1) }}" alt="Github" width="64"></a>
             </div>
-          </aside>
-        </div>
-        <div class="column one-second">
-          <aside class="widget_text widget widget_custom_html">
-            <div class="textwidget custom-html-widget">
-              <h5 class="themecolor">Do you have a question?</h5>
-              <h3>Gensim Support</h3>
-              <hr class="no_line" style="margin:0 auto 30px">
-              <!--<h4 style="display: inline-block; font-weight: 300; margin-right: 10px; color: #000;"><i class="icon-mobile themecolor" style></i> +61 (0) 383 766 284</h4>-->
-              <h4 style="display: inline-block; font-weight: 300; color: #000;">See the <a href="{{ pathto('support') }}">Gensim support page</a> for how to ask for open source and commercial support.</h4>
-            </div>
-          </aside>
-        </div>
-        <div class="column one-fourth">
-          <aside class="widget_text widget widget_custom_html">
-            <div style="text-align: right;">
-              <a style="margin: 0 7px;" href="https://github.com/RaRe-Technologies/gensim" target="_blank"><img src="{{ pathto('_static/images/erp2-footer-icon1.png', 1) }}" alt></a>
-              <a style="margin: 0 7px;" href="https://twitter.com/gensim_py#" target="_blank"><img src="{{ pathto('_static/images/erp2-footer-icon2.png', 1) }}" alt></a>
-            </div>
-          </aside>
-        </div>
+          </div>
+        </aside>
       </div>
     </div>
     <div class="footer_copy">

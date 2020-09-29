@@ -2578,3 +2578,27 @@ pre.prettyprint {
 {
     height: inherit !important;
 }
+
+.subscribe_btn {
+    margin: 0 0 0 10px;
+    border-radius: 20px !important;
+    font-weight: 700;
+}
+
+a.googlegroups {
+    color: #ff7a17 !important;
+}
+
+a.googlegroups:hover {
+    color: #e36304 !important;
+    text-decoration: underline;
+}
+
+.social_icons {
+    margin: 25px auto 0 auto;
+    display: inline-block;
+}
+
+.social_icons a {
+    margin: 15px 15px 0 15px;
+}
