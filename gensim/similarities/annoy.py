@@ -156,6 +156,7 @@ class AnnoyIndexer():
 
     def build_from_doc2vec(self):
         """Build an Annoy index using document vectors from a Doc2Vec model."""
+        # FIXME docvecs now = ? What's the replacement for docvecs.count, index_to_doctag, etc?
         docvecs = self.model.docvecs
         labels = [docvecs.index_to_doctag(i) for i in range(docvecs.count)]
         return self._build_from_model(docvecs.vectors_docs_norm, labels, self.model.vector_size)

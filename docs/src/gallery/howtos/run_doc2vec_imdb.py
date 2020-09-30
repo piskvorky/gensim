@@ -1,6 +1,6 @@
 r"""
-How to Apply Doc2Vec to Reproduce the 'Paragraph Vector' paper
-==============================================================
+How to reproduce the doc2vec 'Paragraph Vector' paper
+=====================================================
 
 Shows how to reproduce results of the "Distributed Representation of Sentences and Documents" paper by Le and Mikolov using Gensim.
 
@@ -100,8 +100,6 @@ def download_dataset(url='http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v
        return fname
 
     # Download the file to local storage first.
-    # We can't read it on the fly because of
-    # https://github.com/RaRe-Technologies/smart_open/issues/331
     with smart_open.open(url, "rb", ignore_ext=True) as fin:
         with smart_open.open(fname, 'wb', ignore_ext=True) as fout:
             while True:
@@ -139,11 +137,11 @@ def extract_documents():
 alldocs = list(extract_documents())
 
 ###############################################################################
-# Here's what a single document looks like
+# Here's what a single document looks like.
 print(alldocs[27])
 
 ###############################################################################
-# Extract our documents and split into training/test sets
+# Extract our documents and split into training/test sets.
 train_docs = [doc for doc in alldocs if doc.split == 'train']
 test_docs = [doc for doc in alldocs if doc.split == 'test']
 print('%d docs: %d train-sentiment, %d test-sentiment' % (len(alldocs), len(train_docs), len(test_docs)))
@@ -151,6 +149,7 @@ print('%d docs: %d train-sentiment, %d test-sentiment' % (len(alldocs), len(trai
 ###############################################################################
 # Set-up Doc2Vec Training & Evaluation Models
 # -------------------------------------------
+#
 # We approximate the experiment of Le & Mikolov `"Distributed Representations
 # of Sentences and Documents"
 # <http://cs.stanford.edu/~quocle/paragraph_vector.pdf>`_ with guidance from
@@ -255,11 +254,11 @@ def error_rate_for_model(test_model, train_set, test_set):
     """Report error rate on test_doc sentiments, using supplied model and train_docs"""
 
     train_targets = [doc.sentiment for doc in train_set]
-    train_regressors = [test_model.docvecs[doc.tags[0]] for doc in train_set]
+    train_regressors = [test_model.dv[doc.tags[0]] for doc in train_set]
     train_regressors = sm.add_constant(train_regressors)
     predictor = logistic_predictor_from_data(train_targets, train_regressors)
 
-    test_regressors = [test_model.docvecs[doc.tags[0]] for doc in test_set]
+    test_regressors = [test_model.dv[doc.tags[0]] for doc in test_set]
     test_regressors = sm.add_constant(test_regressors)
 
     # Predict & evaluate
@@ -347,7 +346,7 @@ for rate, name in sorted((rate, name) for name, rate in error_rates.items()):
 ###############################################################################
 # Are inferred vectors close to the precalculated ones?
 # -----------------------------------------------------
-doc_id = np.random.randint(simple_models[0].docvecs.count)  # Pick random doc; re-run cell for more examples
+doc_id = np.random.randint(len(simple_models[0].dv))  # Pick random doc; re-run cell for more examples
 print('for doc %d...' % doc_id)
 for model in simple_models:
     inferred_docvec = model.infer_vector(alldocs[doc_id].words)
