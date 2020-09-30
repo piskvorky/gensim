@@ -73,14 +73,16 @@ class AnnoyIndexer():
         self.num_trees = num_trees
 
         if model and num_trees:
+            # Extract the KeyedVectors object from whatever model we were given.
             if isinstance(self.model, Doc2Vec):
-                self.build_from_doc2vec()
+                kv = self.model.dv
             elif isinstance(self.model, (Word2Vec, FastText)):
-                self.build_from_word2vec()
+                kv = self.model.wv
             elif isinstance(self.model, (KeyedVectors,)):
-                self.build_from_keyedvectors()
+                kv = self.model
             else:
                 raise ValueError("Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used")
+            self._build_from_model(kv.get_normed_vectors(), kv.index_to_key, kv.vector_size)
 
     def save(self, fname, protocol=2):
         """Save AnnoyIndexer instance to disk.
@@ -88,7 +90,7 @@ class AnnoyIndexer():
         Parameters
         ----------
         fname : str
-            Path to output file, will produce 2 files: `fname` - parameters and `fname`.d - :class:`~annoy.AnnoyIndex`.
+            Path to output file, will produce 2 files: `fname` - parameters and `fname`.dict - :class:`~annoy.AnnoyIndex`.
         protocol : int, optional
             Protocol for pickle.
 
@@ -97,10 +99,9 @@ class AnnoyIndexer():
         This method saves **only the index**. The trained model isn't preserved.
 
         """
-        fname_dict = fname + '.d'
         self.index.save(fname)
         d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
-        with utils.open(fname_dict, 'wb') as fout:
+        with utils.open(fname + '.dict', 'wb') as fout:
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
@@ -131,10 +132,10 @@ class AnnoyIndexer():
             >>> new_indexer.model = model
 
         """
-        fname_dict = fname + '.d'
+        fname_dict = fname + '.dict'
         if not (os.path.exists(fname) and os.path.exists(fname_dict)):
             raise IOError(
-                "Can't find index files '%s' and '%s' - unable to restore AnnoyIndexer state." % (fname, fname_dict)
+                f"Can't find index files '{fname}' and '{fname_dict}' - unable to restore AnnoyIndexer state."
             )
         try:
             from annoy import AnnoyIndex
@@ -147,25 +148,6 @@ class AnnoyIndexer():
         self.index = AnnoyIndex(d['f'], metric='angular')
         self.index.load(fname)
         self.labels = d['labels']
-
-    def build_from_word2vec(self):
-        """Build an Annoy index using word vectors from a Word2Vec model."""
-        return self._build_from_model(
-            self.model.wv.get_normed_vectors(), self.model.wv.index_to_key, self.model.vector_size,
-        )
-
-    def build_from_doc2vec(self):
-        """Build an Annoy index using document vectors from a Doc2Vec model."""
-        # FIXME docvecs now = ? What's the replacement for docvecs.count, index_to_doctag, etc?
-        docvecs = self.model.docvecs
-        labels = [docvecs.index_to_doctag(i) for i in range(docvecs.count)]
-        return self._build_from_model(docvecs.vectors_docs_norm, labels, self.model.vector_size)
-
-    def build_from_keyedvectors(self):
-        """Build an Annoy index using word vectors from a KeyedVectors model."""
-        return self._build_from_model(
-            self.model.get_normed_vectors(), self.model.index_to_key, self.model.vector_size,
-        )
 
     def _build_from_model(self, vectors, labels, num_features):
         try:
