@@ -115,6 +115,7 @@ def strip_punctuation(s):
 
     """
     s = utils.to_unicode(s)
+    # For unicode enhancement options see https://github.com/RaRe-Technologies/gensim/issues/2962
     return RE_PUNCT.sub(" ", s)
 
 
