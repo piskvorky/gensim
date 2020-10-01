@@ -1211,9 +1211,6 @@ class KeyedVectors(utils.SaveLoad):
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """Compute performance of the model on an analogy test set.
 
-        This is modern variant of :meth:`~gensim.models.keyedvectors.KeyedVectors.accuracy`, see
-        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
-
         The accuracy is reported (printed to log and returned as a score) for each section separately,
         plus there's one aggregate summary at the end.
 
@@ -1342,8 +1339,9 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
-                            case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(
+            self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
+        ):
         """Compute correlation of the model with human similarity judgments.
 
         Notes
@@ -1508,8 +1506,10 @@ class KeyedVectors(utils.SaveLoad):
 
         return rcs
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
-                             prefix='', append=False, sort_attr='count'):
+    def save_word2vec_format(
+            self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
+            prefix='', append=False, sort_attr='count',
+        ):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 

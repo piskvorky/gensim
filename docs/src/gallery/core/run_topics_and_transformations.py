@@ -289,5 +289,4 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_topics_and_transformations.png')
 imgplot = plt.imshow(img)
-plt.axis('off')
-plt.show()
+_ = plt.axis('off')

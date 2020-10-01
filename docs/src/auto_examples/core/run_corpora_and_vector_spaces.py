@@ -303,12 +303,8 @@ scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 # .. [1] This is the same corpus as used in
 #        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
 
-###############################################################################
-# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
-#
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_corpora_and_vector_spaces.png')
 imgplot = plt.imshow(img)
-plt.axis('off')
-plt.show()
+_ = plt.axis('off')

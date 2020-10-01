@@ -1,10 +1,12 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_core_run_core_concepts.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_core_run_core_concepts.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_core_run_core_concepts.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_core_run_core_concepts.py:
 
 
 Core Concepts
@@ -17,6 +19,7 @@ This tutorial introduces Documents, Corpora, Vectors and Models: the basic conce
 
 
     import pprint
+
 
 
 
@@ -47,6 +50,7 @@ paragraph (i.e., journal article abstract), a news article, or a book.
 .. code-block:: default
 
     document = "Human machine interface for lab abc computer applications"
+
 
 
 
@@ -95,6 +99,7 @@ It consists of 9 documents, where each document is a string consisting of a sing
         "Graph minors IV Widths of trees and well quasi ordering",
         "Graph minors A survey",
     ]
+
 
 
 
@@ -169,6 +174,7 @@ a delimiter).
 
 
 
+
 Before proceeding, we want to associate each word in the corpus with a unique
 integer ID. We can do this using the :py:class:`gensim.corpora.Dictionary`
 class.  This dictionary defines the vocabulary of all words that our
@@ -194,6 +200,7 @@ processing knows about.
  .. code-block:: none
 
     Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
+
 
 
 
@@ -287,6 +294,7 @@ into these 12-dimensional vectors. We can see what these IDs correspond to:
 
 
 
+
 For example, suppose we wanted to vectorize the phrase "Human computer
 interaction" (note that this phrase was not in our original corpus). We can
 create the bag-of-word representation for a document using the ``doc2bow``
@@ -313,6 +321,7 @@ counts:
  .. code-block:: none
 
     [(0, 1), (1, 1)]
+
 
 
 
@@ -354,6 +363,7 @@ We can convert our entire original corpus to a list of vectors:
      [(9, 1), (10, 1)],
      [(9, 1), (10, 1), (11, 1)],
      [(4, 1), (10, 1), (11, 1)]]
+
 
 
 
@@ -427,6 +437,7 @@ our corpus and transforming the string "system minors":
 
 
 
+
 The ``tfidf`` model again returns a list of tuples, where the first entry is
 the token ID and the second entry is the tf-idf weighting. Note that the ID
 corresponding to "system" (which occurred 4 times in the original corpus) has
@@ -457,6 +468,7 @@ preparation for similarity queries:
 
 
 
+
 and to query the similarity of our query document ``query_document`` against every document in the corpus:
 
 
@@ -478,6 +490,7 @@ and to query the similarity of our query document ``query_document`` against eve
  .. code-block:: none
 
     [(0, 0.0), (1, 0.32448703), (2, 0.41707572), (3, 0.7184812), (4, 0.0), (5, 0.0), (6, 0.0), (7, 0.0), (8, 0.0)]
+
 
 
 
@@ -514,6 +527,7 @@ We can make this slightly more readable by sorting:
 
 
 
+
 Summary
 -------
 
@@ -543,32 +557,24 @@ There's still much more to learn about :ref:`sphx_glr_auto_examples_core_run_cor
     import matplotlib.image as mpimg
     img = mpimg.imread('run_core_concepts.png')
     imgplot = plt.imshow(img)
-    plt.axis('off')
-    plt.show()
+    _ = plt.axis('off')
 
 
 
 .. image:: /auto_examples/core/images/sphx_glr_run_core_concepts_001.png
+    :alt: run core concepts
     :class: sphx-glr-single-img
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    /Volumes/work/workspace/gensim_misha/docs/src/gallery/core/run_core_concepts.py:331: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      plt.show()
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.265 seconds)
+   **Total running time of the script:** ( 0 minutes  1.675 seconds)
 
-**Estimated memory usage:**  36 MB
+**Estimated memory usage:**  37 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_core_concepts.py:
@@ -581,13 +587,13 @@ There's still much more to learn about :ref:`sphx_glr_auto_examples_core_run_cor
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_core_concepts.py <run_core_concepts.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_core_concepts.ipynb <run_core_concepts.ipynb>`
 

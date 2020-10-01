@@ -127,7 +127,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the `Lee Evaluation Corpus &lt;http...">
 
 .. only:: html
 
@@ -148,7 +148,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the `Lee Corpus &lt;https://hekyll.s...">
 
 .. only:: html
 
@@ -190,7 +190,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec. ">
 
 .. only:: html
 
@@ -232,7 +232,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the concept of distance between two bags of words or distributions, and demonstrates...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the concept of distance between document representations, and demonstrates its calcu...">
 
 .. only:: html
 
@@ -258,7 +258,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
-     :alt: Word Movers' Distance
+     :alt: Word Mover's Distance
 
      :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
 
@@ -330,7 +330,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora and pretrained models. ">
 
 .. only:: html
 
@@ -351,7 +351,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="How to author documentation for Gensim. ">
 
 .. only:: html
 
@@ -377,7 +377,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. only:: html
 
  .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
-     :alt: How to Apply Doc2Vec to Reproduce the 'Paragraph Vector' paper
+     :alt: How to reproduce the doc2vec 'Paragraph Vector' paper
 
      :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
 
@@ -393,7 +393,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a topic model with itself or other models.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can visualize and compare trained topic models.">
 
 .. only:: html
 

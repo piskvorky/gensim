@@ -77,7 +77,7 @@ import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, FAST_VERSION  # noqa: F401
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
@@ -296,7 +296,8 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
-            **kwargs)
+            **kwargs,
+        )
 
     @property
     def dm(self):
