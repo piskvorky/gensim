@@ -1422,6 +1422,88 @@ class MmWriter(object):
             self.fout.close()
 
 
+def normal_factors(size, rand_obj, loc=0.0, scale=1.0, k=2, iterations=30):
+    r"""Draw random samples from independent k-factors of the normal distribution.
+
+    The product of k independent k-factors is normally distributed. [Pinelis2018]_
+    This is useful e.g. for initializing neural network weights that are pointwise multiplied and
+    passed to a hidden layer. The pointwise product of the weights will be normally distributed.
+
+    Parameters
+    ----------
+    size : int or tuple of ints
+        The output shape. If the given shape is e.g. ``(m, n, k)``, then ``m * n * k`` random samples
+        are drawn from each k-factor.
+    rand_obj : np.random.Generator
+        A random generator object.
+    loc : float, optional
+        The mean of the normal distribution. If negative, the sample of the first k-factor will be
+        negated to make the factor product also negative. Default is 0.
+    scale : float, optional
+        The standard deviation of the normal distribution. Must be non-negative. Default is 1.
+    k : int, optional
+        The number of k-factors. Must be non-negative. Default is 2.
+    iterations : int, optional
+        The formula of [Pinelis2018]_ contains a sum of a convergent infinite sequence. We approximate
+        the sum by a finite sequence of its ``iterations`` initial elements. Increasing the number of
+        iterations improves accuracy at the expense of speed. Must be non-negative. Default is 30,
+        see the explanation in Notes. In practice, a smaller number of iterations may be sufficient.
+
+    Returns
+    -------
+    factor_samples : tuple of ndarray
+        Random samples drawn from the k independent parametrized k-factors of the normal distribution.
+
+    Raises
+    ------
+    ValueError
+        If the standard deviation, the number of k-factors, or the number of iterations are negative.
+
+    Notes
+    -----
+    The default size of the finite sequence in the equation has been set to 30. At this many iterations,
+    the zero hypothesis that the product of the random samples is normally distributed cannot be rejected
+    at the significance level :math:`\alpha=0.05` by the Kolmogorov-Smirnov two-tailed test of normality.
+
+    References
+    ----------
+    .. [Pinelis2018] Pinelis, Iosif. (2018). `The exp-normal distribution is infinitely divisible.
+       <https://arxiv.org/abs/1803.09838>`_ *arXiv preprint arXiv:1803.09838*.
+
+    """
+    if scale < 0.0:
+        raise ValueError('Standard deviation must be non-negative')
+    if k < 0:
+        raise ValueError('The number of k-factors must be non-negative')
+    if iterations < 0:
+        raise ValueError('The number of iterations must be non-negative')
+
+    if not isinstance(size, tuple):
+        size = (size,)
+
+    arange = np.arange(iterations) + 1
+    exponent = 1.0 / k
+
+    def gamma(size):
+        return rand_obj.gamma(1.0 / k, 1.0, size)
+
+    def factor_sample(sample_number):
+        log_value = np.log(2.0) / (2.0 * k)
+        log_value -= gamma(size)
+        log_value -= np.sum(gamma((*size, iterations)) / (2.0 * arange + 1.0), axis=-1)
+        log_value += np.sum(np.log(1.0 + 1.0 / arange) / (2.0 * k))
+        sample = (rand_obj.uniform(0.0, 1.0, size) < 0.5) * 2.0 - 1.0
+        sample *= np.exp(log_value)
+        sample *= scale**exponent
+        sample += np.abs(loc)**exponent
+        if sample_number == 0 and loc < 0.0:
+            sample *= -1.0
+        return sample
+
+    factor_samples = tuple(factor_sample(i) for i in range(k))
+    return factor_samples
+
+
 try:
     from gensim.corpora._mmreader import MmReader  # noqa: F401
 except ImportError:
