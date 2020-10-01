@@ -46,7 +46,7 @@ print("Using corpus from", text8_path)
 #
 # For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
 from gensim.models import Word2Vec, KeyedVectors
-from gensim.models.word2vec import Text8Corpus
+from gensim.corpora.text8corpus import Text8Corpus
 
 # Using params from Word2Vec_FastText_Comparison
 params = {
