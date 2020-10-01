@@ -90,7 +90,9 @@ class AnnoyIndexer():
         Parameters
         ----------
         fname : str
-            Path to output file, will produce 2 files: `fname` - parameters and `fname`.dict - :class:`~annoy.AnnoyIndex`.
+            Path to output. Save will produce 2 files:
+            `fname`: Annoy index itself.
+            `fname.dict`: Index metadata.
         protocol : int, optional
             Protocol for pickle.
 
