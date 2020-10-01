@@ -9,7 +9,7 @@
 from gensim import utils
 
 try:
-    from gensim.models.word2vec_inner import MAX_WORDS_IN_BATCH
+    from gensim.models.word2vec import MAX_WORDS_IN_BATCH
 except ImportError:
     raise utils.NO_CYTHON
 

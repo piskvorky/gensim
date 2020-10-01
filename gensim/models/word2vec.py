@@ -2130,9 +2130,3 @@ if __name__ == "__main__":
         model.accuracy(args.accuracy)
 
     logger.info("finished running %s", program)
-
-# Alliases of classes so that code relies on original location works
-BrownCorpus = BrownCorpus
-Text8Corpus = Text8Corpus
-LineSentence = LineSentence
-PathLineSentences = PathLineSentences
