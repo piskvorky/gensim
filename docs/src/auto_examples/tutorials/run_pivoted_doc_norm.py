@@ -4,31 +4,35 @@ Pivoted Document Length Normalization
 
 This tutorial demonstrates using Pivoted Document Length Normalization to
 counter the effect of short document bias when working with TfIdf, thereby
-increasing the classification accuracy.
+increasing classification accuracy.
 """
 
 ###############################################################################
-# In many cases, normalizing the tfidf weights for each term favors weight of terms of the documents with shorter length. The *pivoted document length normalization* scheme counters the effect of this bias for short documents by making tfidf independent of the document length.
-# 
-# This is achieved by *tilting* the normalization curve along the pivot point defined by user with some slope.
-# 
+# In many cases, normalizing the tfidf weights for each term favors weights of terms
+# of the documents with shorter length. The *pivoted document length normalization* scheme
+# counters the effect of this bias for short documents, by making tfidf independent of the document length.
+#
+# This is achieved by *tilting* the normalization curve along a pivot point and slope, which
+# must be defined by the user.
+#
 # Roughly following the equation:
-# 
+#
 # ``pivoted_norm = (1 - slope) * pivot + slope * old_norm``
-# 
-# This scheme is proposed in the paper `Pivoted Document Length Normalization <http://singhal.info/pivoted-dln.pdf>`_ by Singhal, Buckley and Mitra.
-# 
-# Overall this approach can increase the accuracy of the model where the document lengths are hugely varying in the entire corpus.
-# 
+#
+# This scheme is proposed in the paper `Pivoted Document Length Normalization <http://singhal.info/pivoted-dln.pdf>`_
+# by Singhal, Buckley and Mitra.
+#
+# Overall this approach can increase the accuracy of the model where document lengths are hugely varying across the corpus.
+#
 # Introduction
 # ------------
-# 
+#
 # This guide demonstrates how to perform pivoted document length normalization.
-# 
-# We will train a logistic regression to distinguish between text from two different newsgroups.
-# 
+#
+# We will train a logistic regression model to distinguish between text from two different newsgroups.
+#
 # Our results will show that using pivoted document length normalization yields a better model (higher classification accuracy).
-# 
+#
 
 #
 # Download our dataset
@@ -86,9 +90,12 @@ from gensim.sklearn_api.tfidf import TfIdfTransformer
 from sklearn.linear_model import LogisticRegression
 from gensim.matutils import corpus2csc
 
-# This function returns the model accuracy and indivitual document prob values using
-# gensim's TfIdfTransformer and sklearn's LogisticRegression
 def get_tfidf_scores(kwargs):
+    """
+    Return a model's accuracy along with individual document probability values, using
+    Gensim's TfIdfTransformer and sklearn's LogisticRegression.
+
+    """
     tfidf_transformer = TfIdfTransformer(**kwargs).fit(train_corpus)
 
     X_train_tfidf = corpus2csc(tfidf_transformer.transform(train_corpus), num_terms=len(id2word)).T
@@ -104,7 +111,7 @@ def get_tfidf_scores(kwargs):
 ###############################################################################
 # Get TFIDF scores for corpus without pivoted document length normalisation
 # -------------------------------------------------------------------------
-# 
+#
 params = {}
 model_accuracy, doc_scores = get_tfidf_scores(params)
 print(model_accuracy)
@@ -129,12 +136,9 @@ def sort_length_by_score(doc_scores, X_test):
 
 
 print(
-   "Normal cosine normalisation favors short documents as our top {} "
-   "docs have a smaller mean doc length of {:.3f} compared to the corpus mean doc length of {:.3f}"
-   .format(
-       k, sort_length_by_score(doc_scores, X_test)[1][:k].mean(), 
-       sort_length_by_score(doc_scores, X_test)[1].mean()
-   )
+    f"Normal cosine normalisation favors short documents as our top {k} docs have a smaller "
+    f"mean doc length of {sort_length_by_score(doc_scores, X_test)[1][:k].mean():.3f} "
+    f"compared to the corpus mean doc length of {sort_length_by_score(doc_scores, X_test)[1].mean():.3f}"
 )
 
 ###############################################################################
@@ -153,9 +157,9 @@ for slope in np.arange(0, 1.1, 0.1):
         best_model_accuracy = model_accuracy
         optimum_slope = slope
 
-    print("Score for slope {} is {}".format(slope, model_accuracy))
+    print(f"Score for slope {slope} is {model_accuracy}")
 
-print("We get best score of {} at slope {}".format(best_model_accuracy, optimum_slope))
+print(f"We get best score of {best_model_accuracy} at slope {optimum_slope}")
 
 ###############################################################################
 # Evaluate the model with optimum slope
@@ -165,27 +169,23 @@ model_accuracy, doc_scores = get_tfidf_scores(params)
 print(model_accuracy)
 
 print(
-   "With pivoted normalisation top {} docs have mean length of {:.3f} "
-   "which is much closer to the corpus mean doc length of {:.3f}"
-   .format(
-       k, sort_length_by_score(doc_scores, X_test)[1][:k].mean(), 
-       sort_length_by_score(doc_scores, X_test)[1].mean()
-   )
+    f"With pivoted normalisation top {k} docs have a mean length of "
+    f"{sort_length_by_score(doc_scores, X_test)[1][:k].mean():.3f} which is much "
+    f"closer to the corpus mean doc length of {sort_length_by_score(doc_scores, X_test)[1].mean():.3f}"
 )
 
 ###############################################################################
-# 
+#
 # Visualizing the pivoted normalization
 # -------------------------------------
-# 
-# Since cosine normalization favors retrieval of short documents from the plot
-# we can see that when slope was 1 (when pivoted normalisation was not applied)
-# short documents with length of around 500 had very good score hence the bias
-# for short documents can be seen. As we varied the value of slope from 1 to 0
+#
+# From the plot we can see that when the slope was 1 (i.e. when pivoted normalisation
+# was not applied at all), short documents with length of around 500 had very good scores.
+# This is a bias for short documents. As we varied the value of slope from 1 to 0
 # we introdcued a new bias for long documents to counter the bias caused by
-# cosine normalisation. Therefore at a certain point we got an optimum value of
-# slope which is 0.5 where the overall accuracy of the model is increased.
-# 
+# cosine normalisation. At a certain point we got an optimum value of
+# slope (0.5 here) where the overall accuracy of the model was maximized.
+#
 import matplotlib.pyplot as py
 
 best_model_accuracy = 0
@@ -211,12 +211,12 @@ for slope in [1, 0.2]:
     x = doc_leng[:k, np.newaxis]
 
     py.subplot(1, 2, it+1).bar(x, y, width=20, linewidth=0)
-    py.title("slope = " + str(slope) + " Model accuracy = " + str(model_accuracy))
+    py.title(f"Slope = {slope} Model accuracy = {model_accuracy}")
     py.ylim([0, 4.5])
     py.xlim([0, 3200])
     py.xlabel("document length")
     py.ylabel("confidence score")
-    
+
     it += 1
 
 py.tight_layout()
@@ -225,19 +225,19 @@ py.show()
 ###############################################################################
 # The above histogram plot helps us visualize the effect of ``slope``. For top
 # k documents we have document length on the x axis and their respective scores
-# of belonging to a specific class on y axis.  
-# 
+# of belonging to a specific class on y axis.
+#
 # As we decrease the slope the density of bins is shifted from low document
 # length (around ~250-500) to over ~500 document length. This suggests that the
 # positive biasness which was seen at ``slope=1`` (or when regular tfidf was
 # used) for short documents is now reduced. We get the optimum slope or the max
 # model accuracy when slope is 0.2.
-# 
+#
 # Conclusion
 # ==========
-# 
-# Using pivoted document normalization improved the classification accuracy significantly:
-# 
+#
+# Using pivoted document normalization improved the classification accuracy a little bit:
+#
 # * Before (slope=1, identical to default cosine normalization): 0.9682
 # * After (slope=0.2): 0.9771
-# 
+#

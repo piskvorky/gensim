@@ -183,7 +183,7 @@ assert gensim.models.doc2vec.FAST_VERSION > -1, "This will be painfully slow oth
 from gensim.models.doc2vec import Doc2Vec
 
 common_kwargs = dict(
-    vector_size=100, epochs=1, min_count=2,  # FIXME
+    vector_size=100, epochs=20, min_count=2,
     sample=0, workers=multiprocessing.cpu_count(), negative=5, hs=0,
 )
 
