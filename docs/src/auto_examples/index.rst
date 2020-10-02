@@ -223,26 +223,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the concept of distance between two bags of words or distributions, and demonstrates...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_distance_metrics_thumb.png
-
-        :ref:`sphx_glr_auto_examples_tutorials_run_distance_metrics.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_distance_metrics
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
 
 .. only:: html
@@ -260,26 +240,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    :hidden:
 
    /auto_examples/tutorials/run_wmd
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial demonstrates using Pivoted Document Length Normalization to counter the effect of...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
-
-        :ref:`sphx_glr_auto_examples_tutorials_run_pivoted_doc_norm.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_pivoted_doc_norm
 .. raw:: html
 
     <div style='clear:both'></div>
@@ -403,7 +363,6 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
    - ? `Colouring words by topic in a document, print words in a
      topics <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb>`__
    - ? `Topic Coherence, a metric that correlates that human judgement on topic quality. <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb>`__
-   - ? `Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_distance_metrics.html>`__
    - ? `America's Next Topic Model slides <https://speakerdeck.com/tmylk/americas-next-topic-model-at-pydata-berlin-august-2016?slide=7>`__
       - How to choose your next topic model, presented at Pydata Berlin 10 August 2016 by Lev Konstantinovsky
    - ?  `Dynamic Topic Modeling and Dynamic Influence Model Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb>`__
