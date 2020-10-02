@@ -1063,3 +1063,9 @@ class Doc2VecVocab(utils.SaveLoad):
 
 class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
+
+
+# Alliases of classes so that code relies on original location works
+TaggedBrownCorpus = TaggedBrownCorpus
+TaggedDocument = TaggedDocument
+TaggedLineDocument = TaggedLineDocument

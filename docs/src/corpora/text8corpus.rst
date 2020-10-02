@@ -1,5 +1,5 @@
 :mod:`corpora.text8corpus` -- Implements Text8Corpus
-==========================================================
+====================================================
 
 .. automodule:: gensim.corpora.text8corpus
     :synopsis: Implements Text8Corpus

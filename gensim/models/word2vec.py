@@ -2044,6 +2044,12 @@ def _assign_binary_codes(wv):
     logger.info("built huffman tree with maximum node depth %i", max_depth)
 
 
+# Alliases of classes so that code relies on original location works
+BrownCorpus = BrownCorpus
+Text8Corpus = Text8Corpus
+LineSentence = LineSentence
+PathLineSentences = PathLineSentences
+
 # Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 \
 # -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3
 if __name__ == "__main__":
