@@ -6,9 +6,10 @@
 
 """This module contains the classes of LineSentence and PathLineSentences."""
 import logging
-from gensim import utils
-import itertools
 import os
+import itertools
+
+from gensim import utils
 
 try:
     from gensim.models.word2vec_inner import MAX_WORDS_IN_BATCH

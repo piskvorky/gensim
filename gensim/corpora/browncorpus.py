@@ -7,7 +7,9 @@
 """This module contains the classes of BrownCorpus and TaggedBrownCorpus."""
 
 import os
+
 from gensim import utils
+
 from .taggeddocument import TaggedDocument
 
 

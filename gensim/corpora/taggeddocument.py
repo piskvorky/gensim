@@ -6,8 +6,9 @@
 
 """This module contains the classes of TaggedDocument and TaggedLineDocument."""
 
-from gensim import utils
 from collections import namedtuple
+
+from gensim import utils
 
 
 class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):

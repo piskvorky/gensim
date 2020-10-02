@@ -15,7 +15,7 @@ from .wikicorpus import WikiCorpus  # noqa:F401
 from .textcorpus import TextCorpus, TextDirectoryCorpus  # noqa:F401
 from .ucicorpus import UciCorpus  # noqa:F401
 from .malletcorpus import MalletCorpus  # noqa:F401
-from .browncorpus import BrownCorpus, TaggedBrownCorpus  # noqa:F401
-from .text8corpus import Text8Corpus  # noqa:F401
-from .linesentence import LineSentence, PathLineSentences  # noqa:F401
-from .taggeddocument import TaggedDocument, TaggedLineDocument  # noqa:F401
+# from .browncorpus import BrownCorpus, TaggedBrownCorpus  # noqa:F401
+# # from .text8corpus import Text8Corpus  # noqa:F401
+# from .linesentence import LineSentence, PathLineSentences  # noqa:F401
+# from .taggeddocument import TaggedDocument, TaggedLineDocument  # noqa:F401
