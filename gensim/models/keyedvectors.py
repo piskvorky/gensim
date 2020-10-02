@@ -101,12 +101,16 @@ Some of them are already built-in
     >>>
     >>> word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
     >>>
+    >>> # Check the "most similar words", using the default "cosine similarity" measure.
     >>> result = word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
-    >>> print("{}: {:.4f}".format(*result[0]))
+    >>> most_similar_key, similarity = result[0]  # look at the first match
+    >>> print(f"{most_similar_key}: {similarity:.4f}")
     queen: 0.7699
     >>>
+    >>> # Use a different similarity measure: "cosmul".
     >>> result = word_vectors.most_similar_cosmul(positive=['woman', 'king'], negative=['man'])
-    >>> print("{}: {:.4f}".format(*result[0]))
+    >>> most_similar_key, similarity = result[0]  # look at the first match
+    >>> print(f"{most_similar_key}: {similarity:.4f}")
     queen: 0.8965
     >>>
     >>> print(word_vectors.doesnt_match("breakfast cereal dinner lunch".split()))
@@ -117,22 +121,23 @@ Some of them are already built-in
     True
     >>>
     >>> result = word_vectors.similar_by_word("cat")
-    >>> print("{}: {:.4f}".format(*result[0]))
+    >>> most_similar_key, similarity = result[0]  # look at the first match
+    >>> print(f"{most_similar_key}: {similarity:.4f}")
     dog: 0.8798
     >>>
     >>> sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
     >>> sentence_president = 'The president greets the press in Chicago'.lower().split()
     >>>
     >>> similarity = word_vectors.wmdistance(sentence_obama, sentence_president)
-    >>> print("{:.4f}".format(similarity))
+    >>> print(f"{similarity:.4f}")
     3.4893
     >>>
     >>> distance = word_vectors.distance("media", "media")
-    >>> print("{:.1f}".format(distance))
+    >>> print(f"{distance:.1f}")
     0.0
     >>>
-    >>> sim = word_vectors.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
-    >>> print("{:.4f}".format(sim))
+    >>> similarity = word_vectors.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant'])
+    >>> print(f"{similarity:.4f}")
     0.7067
     >>>
     >>> vector = word_vectors['computer']  # numpy vector of a word
@@ -192,9 +197,10 @@ class KeyedVectors(utils.SaveLoad):
 
         Used to perform operations on the vectors such as vector lookup, distance, similarity etc.
 
-        To support the needs of specific models and other downstream uses, each key may also have
-        additional attributes set and read via the `set_vecattr(key, attr, value)` and `get_vecattr(key, attr)`
-        methods. Note that all such attributes under the same `attr` name must have compatible `numpy`
+        To support the needs of specific models and other downstream uses, you can also set
+        additional attributes via the :meth:`~gensim.models.keyedvectors.KeyedVectors.set_vecattr`
+        and :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vecattr` methods.
+        Note that all such attributes under the same `attr` name must have compatible `numpy`
         types, as the type and storage array for such attributes is established by the 1st time such
         `attr` is set.
 
@@ -205,10 +211,16 @@ class KeyedVectors(utils.SaveLoad):
         self.next_index = 0  # pointer to where next new entry will land
         self.key_to_index = {}
 
-        self.vectors = zeros((count, vector_size), dtype=dtype)  # fka (formerly known as) syn0
+        self.vectors = zeros((count, vector_size), dtype=dtype)  # formerly known as syn0
         self.norms = None
 
-        self.expandos = {}  # dynamically-expandable per-vector named, numpy-typed attributes
+        # "expandos" are extra attributes stored for each key: {attribute_name} => numpy array of values of
+        # this attribute, with one array value for each vector key.
+        # The same information used to be stored in a structure called Vocab in Gensim <4.0.0, but
+        # with different indexing: {vector key} => Vocab object containing all attributes for the given vector key.
+        #
+        # Don't modify expandos directly; call set_vecattr()/get_vecattr() instead.
+        self.expandos = {}
 
         self.mapfile_path = mapfile_path
 
@@ -219,7 +231,7 @@ class KeyedVectors(utils.SaveLoad):
             self._upconvert_old_d2vkv()
         # fixup rename/consolidation into index_to_key of older index2word, index2entity
         if not hasattr(self, 'index_to_key'):
-            self.index_to_key = self.__dict__.pop('index2word', self.__dict__.pop('index2word', None))
+            self.index_to_key = self.__dict__.pop('index2word', self.__dict__.pop('index2entity', None))
         # fixup rename into vectors of older syn0
         if not hasattr(self, 'vectors'):
             self.vectors = self.__dict__.pop('syn0', None)
@@ -262,27 +274,66 @@ class KeyedVectors(utils.SaveLoad):
         for attr, t in zip(attrs, types):
             if t is int:
                 t = np.int64  # ensure 'int' type 64-bit (numpy-on-Windows https://github.com/numpy/numpy/issues/9464)
+            if t is str:
+                # Avoid typing numpy arrays as strings, because numpy would use its fixed-width `dtype=np.str_`
+                # dtype, which uses too much memory!
+                t = object
             if attr not in self.expandos:
                 self.expandos[attr] = np.zeros(target_size, dtype=t)
                 continue
             prev_expando = self.expandos[attr]
             if not np.issubdtype(t, prev_expando.dtype):
-                raise TypeError("can't allocate {0} for existing {1}".format(t, prev_expando.dtype))
+                raise TypeError(
+                    f"Can't allocate type {t} for attribute {attr}, "
+                    f"conflicts with its existing type {prev_expando.dtype}"
+                )
             if len(prev_expando) == target_size:
                 continue  # no resizing necessary
             prev_count = len(prev_expando)
             self.expandos[attr] = np.zeros(target_size, dtype=prev_expando.dtype)
-            self.expandos[attr][0:min(prev_count, target_size), ] = \
-                prev_expando[0:min(prev_count, target_size), ]
+            self.expandos[attr][: min(prev_count, target_size), ] = prev_expando[: min(prev_count, target_size), ]
 
     def set_vecattr(self, key, attr, val):
-        """Set attribute associated with given key to value. TODO: param docs"""
+        """Set attribute associated with the given key to value.
+
+        Parameters
+        ----------
+
+        key : str
+            Store the attribute for this vector key.
+        attr : str
+            Name of the additional attribute to store for the given key.
+        val : object
+            Value of the additional attribute to store for the given key.
+
+        Returns
+        -------
+
+        None
+
+        """
         self.allocate_vecattrs(attrs=[attr], types=[type(val)])
         index = self.get_index(key)
         self.expandos[attr][index] = val
 
     def get_vecattr(self, key, attr):
-        """Get attribute value associate with given key. TODO: param docs"""
+        """Get attribute value associated with given key.
+
+        Parameters
+        ----------
+
+        key : str
+            Vector key for which to fetch the attribute value.
+        attr : str
+            Name of the additional attribute to fetch for the given key.
+
+        Returns
+        -------
+
+        object
+            Value of the additional attribute fetched for the given key.
+
+        """
         index = self.get_index(key)
         return self.expandos[attr][index]
 
@@ -351,13 +402,14 @@ class KeyedVectors(utils.SaveLoad):
         elif default is not None:
             return default
         else:
-            raise KeyError("Key '%s' not present" % key)
+            raise KeyError(f"Key '{key}' not present")
 
     def get_vector(self, key, norm=False):
         """Get the key's vector, as a 1D numpy array.
 
         Parameters
         ----------
+
         key : str
             Key for vector to return.
         norm : bool, optional
@@ -365,11 +417,13 @@ class KeyedVectors(utils.SaveLoad):
 
         Returns
         -------
+
         numpy.ndarray
             Vector for the specified key.
 
         Raises
         ------
+
         KeyError
             If the given key doesn't exist.
 
@@ -386,18 +440,30 @@ class KeyedVectors(utils.SaveLoad):
 
     @deprecated("Use get_vector instead")
     def word_vec(self, *args, **kwargs):
-        """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()"""
+        """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()."""
         return self.get_vector(*args, **kwargs)
 
-    def add_one(self, key, vector):
+    def add_vector(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
 
         Warning: using this repeatedly is inefficient, requiring a full reallocation & copy,
-        if this instance hasn't been preallocated to be ready fro such incremental additions.
+        if this instance hasn't been preallocated to be ready for such incremental additions.
 
-        returns: actual index used TODO: other param docs
+        Parameters
+        ----------
+
+        key: str
+            Key identifier of the added vector.
+        vector: numpy.ndarray
+            1D numpy array with the vector values.
+
+        Returns
+        -------
+        int
+            Index of the newly added vector, so that ``self.vectors[result] == vector`` and
+            ``self.index_to_key[result] == key``.
+
         """
-
         target_index = self.next_index
         if target_index >= len(self) or self.index_to_key[target_index] is not None:
             # must append at end by expanding existing structures
@@ -406,7 +472,7 @@ class KeyedVectors(utils.SaveLoad):
                 "Adding single vectors to a KeyedVectors which grows by one each time can be costly. "
                 "Consider adding in batches or preallocating to the required size.",
                 UserWarning)
-            self.add([key], [vector])
+            self.add_vectors([key], [vector])
             self.allocate_vecattrs()  # grow any adjunct arrays
             self.next_index = target_index + 1
         else:
@@ -417,14 +483,14 @@ class KeyedVectors(utils.SaveLoad):
             self.next_index += 1
         return target_index
 
-    def add(self, keys, weights, extras=None, replace=False):
+    def add_vectors(self, keys, weights, extras=None, replace=False):
         """Append keys and their vectors in a manual way.
         If some key is already in the vocabulary, the old vector is kept unless `replace` flag is True.
 
         Parameters
         ----------
         keys : list of (str or int)
-            keys specified by string or int ids.
+            Keys specified by string or int ids.
         weights: list of numpy.ndarray or numpy.ndarray
             List of 1D np.array vectors or a 2D np.array of vectors.
         replace: bool, optional
@@ -470,7 +536,9 @@ class KeyedVectors(utils.SaveLoad):
     def __setitem__(self, keys, weights):
         """Add keys and theirs vectors in a manual way.
         If some key is already in the vocabulary, old vector is replaced with the new one.
-        This method is alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.add` with `replace=True`.
+
+        This method is an alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.add_vectors`
+        with `replace=True`.
 
         Parameters
         ----------
@@ -484,7 +552,7 @@ class KeyedVectors(utils.SaveLoad):
             keys = [keys]
             weights = weights.reshape(1, -1)
 
-        self.add(keys, weights, replace=True)
+        self.add_vectors(keys, weights, replace=True)
 
     def has_index_for(self, key):
         """Can this model return a single index for this key?
@@ -522,19 +590,29 @@ class KeyedVectors(utils.SaveLoad):
 
     @property
     def vectors_norm(self):
-        raise ValueError(
-            "The vectors_norm attribute became a get_normed_vectors() method in Gensim 4.0.0. "
+        raise AttributeError(
+            "The `.vectors_norm` attribute is computed dynamically since Gensim 4.0.0. "
+            "Use `.get_normed_vectors()` instead.\n"
             "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
         )
 
     @vectors_norm.setter
     def vectors_norm(self, _):
-        pass  # no-op; shouldn't be set
+        pass   # ignored but must remain for backward serialization compatibility
 
     def get_normed_vectors(self):
-        # TODO: what's the way for users to get from a matrix index (integer) to the
-        # corresponding key (string)?
-        # Shouldn't we return this as a mapping (dict), or even a new KeyedVectors instance?
+        """Get all embedding vectors normalized to unit L2 length (euclidean), as a 2D numpy array.
+
+        To see which key corresponds to which vector = which array row, refer
+        to the :attr:`~gensim.models.keyedvectors.KeyedVectors.index_to_key` attribute.
+
+        Returns
+        -------
+        numpy.ndarray:
+            2D numpy array of shape ``(number_of_keys, embedding dimensionality)``, L2-normalized
+            along the rows (key vectors).
+
+        """
         self.fill_norms()
         return self.vectors / self.norms[..., np.newaxis]
 
@@ -543,7 +621,7 @@ class KeyedVectors(utils.SaveLoad):
         Ensure per-vector norms are available.
 
         Any code which modifies vectors should ensure the accompanying norms are
-        either recalculated or 'None', to trigger a full recalculation later.
+        either recalculated or 'None', to trigger a full recalculation later on-request.
 
         """
         if self.norms is None or force:
@@ -551,27 +629,33 @@ class KeyedVectors(utils.SaveLoad):
 
     @property
     def index2entity(self):
-        return self.index_to_key
+        raise AttributeError(
+            "The index2entity attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        )
 
     @index2entity.setter
     def index2entity(self, value):
-        self.index_to_key = value
+        self.index_to_key = value  # must remain for backward serialization compatibility
 
     @property
     def index2word(self):
-        return self.index_to_key
+        raise AttributeError(
+            "The index2word attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        )
 
     @index2word.setter
     def index2word(self, value):
-        self.index_to_key = value
+        self.index_to_key = value  # must remain for backward serialization compatibility
 
     @property
     def vocab(self):
-        raise NotImplementedError(
-            "The .vocab dict of 'Vocab' propery objects, one per key, has been removed.\n"
-            "See the KeyedVectors .key_to_index dict, .index_to_key list, and methods\n"
-            ".get_vecattr(key, attr)/.set_vecattr(key, attr, new_val) for replacement\n"
-            "functionality."
+        raise AttributeError(
+            "The vocab attribute was removed from KeyedVector in Gensim 4.0.0.\n"
+            "Use KeyedVector's .key_to_index dict, .index_to_key list, and methods "
+            ".get_vecattr(key, attr) and .set_vecattr(key, attr, new_val) instead.\n"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
         )
 
     @vocab.setter
@@ -583,7 +667,7 @@ class KeyedVectors(utils.SaveLoad):
         if not len(self):
             return  # noop if empty
         count_sorted_indexes = np.argsort(self.expandos['count'])[::-1]
-        self.index_to_key = list(np.array(self.index_to_key)[count_sorted_indexes])
+        self.index_to_key = [self.index_to_key[idx] for idx in count_sorted_indexes]
         self.allocate_vecattrs()
         for k in self.expandos:
             # Use numpy's "fancy indexing" to permutate the entire array in one step.
@@ -591,11 +675,10 @@ class KeyedVectors(utils.SaveLoad):
         if len(self.vectors):
             logger.warning("sorting after vectors have been allocated is expensive & error-prone")
             self.vectors = self.vectors[count_sorted_indexes]
-        for i, word in enumerate(self.index_to_key):
-            self.key_to_index[word] = i
+        self.key_to_index = {word: i for i, word in enumerate(self.index_to_key)}
 
     def save(self, *args, **kwargs):
-        """Save KeyedVectors.
+        """Save KeyedVectors to a file.
 
         Parameters
         ----------
@@ -605,13 +688,15 @@ class KeyedVectors(utils.SaveLoad):
         See Also
         --------
         :meth:`~gensim.models.keyedvectors.KeyedVectors.load`
-            Load saved model.
+            Load a previously saved model.
 
         """
         super(KeyedVectors, self).save(*args, **kwargs)
 
-    def most_similar(self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None,
-                     restrict_vocab=None, indexer=None):
+    def most_similar(
+            self, positive=None, negative=None, topn=10, clip_start=0, clip_end=None,
+            restrict_vocab=None, indexer=None,
+        ):
         """Find the top-N most similar keys.
         Positive keys contribute positively towards the similarity, negative keys negatively.
 
@@ -698,8 +783,10 @@ class KeyedVectors(utils.SaveLoad):
             return dists
         best = matutils.argsort(dists, topn=topn + len(all_keys), reverse=True)
         # ignore (don't return) keys from the input
-        result = [(self.index_to_key[sim + clip_start], float(dists[sim]))
-                  for sim in best if (sim + clip_start) not in all_keys]
+        result = [
+            (self.index_to_key[sim + clip_start], float(dists[sim]))
+            for sim in best if (sim + clip_start) not in all_keys
+        ]
         return result[:topn]
 
     def similar_by_word(self, word, topn=10, restrict_vocab=None):
@@ -1124,9 +1211,6 @@ class KeyedVectors(utils.SaveLoad):
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """Compute performance of the model on an analogy test set.
 
-        This is modern variant of :meth:`~gensim.models.keyedvectors.KeyedVectors.accuracy`, see
-        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
-
         The accuracy is reported (printed to log and returned as a score) for each section separately,
         plus there's one aggregate summary at the end.
 
@@ -1255,8 +1339,9 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
-                            case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(
+            self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
+        ):
         """Compute correlation of the model with human similarity judgments.
 
         Notes
@@ -1421,8 +1506,10 @@ class KeyedVectors(utils.SaveLoad):
 
         return rcs
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
-                             prefix='', append=False, sort_attr='count'):
+    def save_word2vec_format(
+            self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
+            prefix='', append=False, sort_attr='count',
+        ):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
@@ -1647,11 +1734,11 @@ def _add_word_to_kv(kv, counts, word, weights, vocab_size):
     if kv.has_index_for(word):
         logger.warning("duplicate word '%s' in word2vec file, ignoring all but first", word)
         return
-    word_id = kv.add_one(word, weights)
+    word_id = kv.add_vector(word, weights)
 
     if counts is None:
-        # most common scenario: no vocab file given. just make up some bogus counts, in descending order
-        # FIXME(someday): make this faking optional, include more realistic (Zipf-based) fake numbers
+        # Most common scenario: no vocab file given. Just make up some bogus counts, in descending order.
+        # TODO (someday): make this faking optional, include more realistic (Zipf-based) fake numbers.
         word_count = vocab_size - word_id
     elif word in counts:
         # use count from the vocab file
@@ -1797,14 +1884,16 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         kv = cls(vector_size, vocab_size, dtype=datatype)
 
         if binary:
-            _word2vec_read_binary(fin, kv, counts,
-                vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size)
+            _word2vec_read_binary(
+                fin, kv, counts,
+                vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+            )
         else:
             _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
     if kv.vectors.shape[0] != len(kv):
         logger.info(
             "duplicate words detected, shrinking matrix size from %i to %i",
-            kv.vectors.shape[0], len(kv)
+            kv.vectors.shape[0], len(kv),
         )
         kv.vectors = ascontiguousarray(kv.vectors[: len(kv)])
     assert (len(kv), vector_size) == kv.vectors.shape
@@ -1814,15 +1903,15 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
 
 
 def load_word2vec_format(*args, **kwargs):
-    """Alias for `KeyedVectors.load_word2vec_format(...)`"""
+    """Alias for :meth:`~gensim.models.keyedvectors.KeyedVectors.load_word2vec_format`."""
     return KeyedVectors.load_word2vec_format(*args, **kwargs)
 
 
 def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
-    """Get a 'random' vector (but deterministically derived from seed_string if supplied).
+    """Get a random vector, derived deterministically from `seed_string` if supplied.
 
-    Useful for initializing KeyedVectors that will be the starting
-    projection/input layers of _2Vec models.
+    Useful for initializing KeyedVectors that will be the starting projection/input layers of _2Vec models.
+
     """
     if seed_string:
         once = np.random.Generator(np.random.SFC64(hashfxn(seed_string) & 0xffffffff))

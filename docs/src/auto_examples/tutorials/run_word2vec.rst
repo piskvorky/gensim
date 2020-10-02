@@ -1,17 +1,19 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_word2vec.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_tutorials_run_word2vec.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_word2vec.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_tutorials_run_word2vec.py:
 
 
 Word2Vec Model
 ==============
 
-Introduces Gensim's Word2Vec model and demonstrates its use on the Lee Corpus.
-
+Introduces Gensim's Word2Vec model and demonstrates its use on the `Lee Evaluation Corpus
+<https://hekyll.services.adelaide.edu.au/dspace/bitstream/2440/28910/1/hdl_28910.pdf>`_.
 
 
 .. code-block:: default
@@ -26,9 +28,9 @@ Introduces Gensim's Word2Vec model and demonstrates its use on the Lee Corpus.
 
 
 
-In case you missed the buzz, word2vec is a widely featured as a member of the
-“new wave” of machine learning algorithms based on neural networks, commonly
-referred to as "deep learning" (though word2vec itself is rather shallow).
+
+In case you missed the buzz, Word2Vec is a widely used algorithm based on neural
+networks, commonly referred to as "deep learning" (though word2vec itself is rather shallow).
 Using large amounts of unannotated plain text, word2vec learns relationships
 between words automatically. The output are vectors, one vector per word,
 with remarkable linear relationships that allow us to do things like:
@@ -157,17 +159,27 @@ this vector algebra for yourself. That demo runs ``word2vec`` on the
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:00:40,474 : INFO : loading projection weights from /Users/kofola3/gensim-data/word2vec-google-news-300/word2vec-google-news-300.gz
+    2020-09-30 17:01:46,484 : INFO : loaded (3000000, 300) matrix from /Users/kofola3/gensim-data/word2vec-google-news-300/word2vec-google-news-300.gz
 
 
-A common operation is to retrieve the vocabulary of a model.  That is trivial:
+
+
+A common operation is to retrieve the vocabulary of a model. That is trivial:
 
 
 .. code-block:: default
 
-    for i, word in enumerate(wv.vocab):
-        if i == 10:
+    for index, word in enumerate(wv.index_to_key):
+        if index == 10:
             break
-        print(word)
+        print(f"word #{index}/{len(wv.index_to_key)} is {word}")
 
 
 
@@ -179,16 +191,17 @@ A common operation is to retrieve the vocabulary of a model.  That is trivial:
 
  .. code-block:: none
 
-    </s>
-    in
-    for
-    that
-    is
-    on
-    ##
-    The
-    with
-    said
+    word #0/3000000 is </s>
+    word #1/3000000 is in
+    word #2/3000000 is for
+    word #3/3000000 is that
+    word #4/3000000 is is
+    word #5/3000000 is on
+    word #6/3000000 is ##
+    word #7/3000000 is The
+    word #8/3000000 is with
+    word #9/3000000 is said
+
 
 
 
@@ -199,6 +212,7 @@ We can easily obtain vectors for terms the model is familiar with:
 .. code-block:: default
 
     vec_king = wv['king']
+
 
 
 
@@ -230,6 +244,7 @@ out the FastText model.
  .. code-block:: none
 
     The word 'cameroon' does not appear in this model
+
 
 
 
@@ -269,6 +284,7 @@ less and less similar.
 
 
 
+
 Print the 5 most similar words to "car" or "minivan"
 
 
@@ -286,7 +302,8 @@ Print the 5 most similar words to "car" or "minivan"
 
  .. code-block:: none
 
-    [('SUV', 0.853219211101532), ('vehicle', 0.8175784349441528), ('pickup_truck', 0.7763689160346985), ('Jeep', 0.7567334175109863), ('Ford_Explorer', 0.756571888923645)]
+    [('SUV', 0.8532192707061768), ('vehicle', 0.8175783753395081), ('pickup_truck', 0.7763688564300537), ('Jeep', 0.7567334175109863), ('Ford_Explorer', 0.7565720081329346)]
+
 
 
 
@@ -307,19 +324,20 @@ Which of the below does not belong in the sequence?
 
  .. code-block:: none
 
-    /home/misha/git/gensim/gensim/models/keyedvectors.py:877: FutureWarning: arrays to stack must be passed as a "sequence" type such as list or tuple. Support for non-sequence iterables such as generators is deprecated as of NumPy 1.16 and will raise an error in the future.
-      vectors = vstack(self.get_vector(word, use_norm=True) for word in used_words).astype(REAL)
     car
+
 
 
 
 Training Your Own Model
 -----------------------
 
-To start, you'll need some data for training the model.  For the following
-examples, we'll use the `Lee Corpus
+To start, you'll need some data for training the model. For the following
+examples, we'll use the `Lee Evaluation Corpus
+<https://hekyll.services.adelaide.edu.au/dspace/bitstream/2440/28910/1/hdl_28910.pdf>`_
+(which you `already have
 <https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/test/test_data/lee_background.cor>`_
-(which you already have if you've installed gensim).
+if you've installed Gensim).
 
 This corpus is small enough to fit entirely in memory, but we'll implement a
 memory-friendly iterator that reads it line-by-line to demonstrate how you
@@ -346,6 +364,16 @@ would handle a larger corpus.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:00,362 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2020-09-30 17:02:00,366 : INFO : built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)
+
+
 
 
 If we wanted to do any custom preprocessing, e.g. decode a non-standard
@@ -370,6 +398,47 @@ training parameters much for now, we'll revisit them later.
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:00,550 : INFO : collecting all words and their counts
+    2020-09-30 17:02:00,551 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2020-09-30 17:02:00,657 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
+    2020-09-30 17:02:00,657 : INFO : Loading a fresh vocabulary
+    2020-09-30 17:02:00,668 : INFO : effective_min_count=5 retains 1750 unique words (25% of original 6981, drops 5231)
+    2020-09-30 17:02:00,668 : INFO : effective_min_count=5 leaves 49335 word corpus (84% of original 58152, drops 8817)
+    2020-09-30 17:02:00,683 : INFO : deleting the raw counts dictionary of 6981 items
+    2020-09-30 17:02:00,741 : INFO : sample=0.001 downsamples 51 most-common words
+    2020-09-30 17:02:00,741 : INFO : downsampling leaves estimated 35935 word corpus (72.8% of prior 49335)
+    2020-09-30 17:02:00,769 : INFO : estimated required memory for 1750 words and 100 dimensions: 2275000 bytes
+    2020-09-30 17:02:00,770 : INFO : resetting layer weights
+    2020-09-30 17:02:00,875 : INFO : training model with 3 workers on 1750 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 17:02:00,993 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:00,994 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:00,999 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:00,999 : INFO : EPOCH - 1 : training on 58152 raw words (35967 effective words) took 0.1s, 305737 effective words/s
+    2020-09-30 17:02:01,099 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:01,103 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:01,106 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:01,106 : INFO : EPOCH - 2 : training on 58152 raw words (35955 effective words) took 0.1s, 343839 effective words/s
+    2020-09-30 17:02:01,210 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:01,218 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:01,220 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:01,220 : INFO : EPOCH - 3 : training on 58152 raw words (35878 effective words) took 0.1s, 316674 effective words/s
+    2020-09-30 17:02:01,326 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:01,333 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:01,336 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:01,336 : INFO : EPOCH - 4 : training on 58152 raw words (35809 effective words) took 0.1s, 312256 effective words/s
+    2020-09-30 17:02:01,434 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:01,438 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:01,441 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:01,441 : INFO : EPOCH - 5 : training on 58152 raw words (35998 effective words) took 0.1s, 344237 effective words/s
+    2020-09-30 17:02:01,441 : INFO : training on a 290760 raw words (179607 effective words) took 0.6s, 317010 effective words/s
+
+
 
 
 Once we have our model, we can use it in the same way as in the demo above.
@@ -388,15 +457,16 @@ The main part of the model is ``model.wv``\ , where "wv" stands for "word vector
 
 
 
+
 Retrieving the vocabulary works the same way:
 
 
 .. code-block:: default
 
-    for i, word in enumerate(model.wv.vocab):
-        if i == 10:
+    for index, word in enumerate(wv.index_to_key):
+        if index == 10:
             break
-        print(word)
+        print(f"word #{index}/{len(wv.index_to_key)} is {word}")
 
 
 
@@ -408,16 +478,17 @@ Retrieving the vocabulary works the same way:
 
  .. code-block:: none
 
-    hundreds
-    of
-    people
-    have
-    been
-    forced
-    to
-    their
-    homes
-    in
+    word #0/3000000 is </s>
+    word #1/3000000 is in
+    word #2/3000000 is for
+    word #3/3000000 is that
+    word #4/3000000 is is
+    word #5/3000000 is on
+    word #6/3000000 is ##
+    word #7/3000000 is The
+    word #8/3000000 is with
+    word #9/3000000 is said
+
 
 
 
@@ -449,6 +520,21 @@ You can store/load models using the standard gensim methods:
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:01,737 : INFO : saving Word2Vec object under /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d, separately None
+    2020-09-30 17:02:01,740 : INFO : not storing attribute cum_table
+    2020-09-30 17:02:01,785 : INFO : saved /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
+    2020-09-30 17:02:01,786 : INFO : loading Word2Vec object from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
+    2020-09-30 17:02:01,801 : INFO : loading wv recursively from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d.wv.* with mmap=None
+    2020-09-30 17:02:01,801 : INFO : setting ignored attribute cum_table to None
+    2020-09-30 17:02:01,821 : INFO : loaded /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
 
 
 
@@ -489,12 +575,53 @@ default value of min_count=5
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:01,918 : INFO : collecting all words and their counts
+    2020-09-30 17:02:01,921 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2020-09-30 17:02:02,011 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
+    2020-09-30 17:02:02,011 : INFO : Loading a fresh vocabulary
+    2020-09-30 17:02:02,018 : INFO : effective_min_count=10 retains 889 unique words (12% of original 6981, drops 6092)
+    2020-09-30 17:02:02,018 : INFO : effective_min_count=10 leaves 43776 word corpus (75% of original 58152, drops 14376)
+    2020-09-30 17:02:02,028 : INFO : deleting the raw counts dictionary of 6981 items
+    2020-09-30 17:02:02,029 : INFO : sample=0.001 downsamples 55 most-common words
+    2020-09-30 17:02:02,029 : INFO : downsampling leaves estimated 29691 word corpus (67.8% of prior 43776)
+    2020-09-30 17:02:02,041 : INFO : estimated required memory for 889 words and 100 dimensions: 1155700 bytes
+    2020-09-30 17:02:02,041 : INFO : resetting layer weights
+    2020-09-30 17:02:02,083 : INFO : training model with 3 workers on 889 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 17:02:02,184 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:02,190 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:02,192 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:02,192 : INFO : EPOCH - 1 : training on 58152 raw words (29629 effective words) took 0.1s, 276020 effective words/s
+    2020-09-30 17:02:02,287 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:02,292 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:02,295 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:02,295 : INFO : EPOCH - 2 : training on 58152 raw words (29624 effective words) took 0.1s, 290768 effective words/s
+    2020-09-30 17:02:02,394 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:02,397 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:02,400 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:02,400 : INFO : EPOCH - 3 : training on 58152 raw words (29769 effective words) took 0.1s, 286475 effective words/s
+    2020-09-30 17:02:02,496 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:02,499 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:02,501 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:02,502 : INFO : EPOCH - 4 : training on 58152 raw words (29578 effective words) took 0.1s, 293835 effective words/s
+    2020-09-30 17:02:02,598 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:02,601 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:02,604 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:02,604 : INFO : EPOCH - 5 : training on 58152 raw words (29707 effective words) took 0.1s, 292782 effective words/s
+    2020-09-30 17:02:02,604 : INFO : training on a 290760 raw words (148307 effective words) took 0.5s, 284858 effective words/s
 
 
-size
-----
 
-``size`` is the number of dimensions (N) of the N-dimensional space that
+
+vector_size
+-----------
+
+``vector_size`` is the number of dimensions (N) of the N-dimensional space that
 gensim Word2Vec maps the words onto.
 
 Bigger size values require more training data, but can lead to better (more
@@ -505,11 +632,52 @@ accurate) models. Reasonable values are in the tens to hundreds.
 .. code-block:: default
 
 
-    # default value of size=100
-    model = gensim.models.Word2Vec(sentences, size=200)
+    # The default value of vector_size is 100.
+    model = gensim.models.Word2Vec(sentences, vector_size=200)
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:02,626 : INFO : collecting all words and their counts
+    2020-09-30 17:02:02,628 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2020-09-30 17:02:02,722 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
+    2020-09-30 17:02:02,722 : INFO : Loading a fresh vocabulary
+    2020-09-30 17:02:02,734 : INFO : effective_min_count=5 retains 1750 unique words (25% of original 6981, drops 5231)
+    2020-09-30 17:02:02,734 : INFO : effective_min_count=5 leaves 49335 word corpus (84% of original 58152, drops 8817)
+    2020-09-30 17:02:02,748 : INFO : deleting the raw counts dictionary of 6981 items
+    2020-09-30 17:02:02,748 : INFO : sample=0.001 downsamples 51 most-common words
+    2020-09-30 17:02:02,748 : INFO : downsampling leaves estimated 35935 word corpus (72.8% of prior 49335)
+    2020-09-30 17:02:02,770 : INFO : estimated required memory for 1750 words and 200 dimensions: 3675000 bytes
+    2020-09-30 17:02:02,770 : INFO : resetting layer weights
+    2020-09-30 17:02:02,864 : INFO : training model with 3 workers on 1750 vocabulary and 200 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 17:02:02,973 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:02,979 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:02,982 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:02,982 : INFO : EPOCH - 1 : training on 58152 raw words (35994 effective words) took 0.1s, 307729 effective words/s
+    2020-09-30 17:02:03,087 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:03,093 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:03,097 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:03,097 : INFO : EPOCH - 2 : training on 58152 raw words (35944 effective words) took 0.1s, 317636 effective words/s
+    2020-09-30 17:02:03,202 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:03,208 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:03,212 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:03,212 : INFO : EPOCH - 3 : training on 58152 raw words (36007 effective words) took 0.1s, 314282 effective words/s
+    2020-09-30 17:02:03,320 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:03,327 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:03,330 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:03,330 : INFO : EPOCH - 4 : training on 58152 raw words (35992 effective words) took 0.1s, 307219 effective words/s
+    2020-09-30 17:02:03,436 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:03,442 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:03,445 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:03,446 : INFO : EPOCH - 5 : training on 58152 raw words (36003 effective words) took 0.1s, 314793 effective words/s
+    2020-09-30 17:02:03,446 : INFO : training on a 290760 raw words (179940 effective words) took 0.6s, 309327 effective words/s
 
 
 
@@ -533,6 +701,52 @@ is for training parallelization, to speed up training:
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:03,470 : INFO : collecting all words and their counts
+    2020-09-30 17:02:03,472 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2020-09-30 17:02:03,571 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
+    2020-09-30 17:02:03,571 : INFO : Loading a fresh vocabulary
+    2020-09-30 17:02:03,582 : INFO : effective_min_count=5 retains 1750 unique words (25% of original 6981, drops 5231)
+    2020-09-30 17:02:03,582 : INFO : effective_min_count=5 leaves 49335 word corpus (84% of original 58152, drops 8817)
+    2020-09-30 17:02:03,595 : INFO : deleting the raw counts dictionary of 6981 items
+    2020-09-30 17:02:03,595 : INFO : sample=0.001 downsamples 51 most-common words
+    2020-09-30 17:02:03,595 : INFO : downsampling leaves estimated 35935 word corpus (72.8% of prior 49335)
+    2020-09-30 17:02:03,616 : INFO : estimated required memory for 1750 words and 100 dimensions: 2275000 bytes
+    2020-09-30 17:02:03,616 : INFO : resetting layer weights
+    2020-09-30 17:02:03,704 : INFO : training model with 4 workers on 1750 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 17:02:03,809 : INFO : worker thread finished; awaiting finish of 3 more threads
+    2020-09-30 17:02:03,810 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:03,810 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:03,815 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:03,816 : INFO : EPOCH - 1 : training on 58152 raw words (35953 effective words) took 0.1s, 326539 effective words/s
+    2020-09-30 17:02:03,912 : INFO : worker thread finished; awaiting finish of 3 more threads
+    2020-09-30 17:02:03,913 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:03,915 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:03,920 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:03,920 : INFO : EPOCH - 2 : training on 58152 raw words (35895 effective words) took 0.1s, 348415 effective words/s
+    2020-09-30 17:02:04,017 : INFO : worker thread finished; awaiting finish of 3 more threads
+    2020-09-30 17:02:04,018 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,021 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,024 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,024 : INFO : EPOCH - 3 : training on 58152 raw words (35907 effective words) took 0.1s, 347822 effective words/s
+    2020-09-30 17:02:04,127 : INFO : worker thread finished; awaiting finish of 3 more threads
+    2020-09-30 17:02:04,127 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,128 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,134 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,134 : INFO : EPOCH - 4 : training on 58152 raw words (35909 effective words) took 0.1s, 333947 effective words/s
+    2020-09-30 17:02:04,232 : INFO : worker thread finished; awaiting finish of 3 more threads
+    2020-09-30 17:02:04,232 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,233 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,238 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,238 : INFO : EPOCH - 5 : training on 58152 raw words (35957 effective words) took 0.1s, 347693 effective words/s
+    2020-09-30 17:02:04,238 : INFO : training on a 290760 raw words (179621 effective words) took 0.5s, 335988 effective words/s
+
+
 
 
 The ``workers`` parameter only has an effect if you have `Cython
@@ -547,15 +761,17 @@ Memory
 ------
 
 At its core, ``word2vec`` model parameters are stored as matrices (NumPy
-arrays). Each array is **#vocabulary** (controlled by min_count parameter)
-times **#size** (size parameter) of floats (single precision aka 4 bytes).
+arrays). Each array is **#vocabulary** (controlled by the ``min_count`` parameter)
+times **vector size** (the ``vector_size`` parameter) of floats (single precision aka 4 bytes).
 
 Three such matrices are held in RAM (work is underway to reduce that number
 to two, or even one). So if your input contains 100,000 unique words, and you
-asked for layer ``size=200``\ , the model will require approx.
+asked for layer ``vector_size=200``\ , the model will require approx.
 ``100,000*200*4*3 bytes = ~229MB``.
 
-There’s a little extra memory needed for storing the vocabulary tree (100,000 words would take a few megabytes), but unless your words are extremely loooong strings, memory footprint will be dominated by the three matrices above.
+There’s a little extra memory needed for storing the vocabulary tree (100,000 words would
+take a few megabytes), but unless your words are extremely loooong strings, memory
+footprint will be dominated by the three matrices above.
 
 
 Evaluating
@@ -568,13 +784,13 @@ Google has released their testing set of about 20,000 syntactic and semantic
 test examples, following the “A is to B as C is to D” task. It is provided in
 the 'datasets' folder.
 
-For example a syntactic analogy of comparative type is bad:worse;good:?.
+For example a syntactic analogy of comparative type is ``bad:worse;good:?``.
 There are total of 9 types of syntactic comparisons in the dataset like
 plural nouns and nouns of opposite meaning.
 
 The semantic questions contain five types of semantic analogies, such as
-capital cities (Paris:France;Tokyo:?) or family members
-(brother:sister;dad:?).
+capital cities (``Paris:France;Tokyo:?``) or family members
+(``brother:sister;dad:?``).
 
 
 Gensim supports the same evaluation set, in exactly the same format:
@@ -583,16 +799,38 @@ Gensim supports the same evaluation set, in exactly the same format:
 
 .. code-block:: default
 
-    model.accuracy('./datasets/questions-words.txt')
+    model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 
 
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:04,350 : INFO : Evaluating word analogies for top 300000 words in the model on /Volumes/work/workspace/gensim/trunk/gensim/test/test_data/questions-words.txt
+    2020-09-30 17:02:04,358 : INFO : capital-common-countries: 0.0% (0/6)
+    2020-09-30 17:02:04,376 : INFO : capital-world: 0.0% (0/2)
+    2020-09-30 17:02:04,392 : INFO : family: 0.0% (0/6)
+    2020-09-30 17:02:04,409 : INFO : gram3-comparative: 0.0% (0/20)
+    2020-09-30 17:02:04,416 : INFO : gram4-superlative: 0.0% (0/12)
+    2020-09-30 17:02:04,423 : INFO : gram5-present-participle: 0.0% (0/20)
+    2020-09-30 17:02:04,435 : INFO : gram6-nationality-adjective: 0.0% (0/30)
+    2020-09-30 17:02:04,445 : INFO : gram7-past-tense: 0.0% (0/20)
+    2020-09-30 17:02:04,457 : INFO : gram8-plural: 3.3% (1/30)
+    2020-09-30 17:02:04,462 : INFO : Quadruplets with out-of-vocabulary words: 99.3%
+    2020-09-30 17:02:04,465 : INFO : NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use "dummy4unknown=True"
+    2020-09-30 17:02:04,465 : INFO : Total accuracy: 0.7% (1/146)
+
+    (0.00684931506849315, [{'section': 'capital-common-countries', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'KABUL', 'AFGHANISTAN')]}, {'section': 'capital-world', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE')]}, {'section': 'currency', 'correct': [], 'incorrect': []}, {'section': 'city-in-state', 'correct': [], 'incorrect': []}, {'section': 'family', 'correct': [], 'incorrect': [('HE', 'SHE', 'HIS', 'HER'), ('HE', 'SHE', 'MAN', 'WOMAN'), ('HIS', 'HER', 'MAN', 'WOMAN'), ('HIS', 'HER', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HIS', 'HER')]}, {'section': 'gram1-adjective-to-adverb', 'correct': [], 'incorrect': []}, {'section': 'gram2-opposite', 'correct': [], 'incorrect': []}, {'section': 'gram3-comparative', 'correct': [], 'incorrect': [('GOOD', 'BETTER', 'GREAT', 'GREATER'), ('GOOD', 'BETTER', 'LONG', 'LONGER'), ('GOOD', 'BETTER', 'LOW', 'LOWER'), ('GOOD', 'BETTER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'LONG', 'LONGER'), ('GREAT', 'GREATER', 'LOW', 'LOWER'), ('GREAT', 'GREATER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'LOW', 'LOWER'), ('LONG', 'LONGER', 'SMALL', 'SMALLER'), ('LONG', 'LONGER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'SMALL', 'SMALLER'), ('LOW', 'LOWER', 'GOOD', 'BETTER'), ('LOW', 'LOWER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'GOOD', 'BETTER'), ('SMALL', 'SMALLER', 'GREAT', 'GREATER'), ('SMALL', 'SMALLER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'LOW', 'LOWER')]}, {'section': 'gram4-superlative', 'correct': [], 'incorrect': [('BIG', 'BIGGEST', 'GOOD', 'BEST'), ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'), ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'GREAT', 'GREATEST'), ('GOOD', 'BEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'), ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'BIG', 'BIGGEST'), ('LARGE', 'LARGEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'GREAT', 'GREATEST')]}, {'section': 'gram5-present-participle', 'correct': [], 'incorrect': [('GO', 'GOING', 'LOOK', 'LOOKING'), ('GO', 'GOING', 'PLAY', 'PLAYING'), ('GO', 'GOING', 'RUN', 'RUNNING'), ('GO', 'GOING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'PLAY', 'PLAYING'), ('LOOK', 'LOOKING', 'RUN', 'RUNNING'), ('LOOK', 'LOOKING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'RUN', 'RUNNING'), ('PLAY', 'PLAYING', 'SAY', 'SAYING'), ('PLAY', 'PLAYING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'SAY', 'SAYING'), ('RUN', 'RUNNING', 'GO', 'GOING'), ('RUN', 'RUNNING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'GO', 'GOING'), ('SAY', 'SAYING', 'LOOK', 'LOOKING'), ('SAY', 'SAYING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'RUN', 'RUNNING')]}, {'section': 'gram6-nationality-adjective', 'correct': [], 'incorrect': [('AUSTRALIA', 'AUSTRALIAN', 'FRANCE', 'FRENCH'), ('AUSTRALIA', 'AUSTRALIAN', 'INDIA', 'INDIAN'), ('AUSTRALIA', 'AUSTRALIAN', 'ISRAEL', 'ISRAELI'), ('AUSTRALIA', 'AUSTRALIAN', 'JAPAN', 'JAPANESE'), ('AUSTRALIA', 'AUSTRALIAN', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'INDIA', 'INDIAN'), ('FRANCE', 'FRENCH', 'ISRAEL', 'ISRAELI'), ('FRANCE', 'FRENCH', 'JAPAN', 'JAPANESE'), ('FRANCE', 'FRENCH', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'ISRAEL', 'ISRAELI'), ('INDIA', 'INDIAN', 'JAPAN', 'JAPANESE'), ('INDIA', 'INDIAN', 'SWITZERLAND', 'SWISS'), ('INDIA', 'INDIAN', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'JAPAN', 'JAPANESE'), ('ISRAEL', 'ISRAELI', 'SWITZERLAND', 'SWISS'), ('ISRAEL', 'ISRAELI', 'AUSTRALIA', 'AUSTRALIAN'), ('ISRAEL', 'ISRAELI', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'SWITZERLAND', 'SWISS'), ('JAPAN', 'JAPANESE', 'AUSTRALIA', 'AUSTRALIAN'), ('JAPAN', 'JAPANESE', 'FRANCE', 'FRENCH'), ('JAPAN', 'JAPANESE', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'AUSTRALIA', 'AUSTRALIAN'), ('SWITZERLAND', 'SWISS', 'FRANCE', 'FRENCH'), ('SWITZERLAND', 'SWISS', 'INDIA', 'INDIAN'), ('SWITZERLAND', 'SWISS', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'JAPAN', 'JAPANESE')]}, {'section': 'gram7-past-tense', 'correct': [], 'incorrect': [('GOING', 'WENT', 'PAYING', 'PAID'), ('GOING', 'WENT', 'PLAYING', 'PLAYED'), ('GOING', 'WENT', 'SAYING', 'SAID'), ('GOING', 'WENT', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'PLAYING', 'PLAYED'), ('PAYING', 'PAID', 'SAYING', 'SAID'), ('PAYING', 'PAID', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'SAYING', 'SAID'), ('PLAYING', 'PLAYED', 'TAKING', 'TOOK'), ('PLAYING', 'PLAYED', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'TAKING', 'TOOK'), ('SAYING', 'SAID', 'GOING', 'WENT'), ('SAYING', 'SAID', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'GOING', 'WENT'), ('TAKING', 'TOOK', 'PAYING', 'PAID'), ('TAKING', 'TOOK', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'SAYING', 'SAID')]}, {'section': 'gram8-plural', 'correct': [('CAR', 'CARS', 'BUILDING', 'BUILDINGS')], 'incorrect': [('BUILDING', 'BUILDINGS', 'CAR', 'CARS'), ('BUILDING', 'BUILDINGS', 'CHILD', 'CHILDREN'), ('BUILDING', 'BUILDINGS', 'MAN', 'MEN'), ('BUILDING', 'BUILDINGS', 'ROAD', 'ROADS'), ('BUILDING', 'BUILDINGS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'CHILD', 'CHILDREN'), ('CAR', 'CARS', 'MAN', 'MEN'), ('CAR', 'CARS', 'ROAD', 'ROADS'), ('CAR', 'CARS', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'MAN', 'MEN'), ('CHILD', 'CHILDREN', 'ROAD', 'ROADS'), ('CHILD', 'CHILDREN', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'CAR', 'CARS'), ('MAN', 'MEN', 'ROAD', 'ROADS'), ('MAN', 'MEN', 'WOMAN', 'WOMEN'), ('MAN', 'MEN', 'BUILDING', 'BUILDINGS'), ('MAN', 'MEN', 'CAR', 'CARS'), ('MAN', 'MEN', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'WOMAN', 'WOMEN'), ('ROAD', 'ROADS', 'BUILDING', 'BUILDINGS'), ('ROAD', 'ROADS', 'CAR', 'CARS'), ('ROAD', 'ROADS', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'BUILDING', 'BUILDINGS'), ('WOMAN', 'WOMEN', 'CAR', 'CARS'), ('WOMAN', 'WOMEN', 'CHILD', 'CHILDREN'), ('WOMAN', 'WOMEN', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'ROAD', 'ROADS')]}, {'section': 'gram9-plural-verbs', 'correct': [], 'incorrect': []}, {'section': 'Total accuracy', 'correct': [('CAR', 'CARS', 'BUILDING', 'BUILDINGS')], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('HE', 'SHE', 'HIS', 'HER'), ('HE', 'SHE', 'MAN', 'WOMAN'), ('HIS', 'HER', 'MAN', 'WOMAN'), ('HIS', 'HER', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HIS', 'HER'), ('GOOD', 'BETTER', 'GREAT', 'GREATER'), ('GOOD', 'BETTER', 'LONG', 'LONGER'), ('GOOD', 'BETTER', 'LOW', 'LOWER'), ('GOOD', 'BETTER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'LONG', 'LONGER'), ('GREAT', 'GREATER', 'LOW', 'LOWER'), ('GREAT', 'GREATER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'LOW', 'LOWER'), ('LONG', 'LONGER', 'SMALL', 'SMALLER'), ('LONG', 'LONGER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'SMALL', 'SMALLER'), ('LOW', 'LOWER', 'GOOD', 'BETTER'), ('LOW', 'LOWER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'GOOD', 'BETTER'), ('SMALL', 'SMALLER', 'GREAT', 'GREATER'), ('SMALL', 'SMALLER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'LOW', 'LOWER'), ('BIG', 'BIGGEST', 'GOOD', 'BEST'), ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'), ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'GREAT', 'GREATEST'), ('GOOD', 'BEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'), ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'BIG', 'BIGGEST'), ('LARGE', 'LARGEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'GREAT', 'GREATEST'), ('GO', 'GOING', 'LOOK', 'LOOKING'), ('GO', 'GOING', 'PLAY', 'PLAYING'), ('GO', 'GOING', 'RUN', 'RUNNING'), ('GO', 'GOING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'PLAY', 'PLAYING'), ('LOOK', 'LOOKING', 'RUN', 'RUNNING'), ('LOOK', 'LOOKING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'RUN', 'RUNNING'), ('PLAY', 'PLAYING', 'SAY', 'SAYING'), ('PLAY', 'PLAYING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'SAY', 'SAYING'), ('RUN', 'RUNNING', 'GO', 'GOING'), ('RUN', 'RUNNING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'GO', 'GOING'), ('SAY', 'SAYING', 'LOOK', 'LOOKING'), ('SAY', 'SAYING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'RUN', 'RUNNING'), ('AUSTRALIA', 'AUSTRALIAN', 'FRANCE', 'FRENCH'), ('AUSTRALIA', 'AUSTRALIAN', 'INDIA', 'INDIAN'), ('AUSTRALIA', 'AUSTRALIAN', 'ISRAEL', 'ISRAELI'), ('AUSTRALIA', 'AUSTRALIAN', 'JAPAN', 'JAPANESE'), ('AUSTRALIA', 'AUSTRALIAN', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'INDIA', 'INDIAN'), ('FRANCE', 'FRENCH', 'ISRAEL', 'ISRAELI'), ('FRANCE', 'FRENCH', 'JAPAN', 'JAPANESE'), ('FRANCE', 'FRENCH', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'ISRAEL', 'ISRAELI'), ('INDIA', 'INDIAN', 'JAPAN', 'JAPANESE'), ('INDIA', 'INDIAN', 'SWITZERLAND', 'SWISS'), ('INDIA', 'INDIAN', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'JAPAN', 'JAPANESE'), ('ISRAEL', 'ISRAELI', 'SWITZERLAND', 'SWISS'), ('ISRAEL', 'ISRAELI', 'AUSTRALIA', 'AUSTRALIAN'), ('ISRAEL', 'ISRAELI', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'SWITZERLAND', 'SWISS'), ('JAPAN', 'JAPANESE', 'AUSTRALIA', 'AUSTRALIAN'), ('JAPAN', 'JAPANESE', 'FRANCE', 'FRENCH'), ('JAPAN', 'JAPANESE', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'AUSTRALIA', 'AUSTRALIAN'), ('SWITZERLAND', 'SWISS', 'FRANCE', 'FRENCH'), ('SWITZERLAND', 'SWISS', 'INDIA', 'INDIAN'), ('SWITZERLAND', 'SWISS', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'JAPAN', 'JAPANESE'), ('GOING', 'WENT', 'PAYING', 'PAID'), ('GOING', 'WENT', 'PLAYING', 'PLAYED'), ('GOING', 'WENT', 'SAYING', 'SAID'), ('GOING', 'WENT', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'PLAYING', 'PLAYED'), ('PAYING', 'PAID', 'SAYING', 'SAID'), ('PAYING', 'PAID', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'SAYING', 'SAID'), ('PLAYING', 'PLAYED', 'TAKING', 'TOOK'), ('PLAYING', 'PLAYED', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'TAKING', 'TOOK'), ('SAYING', 'SAID', 'GOING', 'WENT'), ('SAYING', 'SAID', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'GOING', 'WENT'), ('TAKING', 'TOOK', 'PAYING', 'PAID'), ('TAKING', 'TOOK', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'SAYING', 'SAID'), ('BUILDING', 'BUILDINGS', 'CAR', 'CARS'), ('BUILDING', 'BUILDINGS', 'CHILD', 'CHILDREN'), ('BUILDING', 'BUILDINGS', 'MAN', 'MEN'), ('BUILDING', 'BUILDINGS', 'ROAD', 'ROADS'), ('BUILDING', 'BUILDINGS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'CHILD', 'CHILDREN'), ('CAR', 'CARS', 'MAN', 'MEN'), ('CAR', 'CARS', 'ROAD', 'ROADS'), ('CAR', 'CARS', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'MAN', 'MEN'), ('CHILD', 'CHILDREN', 'ROAD', 'ROADS'), ('CHILD', 'CHILDREN', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'CAR', 'CARS'), ('MAN', 'MEN', 'ROAD', 'ROADS'), ('MAN', 'MEN', 'WOMAN', 'WOMEN'), ('MAN', 'MEN', 'BUILDING', 'BUILDINGS'), ('MAN', 'MEN', 'CAR', 'CARS'), ('MAN', 'MEN', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'WOMAN', 'WOMEN'), ('ROAD', 'ROADS', 'BUILDING', 'BUILDINGS'), ('ROAD', 'ROADS', 'CAR', 'CARS'), ('ROAD', 'ROADS', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'BUILDING', 'BUILDINGS'), ('WOMAN', 'WOMEN', 'CAR', 'CARS'), ('WOMAN', 'WOMEN', 'CHILD', 'CHILDREN'), ('WOMAN', 'WOMEN', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'ROAD', 'ROADS')]}])
 
 
-This ``accuracy`` takes an `optional parameter
-<http://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec.accuracy>`_
+
+This ``evaluate_word_analogies`` method takes an `optional parameter
+<http://radimrehurek.com/gensim/models/keyedvectors.html#gensim.models.keyedvectors.KeyedVectors.evaluate_word_analogies>`_
 ``restrict_vocab`` which limits which test examples are to be considered.
 
 
@@ -609,11 +847,23 @@ are less similar because they are related but not interchangeable.
 
 .. code-block:: default
 
-    model.evaluate_word_pairs(datapath('wordsim353.tsv'))
+    model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:04,681 : INFO : Pearson correlation coefficient against /Volumes/work/workspace/gensim/trunk/gensim/test/test_data/wordsim353.tsv: 0.1072
+    2020-09-30 17:02:04,682 : INFO : Spearman rank-order correlation coefficient against /Volumes/work/workspace/gensim/trunk/gensim/test/test_data/wordsim353.tsv: 0.0977
+    2020-09-30 17:02:04,682 : INFO : Pairs with unknown words ratio: 83.0%
+
+    ((0.10718629411012633, 0.41498744701424156), SpearmanrResult(correlation=0.09773516803468056, pvalue=0.4575366217424267), 83.0028328611898)
 
 
 
@@ -638,10 +888,10 @@ and `new vocabulary words <online_w2v_tutorial.ipynb>`_:
     model = gensim.models.Word2Vec.load(temporary_filepath)
     more_sentences = [
         ['Advanced', 'users', 'can', 'load', 'a', 'model',
-         'and', 'continue', 'training', 'it', 'with', 'more', 'sentences']
+         'and', 'continue', 'training', 'it', 'with', 'more', 'sentences'],
     ]
     model.build_vocab(more_sentences, update=True)
-    model.train(more_sentences, total_examples=model.corpus_count, epochs=model.iter)
+    model.train(more_sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
     # cleaning up temporary file
     import os
@@ -649,6 +899,51 @@ and `new vocabulary words <online_w2v_tutorial.ipynb>`_:
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 17:02:04,775 : INFO : loading Word2Vec object from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
+    2020-09-30 17:02:04,788 : INFO : loading wv recursively from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d.wv.* with mmap=None
+    2020-09-30 17:02:04,789 : INFO : setting ignored attribute cum_table to None
+    2020-09-30 17:02:04,809 : INFO : loaded /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
+    2020-09-30 17:02:04,809 : INFO : collecting all words and their counts
+    2020-09-30 17:02:04,809 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2020-09-30 17:02:04,810 : INFO : collected 13 word types from a corpus of 13 raw words and 1 sentences
+    2020-09-30 17:02:04,810 : INFO : Updating model with new vocabulary
+    2020-09-30 17:02:04,819 : INFO : New added 0 unique words (0% of original 13) and increased the count of 0 pre-existing words (0% of original 13)
+    2020-09-30 17:02:04,819 : INFO : deleting the raw counts dictionary of 13 items
+    2020-09-30 17:02:04,819 : INFO : sample=0.001 downsamples 0 most-common words
+    2020-09-30 17:02:04,819 : INFO : downsampling leaves estimated 0 word corpus (0.0% of prior 0)
+    2020-09-30 17:02:04,838 : INFO : estimated required memory for 1750 words and 100 dimensions: 2275000 bytes
+    2020-09-30 17:02:04,838 : INFO : updating layer weights
+    2020-09-30 17:02:04,839 : WARNING : Effective 'alpha' higher than previous training cycles
+    2020-09-30 17:02:04,839 : INFO : training model with 3 workers on 1750 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 17:02:04,842 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,843 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,843 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,843 : INFO : EPOCH - 1 : training on 13 raw words (6 effective words) took 0.0s, 5326 effective words/s
+    2020-09-30 17:02:04,844 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,845 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,845 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,845 : INFO : EPOCH - 2 : training on 13 raw words (5 effective words) took 0.0s, 6975 effective words/s
+    2020-09-30 17:02:04,846 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,846 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,846 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,846 : INFO : EPOCH - 3 : training on 13 raw words (5 effective words) took 0.0s, 8539 effective words/s
+    2020-09-30 17:02:04,847 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,847 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,847 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,848 : INFO : EPOCH - 4 : training on 13 raw words (6 effective words) took 0.0s, 11100 effective words/s
+    2020-09-30 17:02:04,848 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:04,849 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:04,849 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:04,849 : INFO : EPOCH - 5 : training on 13 raw words (5 effective words) took 0.0s, 9718 effective words/s
+    2020-09-30 17:02:04,849 : INFO : training on a 65 raw words (27 effective words) took 0.0s, 2900 effective words/s
 
 
 
@@ -682,7 +977,7 @@ attribute ``running_training_loss`` and can be retrieved using the function
         compute_loss=True,
         hs=0,
         sg=1,
-        seed=42
+        seed=42,
     )
 
     # getting the training loss value
@@ -699,7 +994,41 @@ attribute ``running_training_loss`` and can be retrieved using the function
 
  .. code-block:: none
 
-    1376815.375
+    2020-09-30 17:02:05,025 : INFO : collecting all words and their counts
+    2020-09-30 17:02:05,027 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2020-09-30 17:02:05,112 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
+    2020-09-30 17:02:05,112 : INFO : Loading a fresh vocabulary
+    2020-09-30 17:02:05,152 : INFO : effective_min_count=1 retains 6981 unique words (100% of original 6981, drops 0)
+    2020-09-30 17:02:05,152 : INFO : effective_min_count=1 leaves 58152 word corpus (100% of original 58152, drops 0)
+    2020-09-30 17:02:05,207 : INFO : deleting the raw counts dictionary of 6981 items
+    2020-09-30 17:02:05,207 : INFO : sample=0.001 downsamples 43 most-common words
+    2020-09-30 17:02:05,207 : INFO : downsampling leaves estimated 45723 word corpus (78.6% of prior 58152)
+    2020-09-30 17:02:05,294 : INFO : estimated required memory for 6981 words and 100 dimensions: 9075300 bytes
+    2020-09-30 17:02:05,294 : INFO : resetting layer weights
+    2020-09-30 17:02:05,651 : INFO : training model with 3 workers on 6981 vocabulary and 100 features, using sg=1 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 17:02:05,800 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:05,839 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:05,841 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:05,841 : INFO : EPOCH - 1 : training on 58152 raw words (45692 effective words) took 0.2s, 242729 effective words/s
+    2020-09-30 17:02:06,028 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:06,032 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:06,037 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:06,037 : INFO : EPOCH - 2 : training on 58152 raw words (45778 effective words) took 0.2s, 234367 effective words/s
+    2020-09-30 17:02:06,218 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:06,222 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:06,225 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:06,225 : INFO : EPOCH - 3 : training on 58152 raw words (45684 effective words) took 0.2s, 244363 effective words/s
+    2020-09-30 17:02:06,400 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:06,407 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:06,409 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:06,409 : INFO : EPOCH - 4 : training on 58152 raw words (45651 effective words) took 0.2s, 249862 effective words/s
+    2020-09-30 17:02:06,558 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 17:02:06,597 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 17:02:06,600 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 17:02:06,600 : INFO : EPOCH - 5 : training on 58152 raw words (45745 effective words) took 0.2s, 240328 effective words/s
+    2020-09-30 17:02:06,600 : INFO : training on a 290760 raw words (228550 effective words) took 0.9s, 240759 effective words/s
+    1365568.125
+
 
 
 
@@ -749,6 +1078,7 @@ We'll use the following data for the benchmarks:
 
 
     input_data = list(generate_input_data())
+
 
 
 
@@ -828,95 +1158,6 @@ standard deviation of the test duration.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.42024485270182294, 'train_time_std': 0.010698776849185184}
-    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.4227687517801921, 'train_time_std': 0.010170030330566043}
-    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.536113421122233, 'train_time_std': 0.004805753793586722}
-    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.5387027263641357, 'train_time_std': 0.008667062182886069}
-    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.6562980810801188, 'train_time_std': 0.013588778726591642}
-    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.6652247111002604, 'train_time_std': 0.011507952438692074}
-    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 1.063435713450114, 'train_time_std': 0.007722866080141013}
-    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 1.0656228065490723, 'train_time_std': 0.010417429290681622}
-    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 1.1557533740997314, 'train_time_std': 0.021498065208364548}
-    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 1.1348456541697185, 'train_time_std': 0.008478234726085157}
-    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.5982224941253662, 'train_time_std': 0.032441277082374986}
-    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.6024325688680012, 'train_time_std': 0.05484816962039394}
-    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 2.0538527170817056, 'train_time_std': 0.02116566035017678}
-    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 2.095852772394816, 'train_time_std': 0.027719772722993145}
-    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 3.8532145023345947, 'train_time_std': 0.13194007715689138}
-    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 4.347004095713298, 'train_time_std': 0.4074951861350163}
-    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 9.744145313898722, 'train_time_std': 0.528574777917741}
-    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 10.102657397588095, 'train_time_std': 0.04922284567998143}
-    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 14.720670620600382, 'train_time_std': 0.14477234755034}
-    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 15.064472993214926, 'train_time_std': 0.13933597618834875}
-    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 22.98580002784729, 'train_time_std': 0.13657929022316737}
-    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 22.99385412534078, 'train_time_std': 0.4251254084886872}
-    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 43.337499936421715, 'train_time_std': 0.8026425548453814}
-    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 41.70925132433573, 'train_time_std': 0.2547404428238225}
-       train_data  compute_loss  sg  hs  train_time_mean  train_time_std
-    4        25kB          True   1   0         0.656298        0.013589
-    5        25kB         False   1   0         0.665225        0.011508
-    6        25kB          True   1   1         1.063436        0.007723
-    7        25kB         False   1   1         1.065623        0.010417
-    0        25kB          True   0   0         0.420245        0.010699
-    1        25kB         False   0   0         0.422769        0.010170
-    2        25kB          True   0   1         0.536113        0.004806
-    3        25kB         False   0   1         0.538703        0.008667
-    12        1MB          True   1   0         2.053853        0.021166
-    13        1MB         False   1   0         2.095853        0.027720
-    14        1MB          True   1   1         3.853215        0.131940
-    15        1MB         False   1   1         4.347004        0.407495
-    8         1MB          True   0   0         1.155753        0.021498
-    9         1MB         False   0   0         1.134846        0.008478
-    10        1MB          True   0   1         1.598222        0.032441
-    11        1MB         False   0   1         1.602433        0.054848
-    20       10MB          True   1   0        22.985800        0.136579
-    21       10MB         False   1   0        22.993854        0.425125
-    22       10MB          True   1   1        43.337500        0.802643
-    23       10MB         False   1   1        41.709251        0.254740
-    16       10MB          True   0   0         9.744145        0.528575
-    17       10MB         False   0   0        10.102657        0.049223
-    18       10MB          True   0   1        14.720671        0.144772
-    19       10MB         False   0   1        15.064473        0.139336
-
-
-
-Adding Word2Vec "model to dict" method to production pipeline
--------------------------------------------------------------
-
-Suppose, we still want more performance improvement in production.
-
-One good way is to cache all the similar words in a dictionary.
-
-So that next time when we get the similar query word, we'll search it first in the dict.
-
-And if it's a hit then we will show the result directly from the dictionary.
-
-otherwise we will query the word and then cache it so that it doesn't miss next time.
-
-
-
-.. code-block:: default
-
-
-
-    # re-enable logging
-    logging.root.level = logging.INFO
-
-    most_similars_precalc = {word : model.wv.most_similar(word) for word in model.wv.index2word}
-    for i, (key, value) in enumerate(most_similars_precalc.items()):
-        if i == 3:
-            break
-        print(key, value)
-
-
-
-
 
 .. rst-class:: sphx-glr-script-out
 
@@ -924,104 +1165,61 @@ otherwise we will query the word and then cache it so that it doesn't miss next 
 
  .. code-block:: none
 
-    the [('of', 0.999931812286377), ('at', 0.999925434589386), ('state', 0.9999253153800964), ('and', 0.9999250769615173), ('from', 0.9999250173568726), ('world', 0.9999234676361084), ('its', 0.9999232292175293), ('first', 0.9999232292175293), ('australia', 0.9999231100082397), ('one', 0.9999231100082397)]
-    to [('at', 0.999946117401123), ('if', 0.9999457597732544), ('will', 0.9999451637268066), ('out', 0.9999433159828186), ('or', 0.999942421913147), ('are', 0.9999421238899231), ('that', 0.9999387264251709), ('but', 0.9999367594718933), ('into', 0.999936580657959), ('from', 0.9999353885650635)]
-    of [('first', 0.9999472498893738), ('at', 0.999944806098938), ('australian', 0.9999432563781738), ('into', 0.9999418258666992), ('three', 0.9999409914016724), ('with', 0.999938428401947), ('over', 0.9999372363090515), ('in', 0.9999370574951172), ('by', 0.9999368786811829), ('and', 0.9999358654022217)]
-
-
-
-Comparison with and without caching
------------------------------------
-
-for time being lets take 4 words randomly
-
-
-
-.. code-block:: default
-
-    import time
-    words = ['voted', 'few', 'their', 'around']
-
-
-
-
-
-
-
-Without caching
-
-
-
-.. code-block:: default
-
-    start = time.time()
-    for word in words:
-        result = model.wv.most_similar(word)
-        print(result)
-    end = time.time()
-    print(end - start)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    [('flights', 0.9986665844917297), ('job', 0.9986284971237183), ('building', 0.9985975623130798), ('see', 0.9985952377319336), ('figures', 0.9985781311988831), ('melbourne', 0.9985730051994324), ('two', 0.9985727071762085), ('per', 0.9985710978507996), ('weather', 0.9985674619674683), ('still', 0.9985595345497131)]
-    [('an', 0.9997475147247314), ('today', 0.999739408493042), ('were', 0.9997352361679077), ('after', 0.9997317790985107), ('which', 0.9997289180755615), ('with', 0.9997268915176392), ('against', 0.999722957611084), ('still', 0.9997221231460571), ('at', 0.9997204542160034), ('could', 0.9997197389602661)]
-    [('at', 0.9999508857727051), ('from', 0.9999468326568604), ('up', 0.9999455809593201), ('today', 0.9999449849128723), ('us', 0.9999443292617798), ('on', 0.999944269657135), ('his', 0.9999438524246216), ('by', 0.9999434947967529), ('into', 0.9999425411224365), ('with', 0.9999420642852783)]
-    [('by', 0.9999364018440247), ('out', 0.999934732913971), ('after', 0.9999337196350098), ('into', 0.9999316334724426), ('at', 0.9999312162399292), ('and', 0.9999300241470337), ('with', 0.9999291896820068), ('over', 0.9999289512634277), ('as', 0.9999284744262695), ('were', 0.9999282360076904)]
-    0.030631542205810547
-
-
-
-Now with caching
-
-
-
-.. code-block:: default
-
-    start = time.time()
-    for word in words:
-        if 'voted' in most_similars_precalc:
-            result = most_similars_precalc[word]
-            print(result)
-        else:
-            result = model.wv.most_similar(word)
-            most_similars_precalc[word] = result
-            print(result)
-
-    end = time.time()
-    print(end - start)
+    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.3307774066925049, 'train_time_std': 0.00578659163388716}
+    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.3314487934112549, 'train_time_std': 0.004201913501261655}
+    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.5213752587636312, 'train_time_std': 0.008047867089155704}
+    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.5293020407358805, 'train_time_std': 0.005368254032954145}
+    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.571751594543457, 'train_time_std': 0.001023259266794945}
+    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.5736987590789795, 'train_time_std': 0.00740075638673385}
+    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 1.1089734236399333, 'train_time_std': 0.029923990619945186}
+    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 1.2068419456481934, 'train_time_std': 0.006783016321594606}
+    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.9139569600423177, 'train_time_std': 0.04541121423444599}
+    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.9152584075927734, 'train_time_std': 0.05191135337399049}
+    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.6703286170959473, 'train_time_std': 0.11292966925292192}
+    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.583152135213216, 'train_time_std': 0.04577290669842482}
+    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 1.811710516611735, 'train_time_std': 0.01081321887556254}
+    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 1.8143157164255779, 'train_time_std': 0.026406013455100835}
+    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 3.5845812956492105, 'train_time_std': 0.08968344917541199}
+    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 3.6167975266774497, 'train_time_std': 0.14609390508721276}
+    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 8.021462361017862, 'train_time_std': 0.21593094159548987}
+    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 7.931290070215861, 'train_time_std': 0.25084118769867136}
+    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 15.51533571879069, 'train_time_std': 0.8857355166766315}
+    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 15.930208921432495, 'train_time_std': 0.6417048653898146}
+    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 21.687038342158, 'train_time_std': 0.3261330075856754}
+    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 21.280882279078167, 'train_time_std': 0.12885843584913614}
+    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 43.11969208717346, 'train_time_std': 0.8133788671881127}
+    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 40.59294398625692, 'train_time_std': 0.47622639550838375}
+        compute_loss  hs  sg train_data  train_time_mean  train_time_std
+    4           True   0   1       25kB         0.571752        0.001023
+    5          False   0   1       25kB         0.573699        0.007401
+    6           True   1   1       25kB         1.108973        0.029924
+    7          False   1   1       25kB         1.206842        0.006783
+    0           True   0   0       25kB         0.330777        0.005787
+    1          False   0   0       25kB         0.331449        0.004202
+    2           True   1   0       25kB         0.521375        0.008048
+    3          False   1   0       25kB         0.529302        0.005368
+    12          True   0   1        1MB         1.811711        0.010813
+    13         False   0   1        1MB         1.814316        0.026406
+    14          True   1   1        1MB         3.584581        0.089683
+    15         False   1   1        1MB         3.616798        0.146094
+    8           True   0   0        1MB         0.913957        0.045411
+    9          False   0   0        1MB         0.915258        0.051911
+    10          True   1   0        1MB         1.670329        0.112930
+    11         False   1   0        1MB         1.583152        0.045773
+    20          True   0   1       10MB        21.687038        0.326133
+    21         False   0   1       10MB        21.280882        0.128858
+    22          True   1   1       10MB        43.119692        0.813379
+    23         False   1   1       10MB        40.592944        0.476226
+    16          True   0   0       10MB         8.021462        0.215931
+    17         False   0   0       10MB         7.931290        0.250841
+    18          True   1   0       10MB        15.515336        0.885736
+    19         False   1   0       10MB        15.930209        0.641705
 
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    [('flights', 0.9986665844917297), ('job', 0.9986284971237183), ('building', 0.9985975623130798), ('see', 0.9985952377319336), ('figures', 0.9985781311988831), ('melbourne', 0.9985730051994324), ('two', 0.9985727071762085), ('per', 0.9985710978507996), ('weather', 0.9985674619674683), ('still', 0.9985595345497131)]
-    [('an', 0.9997475147247314), ('today', 0.999739408493042), ('were', 0.9997352361679077), ('after', 0.9997317790985107), ('which', 0.9997289180755615), ('with', 0.9997268915176392), ('against', 0.999722957611084), ('still', 0.9997221231460571), ('at', 0.9997204542160034), ('could', 0.9997197389602661)]
-    [('at', 0.9999508857727051), ('from', 0.9999468326568604), ('up', 0.9999455809593201), ('today', 0.9999449849128723), ('us', 0.9999443292617798), ('on', 0.999944269657135), ('his', 0.9999438524246216), ('by', 0.9999434947967529), ('into', 0.9999425411224365), ('with', 0.9999420642852783)]
-    [('by', 0.9999364018440247), ('out', 0.999934732913971), ('after', 0.9999337196350098), ('into', 0.9999316334724426), ('at', 0.9999312162399292), ('and', 0.9999300241470337), ('with', 0.9999291896820068), ('over', 0.9999289512634277), ('as', 0.9999284744262695), ('were', 0.9999282360076904)]
-    0.0009360313415527344
-
-
-
-Clearly you can see the improvement but this difference will be even larger
-when we take more words in the consideration.
-
-
-Visualising the Word Embeddings
--------------------------------
+Visualising Word Embeddings
+---------------------------
 
 The word embeddings made by the model can be visualised by reducing
 dimensionality of the words to 2 dimensions using tSNE.
@@ -1052,18 +1250,11 @@ Vector relations like vKing - vMan = vQueen - vWoman can also be noticed.
     def reduce_dimensions(model):
         num_dimensions = 2  # final num dimensions (2D, 3D, etc)
 
-        vectors = [] # positions in vector space
-        labels = [] # keep track of words to label our data again later
-        for word in model.wv.vocab:
-            vectors.append(model.wv[word])
-            labels.append(word)
-
-        # convert both lists into numpy vectors for reduction
-        vectors = np.asarray(vectors)
-        labels = np.asarray(labels)
+        # extract the words & their vectors, as numpy arrays
+        vectors = np.asarray(model.wv.vectors)
+        labels = np.asarray(model.wv.index_to_key)  # fixed-width numpy strings
 
         # reduce using t-SNE
-        vectors = np.asarray(vectors)
         tsne = TSNE(n_components=num_dimensions, random_state=0)
         vectors = tsne.fit_transform(vectors)
 
@@ -1118,7 +1309,9 @@ Vector relations like vKing - vMan = vQueen - vWoman can also be noticed.
 
 
 .. image:: /auto_examples/tutorials/images/sphx_glr_run_word2vec_001.png
+    :alt: run word2vec
     :class: sphx-glr-single-img
+
 
 
 
@@ -1140,9 +1333,9 @@ Links
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 14 minutes  57.464 seconds)
+   **Total running time of the script:** ( 11 minutes  46.634 seconds)
 
-**Estimated memory usage:**  11388 MB
+**Estimated memory usage:**  6399 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_word2vec.py:
@@ -1155,13 +1348,13 @@ Links
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_word2vec.py <run_word2vec.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_word2vec.ipynb <run_word2vec.ipynb>`
 

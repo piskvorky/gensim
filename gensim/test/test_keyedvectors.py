@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 
 class TestKeyedVectors(unittest.TestCase):
     def setUp(self):
-        self.vectors = KeyedVectors.load_word2vec_format(
-            datapath('euclidean_vectors.bin'), binary=True)
+        self.vectors = KeyedVectors.load_word2vec_format(datapath('euclidean_vectors.bin'), binary=True)
         self.model_path = datapath("w2v_keyedvectors_load_test.modeldata")
         self.vocab_path = datapath("w2v_keyedvectors_load_test.vocab")
 
@@ -61,12 +60,9 @@ class TestKeyedVectors(unittest.TestCase):
             'respectable', 'beneficial', 'just', 'upright', 'adept', 'expert', 'practiced', 'proficient',
             'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
             'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
-            'unspoiled', 'unspoilt', 'thoroughly', 'soundly'
+            'unspoiled', 'unspoilt', 'thoroughly', 'soundly',
         ]  # synonyms for "good" as per wordnet
-        cos_sim = []
-        for i in range(len(wordnet_syn)):
-            if wordnet_syn[i] in self.vectors:
-                cos_sim.append(self.vectors.similarity("good", wordnet_syn[i]))
+        cos_sim = [self.vectors.similarity("good", syn) for syn in wordnet_syn if syn in self.vectors]
         cos_sim = sorted(cos_sim, reverse=True)  # cosine_similarity of "good" with wordnet_syn in decreasing order
         # computing relative_cosine_similarity of two similar words
         rcs_wordnet = self.vectors.similarity("good", "nice") / sum(cos_sim[i] for i in range(10))
@@ -84,7 +80,7 @@ class TestKeyedVectors(unittest.TestCase):
 
     def test_most_similar_restrict_vocab(self):
         """Test most_similar returns handles restrict_vocab correctly."""
-        expected = set(self.vectors.index2word[:5])
+        expected = set(self.vectors.index_to_key[:5])
         predicted = set(result[0] for result in self.vectors.most_similar('war', topn=5, restrict_vocab=5))
         self.assertEqual(expected, predicted)
 
@@ -113,7 +109,7 @@ class TestKeyedVectors(unittest.TestCase):
             'administration',
             'terrorism',
             'call',
-            'israel'
+            'israel',
         ]
         predicted = [result[0] for result in self.vectors.similar_by_word('war', topn=5)]
         self.assertEqual(expected, predicted)
@@ -154,12 +150,12 @@ class TestKeyedVectors(unittest.TestCase):
 
     def test_add_single(self):
         """Test that adding entity in a manual way works correctly."""
-        entities = ['___some_entity{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
+        entities = [f'___some_entity{i}_not_present_in_keyed_vectors___' for i in range(5)]
         vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
         # Test `add` on already filled kv.
         for ent, vector in zip(entities, vectors):
-            self.vectors.add(ent, vector)
+            self.vectors.add_vectors(ent, vector)
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
@@ -167,7 +163,7 @@ class TestKeyedVectors(unittest.TestCase):
         # Test `add` on empty kv.
         kv = KeyedVectors(self.vectors.vector_size)
         for ent, vector in zip(entities, vectors):
-            kv.add(ent, vector)
+            kv.add_vectors(ent, vector)
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
@@ -179,7 +175,7 @@ class TestKeyedVectors(unittest.TestCase):
 
         # Test `add` on already filled kv.
         vocab_size = len(self.vectors)
-        self.vectors.add(entities, vectors, replace=False)
+        self.vectors.add_vectors(entities, vectors, replace=False)
         self.assertEqual(vocab_size + len(entities), len(self.vectors))
 
         for ent, vector in zip(entities, vectors):
@@ -198,7 +194,7 @@ class TestKeyedVectors(unittest.TestCase):
         assert kv.vectors.dtype == REAL
 
         words, vectors = ["a"], np.array([1., 1.], dtype=np.float64).reshape(1, -1)
-        kv.add(words, vectors)
+        kv.add_vectors(words, vectors)
 
         assert kv.vectors.dtype == REAL
 
@@ -270,7 +266,7 @@ class TestKeyedVectors(unittest.TestCase):
         count = 20
         keys = [str(i) for i in range(count)]
         weights = [pseudorandom_weak_vector(randkv.vector_size) for _ in range(count)]
-        randkv.add(keys, weights)
+        randkv.add_vectors(keys, weights)
         tmpfiletxt = gensim.test.utils.get_tmpfile("tmp_kv.txt")
         randkv.save_word2vec_format(tmpfiletxt, binary=False)
         reloadtxtkv = KeyedVectors.load_word2vec_format(tmpfiletxt, binary=False)
@@ -287,7 +283,7 @@ class TestKeyedVectors(unittest.TestCase):
         count = 20
         keys = [str(i) for i in range(count)]
         weights = [pseudorandom_weak_vector(randkv.vector_size) for _ in range(count)]
-        randkv.add(keys, weights)
+        randkv.add_vectors(keys, weights)
         tmpfiletxt = gensim.test.utils.get_tmpfile("tmp_kv.txt")
         randkv.save_word2vec_format(tmpfiletxt, binary=False, write_header=False)
         reloadtxtkv = KeyedVectors.load_word2vec_format(tmpfiletxt, binary=False, no_header=True)

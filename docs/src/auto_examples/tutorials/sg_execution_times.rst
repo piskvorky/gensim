@@ -5,7 +5,7 @@
 
 Computation times
 =================
-**14:40.672** total execution time for **auto_examples_tutorials** files:
+**00:07.863** total execution time for **auto_examples_tutorials** files:
 
 +-----------------------------------------------------------------------------------------------+-----------+----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py` (``run_annoy.py``)                       | 14:40.672 | 752.8 MB |

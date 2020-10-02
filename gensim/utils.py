@@ -11,16 +11,9 @@ from contextlib import contextmanager
 import collections
 import logging
 import warnings
-
-try:
-    from html.entities import name2codepoint as n2cp
-except ImportError:
-    from htmlentitydefs import name2codepoint as n2cp
-try:
-    import cPickle as _pickle
-except ImportError:
-    import pickle as _pickle
-
+import numbers
+from html.entities import name2codepoint as n2cp
+import pickle as _pickle
 import re
 import unicodedata
 import os
@@ -36,18 +29,9 @@ import inspect
 import heapq
 
 import numpy as np
-import numbers
 import scipy.sparse
-
-from six import iterkeys, iteritems, itervalues, u, string_types, unichr
-from six.moves import range
-
 from smart_open import open
 
-from multiprocessing import cpu_count
-
-if sys.version_info[0] >= 3:
-    unicode = str
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +122,7 @@ def file_or_filename(input):
         An open file, positioned at the beginning.
 
     """
-    if isinstance(input, string_types):
+    if isinstance(input, str):
         # input was a filename: open as file
         return open(input, 'rb')
     else:
@@ -169,11 +153,11 @@ def open_file(input):
     except Exception:
         # Handling any unhandled exceptions from the code nested in 'with' statement.
         exc = True
-        if not isinstance(input, string_types) or not mgr.__exit__(*sys.exc_info()):
+        if not isinstance(input, str) or not mgr.__exit__(*sys.exc_info()):
             raise
         # Try to introspect and silence errors.
     finally:
-        if not exc and isinstance(input, string_types):
+        if not exc and isinstance(input, str):
             mgr.__exit__(None, None, None)
 
 
@@ -199,11 +183,11 @@ def deaccent(text):
         u'Sef chomutovskych komunistu dostal postou bily prasek'
 
     """
-    if not isinstance(text, unicode):
+    if not isinstance(text, str):
         # assume utf8 for byte strings, use default (strict) error handling
         text = text.decode('utf8')
     norm = unicodedata.normalize("NFD", text)
-    result = u('').join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
+    result = ''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
 
 
@@ -339,10 +323,10 @@ def any2utf8(text, errors='strict', encoding='utf8'):
 
     """
 
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
-    return unicode(text, encoding, errors=errors).encode('utf8')
+    return str(text, encoding, errors=errors).encode('utf8')
 
 
 to_utf8 = any2utf8
@@ -366,9 +350,9 @@ def any2unicode(text, encoding='utf8', errors='strict'):
         Unicode version of `text`.
 
     """
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return text
-    return unicode(text, encoding, errors=errors)
+    return str(text, encoding, errors=errors)
 
 
 to_unicode = any2unicode
@@ -393,7 +377,7 @@ def call_on_class_only(*args, **kwargs):
     raise AttributeError('This method should be called on a class object.')
 
 
-class SaveLoad(object):
+class SaveLoad:
     """Serialize/deserialize object from disk, by equipping objects with the save()/load() methods.
 
     Warnings
@@ -562,7 +546,7 @@ class SaveLoad(object):
         finally:
             # restore attribs handled specially
             for obj, asides in restores:
-                for attrib, val in iteritems(asides):
+                for attrib, val in asides.items():
                     with ignore_deprecation_warning():
                         setattr(obj, attrib, val)
         logger.info("saved %s", fname)
@@ -599,7 +583,7 @@ class SaveLoad(object):
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
-            for attrib, val in iteritems(self.__dict__):
+            for attrib, val in self.__dict__.items():
                 if isinstance(val, np.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
@@ -614,7 +598,7 @@ class SaveLoad(object):
 
         recursive_saveloads = []
         restores = []
-        for attrib, val in iteritems(self.__dict__):
+        for attrib, val in self.__dict__.items():
             if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
@@ -622,7 +606,7 @@ class SaveLoad(object):
 
         try:
             numpys, scipys, ignoreds = [], [], []
-            for attrib, val in iteritems(asides):
+            for attrib, val in asides.items():
                 if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
                     logger.info("storing np array '%s' to %s", attrib, subname(fname, attrib))
@@ -666,7 +650,7 @@ class SaveLoad(object):
             self.__dict__['__recursive_saveloads'] = recursive_saveloads
         except Exception:
             # restore the attributes if exception-interrupted
-            for attrib, val in iteritems(asides):
+            for attrib, val in asides.items():
                 setattr(self, attrib, val)
             raise
         return restores + [(self, asides)]
@@ -749,7 +733,7 @@ def get_max_id(corpus):
     return maxid
 
 
-class FakeDict(object):
+class FakeDict:
     """Objects of this class act as dictionaries that map integer->str(integer), for a specified
     range of integers <0, num_terms).
 
@@ -777,7 +761,6 @@ class FakeDict(object):
 
     def iteritems(self):
         """Iterate over all keys and values.
-
 
         Yields
         ------
@@ -1087,9 +1070,9 @@ def safe_unichr(intval):
 
     """
     try:
-        return unichr(intval)
+        return chr(intval)
     except ValueError:
-        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        # ValueError: chr() arg not in range(0x10000) (narrow Python build)
         s = "\\U%08x" % intval
         # return UTF16 surrogate pair
         return s.decode('unicode-escape')
@@ -1396,11 +1379,7 @@ def unpickle(fname):
 
     """
     with open(fname, 'rb') as f:
-        # Because of loading from S3 load can't be used (missing readline in smart_open)
-        if sys.version_info > (3, 0):
-            return _pickle.load(f, encoding='latin1')
-        else:
-            return _pickle.loads(f.read())
+        return _pickle.load(f, encoding='latin1')  # needed because loading from S3 doesn't support readline()
 
 
 def revdict(d):
@@ -1430,7 +1409,7 @@ def revdict(d):
         {2: 1, 4: 3}
 
     """
-    return {v: k for (k, v) in iteritems(dict(d))}
+    return {v: k for (k, v) in dict(d).items()}
 
 
 def deprecated(reason):
@@ -1450,7 +1429,7 @@ def deprecated(reason):
         Decorated function
 
     """
-    if isinstance(reason, string_types):
+    if isinstance(reason, str):
         def decorator(func):
             fmt = "Call to deprecated `{name}` ({reason})."
 
@@ -1704,7 +1683,7 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
     # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
     # FIXME this throws away all fancy parsing cues, including sentence structure,
     # abbreviations etc.
-    content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
+    content = ' '.join(tokenize(content, lower=True, errors='ignore'))
 
     parsed = parse(content, lemmata=True, collapse=False)
     result = []
@@ -1814,7 +1793,7 @@ def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     if topk >= len(vocab):
         return
 
-    min_count = heapq.nlargest(topk, itervalues(vocab))[-1]
+    min_count = heapq.nlargest(topk, vocab.values())[-1]
     prune_vocab(vocab, min_count, trim_rule=trim_rule)
 
 
@@ -1831,7 +1810,7 @@ def merge_counts(dict1, dict2):
     result : dict
         Merged dictionary with sum of frequencies as values.
     """
-    for word, freq in iteritems(dict2):
+    for word, freq in dict2.items():
         if word in dict1:
             dict1[word] += freq
         else:
@@ -1957,7 +1936,7 @@ def sample_dict(d, n=10, use_random=True):
         Selected items from dictionary, as a list.
 
     """
-    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(d.keys(), n)
     return [(key, d[key]) for key in selected_keys]
 
 
@@ -2080,7 +2059,7 @@ def lazy_flatten(nested_list):
 
     """
     for el in nested_list:
-        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
+        if isinstance(el, collections.Iterable) and not isinstance(el, str):
             for sub in flatten(el):
                 yield sub
         else:
@@ -2124,5 +2103,5 @@ def effective_n_jobs(n_jobs):
     elif n_jobs is None:
         return 1
     elif n_jobs < 0:
-        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
+        n_jobs = max(multiprocessing.cpu_count() + 1 + n_jobs, 1)
     return n_jobs

@@ -8,6 +8,7 @@
 """
 Introduction
 ============
+
 This module implements the word2vec family of algorithms, using highly optimized C routines,
 data streaming and Pythonic interfaces.
 
@@ -21,16 +22,14 @@ Other embeddings
 
 There are more ways to train word vectors in Gensim than just Word2Vec.
 See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-wrappers for :class:`~gensim.models.wrappers.VarEmbed` and :class:`~gensim.models.wrappers.WordRank`.
+wrappers for :class:`~gensim.models.wrappers.varembed.VarEmbed` and :class:`~gensim.models.wrappers.wordrank.WordRank`.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
-and extended with additional functionality and optimizations over the years.
+and extended with additional functionality and
+`optimizations <https://rare-technologies.com/parallelizing-word2vec-in-python/>`_ over the years.
 
 For a tutorial on Gensim word2vec, with an interactive web app trained on GoogleNews,
 visit https://rare-technologies.com/word2vec-tutorial/.
-
-**Make sure you have a C compiler before installing Gensim, to use the optimized word2vec routines**
-(70x speedup compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/).
 
 Usage examples
 ==============
@@ -42,17 +41,17 @@ Initialize a model with e.g.:
     >>> from gensim.test.utils import common_texts
     >>> from gensim.models import Word2Vec
     >>>
-    >>> model = Word2Vec(common_texts, size=100, window=5, min_count=1, workers=4)
+    >>> model = Word2Vec(sentences=common_texts, vector_size=100, window=5, min_count=1, workers=4)
     >>> model.save("word2vec.model")
 
 
-The training is streamed, so ``sentences`` can be an iterable, reading input data
-from disk on-the-fly. This lets you avoid loading the entire corpus into RAM.
-However, note that because the iterable must be re-startable, `sentences` must
-not be a generator. For an example of an appropriate iterator see
-:class:`~gensim.models.word2vec.BrownCorpus`,
-:class:`~gensim.models.word2vec.Text8Corpus` or
-:class:`~gensim.models.word2vec.LineSentence`.
+**The training is streamed, so ``sentences`` can be an iterable**, reading input data
+from the disk or network on-the-fly, without loading your entire corpus into RAM.
+
+Note the ``sentences`` iterable must be *restartable* (not just a generator), to allow the algorithm
+to stream over your dataset multiple times. For some examples of streamed iterables,
+see :class:`~gensim.models.word2vec.BrownCorpus`,
+:class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`.
 
 If you save the model you can continue training it later:
 
@@ -62,26 +61,31 @@ If you save the model you can continue training it later:
     >>> model.train([["hello", "world"]], total_examples=1, epochs=1)
     (0, 2)
 
-The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance in `model.wv`:
+The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.KeyedVectors` instance, as `model.wv`:
 
 .. sourcecode:: pycon
 
-    >>> vector = model.wv['computer']  # numpy vector of a word
+    >>> vector = model.wv['computer']  # get numpy vector of a word
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
-need the full model state any more (don't need to continue training), the state can discarded,
-resulting in a much smaller and faster object that can be mmapped for lightning
+need the full model state any more (don't need to continue training), its state can discarded,
+keeping just the vectors and their keys proper.
+
+This results in a much smaller and faster object that can be mmapped for lightning
 fast loading and sharing the vectors in RAM between processes:
 
 .. sourcecode:: pycon
 
     >>> from gensim.models import KeyedVectors
     >>>
-    >>> path = get_tmpfile("wordvectors.kv")
+    >>> # Store just the words + their trained embeddings.
+    >>> word_vectors = model.wv
+    >>> word_vectors.save("word2vec.wordvectors")
     >>>
-    >>> model.wv.save(path)
-    >>> wv = KeyedVectors.load("model.wv", mmap='r')
-    >>> vector = wv['computer']  # numpy vector of a word
+    >>> # Load back with memory-mapping = read-only, shared across processes.
+    >>> wv = KeyedVectors.load("word2vec.wordvectors", mmap='r')
+    >>>
+    >>> vector = wv['computer']  # Get numpy vector of a word
 
 Gensim can also load word vectors in the "word2vec C format", as a
 :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
@@ -90,16 +94,18 @@ Gensim can also load word vectors in the "word2vec C format", as a
 
     >>> from gensim.test.utils import datapath
     >>>
-    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)  # C text format
-    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)  # C bin format
+    >>> # Load a word2vec model stored in the C *text* format.
+    >>> wv_from_text = KeyedVectors.load_word2vec_format(datapath('word2vec_pre_kv_c'), binary=False)
+    >>> # Load a word2vec model stored in the C *binary* format.
+    >>> wv_from_bin = KeyedVectors.load_word2vec_format(datapath("euclidean_vectors.bin"), binary=True)
 
 It is impossible to continue training the vectors loaded from the C format because the hidden weights,
 vocabulary frequencies and the binary tree are missing. To continue training, you'll need the
 full :class:`~gensim.models.word2vec.Word2Vec` object state, as stored by :meth:`~gensim.models.word2vec.Word2Vec.save`,
 not just the :class:`~gensim.models.keyedvectors.KeyedVectors`.
 
-You can perform various NLP word tasks with a trained model. Some of them
-are already built-in - you can see it in :mod:`gensim.models.keyedvectors`.
+You can perform various NLP tasks with a trained model. Some of the operations
+are already built-in - see :mod:`gensim.models.keyedvectors`.
 
 If you're finished training a model (i.e. no more updates, only querying),
 you can switch to the :class:`~gensim.models.keyedvectors.KeyedVectors` instance:
@@ -111,17 +117,64 @@ you can switch to the :class:`~gensim.models.keyedvectors.KeyedVectors` instance
 
 to trim unneeded model state = use much less RAM and allow fast loading and memory sharing (mmap).
 
-Note that there is a :mod:`gensim.models.phrases` module which lets you automatically
-detect phrases longer than one word. Using phrases, you can learn a word2vec model
-where "words" are actually multiword expressions, such as `new_york_times` or `financial_crisis`:
+Embeddings with multiword ngrams
+================================
+
+There is a :mod:`gensim.models.phrases` module which lets you automatically
+detect phrases longer than one word, using collocation statistics.
+Using phrases, you can learn a word2vec model where "words" are actually multiword expressions,
+such as `new_york_times` or `financial_crisis`:
 
 .. sourcecode:: pycon
 
-    >>> from gensim.test.utils import common_texts
     >>> from gensim.models import Phrases
     >>>
+    >>> # Train a bigram detector.
     >>> bigram_transformer = Phrases(common_texts)
+    >>>
+    >>> # Apply the trained MWE detector to a corpus, using the result to train a Word2vec model.
     >>> model = Word2Vec(bigram_transformer[common_texts], min_count=1)
+
+Pretrained models
+=================
+
+Gensim comes with several already pre-trained models, in the
+`Gensim-data repository <https://github.com/RaRe-Technologies/gensim-data>`_:
+
+.. sourcecode:: pycon
+
+    >>> import gensim.downloader
+    >>> # Show all available models in gensim-data
+    >>> print(list(gensim.downloader.info()['models'].keys()))
+    ['fasttext-wiki-news-subwords-300',
+     'conceptnet-numberbatch-17-06-300',
+     'word2vec-ruscorpora-300',
+     'word2vec-google-news-300',
+     'glove-wiki-gigaword-50',
+     'glove-wiki-gigaword-100',
+     'glove-wiki-gigaword-200',
+     'glove-wiki-gigaword-300',
+     'glove-twitter-25',
+     'glove-twitter-50',
+     'glove-twitter-100',
+     'glove-twitter-200',
+     '__testing_word2vec-matrix-synopsis']
+    >>>
+    >>> # Download the "glove-twitter-25" embeddings
+    >>> glove_vectors = gensim.downloader.load('glove-twitter-25')
+    >>>
+    >>> # Use the downloaded vectors as usual:
+    >>> glove_vectors.most_similar('twitter')
+    [('facebook', 0.948005199432373),
+     ('tweet', 0.9403423070907593),
+     ('fb', 0.9342358708381653),
+     ('instagram', 0.9104824066162109),
+     ('chat', 0.8964964747428894),
+     ('hashtag', 0.8885937333106995),
+     ('tweets', 0.8878158330917358),
+     ('tl', 0.8778461217880249),
+     ('link', 0.8778210878372192),
+     ('internet', 0.8753897547721863)]
 
 """
 
@@ -137,21 +190,15 @@ from types import GeneratorType
 import threading
 import itertools
 import copy
-
-from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
-from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
-
-try:
-    from queue import Queue, Empty
-except ImportError:
-    from Queue import Queue, Empty
+from queue import Queue, Empty
 
 from numpy import float32 as REAL
 import numpy as np
 
-from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
-from six import iteritems, itervalues, string_types
-from six.moves import range
+from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
+from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
+from gensim import utils, matutils
+
 
 logger = logging.getLogger(__name__)
 
@@ -173,21 +220,27 @@ except ImportError:
     # file-based word2vec is not supported
     CORPUSFILE_VERSION = -1
 
-    def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                       _work, _neu1, compute_loss):
+    def train_epoch_sg(
+            model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+            _work, _neu1, compute_loss,
+        ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
-    def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-                         _work, _neu1, compute_loss):
+    def train_epoch_cbow(
+            model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
+            _work, _neu1, compute_loss,
+        ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
 
 class Word2Vec(utils.SaveLoad):
-    def __init__(self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
-                 max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
-                 sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
-                 trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-                 comment=None, max_final_vocab=None):
+    def __init__(
+            self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
+            max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
+            sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
+            comment=None, max_final_vocab=None,
+        ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
         Once you're finished training a model (=no more updates, only querying)
@@ -375,7 +428,7 @@ class Word2Vec(utils.SaveLoad):
     def build_vocab_and_train(self, corpus_iterable=None, corpus_file=None, trim_rule=None, callbacks=None):
         if not (corpus_iterable is None) ^ (corpus_file is None):
             raise ValueError("You must provide only one of corpus_iterable or corpus_file arguments.")
-        if corpus_file is not None and not isinstance(corpus_file, string_types):
+        if corpus_file is not None and not isinstance(corpus_file, str):
             raise TypeError("You must pass string as the corpus_file argument.")
         elif isinstance(corpus_iterable, GeneratorType):
             raise TypeError("You can't pass a generator as the sentences argument. Try a sequence.")
@@ -386,8 +439,10 @@ class Word2Vec(utils.SaveLoad):
             total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
             end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks)
 
-    def build_vocab(self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
-                    keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(
+            self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
+            keep_raw_vocab=False, trim_rule=None, **kwargs,
+        ):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -433,7 +488,9 @@ class Word2Vec(utils.SaveLoad):
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.prepare_weights(update=update)
 
-    def build_vocab_from_freq(self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False):
+    def build_vocab_from_freq(
+            self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False,
+        ):
         """Build vocabulary from a dictionary of word frequencies.
 
         Parameters
@@ -468,7 +525,7 @@ class Word2Vec(utils.SaveLoad):
         raw_vocab = word_freq
         logger.info(
             "collected %i different raw word, with total frequency of %i",
-            len(raw_vocab), sum(itervalues(raw_vocab))
+            len(raw_vocab), sum(raw_vocab.values()),
         )
 
         # Since no sentences are provided, this is to control the corpus_count.
@@ -488,11 +545,11 @@ class Word2Vec(utils.SaveLoad):
         checked_string_types = 0
         for sentence_no, sentence in enumerate(sentences):
             if not checked_string_types:
-                if isinstance(sentence, string_types):
+                if isinstance(sentence, str):
                     logger.warning(
                         "Each 'sentences' item should be a list of words (usually unicode strings). "
                         "First item here is instead plain %s.",
-                        type(sentence)
+                        type(sentence),
                     )
                 checked_string_types += 1
             if sentence_no % progress_per == 0:
@@ -528,7 +585,8 @@ class Word2Vec(utils.SaveLoad):
 
     def prepare_vocab(
             self, update=False, keep_raw_vocab=False, trim_rule=None,
-            min_count=None, sample=None, dry_run=False):
+            min_count=None, sample=None, dry_run=False,
+        ):
         """Apply vocabulary settings for `min_count` (discarding less-frequent words)
         and `sample` (controlling the downsampling of more-frequent words).
 
@@ -574,7 +632,7 @@ class Word2Vec(utils.SaveLoad):
                 self.sample = sample
                 self.wv.key_to_index = {}
 
-            for word, v in iteritems(self.raw_vocab):
+            for word, v in self.raw_vocab.items():
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     retain_words.append(word)
                     retain_total += v
@@ -604,7 +662,7 @@ class Word2Vec(utils.SaveLoad):
             logger.info("Updating model with new vocabulary")
             new_total = pre_exist_total = 0
             new_words = pre_exist_words = []
-            for word, v in iteritems(self.raw_vocab):
+            for word, v in self.raw_vocab.items():
                 if keep_vocab_item(word, v, self.effective_min_count, trim_rule=trim_rule):
                     if self.wv.has_index_for(word):
                         pre_exist_words.append(word)
@@ -836,8 +894,10 @@ class Word2Vec(utils.SaveLoad):
         """
         self.wv.init_sims(replace=replace)
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, **kwargs):
+    def _do_train_epoch(
+            self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+            total_examples=None, total_words=None, **kwargs,
+        ):
         work, neu1 = thread_private_mem
 
         if self.sg:
@@ -879,10 +939,12 @@ class Word2Vec(utils.SaveLoad):
         """Clear any cached vector lengths from the model."""
         self.wv.norms = None
 
-    def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None, word_count=0,
-              queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(),
-              **kwargs):
+    def train(
+            self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
+            epochs=None, start_alpha=None, end_alpha=None, word_count=0,
+            queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(),
+            **kwargs,
+        ):
         """Update the model's neural weights from a sequence of sentences.
 
         Notes
@@ -897,7 +959,7 @@ class Word2Vec(utils.SaveLoad):
         --------
         To avoid common mistakes around the model's ability to do multiple training passes itself, an
         explicit `epochs` argument **MUST** be provided. In the common and recommended case
-        where :meth:`~gensim.models.word2vec.Word2Vec.train` is only called once, you can set `epochs=self.iter`.
+        where :meth:`~gensim.models.word2vec.Word2Vec.train` is only called once, you can set `epochs=self.epochs`.
 
         Parameters
         ----------
@@ -950,7 +1012,7 @@ class Word2Vec(utils.SaveLoad):
             >>>
             >>> model = Word2Vec(min_count=1)
             >>> model.build_vocab(sentences)  # prepare the model vocabulary
-            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.iter)  # train word vectors
+            >>> model.train(sentences, total_examples=model.corpus_count, epochs=model.epochs)  # train word vectors
             (1, 30)
 
         """
@@ -1006,8 +1068,10 @@ class Word2Vec(utils.SaveLoad):
             callback.on_train_end(self)
         return trained_word_count, raw_word_count
 
-    def _worker_loop_corpusfile(self, corpus_file, thread_id, offset, cython_vocab, progress_queue, cur_epoch=0,
-                                total_examples=None, total_words=None, **kwargs):
+    def _worker_loop_corpusfile(
+            self, corpus_file, thread_id, offset, cython_vocab, progress_queue, cur_epoch=0,
+            total_examples=None, total_words=None, **kwargs,
+        ):
         """Train the model on a `corpus_file` in LineSentence format.
 
         This function will be called in parallel by multiple workers (threads or processes) to make
@@ -1153,8 +1217,10 @@ class Word2Vec(utils.SaveLoad):
             job_queue.put(None)
         logger.debug("job loop exiting, total %i jobs", job_no)
 
-    def _log_epoch_progress(self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
-                            total_words=None, report_delay=1.0, is_corpus_file_mode=None):
+    def _log_epoch_progress(
+            self, progress_queue=None, job_queue=None, cur_epoch=0, total_examples=None,
+            total_words=None, report_delay=1.0, is_corpus_file_mode=None,
+        ):
         """Get the progress report for a single training epoch.
 
         Parameters
@@ -1226,7 +1292,8 @@ class Word2Vec(utils.SaveLoad):
         return trained_word_count, raw_word_count, job_tally
 
     def _train_epoch_corpusfile(
-        self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, callbacks=(), **kwargs):
+            self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, callbacks=(), **kwargs,
+        ):
         """Train the model for a single epoch.
 
         Parameters
@@ -1289,8 +1356,10 @@ class Word2Vec(utils.SaveLoad):
 
         return trained_word_count, raw_word_count, job_tally
 
-    def _train_epoch(self, data_iterable, cur_epoch=0, total_examples=None, total_words=None,
-                     queue_factor=2, report_delay=1.0, callbacks=()):
+    def _train_epoch(
+            self, data_iterable, cur_epoch=0, total_examples=None, total_words=None,
+            queue_factor=2, report_delay=1.0, callbacks=(),
+        ):
         """Train the model for a single epoch.
 
         Parameters
@@ -1455,8 +1524,10 @@ class Word2Vec(utils.SaveLoad):
             self.hs, self.sample, self.negative, self.window
         )
 
-    def _log_progress(self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
-                      raw_word_count, total_words, trained_word_count, elapsed):
+    def _log_progress(
+            self, job_queue, progress_queue, cur_epoch, example_count, total_examples,
+            raw_word_count, total_words, trained_word_count, elapsed
+        ):
         """Callback used to log progress for long running jobs.
 
         Parameters
@@ -1506,8 +1577,10 @@ class Word2Vec(utils.SaveLoad):
                 -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
-    def _log_epoch_end(self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
-                       trained_word_count, elapsed, is_corpus_file_mode):
+    def _log_epoch_end(
+            self, cur_epoch, example_count, total_examples, raw_word_count, total_words,
+            trained_word_count, elapsed, is_corpus_file_mode
+        ):
         """Callback used to log the end of a training epoch.
 
         Parameters
@@ -1801,20 +1874,14 @@ class Word2Vec(utils.SaveLoad):
             Path to the file.
 
         """
-        # don't bother storing recalculable table
-        kwargs['ignore'] = kwargs.get('ignore', []) + ['cum_table', ]
         super(Word2Vec, self).save(*args, **kwargs)
 
-    def get_latest_training_loss(self):
-        """Get current value of the training loss.
-
-        Returns
-        -------
-        float
-            Current training loss.
-
-        """
-        return self.running_training_loss
+    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+        """Arrange any special handling for the `gensim.utils.SaveLoad` protocol."""
+        # don't save properties that are merely calculated from others
+        ignore = set(ignore).union(['cum_table', ])
+        return super(Word2Vec, self)._save_specials(
+            fname, separately, sep_limit, ignore, pickle_protocol, compress, subname)
 
     @classmethod
     def load(cls, *args, rethrow=False, **kwargs):
@@ -1841,48 +1908,64 @@ class Word2Vec(utils.SaveLoad):
             if not isinstance(model, Word2Vec):
                 rethrow = True
                 raise AttributeError("Model of type %s can't be loaded by %s" % (type(model), str(cls)))
-            # for backward compatibility
-            if not hasattr(model, 'ns_exponent'):
-                model.ns_exponent = 0.75
-            if model.negative and hasattr(model.wv, 'index2word'):
-                model.make_cum_table()  # rebuild cum_table from vocabulary  ## TODO: ???
-            if not hasattr(model, 'corpus_count'):
-                model.corpus_count = None
-            if not hasattr(model, 'corpus_total_words'):
-                model.corpus_total_words = None
-            if not hasattr(model.wv, 'vectors_lockf') and hasattr(model.wv, 'vectors'):
-                model.wv.vectors_lockf = getattr(model, 'vectors_lockf', np.ones(1, dtype=REAL))
-            if not hasattr(model, 'random'):
-                model.random = np.random.RandomState(model.seed)
-            if not hasattr(model, 'train_count'):
-                model.train_count = 0
-                model.total_train_time = 0
-            if not hasattr(model, 'epochs'):
-                model.epochs = model.iter
-                del model.iter
-            if not hasattr(model, 'max_final_vocab'):
-                model.max_final_vocab = None
-            if hasattr(model, 'vocabulary'):  # re-integrate state that had been moved
-                for a in ('max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word', 'raw_vocab'):
-                    setattr(model, a, getattr(model.vocabulary, a))
-                del model.vocabulary
-            if hasattr(model, 'trainables'):  # re-integrate state that had been moved
-                for a in ('hashfxn', 'layer1_size', 'seed', 'syn1neg', 'syn1'):
-                    if hasattr(model.trainables, a):
-                        setattr(model, a, getattr(model.trainables, a))
-                if hasattr(model, 'syn1'):
-                    model.syn1 = model.syn1
-                    del model.syn1
-                del model.trainables
             return model
         except AttributeError as ae:
             if rethrow:
                 raise ae
             logger.error(
                 "Model load error. Was model saved using code from an older Gensim Version? "
-                "Try loading older model using gensim-3.8.1, then re-saving, to restore "
+                "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae
+
+    def _load_specials(self, *args, **kwargs):
+        """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
+        super(Word2Vec, self)._load_specials(*args, **kwargs)
+        # for backward compatibility, add/rearrange properties from prior versions
+        if not hasattr(self, 'ns_exponent'):
+            self.ns_exponent = 0.75
+        if self.negative and hasattr(self.wv, 'index_to_key'):
+            self.make_cum_table()  # rebuild cum_table from vocabulary
+        if not hasattr(self, 'corpus_count'):
+            self.corpus_count = None
+        if not hasattr(self, 'corpus_total_words'):
+            self.corpus_total_words = None
+        if not hasattr(self.wv, 'vectors_lockf') and hasattr(self.wv, 'vectors'):
+            self.wv.vectors_lockf = np.ones(1, dtype=REAL)
+        if not hasattr(self, 'random'):
+            # use new instance of numpy's recommended generator/algorithm
+            self.random = np.random.default_rng(seed=self.seed)
+        if not hasattr(self, 'train_count'):
+            self.train_count = 0
+            self.total_train_time = 0
+        if not hasattr(self, 'epochs'):
+            self.epochs = self.iter
+            del self.iter
+        if not hasattr(self, 'max_final_vocab'):
+            self.max_final_vocab = None
+        if hasattr(self, 'vocabulary'):  # re-integrate state that had been moved
+            for a in ('max_vocab_size', 'min_count', 'sample', 'sorted_vocab', 'null_word', 'raw_vocab'):
+                setattr(self, a, getattr(self.vocabulary, a))
+            del self.vocabulary
+        if hasattr(self, 'trainables'):  # re-integrate state that had been moved
+            for a in ('hashfxn', 'layer1_size', 'seed', 'syn1neg', 'syn1'):
+                if hasattr(self.trainables, a):
+                    setattr(self, a, getattr(self.trainables, a))
+            if hasattr(self, 'syn1'):
+                self.syn1 = self.syn1
+                del self.syn1
+            del self.trainables
+
+    def get_latest_training_loss(self):
+        """Get current value of the training loss.
+
+        Returns
+        -------
+        float
+            Current training loss.
+
+        """
+        return self.running_training_loss
 
 
 class BrownCorpus(object):
@@ -2043,12 +2126,12 @@ class PathLineSentences(object):
 
 
 class Word2VecVocab(utils.SaveLoad):
-    """Obsolete class retained for now as load-compatibility state capture"""
+    """Obsolete class retained for now as load-compatibility state capture."""
     pass
 
 
 class Word2VecTrainables(utils.SaveLoad):
-    """Obsolete class retained for now as load-compatibility state capture"""
+    """Obsolete class retained for now as load-compatibility state capture."""
     pass
 
 

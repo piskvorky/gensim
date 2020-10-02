@@ -1,5 +1,5 @@
 r"""
-Word Movers' Distance
+Word Mover's Distance
 =====================
 
 Demonstrates using Gensim's implemenation of the WMD.
@@ -16,14 +16,14 @@ Demonstrates using Gensim's implemenation of the WMD.
 # ----------
 #
 # WMD enables us to assess the "distance" between two documents in a meaningful
-# way, even when they have no words in common. It uses `word2vec
+# way even when they have no words in common. It uses `word2vec
 # <http://rare-technologies.com/word2vec-tutorial/>`_ [4] vector embeddings of
 # words. It been shown to outperform many of the state-of-the-art methods in
-# *k*\ -nearest neighbors classification [3].
+# k-nearest neighbors classification [3].
 #
 # WMD is illustrated below for two very similar sentences (illustration taken
 # from `Vlad Niculae's blog
-# <http://vene.ro/blog/word-movers-distance-in-python.html>`_\ ). The sentences
+# <http://vene.ro/blog/word-movers-distance-in-python.html>`_). The sentences
 # have no words in common, but by matching the relevant words, WMD is able to
 # accurately measure the (dis)similarity between the two sentences. The method
 # also uses the bag-of-words representation of the documents (simply put, the
@@ -123,9 +123,9 @@ print('distance = %.4f' % distance)
 # call ``model.init_sims(replace=True)`` and Gensim will take care of that for
 # you.
 #
-# Usually, one measures the distance between two word2vec vectors using the
+# Usually, one measures the distance between two Word2Vec vectors using the
 # cosine distance (see `cosine similarity
-# <https://en.wikipedia.org/wiki/Cosine_similarity>`_\ ), which measures the
+# <https://en.wikipedia.org/wiki/Cosine_similarity>`_), which measures the
 # angle between vectors. WMD, on the other hand, uses the Euclidean distance.
 # The Euclidean distance between two vectors might be large because their
 # lengths differ, but the cosine distance is small because the angle between
@@ -147,8 +147,8 @@ print('distance = %.4f' % distance)
 # References
 # ----------
 #
-# 1. Ofir Pele and Michael Werman, *A linear time histogram metric for improved SIFT matching*\ , 2008.
-# 2. Ofir Pele and Michael Werman, *Fast and robust earth mover's distances*\ , 2009.
-# 3. Matt Kusner et al. *From Embeddings To Document Distances*\ , 2015.
-# 4. Thomas Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*\ , 2013.
+# 1. Ofir Pele and Michael Werman, *A linear time histogram metric for improved SIFT matching*, 2008.
+# 2. Ofir Pele and Michael Werman, *Fast and robust earth mover's distances*, 2009.
+# 3. Matt Kusner et al. *From Embeddings To Document Distances*, 2015.
+# 4. Thomas Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
 #

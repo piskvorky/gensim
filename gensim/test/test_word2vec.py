@@ -571,9 +571,9 @@ class TestWord2VecModel(unittest.TestCase):
         pearson = correlation[0][0]
         spearman = correlation[1][0]
         oov = correlation[2]
-        self.assertTrue(0.1 < pearson < 1.0, "pearson %f not between 0.1 & 1.0" % pearson)
-        self.assertTrue(0.1 < spearman < 1.0, "spearman %f not between 0.1 and 1.0" % spearman)
-        self.assertTrue(0.0 <= oov < 90.0, "oov %f not between 0.0 and 90.0" % oov)
+        self.assertTrue(0.1 < pearson < 1.0, "pearson {pearson} not between 0.1 & 1.0")
+        self.assertTrue(0.1 < spearman < 1.0, "spearman {spearman} not between 0.1 and 1.0")
+        self.assertTrue(0.0 <= oov < 90.0, "OOV {oov} not between 0.0 and 90.0")
 
     @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testEvaluateWordPairsFromFile(self):
@@ -586,9 +586,9 @@ class TestWord2VecModel(unittest.TestCase):
             pearson = correlation[0][0]
             spearman = correlation[1][0]
             oov = correlation[2]
-            self.assertTrue(0.1 < pearson < 1.0, "pearson %f not between 0.1 & 1.0" % pearson)
-            self.assertTrue(0.1 < spearman < 1.0, "spearman %f not between 0.1 and 1.0" % spearman)
-            self.assertTrue(0.0 <= oov < 90.0, "oov %f not between 0.0 and 90.0" % oov)
+            self.assertTrue(0.1 < pearson < 1.0, f"pearson {pearson} not between 0.1 & 1.0")
+            self.assertTrue(0.1 < spearman < 1.0, f"spearman {spearman} not between 0.1 and 1.0")
+            self.assertTrue(0.0 <= oov < 90.0, f"OOV {oov} not between 0.0 and 90.0")
 
     def model_sanity(self, model, train=True, with_corpus_file=False, ranks=None):
         """Even tiny models trained on LeeCorpus should pass these sanity checks"""
@@ -606,7 +606,7 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertFalse((orig0 == model.wv.vectors[1]).all())  # vector should vary after training
         query_word = 'attacks'
         expected_word = 'bombings'
-        sims = model.wv.most_similar(query_word, topn=len(model.wv.index2word))
+        sims = model.wv.most_similar(query_word, topn=len(model.wv.index_to_key))
         t_rank = [word for word, score in sims].index(expected_word)
         # in >200 calibration runs w/ calling parameters, 'terrorism' in 50-most_sim for 'war'
         if ranks is not None:
@@ -855,7 +855,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
         self.assertTrue(len(model.wv) == 12)
-        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertTrue(len(model.wv.index_to_key) == 12)
         self.assertTrue(model.syn1neg.shape == (len(model.wv), model.wv.vector_size))
         self.assertTrue(len(model.wv.vectors_lockf.shape) > 0)
         self.assertTrue(model.cum_table.shape == (12,))
@@ -870,7 +870,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec.load(datapath(model_file))
         self.assertTrue(model.wv.vectors.shape == (12, 100))
         self.assertTrue(len(model.wv) == 12)
-        self.assertTrue(len(model.wv.index2word) == 12)
+        self.assertTrue(len(model.wv.index_to_key) == 12)
         self.assertTrue(model.syn1neg.shape == (len(model.wv), model.wv.vector_size))
         self.assertTrue(len(model.wv.vectors_lockf.shape) > 0)
         self.assertTrue(model.cum_table.shape == (12,))

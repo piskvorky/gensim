@@ -2,21 +2,23 @@ r"""
 How to download pre-trained models and corpora
 ==============================================
 
-Demonstrates simple and quick access to common corpora, models, and other data.
+Demonstrates simple and quick access to common corpora and pretrained models.
 """
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ###############################################################################
-# One of Gensim's features is simple and easy access to some common data.
-# The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a variety of corpora, models and other data.
+# One of Gensim's features is simple and easy access to common data.
+# The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a
+# variety of corpora and pretrained models.
 # Gensim has a :py:mod:`gensim.downloader` module for programmatically accessing this data.
-# The module leverages a local cache that ensures data is downloaded at most once.
+# This module leverages a local cache (in user's home folder, by default) that
+# ensures data is downloaded at most once.
 #
 # This tutorial:
 #
-# * Retrieves the text8 corpus, unless it is already on your local machine
+# * Downloads the text8 corpus, unless it is already on your local machine
 # * Trains a Word2Vec model from the corpus (see :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py` for a detailed tutorial)
 # * Leverages the model to calculate word similarity
 # * Demonstrates using the API to load other models and corpora
@@ -27,12 +29,13 @@ import gensim.downloader as api
 
 ###############################################################################
 #
-# Now, lets download the text8 corpus and load it to memory (automatically)
+# Now, let's download the text8 corpus and load it as a Python object
+# that supports streamed access.
 #
 corpus = api.load('text8')
 
 ###############################################################################
-# In this case, corpus is an iterable.
+# In this case, our corpus is an iterable.
 # If you look under the covers, it has the following definition:
 
 import inspect
@@ -46,7 +49,7 @@ print(inspect.getfile(corpus.__class__))
 
 ###############################################################################
 #
-# As the corpus has been downloaded and loaded, let's create a word2vec model of our corpus.
+# With the corpus has been downloaded and loaded, let's use it to train a word2vec model.
 #
 
 from gensim.models.word2vec import Word2Vec
@@ -54,15 +57,16 @@ model = Word2Vec(corpus)
 
 ###############################################################################
 #
-# Now that we have our word2vec model, let's find words that are similar to 'tree'
+# Now that we have our word2vec model, let's find words that are similar to 'tree'.
 #
 
 
-print(model.most_similar('tree'))
+print(model.wv.most_similar('tree'))
 
 ###############################################################################
 #
-# You can use the API to download many corpora and models. You can get the list of all the models and corpora that are provided, by using the code below:
+# You can use the API to download several different corpora and pretrained models.
+# Here's how to list all resources available in gensim-data:
 #
 
 
@@ -71,7 +75,7 @@ info = api.info()
 print(json.dumps(info, indent=4))
 
 ###############################################################################
-# There are two types of data: corpora and models.
+# There are two types of data resources: corpora and models.
 print(info.keys())
 
 ###############################################################################
@@ -98,7 +102,7 @@ for model_name, model_data in sorted(info['models'].items()):
 
 ###############################################################################
 #
-# If you want to get detailed information about the model/corpus, use:
+# If you want to get detailed information about a model/corpus, use:
 #
 
 
@@ -107,7 +111,8 @@ print(json.dumps(fake_news_info, indent=4))
 
 ###############################################################################
 #
-# Sometimes, you do not want to load the model to memory. You would just want to get the path to the model. For that, use :
+# Sometimes, you do not want to load a model into memory. Instead, you can request
+# just the filesystem path to the model. For that, use:
 #
 
 
@@ -124,7 +129,6 @@ model.most_similar("glass")
 
 ###############################################################################
 #
-# In corpora, the corpus is never loaded to memory, all corpuses wrapped to special class ``Dataset`` and provide ``__iter__`` method
+# For corpora, the corpus is never loaded to memory, all corpora are iterables wrapped in
+# a special class ``Dataset``, with an ``__iter__`` method.
 #
-
-

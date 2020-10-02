@@ -77,7 +77,7 @@ import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, FAST_VERSION  # noqa: F401
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
@@ -296,7 +296,8 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
-            **kwargs)
+            **kwargs,
+        )
 
     @property
     def dm(self):
@@ -799,7 +800,7 @@ class Doc2Vec(Word2Vec):
         except AttributeError as ae:
             logger.error(
                 "Model load error. Was model saved using code from an older Gensim Version? "
-                "Try loading older model using gensim-3.8.1, then re-saving, to restore "
+                "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae
 

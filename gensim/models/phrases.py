@@ -62,20 +62,14 @@ import sys
 import os
 import logging
 from collections import defaultdict
-import functools as ft
-import itertools as it
+import functools
+import itertools
 from math import log
 import pickle
-import six
-
-from six import iteritems, string_types, PY2, next
+from inspect import getfullargspec as getargspec
 
 from gensim import utils, interfaces
 
-if PY2:
-    from inspect import getargspec
-else:
-    from inspect import getfullargspec as getargspec
 
 logger = logging.getLogger(__name__)
 
@@ -101,11 +95,11 @@ def _is_single(obj):
     temp_iter = obj_iter
     try:
         peek = next(obj_iter)
-        obj_iter = it.chain([peek], obj_iter)
+        obj_iter = itertools.chain([peek], obj_iter)
     except StopIteration:
         # An empty object is a single document
         return True, obj
-    if isinstance(peek, string_types):
+    if isinstance(peek, str):
         # It's a document, return the iterator
         return True, obj_iter
     if temp_iter is obj:
@@ -116,7 +110,7 @@ def _is_single(obj):
         return False, obj
 
 
-class SentenceAnalyzer(object):
+class SentenceAnalyzer:
     """Base util class for :class:`~gensim.models.phrases.Phrases` and :class:`~gensim.models.phrases.Phraser`."""
     def score_item(self, worda, wordb, components, scorer):
         """Get bi-gram score statistics.
@@ -194,7 +188,7 @@ class SentenceAnalyzer(object):
                     in_between = []
                 else:
                     # release words individually
-                    for w in it.chain([last_uncommon], in_between):
+                    for w in itertools.chain([last_uncommon], in_between):
                         yield (w, None)
                     in_between = []
                     last_uncommon = word
@@ -242,7 +236,7 @@ class PhrasesTransformation(interfaces.TransformationABC):
             model.scoring = original_scorer
         # if there is a scoring parameter, and it's a text value, load the proper scoring function
         if hasattr(model, 'scoring'):
-            if isinstance(model.scoring, six.string_types):
+            if isinstance(model.scoring, str):
                 if model.scoring == 'default':
                     logger.info('older version of %s loaded with "default" scoring parameter', cls.__name__)
                     logger.info('setting scoring method to original_scorer pluggable scoring method for compatibility')
@@ -290,7 +284,7 @@ def _sentence2token(phrase_class, sentence):
 
     delimiter = phrase_class.delimiter
     if hasattr(phrase_class, 'vocab'):
-        scorer = ft.partial(
+        scorer = functools.partial(
             phrase_class.scoring,
             len_vocab=float(len(phrase_class.vocab)),
             min_count=float(phrase_class.min_count),
@@ -311,9 +305,11 @@ def _sentence2token(phrase_class, sentence):
 class Phrases(SentenceAnalyzer, PhrasesTransformation):
     """Detect phrases based on collocation counts."""
 
-    def __init__(self, sentences=None, min_count=5, threshold=10.0,
-                 max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
-                 scoring='default', common_terms=frozenset()):
+    def __init__(
+            self, sentences=None, min_count=5, threshold=10.0,
+            max_vocab_size=40000000, delimiter=b'_', progress_per=10000,
+            scoring='default', common_terms=frozenset(),
+        ):
         """
 
         Parameters
@@ -378,16 +374,16 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         # intentially override the value of the scoring parameter rather than set self.scoring here,
         # to still run the check of scoring function parameters in the next code block
 
-        if isinstance(scoring, six.string_types):
+        if isinstance(scoring, str):
             if scoring == 'default':
                 scoring = original_scorer
             elif scoring == 'npmi':
                 scoring = npmi_scorer
             else:
-                raise ValueError('unknown scoring method string %s specified' % (scoring))
+                raise ValueError(f'unknown scoring method string {scoring} specified')
 
         scoring_parameters = [
-            'worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count'
+            'worda_count', 'wordb_count', 'bigram_count', 'len_vocab', 'min_count', 'corpus_word_count',
         ]
         if callable(scoring):
             if all(parameter in getargspec(scoring)[0] for parameter in scoring_parameters):
@@ -407,13 +403,9 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
 
         # ensure picklability of custom scorer
         try:
-            test_pickle = pickle.dumps(self.scoring)
-            load_pickle = pickle.loads(test_pickle)
+            pickle.loads(pickle.dumps(self.scoring))
         except pickle.PickleError:
-            raise pickle.PickleError('unable to pickle custom Phrases scoring function')
-        finally:
-            del(test_pickle)
-            del(load_pickle)
+            raise pickle.PickleError('Custom Phrases scoring function must be pickle-able')
 
         if sentences is not None:
             self.add_vocab(sentences)
@@ -442,7 +434,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         """Get short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
-            self.threshold, self.max_vocab_size
+            self.threshold, self.max_vocab_size,
         )
 
     @staticmethod
@@ -510,7 +502,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
                 if word not in common_terms:
                     vocab[word] += 1
                     if last_uncommon is not None:
-                        components = it.chain([last_uncommon], in_between, [word])
+                        components = itertools.chain([last_uncommon], in_between, [word])
                         vocab[delimiter.join(components)] += 1
                     last_uncommon = word
                     in_between = []
@@ -569,7 +561,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         if len(self.vocab) > 0:
             logger.info("merging %i counts into %s", len(vocab), self)
             self.min_reduce = max(self.min_reduce, min_reduce)
-            for word, count in iteritems(vocab):
+            for word, count in vocab.items():
                 self.vocab[word] += count
             if len(self.vocab) > self.max_vocab_size:
                 utils.prune_vocab(self.vocab, self.min_reduce)
@@ -612,11 +604,11 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
             ...     pass
 
         """
-        analyze_sentence = ft.partial(
+        analyze_sentence = functools.partial(
             self.analyze_sentence,
             threshold=self.threshold,
             common_terms=self.common_terms,
-            scorer=ft.partial(
+            scorer=functools.partial(
                 self.scoring,
                 len_vocab=float(len(self.vocab)),
                 min_count=float(self.min_count),
@@ -780,7 +772,7 @@ def pseudocorpus(source_vocab, sep, common_terms=frozenset()):
         for i in range(1, len(unigrams)):
             if unigrams[i - 1] not in common_terms:
                 # do not join common terms
-                cterms = list(it.takewhile(lambda w: w in common_terms, unigrams[i:]))
+                cterms = list(itertools.takewhile(lambda w: w in common_terms, unigrams[i:]))
                 tail = unigrams[i + len(cterms):]
                 components = [sep.join(unigrams[:i])] + cterms
                 if tail:
