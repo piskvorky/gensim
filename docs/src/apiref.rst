@@ -57,11 +57,6 @@ Modules:
     models/word2vec_inner
     models/doc2vec_inner
     models/fasttext_inner
-    models/wrappers/ldamallet
-    models/wrappers/dtmmodel
-    models/wrappers/ldavowpalwabbit.rst
-    models/wrappers/wordrank
-    models/wrappers/varembed
     similarities/docsim
     similarities/termsim
     similarities/annoy

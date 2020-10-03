@@ -19,8 +19,8 @@ import numpy as np
 from gensim.matutils import argsort
 from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
 from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaMallet
-from gensim.models.wrappers import LdaVowpalWabbit
+# from gensim.models.wrappers import LdaMallet
+# from gensim.models.wrappers import LdaVowpalWabbit
 from gensim.test.utils import get_tmpfile, common_texts, common_dictionary, common_corpus
 
 
