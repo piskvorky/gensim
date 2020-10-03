@@ -256,10 +256,8 @@ def sort_key(source_dir):
         'run_fasttext.py',
         'run_annoy.py',
         'run_lda.py',
-        'run_distance_metrics.py',
         'run_wmd.py',
         'run_summarization.py',
-        'run_pivoted_doc_norm.py',
     ]
 
     howto_order = [

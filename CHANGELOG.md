@@ -21,6 +21,10 @@ This release contains a major refactoring.
  * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
  * Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
 
+### :warning: Removed functionality
+
+ * Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
+
 ## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 
 ## 3.8.3, 2020-05-03
