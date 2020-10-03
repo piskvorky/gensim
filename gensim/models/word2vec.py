@@ -21,8 +21,7 @@ Other embeddings
 ================
 
 There are more ways to train word vectors in Gensim than just Word2Vec.
-See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-wrappers for :class:`~gensim.models.wrappers.varembed.VarEmbed` and :class:`~gensim.models.wrappers.wordrank.WordRank`.
+See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText`.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality and
