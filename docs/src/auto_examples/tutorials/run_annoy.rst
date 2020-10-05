@@ -86,7 +86,7 @@ For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
 .. code-block:: default
 
     from gensim.models import Word2Vec, KeyedVectors
-    from gensim.corpora.text8corpus import Text8Corpus
+    from gensim.models.word2vec import Text8Corpus
 
     # Using params from Word2Vec_FastText_Comparison
     params = {

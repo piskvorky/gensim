@@ -76,3 +76,5 @@ data
 *.inv
 *.js
 docs/_images/
+*.c
+*.cpp

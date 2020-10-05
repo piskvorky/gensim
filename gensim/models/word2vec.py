@@ -50,8 +50,8 @@ from the disk or network on-the-fly, without loading your entire corpus into RAM
 
 Note the ``sentences`` iterable must be *restartable* (not just a generator), to allow the algorithm
 to stream over your dataset multiple times. For some examples of streamed iterables,
-see :class:`~gensim.corpora.browncorpus.BrownCorpus`,
-:class:`~gensim.corpora.text8corpus.Text8Corpus` or :class:`~gensim.corpora.linesentence.LineSentence`.
+see :class:`~gensim.corpora.utils.BrownCorpus`,
+:class:`~gensim.corpora.utils.Text8Corpus` or :class:`~gensim.corpora.utils.LineSentence`.
 
 If you save the model you can continue training it later:
 
@@ -198,9 +198,8 @@ from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
-from gensim.corpora.browncorpus import BrownCorpus
-from gensim.corpora.text8corpus import Text8Corpus
-from gensim.corpora.linesentence import LineSentence, PathLineSentences
+from gensim.corpora.utils import BrownCorpus, Text8Corpus
+from gensim.corpora.utils import LineSentence, PathLineSentences
 
 logger = logging.getLogger(__name__)
 
@@ -261,15 +260,15 @@ class Word2Vec(utils.SaveLoad):
         sentences : iterable of iterables, optional
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec` module
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils` module
             for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         vector_size : int, optional
@@ -453,10 +452,10 @@ class Word2Vec(utils.SaveLoad):
         corpus_iterable : iterable of list of str
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` module for such examples.
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` module for such examples.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them).
         update : bool
@@ -969,13 +968,13 @@ class Word2Vec(utils.SaveLoad):
         corpus_iterable : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec`
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
             module for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
@@ -1084,7 +1083,7 @@ class Word2Vec(utils.SaveLoad):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
         thread_id : int
             Thread index starting from 0 to `number of workers - 1`.
         offset : int
@@ -1303,7 +1302,7 @@ class Word2Vec(utils.SaveLoad):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
         cur_epoch : int, optional
             The current training epoch, needed to compute the training parameters for each job.
             For example in many implementations the learning rate would be dropping with the number of epochs.
@@ -1673,8 +1672,8 @@ class Word2Vec(utils.SaveLoad):
         sentences : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec`
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
             module for such examples.
         total_sentences : int, optional
             Count of sentences.

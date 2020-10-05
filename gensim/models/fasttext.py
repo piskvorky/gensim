@@ -76,7 +76,7 @@ In the above examples, we trained the model from sentences (lists of words) load
 This is OK for smaller datasets, but for larger datasets, we recommend streaming the file,
 for example from disk or the network.
 In Gensim, we refer to such datasets as "corpora" (singular "corpus"), and keep them
-in the format described in :class:`~gensim.corpora.linesentence.LineSentence`.
+in the format described in :class:`~gensim.corpora.utils.LineSentence`.
 Passing a corpus is simple:
 
 .. sourcecode:: pycon
@@ -324,12 +324,12 @@ class FastText(Word2Vec):
         sentences : iterable of list of str, optional
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus'
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec` module for such
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus'
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils` module for such
             examples. If you don't supply `sentences`, the model is left uninitialized -- use if you plan to
             initialize it in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (or none of them, in that case, the model is left
             uninitialized).
@@ -518,11 +518,11 @@ class FastText(Word2Vec):
         corpus_iterable : iterable of list of str, optional
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec`
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
             module for such examples.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them).
         update : bool
@@ -644,8 +644,8 @@ class FastText(Word2Vec):
         sentences : iterable of list of str
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`, :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec`
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
             module for such examples.
         alpha : float
             The current learning rate.
@@ -684,12 +684,12 @@ class FastText(Word2Vec):
         sentences : iterable of list of str, optional
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.BrownCorpus`,
-            :class:`~gensim.corpora.text8corpus.Text8Corpus`
-            or :class:`~gensim.corpora.linesentence.LineSentence` in :mod:`~gensim.models.word2vec`
+            See :class:`~gensim.corpora.utils.BrownCorpus`,
+            :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
             module for such examples.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentencegensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             If you use this argument instead of `sentences`, you must provide `total_words` argument as well. Only one
             of `sentences` or `corpus_file` arguments need to be passed (not both of them).
         total_examples : int

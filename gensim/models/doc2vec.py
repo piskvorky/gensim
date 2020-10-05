@@ -36,7 +36,7 @@ Initialize & train a model:
 
     >>> from gensim.test.utils import common_texts
     >>> from gensim.models.doc2vec import Doc2Vec
-    >>> from gensim.corpora.taggeddocument import TaggedDocument
+    >>> from gensim.corpora.utils import TaggedDocument
     >>>
     >>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
     >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
@@ -81,8 +81,8 @@ from gensim.utils import deprecated
 from gensim.models import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
-from gensim.corpora.browncorpus import TaggedBrownCorpus
-from gensim.corpora.taggeddocument import TaggedDocument, TaggedLineDocument
+from gensim.corpora.utils import TaggedBrownCorpus
+from gensim.corpora.utils import TaggedDocument, TaggedLineDocument
 
 logger = logging.getLogger(__name__)
 
@@ -152,16 +152,16 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of list of :class:`~gensim.corpora.taggeddocument.TaggedDocument`, optional
+        documents : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`, optional
             Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents` (or `corpus_file`), the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
             Documents' tags are assigned automatically and are equal to line number, as in
-            :class:`~gensim.corpora.taggeddocument.TaggedLineDocument`.
+            :class:`~gensim.corpora.utils.TaggedLineDocument`.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -374,7 +374,7 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        job : iterable of list of :class:`~gensim.corpora.taggeddocument.TaggedDocument`
+        job : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`
             The corpus chunk to be used for training this batch.
         alpha : float
             Learning rate to be used for training this batch.
@@ -429,15 +429,15 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        corpus_iterable : iterable of list of :class:`~gensim.corpora.taggeddocument.TaggedDocument`, optional
+        corpus_iterable : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`, optional
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents` (or `corpus_file`), the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
-            and are equal to line number, as in :class:`~gensim.corpora.taggeddocument.TaggedLineDocument`.
+            and are equal to line number, as in :class:`~gensim.corpora.utils.TaggedLineDocument`.
         total_examples : int, optional
             Count of documents.
         total_words : int, optional
@@ -501,7 +501,7 @@ class Doc2Vec(Word2Vec):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
         workers : int
             Number of workers.
 
@@ -539,7 +539,7 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        job : iterable of list of :class:`~gensim.corpora.taggeddocument.TaggedDocument`
+        job : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`
             Corpus chunk.
 
         Returns
@@ -815,16 +815,16 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of list of :class:`~gensim.corpora.taggeddocument.TaggedDocument`, optional
-            Can be simply a list of :class:`~gensim.corpora.taggeddocument.TaggedDocument` elements, but
+        documents : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`, optional
+            Can be simply a list of :class:`~gensim.corpora.utils.TaggedDocument` elements, but
             for larger corpora, consider an iterable that streams the documents directly from disk/network.
-            See :class:`~gensim.corpora.browncorpus.TaggedBrownCorpus` or
-            :class:`~gensim.corpora.taggeddocument.TaggedLineDocument`
+            See :class:`~gensim.corpora.utils.TaggedBrownCorpus` or
+            :class:`~gensim.corpora.utils.TaggedLineDocument`
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
-            and are equal to a line number, as in :class:`~gensim.corpora.taggeddocument.TaggedLineDocument`.
+            and are equal to a line number, as in :class:`~gensim.corpora.utils.TaggedLineDocument`.
         update : bool
             If true, the new words in `documents` will be added to model's vocab.
         progress_per : int
@@ -987,10 +987,10 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of :class:`~gensim.corpora.taggeddocument.TaggedDocument`, optional
+        documents : iterable of :class:`~gensim.corpora.utils.TaggedDocument`, optional
             The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.corpora.linesentence.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them).
         progress_per : int

@@ -20,7 +20,7 @@ Examples
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
-    >>> from gensim.corpora.text8corpus import Text8Corpus
+    >>> from gensim.corpora.utils import Text8Corpus
     >>> from gensim.models.phrases import Phrases, Phraser
     >>>
     >>> # Load training data.
@@ -316,8 +316,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         ----------
         sentences : iterable of list of str, optional
             The `sentences` iterable can be simply a list, but for larger corpora, consider a generator that streams
-            the sentences directly from disk/network, See :class:`~gensim.corpora.browncorpus.BrownCorpus`,
-            :class:`~gensim.corpora.text8corpus.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
+            the sentences directly from disk/network, See :class:`~gensim.corpora.utils.BrownCorpus`,
+            :class:`~gensim.corpora.utils.Text8Corpus` or :class:`~gensim.corpora.utils.LineSentence`
             for such examples.
         min_count : float, optional
             Ignore all words and bigrams with total collected count lower than this value.
@@ -446,8 +446,8 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         ----------
         sentences : iterable of list of str
             The `sentences` iterable can be simply a list, but for larger corpora, consider a generator that streams
-            the sentences directly from disk/network, See :class:`~gensim.corpora.browncorpus.BrownCorpus`,
-            :class:`~gensim.corpora.text8corpus.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
+            the sentences directly from disk/network, See :class:`~gensim.corpora.utils.BrownCorpus`,
+            :class:`~gensim.corpora.utils.Text8Corpus` or :class:`~gensim.corpora.utils.LineSentence`
             for such examples.
         max_vocab_size : int
             Maximum size (number of tokens) of the vocabulary. Used to control pruning of less common words,
@@ -471,7 +471,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.corpora.text8corpus import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -533,7 +533,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.corpora.text8corpus import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>> # Create corpus and use it for phrase detector
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -594,7 +594,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -648,7 +648,7 @@ class Phrases(SentenceAnalyzer, PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.corpora.text8corpus import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases, Phraser
             >>>
             >>> # Create corpus
@@ -808,7 +808,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.corpora.text8corpus import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases, Phraser
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -898,7 +898,7 @@ class Phraser(SentenceAnalyzer, PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.corpora.text8corpus import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases, Phraser
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))  # Read corpus
@@ -932,7 +932,7 @@ if __name__ == '__main__':
     infile = sys.argv[1]
 
     from gensim.models import Phrases  # noqa:F811 for pickle
-    from gensim.corpora.text8corpus import Text8Corpus
+    from gensim.corpora.utils import Text8Corpus
     sentences = Text8Corpus(infile)
 
     # test_doc = LineSentence('test/test_data/testcorpus.txt')

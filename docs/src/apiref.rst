@@ -27,6 +27,7 @@ Modules:
     corpora/textcorpus
     corpora/ucicorpus
     corpora/wikicorpus
+    corpora/utils
     models/ldamodel
     models/ldamulticore
     models/nmf
