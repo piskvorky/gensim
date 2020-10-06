@@ -1924,7 +1924,9 @@ def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
         return prior_vectors
     target_count, vector_size = target_shape
     rng = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
-    new_vectors = rng.uniform(-1.0, 1.0, target_shape).astype(dtype)
+    new_vectors = rng.random(target_shape, dtype=dtype)  # [0.0, 1.0)
+    new_vectors *= 2.0  # [0.0, 2.0)
+    new_vectors -= 1.0  # [-1.0, 1.0)
     new_vectors /= vector_size
     new_vectors[0:prior_vectors.shape[0], 0:prior_vectors.shape[1]] = prior_vectors
     return new_vectors
