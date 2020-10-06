@@ -940,6 +940,12 @@ class FastTextKeyedVectors(KeyedVectors):
             The maximum number of characters in an ngram
         bucket : int
             The number of buckets.
+        count : int, optional
+            If provided, vectors will be pre-allocated for at least this many vectors. (Otherwise
+            they can be added later.)
+        dtype : type, optional
+            Vector dimensions will default to `np.float32` (AKA `REAL` in some Gensim code) unless
+            another type is provided here.
 
         Attributes
         ----------
@@ -963,7 +969,7 @@ class FastTextKeyedVectors(KeyedVectors):
         training-update-dampening factors.
 
         """
-        super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
+        super(FastTextKeyedVectors, self).__init__(vector_size=vector_size, count=count, dtype=dtype)
         self.min_n = min_n
         self.max_n = max_n
         self.bucket = bucket  # count of buckets, fka num_ngram_vectors
@@ -1122,12 +1128,10 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec
 
     def resize_vectors(self, seed=0):
-        """Make underlying vectors match 'index_to_key' size; random-initialize any new rows.
-
-        Unlike in superclass, the 'vectors_vocab' array is of primary importance, with
-        'vectors' derived from it. And, the ngrams_vectors may need allocation."""
+        """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""
 
         vocab_shape = (len(self.index_to_key), self.vector_size)
+        # Unlike in superclass, 'vectors_vocab' array is primary with 'vectors' derived from it & ngrams
         self.vectors_vocab = prep_vectors(vocab_shape, prior_vectors=self.vectors_vocab, seed=seed)
         ngrams_shape = (self.bucket, self.vector_size)
         self.vectors_ngrams = prep_vectors(ngrams_shape, prior_vectors=self.vectors_ngrams, seed=seed + 1)

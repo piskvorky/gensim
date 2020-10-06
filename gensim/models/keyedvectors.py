@@ -191,7 +191,7 @@ KEY_TYPES = (str, int, np.integer)
 
 
 class KeyedVectors(utils.SaveLoad):
-    def __init__(self, vector_size, count=0, dtype=REAL, mapfile_path=None):
+    def __init__(self, vector_size, count=0, dtype=np.float32, mapfile_path=None):
         """Mapping between keys (such as words)  and vectors for :class:`~gensim.models.Word2Vec`
         and related models.
 
@@ -204,6 +204,18 @@ class KeyedVectors(utils.SaveLoad):
         types, as the type and storage array for such attributes is established by the 1st time such
         `attr` is set.
 
+        Parameters
+        ----------
+        vector_size : int
+            Intended number of dimensions for all contained vectors.
+        count : int, optional
+            If provided, vectors wil be pre-allocated for at least this many vectors. (Otherwise
+            they can be added later.)
+        dtype : type, optional
+            Vector dimensions will default to `np.float32` (AKA `REAL` in some Gensim code) unless
+            another type is provided here.
+        mapfile_path : string, optional
+            TODO: UNDER CONSTRUCTION / SUBJECT TO CHANGE - pending mmap work
         """
         self.vector_size = vector_size
         # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
@@ -342,7 +354,7 @@ class KeyedVectors(utils.SaveLoad):
 
         target_shape = (len(self.index_to_key), self.vector_size)
         self.vectors = prep_vectors(target_shape, prior_vectors=self.vectors, seed=seed)
-        # TODO: support memmap?
+        # TODO: support memmap & cleanup
 #        if hasattr(self, 'mapfile_path') and self.mapfile_path:
 #            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
 
@@ -1903,7 +1915,8 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
 
 
 def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
-    """Return a numpy array of the given shape. Reuse prior_vectors values instance or values
+    """TODO: NAME/DOCS CHANGES PENDING MMAP & OTHER INITIALIZATION CLEANUP WORK
+    Return a numpy array of the given shape. Reuse prior_vectors object or values
     to extent possible. Initialize new values randomly if requested."""
     if prior_vectors is None:
         prior_vectors = np.zeros((0, 0))
