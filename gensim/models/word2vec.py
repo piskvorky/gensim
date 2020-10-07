@@ -200,6 +200,7 @@ from gensim import utils, matutils
 
 from gensim.corpora.utils import BrownCorpus, Text8Corpus
 from gensim.corpora.utils import LineSentence, PathLineSentences
+from gensim.corpora.utils import MAX_WORDS
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +210,6 @@ try:
         train_batch_cbow,
         score_sentence_sg,
         score_sentence_cbow,
-        MAX_WORDS_IN_BATCH,
         FAST_VERSION,
     )
 except ImportError:
@@ -239,7 +239,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS, compute_loss=False, callbacks=(),
             comment=None, max_final_vocab=None,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.

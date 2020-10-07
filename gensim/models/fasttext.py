@@ -287,10 +287,10 @@ from gensim.models.word2vec import Word2Vec
 from gensim.models.keyedvectors import KeyedVectors
 from gensim import utils
 from gensim.utils import deprecated
+from gensim.corpora.utils import MAX_WORDS
 try:
     from gensim.models.fasttext_inner import (  # noqa: F401
         train_batch_any,
-        MAX_WORDS_IN_BATCH,
         compute_ngrams,
         compute_ngrams_bytes,
         ft_hash_bytes,
@@ -309,7 +309,7 @@ class FastText(Word2Vec):
                  window=5, min_count=5,
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3, max_n=6,
-                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
+                 sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS, callbacks=(),
                  max_final_vocab=None):
         """Train, use and evaluate word representations learned using the method
         described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
