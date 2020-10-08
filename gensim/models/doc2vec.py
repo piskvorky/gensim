@@ -82,6 +82,8 @@ from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
 
+SEED_DIVERSIFIER = 7919  # 1000th prime
+
 try:
     from gensim.models.doc2vec_inner import train_document_dbow, train_document_dm, train_document_dm_concat
 except ImportError:
@@ -335,7 +337,7 @@ class Doc2Vec(Word2Vec):
 
     def init_weights(self):
         super(Doc2Vec, self).init_weights()
-        self.dv.resize_vectors(seed=self.seed)
+        self.dv.resize_vectors(seed=self.seed + SEED_DIVERSIFIER)  # don't use identical rnd stream as words
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.

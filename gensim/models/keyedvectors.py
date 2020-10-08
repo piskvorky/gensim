@@ -1924,20 +1924,9 @@ def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
         return prior_vectors
     target_count, vector_size = target_shape
     rng = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
-    # FIXME: `uniform` passes all tests, but generates temporary double-sized np.float64 array,
-    # then cast-down ito right-sized np.float32, which means momentary 3x RAM usage on the model's
-    # largest structure (often GB in size)
-    new_vectors = rng.uniform(-1.0, 1.0, target_shape).astype(dtype)
-    # Meanwhile, this alternative, which by docs/reasoning/visual-inspection should be equivalent
-    # while never creating the unneeded oversized np.float64 array, passes all *2Vec class
-    # functional tests, but mysteriously (but reliably!) fails one obscure barely-sensible test
-    # of a fringe downstream functionality: `TestBackMappingTranslationMatric.test_infer_vector`.
-    # I'd adjust or jettison that test entirely *except* that the failure is *so* reliable, and
-    # *so* mysterious, that it may be warning of something very subtle. So for now, very briefly,
-    # sticking with the RAM-wasteful-but-all-tests-passing approach above, TODO debug/fix ASAP.
-    # new_vectors = rng.random(target_shape, dtype=dtype)  # [0.0, 1.0)
-    # new_vectors *= 2.0  # [0.0, 2.0)
-    # new_vectors -= 1.0  # [-1.0, 1.0)
+    new_vectors = rng.random(target_shape, dtype=dtype)  # [0.0, 1.0)
+    new_vectors *= 2.0  # [0.0, 2.0)
+    new_vectors -= 1.0  # [-1.0, 1.0)
     new_vectors /= vector_size
     new_vectors[0:prior_vectors.shape[0], 0:prior_vectors.shape[1]] = prior_vectors
     return new_vectors
