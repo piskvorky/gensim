@@ -14,7 +14,7 @@ from gensim import utils
 
 logger = logging.getLogger(__name__)
 
-# Shared capped size, in count of words/tokens, for texts that should not be arbitrarily long
+#: Shared capped size, in count of words/tokens, for texts that should not be arbitrarily long
 MAX_WORDS = 10000
 
 
