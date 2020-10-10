@@ -21,7 +21,7 @@ Examples
 
     >>> from gensim.test.utils import datapath
     >>> from gensim.models.word2vec import Text8Corpus
-    >>> from gensim.models.phrases import Phrases, FrozenPhrases
+    >>> from gensim.models.phrases import Phrases
     >>>
     >>> # Create training corpus. Must be a sequence of sentences (e.g. an iterable or a generator).
     >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -252,7 +252,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
                 else:
                     # Not inside a potential bigram yet; start a new potential bigram here.
                     start_token, in_between = word, []
-            else: # We're a stop word.
+            else:  # We're a stop word.
                 if start_token:
                     # We're inside a potential bigram: add the stopword and keep growing the phrase.
                     in_between.append(word)
@@ -475,7 +475,7 @@ class Phrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases, FrozenPhrases
+            >>> from gensim.models.phrases import Phrases
             >>>
             >>> # Load corpus and train a model.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -732,8 +732,8 @@ class FrozenPhrases(_PhrasesTransformation):
 
         Notes
         -----
-        After the one-time initialization, a :class:`~gensim.models.phrases.FrozenPhrases` will be much smaller and
-        faster than using the full :class:`~gensim.models.phrases.Phrases` model.
+        After the one-time initialization, a :class:`~gensim.models.phrases.FrozenPhrases` will be much
+        smaller and faster than using the full :class:`~gensim.models.phrases.Phrases` model.
 
         Examples
         ----------
@@ -741,13 +741,13 @@ class FrozenPhrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases, FrozenPhrases
+            >>> from gensim.models.phrases import Phrases
             >>>
             >>> # Load corpus and train a model.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>> phrases = Phrases(sentences, min_count=1, threshold=1)
             >>>
-            >>> # Export FrozenPhrases that is more efficient but doesn't allow any more training.
+            >>> # Export a FrozenPhrases object that is more efficient but doesn't allow further training.
             >>> frozen_phrases = phrases.freeze()
             >>> print(frozen_phrases[sent])
             [u'trees_graph', u'minors']
