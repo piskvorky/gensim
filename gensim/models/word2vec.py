@@ -953,7 +953,7 @@ class Word2Vec(utils.SaveLoad):
         Parameters
         ----------
         corpus_iterable : iterable of list of str
-            The `corpus_iterable` can be simply a list of lists of tokens, but for larger corpora,
+            The ``corpus_iterable`` can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network, to limit RAM usage.
             See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
             or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
