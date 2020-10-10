@@ -1137,7 +1137,7 @@ class TestPhrasesTransformer(unittest.TestCase):
         new_sentences = [
             ['world', 'peace', 'humans', 'world', 'peace', 'world', 'peace', 'people'],
             ['world', 'peace', 'people'],
-            ['world', 'peace', 'humans']
+            ['world', 'peace', 'humans'],
         ]
         self.model.partial_fit(X=new_sentences)  # train model with new sentences
 
@@ -1182,30 +1182,6 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
             [u'the', u'bank_of_america', u'offices', u'are', u'closed']
         ]
 
-    def testCompareToOld(self):
-        with open(datapath("phrases-transformer-v3-5-0.pkl"), "rb") as old_phrases_transformer_pkl:
-            old_phrases_transformer = pickle.load(old_phrases_transformer_pkl)
-        doc = phrases_sentences[-1]
-        phrase_tokens = old_phrases_transformer.transform(doc)[0]
-        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
-        self.assertEqual(phrase_tokens, expected_phrase_tokens)
-
-        self.model.fit(phrases_sentences)
-        new_phrase_tokens = self.model.transform(doc)[0]
-        self.assertEqual(new_phrase_tokens, phrase_tokens)
-
-    def testLoadNew(self):
-        with open(datapath("phrases-transformer-new-v3-5-0.pkl"), "rb") as new_phrases_transformer_pkl:
-            old_phrases_transformer = pickle.load(new_phrases_transformer_pkl)
-        doc = phrases_sentences[-1]
-        phrase_tokens = old_phrases_transformer.transform(doc)[0]
-        expected_phrase_tokens = [u'graph_minors', u'survey', u'human_interface']
-        self.assertEqual(phrase_tokens, expected_phrase_tokens)
-
-        self.model.fit(phrases_sentences)
-        new_phrase_tokens = self.model.transform(doc)[0]
-        self.assertEqual(new_phrase_tokens, phrase_tokens)
-
     def testFitAndTransform(self):
         self.model.fit(phrases_w_common_terms)
 
@@ -1247,10 +1223,7 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
         self.assertEqual(transformed_2, expected_transformations_2)
 
 
-# specifically test pluggable scoring in Phrases, because possible pickling issues with function parameter
-
-# this is intentionally in main rather than a class method to support pickling
-# all scores will be 1
+# For testing pluggable scoring in Phrases – must remain pickleable.
 def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     return 1
 
