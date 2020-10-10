@@ -215,7 +215,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
         """
         raise NotImplementedError("ABC: override this method in child classes")
 
-    def _analyze_sentence(self, sentence):
+    def analyze_sentence(self, sentence):
         """Analyze a sentence, concatenating any detected phrases into a single token.
 
         Parameters
@@ -291,7 +291,40 @@ class _PhrasesTransformation(interfaces.TransformationABC):
             # return an iterable stream.
             return self._apply(sentence)
 
-        return [token for token, _ in self._analyze_sentence(sentence)]
+        return [token for token, _ in self.analyze_sentence(sentence)]
+
+    def export_phrases(self, sentences):
+        """Get all unique phrases (multi-word expressions) that appear in 'sentences'.
+
+        Parameters
+        ----------
+        sentences : iterable of list of str
+            Text corpus.
+
+        Returns
+        -------
+        set((str, float))
+           Set of unique phrases and their scores.
+
+        Example
+        -------
+        .. sourcecode:: pycon
+            >>> from gensim.test.utils import datapath
+            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.models.phrases import Phrases
+            >>>
+            >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
+            >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
+            >>>
+            >>> for phrase, score in phrases.export_phrases(sentences):
+            ...     print(phrase, score)
+        """
+        result = set()
+        for sentence in sentences:
+            for phrase, score in self.analyze_sentence(sentence):
+                if score is not None:
+                    result.add((phrase, score))
+        return result
 
     @classmethod
     def load(cls, *args, **kwargs):
@@ -316,9 +349,15 @@ class _PhrasesTransformation(interfaces.TransformationABC):
             component, score = next(iter(phrasegrams.items()))
             if isinstance(score, tuple):
                 # Value in phrasegrams used to be a tuple; keep only the 2nd tuple component = score.
-                model.phrasegrams = {model.delimiter.join(key): val[1] for key, val in phrasegrams.items()}
-            elif isinstance(component, tuple):  # 3.8 => 4.0: phrasegram keys are strings, not tuples
-                model.phrasegrams[model.delimiter.join(component)] = score
+                model.phrasegrams = {
+                    str(model.delimiter.join(key), encoding='utf8'): val[1]
+                    for key, val in phrasegrams.items()
+                }
+            elif isinstance(component, tuple):  # 3.8 => 4.0: phrasegram keys are strings, not tuples with bytestrings
+                model.phrasegrams = {
+                    str(model.delimiter.join(component), encoding='utf8'): score
+                    for key, val in phrasegrams.items()
+                }
         except StopIteration:
             # no phrasegrams, nothing to upgrade
             pass
@@ -360,10 +399,10 @@ class _PhrasesTransformation(interfaces.TransformationABC):
             if not isinstance(word, str):
                 logger.info("old version of %s loaded, upgrading %i words in memory", cls.__name__, len(model.vocab))
                 logger.info("re-save the loaded model to avoid this upgrade in the future")
-                model.vocab = {  # needs lots of extra RAM temporarily!
-                    str(key, encoding='utf8'): value
-                    for key, value in model.vocab.items()
-                }
+                vocab = defaultdict(int)
+                for key, value in model.vocab.items():  # needs lots of extra RAM temporarily!
+                    vocab[str(key, encoding='utf8')] = value
+                model.vocab = vocab
         if not isinstance(model.delimiter, str):
             model.delimiter = str(model.delimiter, encoding='utf8')
         return model
@@ -508,7 +547,6 @@ class Phrases(_PhrasesTransformation):
             self.add_vocab(sentences)
 
     def __str__(self):
-        """Get a short string representation of this phrase detector."""
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
             self.__class__.__name__, len(self.vocab), self.min_count,
             self.threshold, self.max_vocab_size,
@@ -591,7 +629,8 @@ class Phrases(_PhrasesTransformation):
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
             >>> from gensim.models.phrases import Phrases
-            >>> # Create corpus and use it for phrase detector
+            >>>
+            >>> # Train a phrase detector from a text corpus.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>> phrases = Phrases(sentences)  # train model
             >>> assert len(phrases.vocab) == 37
@@ -605,8 +644,8 @@ class Phrases(_PhrasesTransformation):
             >>> assert len(phrases.vocab) == 60
 
         """
-        # uses a separate vocab to collect the token counts from `sentences`.
-        # this consumes more RAM than merging new sentences into `self.vocab`
+        # Uses a separate vocab to collect the token counts from `sentences`.
+        # This consumes more RAM than merging new sentences into `self.vocab`
         # directly, but gives the new sentences a fighting chance to collect
         # sufficient counts, before being pruned out by the (large) accumulated
         # counts collected in previous learn_vocab runs.
@@ -731,16 +770,15 @@ class FrozenPhrases(_PhrasesTransformation):
         self.scoring = phrases_model.scoring
         self.common_terms = phrases_model.common_terms
         logger.info('exporting phrases from %s', phrases_model)
-        self.phrasegrams = self._export_phrases(phrases_model)
+        self.phrasegrams = self._import_phrases(phrases_model)
         logger.info('exported %s', self)
 
     def __str__(self):
-        """Get a short string representation of this phrase detector."""
         return "%s<%i phrases, min_count=%s, threshold=%s>" % (
             self.__class__.__name__, len(self.phrasegrams), self.min_count, self.threshold,
         )
 
-    def _export_phrases(self, phrases_model):
+    def _import_phrases(self, phrases_model):
         """Extract all phrases that pass the threshold out of `phrases_model`.
 
         Returns
