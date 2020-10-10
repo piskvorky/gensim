@@ -77,6 +77,15 @@ logger = logging.getLogger(__name__)
 
 NEGATIVE_INFINITY = float('-inf')
 
+#: Set of common English prepositions and articles. Tokens from this set
+# are "ignored" during phrase detection:
+# 1) Phrases may not start with these words.
+# 2) Phrases may include any number of these words inside.
+ENGLISH_COMMON_TERMS = frozenset(
+    " a an the "  # articles; we never care about these in MWEs
+    " for of with without at from to in on by "  # prepositions; incomplete on purpose, to minimize FNs
+    .split()
+)
 
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     r"""Bigram scoring function, based on the original `Mikolov, et. al: "Distributed Representations
@@ -415,7 +424,7 @@ class Phrases(_PhrasesTransformation):
     def __init__(
             self, sentences=None, min_count=5, threshold=10.0,
             max_vocab_size=40000000, delimiter='_', progress_per=10000,
-            scoring='default', common_terms=frozenset(),
+            scoring='default', common_terms=ENGLISH_COMMON_TERMS,
         ):
         """
 
@@ -448,6 +457,10 @@ class Phrases(_PhrasesTransformation):
         common_terms : set of str, optional
             Set of "stop words" to include in bigram phrases, without affecting their scoring.
             Allows detection of expressions like `bank_of_america` or `eye_of_the_beholder`.
+
+            By default, ``common_terms`` includes common English articles and prepositions.
+            **Change this if your corpus is not in English**, or if you have a domain-specific
+            corpus with a different concept of "words irrelevant to phrases".
 
         Examples
         ----------
