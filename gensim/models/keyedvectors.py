@@ -215,7 +215,7 @@ class KeyedVectors(utils.SaveLoad):
             Vector dimensions will default to `np.float32` (AKA `REAL` in some Gensim code) unless
             another type is provided here.
         mapfile_path : string, optional
-            TODO: UNDER CONSTRUCTION / SUBJECT TO CHANGE - pending mmap work
+            FIXME: UNDER CONSTRUCTION / WILL CHANGE PRE-4.0.0 PER #2955 / #2975
         """
         self.vector_size = vector_size
         # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
@@ -354,7 +354,7 @@ class KeyedVectors(utils.SaveLoad):
 
         target_shape = (len(self.index_to_key), self.vector_size)
         self.vectors = prep_vectors(target_shape, prior_vectors=self.vectors, seed=seed)
-        # TODO: support memmap & cleanup
+        # FIXME BEFORE 4.0.0 PER #2955 / #2975 : support memmap & cleanup
 #        if hasattr(self, 'mapfile_path') and self.mapfile_path:
 #            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
 
@@ -1520,7 +1520,7 @@ class KeyedVectors(utils.SaveLoad):
             (in case word vectors are appended with document vectors afterwards).
         write_header : bool, optional
             If False, don't write the 1st line declaring the count of vectors and dimensions.
-        TODO: doc prefix, append, sort_attr
+        FIXME: doc prefix, append, sort_attr
         """
         if total_vec is None:
             total_vec = len(self.index_to_key)
@@ -1915,7 +1915,7 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
 
 
 def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
-    """TODO: NAME/DOCS CHANGES PENDING MMAP & OTHER INITIALIZATION CLEANUP WORK
+    """FIXME: NAME/DOCS CHANGES PRE-4.0.0 FOR #2955/#2975 MMAP & OTHER INITIALIZATION CLEANUP WORK
     Return a numpy array of the given shape. Reuse prior_vectors object or values
     to extent possible. Initialize new values randomly if requested."""
     if prior_vectors is None:
