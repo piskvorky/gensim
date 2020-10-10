@@ -49,7 +49,7 @@ Examples
     >>>
     >>> # Export the trained model = use less RAM, faster processing. Model updates no longer possible.
     >>> frozen_model = phrase_model.freeze()
-    >>> # Apply the exported model to a sentence; same results as before:
+    >>> # Apply the frozen model; same results as before:
     >>> frozen_model[new_sentence]
     ['trees_graph', 'minors']
     >>>
@@ -294,7 +294,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
         return [token for token, _ in self.analyze_sentence(sentence)]
 
     def export_phrases(self, sentences):
-        """Get all unique phrases (multi-word expressions) that appear in 'sentences'.
+        """Get all unique phrases (multi-word expressions) that appear in ``sentences``, and their scores.
 
         Parameters
         ----------
@@ -303,12 +303,13 @@ class _PhrasesTransformation(interfaces.TransformationABC):
 
         Returns
         -------
-        set((str, float))
-           Set of unique phrases and their scores.
+        dict(str, float)
+           Unique phrases mapped to their scores.
 
         Example
         -------
         .. sourcecode:: pycon
+
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
             >>> from gensim.models.phrases import Phrases
@@ -316,14 +317,14 @@ class _PhrasesTransformation(interfaces.TransformationABC):
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
             >>>
-            >>> for phrase, score in phrases.export_phrases(sentences):
+            >>> for phrase, score in phrases.export_phrases(sentences).items():
             ...     print(phrase, score)
         """
-        result = set()
+        result = {}
         for sentence in sentences:
             for phrase, score in self.analyze_sentence(sentence):
                 if score is not None:
-                    result.add((phrase, score))
+                    result[phrase] = score
         return result
 
     @classmethod
@@ -731,7 +732,7 @@ class FrozenPhrases(_PhrasesTransformation):
 
         Notes
         -----
-        After the one-time initialization, a :class:`~gensim.models.phrases.FrozenPhrases` will be much smaller and somewhat
+        After the one-time initialization, a :class:`~gensim.models.phrases.FrozenPhrases` will be much smaller and
         faster than using the full :class:`~gensim.models.phrases.Phrases` model.
 
         Examples
@@ -746,19 +747,7 @@ class FrozenPhrases(_PhrasesTransformation):
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>> phrases = Phrases(sentences, min_count=1, threshold=1)
             >>>
-            >>> # Use the model to detect phrases in a new sentence.
-            >>> sent = [u'trees', u'graph', u'minors']
-            >>> print(phrases[sent])
-            [u'trees_graph', u'minors']
-            >>>
-            >>> # Or transform multiple sentences at once.
-            >>> sents = [[u'trees', u'graph', u'minors'], [u'graph', u'minors']]
-            >>> for phrase in frozen_phrases[sents]:
-            ...     print(phrase)
-            [u'trees_graph', u'minors']
-            [u'graph_minors']
-            >>>
-            >>> # Export a FrozenPhrases object that is more efficient but doesn't allow any more training.
+            >>> # Export FrozenPhrases that is more efficient but doesn't allow any more training.
             >>> frozen_phrases = phrases.freeze()
             >>> print(frozen_phrases[sent])
             [u'trees_graph', u'minors']

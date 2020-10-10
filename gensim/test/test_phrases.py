@@ -213,9 +213,9 @@ def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def testExportPhrases(self):
-        """Test Phrases bigram export phrases functionality."""
+        """Test Phrases bigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
-        seen_bigrams = set(phrase for phrase, score in bigram.export_phrases(self.sentences))
+        seen_bigrams = set(bigram.export_phrases(self.sentences).keys())
 
         assert seen_bigrams == {
             'response time',
@@ -227,7 +227,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         """Test a single entry produces multiple bigrams."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
-        seen_bigrams = set(phrase for phrase, score in bigram.export_phrases(test_sentences))
+        seen_bigrams = set(bigram.export_phrases(test_sentences).keys())
 
         assert seen_bigrams == {'graph minors', 'human interface'}
 
@@ -235,7 +235,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         """Test the default scoring, from the mikolov word2vec paper."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
-        seen_scores = set(round(score, 3) for phrase, score in bigram.export_phrases(test_sentences))
+        seen_scores = set(round(score, 3) for score in bigram.export_phrases(test_sentences).values())
 
         assert seen_scores == {
             5.167,  # score for graph minors
@@ -254,7 +254,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         """Test normalized pointwise mutual information scoring."""
         bigram = Phrases(self.sentences, min_count=1, threshold=.5, scoring='npmi')
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
-        seen_scores = set(round(score, 3) for phrase, score in bigram.export_phrases(test_sentences))
+        seen_scores = set(round(score, 3) for score in bigram.export_phrases(test_sentences).values())
 
         assert seen_scores == {
             .882,  # score for graph minors
@@ -265,7 +265,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         """Test using a custom scoring function."""
         bigram = Phrases(self.sentences, min_count=1, threshold=.001, scoring=dumb_scorer)
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-        seen_scores = [score for phrase, score in bigram.export_phrases(test_sentences)]
+        seen_scores = list(bigram.export_phrases(test_sentences).values())
 
         assert all(score == 1 for score in seen_scores)
         assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
@@ -294,7 +294,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
             bigram.save(fpath)
             bigram_loaded = Phrases.load(fpath)
             test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-            seen_scores = [score for phrase, score in bigram_loaded.export_phrases(test_sentences)]
+            seen_scores = list(bigram_loaded.export_phrases(test_sentences).values())
 
             assert all(score == 1 for score in seen_scores)
             assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
@@ -306,7 +306,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
             bigram.save(fpath)
             bigram_loaded = Phrases.load(fpath)
             test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-            seen_scores = set(round(score, 3) for phrase, score in bigram_loaded.export_phrases(test_sentences))
+            seen_scores = set(round(score, 3) for score in bigram_loaded.export_phrases(test_sentences).values())
 
             assert seen_scores == set([
                 5.167,  # score for graph minors
@@ -317,7 +317,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
         """Test backwards compatibility with a previous version of Phrases with custom scoring."""
         bigram_loaded = Phrases.load(datapath("phrases-scoring-str.pkl"))
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-        seen_scores = set(round(score, 3) for phrase, score in bigram_loaded.export_phrases(test_sentences))
+        seen_scores = set(round(score, 3) for score in bigram_loaded.export_phrases(test_sentences).values())
 
         assert seen_scores == set([
             5.167,  # score for graph minors
@@ -328,7 +328,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
         """Test backwards compatibility with old versions of Phrases with no scoring parameter."""
         bigram_loaded = Phrases.load(datapath("phrases-no-scoring.pkl"))
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
-        seen_scores = set(round(score, 3) for phrase, score in bigram_loaded.export_phrases(test_sentences))
+        seen_scores = set(round(score, 3) for score in bigram_loaded.export_phrases(test_sentences).values())
 
         assert seen_scores == set([
             5.167,  # score for graph minors
@@ -434,7 +434,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         """Test a single entry produces multiple bigrams."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms, delimiter=' ')
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
-        seen_bigrams = set(phrase for phrase, score in bigram.export_phrases(test_sentences))
+        seen_bigrams = set(bigram.export_phrases(test_sentences).keys())
 
         assert seen_bigrams == set([
             'data and graph',
@@ -442,9 +442,9 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         ])
 
     def testExportPhrases(self):
-        """Test Phrases bigram export phrases functionality."""
+        """Test Phrases bigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms, delimiter=' ')
-        seen_bigrams = set(phrase for phrase, score in bigram.export_phrases(self.sentences))
+        seen_bigrams = set(bigram.export_phrases(self.sentences).keys())
 
         assert seen_bigrams == set([
             'human interface',
@@ -457,7 +457,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         """ test the default scoring, from the mikolov word2vec paper """
         bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms)
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
-        seen_scores = set(round(score, 3) for phrase, score in bigram.export_phrases(test_sentences))
+        seen_scores = set(round(score, 3) for score in bigram.export_phrases(test_sentences).values())
 
         min_count = float(bigram.min_count)
         len_vocab = float(len(bigram.vocab))
@@ -482,7 +482,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             scoring='npmi', common_terms=self.common_terms,
         )
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
-        seen_scores = set(round(score, 3) for phrase, score in bigram.export_phrases(test_sentences))
+        seen_scores = set(round(score, 3) for score in bigram.export_phrases(test_sentences).values())
 
         assert seen_scores == set([
             .74,  # score for data and graph
@@ -496,7 +496,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             scoring=dumb_scorer, common_terms=self.common_terms,
         )
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
-        seen_scores = [score for phrase, score in bigram.export_phrases(test_sentences)]
+        seen_scores = list(bigram.export_phrases(test_sentences).values())
 
         assert all(seen_scores)  # all scores 1
         assert len(seen_scores) == 2  # 'data and graph' 'survey for human'
