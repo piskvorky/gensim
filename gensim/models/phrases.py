@@ -100,7 +100,7 @@ def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count
     Returns
     -------
     float
-        Score for given bi-gram, greater than or equal to 0.
+        Score for given phrase. Can be negative.
 
     Notes
     -----
@@ -293,7 +293,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
 
         return [token for token, _ in self.analyze_sentence(sentence)]
 
-    def export_phrases(self, sentences):
+    def find_phrases(self, sentences):
         """Get all unique phrases (multi-word expressions) that appear in ``sentences``, and their scores.
 
         Parameters
@@ -304,7 +304,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
         Returns
         -------
         dict(str, float)
-           Unique phrases mapped to their scores.
+           Unique phrases found in ``sentences``, mapped to their scores.
 
         Example
         -------
@@ -317,7 +317,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
             >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
             >>>
-            >>> for phrase, score in phrases.export_phrases(sentences).items():
+            >>> for phrase, score in phrases.find_phrases(sentences).items():
             ...     print(phrase, score)
         """
         result = {}
@@ -446,28 +446,8 @@ class Phrases(_PhrasesTransformation):
             #. "default" - :func:`~gensim.models.phrases.original_scorer`.
             #. "npmi" - :func:`~gensim.models.phrases.npmi_scorer`.
         common_terms : set of str, optional
-            List of "stop words" that won't affect frequency count of expressions containing them.
-            Allow to detect expressions like "bank_of_america" or "eye_of_the_beholder".
-
-        Notes
-        -----
-        'npmi' is more robust when dealing with common words that form part of common bigrams, and
-        ranges from -1 to 1, but is slower to calculate than the default. The default is the PMI-like scoring
-        as described by `Mikolov, et. al: "Distributed Representations of Words and Phrases and their Compositionality"
-        <https://arxiv.org/abs/1310.4546>`_.
-
-        To use a custom scoring function, pass in a function with the following signature:
-
-        * worda_count - number of corpus occurrences in `sentences` of the first token in the bigram being scored
-        * wordb_count - number of corpus occurrences in `sentences` of the second token in the bigram being scored
-        * bigram_count - number of occurrences in `sentences` of the whole bigram
-        * len_vocab - the number of unique tokens in `sentences`
-        * min_count - the `min_count` setting of the Phrases class
-        * corpus_word_count - the total number of tokens (non-unique) in `sentences`
-
-        The scoring function **must accept all these parameters**, even if it doesn't use them in its scoring.
-
-        The scoring function **must be pickleable**.
+            Set of "stop words" to include in bigram phrases, without affecting their scoring.
+            Allows detection of expressions like `bank_of_america` or `eye_of_the_beholder`.
 
         Examples
         ----------
@@ -497,6 +477,27 @@ class Phrases(_PhrasesTransformation):
             >>> frozen_phrases = phrases.freeze()
             >>> print(frozen_phrases[sent])
             [u'trees_graph', u'minors']
+
+        Notes on collocation scoring
+        ----------------------------
+
+        The ``scoring="npmi"`` is more robust when dealing with common words that form part of common bigrams, and
+        ranges from -1 to 1, but is slower to calculate than the default ``scoring=="default"``.
+        The default is the PMI-like scoring as described in `Mikolov, et. al: "Distributed
+        Representations of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
+
+        To use your own custom ``scoring`` function, pass in a function with the following signature:
+
+        * `worda_count` - number of corpus occurrences in `sentences` of the first token in the bigram being scored
+        * `wordb_count` - number of corpus occurrences in `sentences` of the second token in the bigram being scored
+        * `bigram_count` - number of occurrences in `sentences` of the whole bigram
+        * `len_vocab` - the number of unique tokens in `sentences`
+        * `min_count` - the `min_count` setting of the Phrases class
+        * `corpus_word_count` - the total number of tokens (non-unique) in `sentences`
+
+        The scoring function must accept all these parameters, even if it doesn't use them in its scoring.
+
+        The scoring function **must be pickleable**.
 
         """
         super().__init__(common_terms=common_terms)
@@ -621,7 +622,7 @@ class Phrases(_PhrasesTransformation):
         Parameters
         ----------
         sentences : iterable of list of str
-            Text corpus.
+            Text corpus to update this model's parameters from.
 
         Example
         -------
@@ -638,7 +639,7 @@ class Phrases(_PhrasesTransformation):
             >>>
             >>> more_sentences = [
             ...     [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
-            ...     [u'machine', u'learning', u'can', u'be', u'new', u'york', u'sometimes']
+            ...     [u'machine', u'learning', u'can', u'be', u'new', u'york', u'sometimes'],
             ... ]
             >>>
             >>> phrases.add_vocab(more_sentences)  # add new sentences to model
@@ -711,9 +712,28 @@ class Phrases(_PhrasesTransformation):
         """
         return FrozenPhrases(self)
 
+    def export_phrases(self):
+        """Extract all found phrases.
+
+        Returns
+        ------
+        dict(str, float)
+            Mapping between phrases and their scores.
+
+        """
+        result, source_vocab = {}, self.vocab
+        for token in source_vocab:
+            unigrams = token.split(self.delimiter)
+            if len(unigrams) < 2:
+                continue  # no phrases here
+            phrase, score = self.score_candidate(unigrams[0], unigrams[-1], unigrams[1:-1])
+            if score is not None:
+                result[phrase] = score
+        return result
+
 
 class FrozenPhrases(_PhrasesTransformation):
-    """Minimal state & functionality exported from :class:`~gensim.models.phrases.Phrases`.
+    """Minimal state & functionality exported from a trained :class:`~gensim.models.phrases.Phrases` model.
 
     The goal of this class is to cut down memory consumption of `Phrases`, by discarding model state
     not strictly needed for the phrase detection task.
@@ -759,32 +779,13 @@ class FrozenPhrases(_PhrasesTransformation):
         self.scoring = phrases_model.scoring
         self.common_terms = phrases_model.common_terms
         logger.info('exporting phrases from %s', phrases_model)
-        self.phrasegrams = self._import_phrases(phrases_model)
+        self.phrasegrams = phrases_model.export_phrases()
         logger.info('exported %s', self)
 
     def __str__(self):
         return "%s<%i phrases, min_count=%s, threshold=%s>" % (
             self.__class__.__name__, len(self.phrasegrams), self.min_count, self.threshold,
         )
-
-    def _import_phrases(self, phrases_model):
-        """Extract all phrases that pass the threshold out of `phrases_model`.
-
-        Returns
-        ------
-        dict[str, float]
-            Mapping between phrases and their scores.
-
-        """
-        result, source_vocab = {}, phrases_model.vocab
-        for token in source_vocab:
-            unigrams = token.split(self.delimiter)
-            if len(unigrams) < 2:
-                continue  # no phrases here
-            phrase, score = phrases_model.score_candidate(unigrams[0], unigrams[-1], unigrams[1:-1])
-            if score is not None:
-                result[phrase] = score
-        return result
 
     def score_candidate(self, word_a, word_b, in_between):
         phrase = self.delimiter.join([word_a] + in_between + [word_b])
