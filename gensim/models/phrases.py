@@ -87,6 +87,7 @@ ENGLISH_COMMON_TERMS = frozenset(
     .split()
 )
 
+
 def original_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, corpus_word_count):
     r"""Bigram scoring function, based on the original `Mikolov, et. al: "Distributed Representations
     of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
@@ -463,7 +464,7 @@ class Phrases(_PhrasesTransformation):
             corpus with a different concept of "words irrelevant to phrases".
 
         Examples
-        ----------
+        --------
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
@@ -491,22 +492,22 @@ class Phrases(_PhrasesTransformation):
             >>> print(frozen_phrases[sent])
             [u'trees_graph', u'minors']
 
-        Notes on collocation scoring
-        ----------------------------
+        Notes
+        -----
 
         The ``scoring="npmi"`` is more robust when dealing with common words that form part of common bigrams, and
-        ranges from -1 to 1, but is slower to calculate than the default ``scoring=="default"``.
+        ranges from -1 to 1, but is slower to calculate than the default``scoring="default"``.
         The default is the PMI-like scoring as described in `Mikolov, et. al: "Distributed
         Representations of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
 
         To use your own custom ``scoring`` function, pass in a function with the following signature:
 
-        * `worda_count` - number of corpus occurrences in `sentences` of the first token in the bigram being scored
-        * `wordb_count` - number of corpus occurrences in `sentences` of the second token in the bigram being scored
-        * `bigram_count` - number of occurrences in `sentences` of the whole bigram
-        * `len_vocab` - the number of unique tokens in `sentences`
-        * `min_count` - the `min_count` setting of the Phrases class
-        * `corpus_word_count` - the total number of tokens (non-unique) in `sentences`
+        * ``worda_count`` - number of corpus occurrences in `sentences` of the first token in the bigram being scored
+        * ``wordb_count`` - number of corpus occurrences in `sentences` of the second token in the bigram being scored
+        * ``bigram_count`` - number of occurrences in `sentences` of the whole bigram
+        * ``len_vocab`` - the number of unique tokens in `sentences`
+        * ``min_count`` - the `min_count` setting of the Phrases class
+        * ``corpus_word_count`` - the total number of tokens (non-unique) in `sentences`
 
         The scoring function must accept all these parameters, even if it doesn't use them in its scoring.
 
