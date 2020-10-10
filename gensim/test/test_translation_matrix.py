@@ -102,7 +102,11 @@ class TestBackMappingTranslationMatrix(unittest.TestCase):
         transmat = model.train(self.train_docs[:5])
         self.assertEqual(transmat.shape, (8, 8))
 
-    def disabled_test_infer_vector(self):
+    @unittest.skip(
+        "flaky test likely to be discarded when <https://github.com/RaRe-Technologies/gensim/issues/2977> "
+        "is addressed"
+    )
+    def test_infer_vector(self):
         """Test that translation gives similar results to traditional inference.
 
         This may not be completely sensible/salient with such tiny data, but
