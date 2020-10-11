@@ -61,8 +61,6 @@ Examples
 
 """
 
-import sys
-import os
 import logging
 from collections import defaultdict
 import itertools
@@ -84,6 +82,7 @@ NEGATIVE_INFINITY = float('-inf')
 ENGLISH_COMMON_TERMS = frozenset(
     " a an the "  # articles; we never care about these in MWEs
     " for of with without at from to in on by "  # prepositions; incomplete on purpose, to minimize FNs
+    " and or "  # conjunctions; incomplete on purpose, to minimize FNs
     .split()
 )
 
@@ -235,7 +234,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
 
         Yields
         ------
-        (str, score)
+        (str, {float, None})
             Iterate through the input sentence tokens and yield 2-tuples of:
             - ``(concatenated_phrase_tokens, score)`` for token sequences that form a phrase.
             - ``(word, None)`` if the token is not a part of a phrase.
@@ -276,7 +275,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
                 yield w, None
 
     def __getitem__(self, sentence):
-        """Convert the input sequence of tokens `sentence` into a sequence of tokens where adjacent
+        """Convert the input sequence of tokens ``sentence`` into a sequence of tokens where adjacent
         tokens are replaced by a single token if they form a bigram collocation.
 
         If `sentence` is an entire corpus (iterable of sentences rather than a single
@@ -291,10 +290,10 @@ class _PhrasesTransformation(interfaces.TransformationABC):
         Return
         ------
         {list of str, iterable of list of str}
-            Sentence with phrase tokens joined by `self.delimiter` character, if input was a single sentence.
-            A generator of such joined sentences if input was a corpus.
+            Sentence with phrase tokens joined by ``self.delimiter``, if input was a single sentence.
+            A generator of such sentences if input was a corpus.
 
-        """
+s        """
         is_single, sentence = _is_single(sentence)
         if not is_single:
             # If the input is an entire corpus (rather than a single sentence),
@@ -810,23 +809,3 @@ class FrozenPhrases(_PhrasesTransformation):
 
 
 Phraser = FrozenPhrases  # alias for backward compatibility
-
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(threadName)s : %(levelname)s : %(message)s', level=logging.INFO)
-    logging.info("running %s", " ".join(sys.argv))
-
-    # check and process cmdline input
-    program = os.path.basename(sys.argv[0])
-    if len(sys.argv) < 2:
-        print(globals()['__doc__'] % locals())
-        sys.exit(1)
-    infile = sys.argv[1]
-
-    from gensim.models import Phrases  # noqa:F811 for pickle
-    from gensim.models.word2vec import Text8Corpus
-    sentences = Text8Corpus(infile)
-
-    bigram = Phrases(sentences, min_count=5, threshold=100)
-    for s in bigram[sentences]:
-        print(u' '.join(s))
