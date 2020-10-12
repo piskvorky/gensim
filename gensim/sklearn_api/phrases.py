@@ -32,7 +32,7 @@ from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.models.phrases import FrozenPhrases, ENGLISH_CONNECTOR_WORDS
+from gensim.models.phrases import FrozenPhrases, ENGLISH_CONNECTOR_WORDS  # noqa:F401
 
 
 class PhrasesTransformer(TransformerMixin, BaseEstimator):
