@@ -75,8 +75,7 @@ logger = logging.getLogger(__name__)
 
 NEGATIVE_INFINITY = float('-inf')
 
-#: Set of common English prepositions and articles. Tokens from this set
-# are "ignored" during phrase detection:
+# Set of common English words. Tokens from this set are "ignored" during phrase detection:
 # 1) Phrases may not start with these words.
 # 2) Phrases may include any number of these words inside.
 ENGLISH_COMMON_TERMS = frozenset(
@@ -649,7 +648,7 @@ class Phrases(_PhrasesTransformation):
             >>>
             >>> # Train a phrase detector from a text corpus.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, common_words=ENGLISH_COMMON_TERMS)  # train model
+            >>> phrases = Phrases(sentences, common_terms=ENGLISH_COMMON_TERMS)  # train model
             >>> assert len(phrases.vocab) == 37
             >>>
             >>> more_sentences = [
