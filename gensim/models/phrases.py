@@ -21,7 +21,7 @@ Examples
 
     >>> from gensim.test.utils import datapath
     >>> from gensim.models.word2vec import Text8Corpus
-    >>> from gensim.models.phrases import Phrases
+    >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
     >>>
     >>> # Create training corpus. Must be a sequence of sentences (e.g. an iterable or a generator).
     >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -31,7 +31,7 @@ Examples
     ['computer', 'human', 'interface', 'computer', 'response', 'survey', 'system', 'time', 'user', 'interface']
     >>>
     >>> # Train a toy phrase model on our training corpus.
-    >>> phrase_model = Phrases(sentences, delimiter='_', min_count=1, threshold=1)
+    >>> phrase_model = Phrases(sentences, min_count=1, threshold=1, common_terms=ENGLISH_COMMON_TERMS)
     >>>
     >>> # Apply the trained phrases model to a new, unseen sentence.
     >>> new_sentence = ['trees', 'graph', 'minors']
@@ -321,10 +321,10 @@ s        """
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases
+            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, min_count=1, threshold=0.1)
+            >>> phrases = Phrases(sentences, min_count=1, threshold=0.1, common_terms=ENGLISH_COMMON_TERMS)
             >>>
             >>> for phrase, score in phrases.find_phrases(sentences).items():
             ...     print(phrase, score)
@@ -424,7 +424,7 @@ class Phrases(_PhrasesTransformation):
     def __init__(
             self, sentences=None, min_count=5, threshold=10.0,
             max_vocab_size=40000000, delimiter='_', progress_per=10000,
-            scoring='default', common_terms=ENGLISH_COMMON_TERMS,
+            scoring='default', common_terms=frozenset(),
         ):
         """
 
@@ -455,12 +455,14 @@ class Phrases(_PhrasesTransformation):
             #. "default" - :func:`~gensim.models.phrases.original_scorer`.
             #. "npmi" - :func:`~gensim.models.phrases.npmi_scorer`.
         common_terms : set of str, optional
-            Set of "stop words" to include in bigram phrases, without affecting their scoring.
-            Allows detection of expressions like `bank_of_america` or `eye_of_the_beholder`.
+            Set of "stop words" that may be included within a phrase, without affecting its scoring.
 
-            By default, ``common_terms`` includes common English articles and prepositions.
-            **Change this if your corpus is not in English**, or if you have a domain-specific
-            corpus with a different concept of "words irrelevant to phrases".
+            **If your texts are in English, set ``common_terms=phrases.ENGLISH_COMMON_TERMS``.**
+            This will cause phrases to include common English articles and prepositions, such
+            as `bank_of_america` or `eye_of_the_beholder`.
+
+            For other languages or specific applications domains, use custom ``common_terms``
+            that make sense there: ``common_terms=frozenset("der die das".split())`` etc.
 
         Examples
         --------
@@ -468,11 +470,11 @@ class Phrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases
+            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
             >>>
             >>> # Load corpus and train a model.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1, common_terms=ENGLISH_COMMON_TERMS)
             >>>
             >>> # Use the model to detect phrases in a new sentence.
             >>> sent = [u'trees', u'graph', u'minors']
@@ -481,7 +483,7 @@ class Phrases(_PhrasesTransformation):
             >>>
             >>> # Or transform multiple sentences at once.
             >>> sents = [[u'trees', u'graph', u'minors'], [u'graph', u'minors']]
-            >>> for phrase in frozen_phrases[sents]:
+            >>> for phrase in phrases[sents]:
             ...     print(phrase)
             [u'trees_graph', u'minors']
             [u'graph_minors']
@@ -643,11 +645,11 @@ class Phrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases
+            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
             >>>
             >>> # Train a phrase detector from a text corpus.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences)  # train model
+            >>> phrases = Phrases(sentences, common_words=ENGLISH_COMMON_TERMS)  # train model
             >>> assert len(phrases.vocab) == 37
             >>>
             >>> more_sentences = [
@@ -774,11 +776,11 @@ class FrozenPhrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases
+            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
             >>>
             >>> # Load corpus and train a model.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, min_count=1, threshold=1)
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1, common_terms=ENGLISH_COMMON_TERMS)
             >>>
             >>> # Export a FrozenPhrases object that is more efficient but doesn't allow further training.
             >>> frozen_phrases = phrases.freeze()
