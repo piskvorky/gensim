@@ -22,7 +22,7 @@ class TestPhraseAnalysis(unittest.TestCase):
     class AnalysisTester(_PhrasesTransformation):
 
         def __init__(self, scores, threshold):
-            super().__init__(common_terms={"a", "the", "with", "of"})
+            super().__init__(connector_words={"a", "the", "with", "of"})
             self.scores = scores
             self.threshold = threshold
 
@@ -59,7 +59,7 @@ class TestPhraseAnalysis(unittest.TestCase):
         result = self.AnalysisTester(scores, threshold=1)[sentence]
         self.assertEqual(result, sentence)
 
-    def test_analysis_common_terms(self):
+    def test_analysis_connector_words(self):
         scores = {
             "simple_sentence": 2, "sentence_many": 2,
             "many_possible": 2, "possible_bigrams": 2,
@@ -75,7 +75,7 @@ class TestPhraseAnalysis(unittest.TestCase):
             ["simple", "the", "sentence", "and", "many_possible", "bigrams", "with", "a"],
         )
 
-    def test_analysis_common_terms_in_between(self):
+    def test_analysis_connector_words_in_between(self):
         scores = {
             "simple_sentence": 2, "sentence_with_many": 2,
             "many_possible": 2, "many_of_the_possible": 2, "possible_bigrams": 2,
@@ -95,7 +95,7 @@ class PhrasesData:
     sentences = common_texts + [
         ['graph', 'minors', 'survey', 'human', 'interface'],
     ]
-    common_terms = frozenset()
+    connector_words = frozenset()
 
     bigram1 = u'response_time'
     bigram2 = u'graph_minors'
@@ -109,8 +109,8 @@ class PhrasesCommon(PhrasesData):
     """Tests for both Phrases and FrozenPhrases classes."""
 
     def setUp(self):
-        self.bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms)
-        self.bigram_default = Phrases(self.sentences, common_terms=self.common_terms)
+        self.bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words)
+        self.bigram_default = Phrases(self.sentences, connector_words=self.connector_words)
 
     def testEmptyPhrasifiedSentencesIterator(self):
         bigram_phrases = Phrases(self.sentences)
@@ -336,9 +336,9 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
         ])
 
     def testSaveLoadNoCommonTerms(self):
-        """ Ensure backwards compatibility with old versions of Phrases, before common_terms"""
+        """Ensure backwards compatibility with old versions of Phrases, before connector_words."""
         bigram_loaded = Phrases.load(datapath("phrases-no-common-terms.pkl"))
-        self.assertEqual(bigram_loaded.common_terms, frozenset())
+        self.assertEqual(bigram_loaded.connector_words, frozenset())
         # can make a phraser, cf #1751
         phraser = FrozenPhrases(bigram_loaded)  # does not raise
         phraser[["human", "interface", "survey"]]  # does not raise
@@ -381,9 +381,9 @@ class TestFrozenPhrasesPersistence(PhrasesData, unittest.TestCase):
         self.assertEqual(bigram_loaded.scoring, original_scorer)
 
     def testSaveLoadNoCommonTerms(self):
-        """Ensure backwards compatibility with old versions of FrozenPhrases, before common_terms."""
+        """Ensure backwards compatibility with old versions of FrozenPhrases, before connector_words."""
         bigram_loaded = FrozenPhrases.load(datapath("phraser-no-common-terms.pkl"))
-        self.assertEqual(bigram_loaded.common_terms, frozenset())
+        self.assertEqual(bigram_loaded.connector_words, frozenset())
 
 
 class TestFrozenPhrasesModel(PhrasesCommon, unittest.TestCase):
@@ -392,15 +392,15 @@ class TestFrozenPhrasesModel(PhrasesCommon, unittest.TestCase):
     def setUp(self):
         """Set up FrozenPhrases models for the tests."""
         bigram_phrases = Phrases(
-            self.sentences, min_count=1, threshold=1, common_terms=self.common_terms)
+            self.sentences, min_count=1, threshold=1, connector_words=self.connector_words)
         self.bigram = FrozenPhrases(bigram_phrases)
 
-        bigram_default_phrases = Phrases(self.sentences, common_terms=self.common_terms)
+        bigram_default_phrases = Phrases(self.sentences, connector_words=self.connector_words)
         self.bigram_default = FrozenPhrases(bigram_default_phrases)
 
 
 class CommonTermsPhrasesData:
-    """This mixin permits to reuse tests with the common_terms option."""
+    """This mixin permits to reuse tests with the connector_words option."""
 
     sentences = [
         ['human', 'interface', 'with', 'computer'],
@@ -414,7 +414,7 @@ class CommonTermsPhrasesData:
         ['data', 'and', 'graph', 'survey'],
         ['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']  # test bigrams within same sentence
     ]
-    common_terms = ['of', 'and', 'for']
+    connector_words = ['of', 'and', 'for']
 
     bigram1 = u'lack_of_interest'
     bigram2 = u'data_and_graph'
@@ -428,11 +428,11 @@ class CommonTermsPhrasesData:
 
 
 class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
-    """Test Phrases models with common terms"""
+    """Test Phrases models with connector words."""
 
     def testMultipleBigramsSingleEntry(self):
         """Test a single entry produces multiple bigrams."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms, delimiter=' ')
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
         seen_bigrams = set(bigram.find_phrases(test_sentences).keys())
 
@@ -443,7 +443,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
     def testExportPhrases(self):
         """Test Phrases bigram export phrases."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms, delimiter=' ')
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
         assert seen_bigrams == set([
@@ -455,7 +455,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
     def testScoringDefault(self):
         """ test the default scoring, from the mikolov word2vec paper """
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms)
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words)
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
         seen_scores = set(round(score, 3) for score in bigram.find_phrases(test_sentences).values())
 
@@ -479,7 +479,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         """Test normalized pointwise mutual information scoring."""
         bigram = Phrases(
             self.sentences, min_count=1, threshold=.5,
-            scoring='npmi', common_terms=self.common_terms,
+            scoring='npmi', connector_words=self.connector_words,
         )
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
         seen_scores = set(round(score, 3) for score in bigram.find_phrases(test_sentences).values())
@@ -493,7 +493,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         """Test using a custom scoring function."""
         bigram = Phrases(
             self.sentences, min_count=1, threshold=.001,
-            scoring=dumb_scorer, common_terms=self.common_terms,
+            scoring=dumb_scorer, connector_words=self.connector_words,
         )
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
         seen_scores = list(bigram.find_phrases(test_sentences).values())
@@ -503,7 +503,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
     def test__getitem__(self):
         """Test Phrases[sentences] with a single sentence."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, common_terms=self.common_terms)
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words)
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
         phrased_sentence = next(bigram[test_sentences].__iter__())
 

@@ -280,7 +280,7 @@ w2v_texts = [
      'technologies', 'that', 'arise', 'from', 'theoretical', 'breakthroughs'],
     ['advances', 'in', 'the', 'understanding', 'of', 'electromagnetism', 'or', 'nuclear', 'physics',
      'led', 'directly', 'to', 'the', 'development', 'of', 'new', 'products', 'that', 'have', 'dramatically',
-     'transformed', 'modern', 'day', 'society']
+     'transformed', 'modern', 'day', 'society'],
 ]
 
 d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(w2v_texts)]
@@ -288,15 +288,15 @@ d2v_sentences = [models.doc2vec.TaggedDocument(words, [i]) for i, words in enume
 dict_texts = [' '.join(text) for text in common_texts]
 
 phrases_sentences = common_texts + [
-    ['graph', 'minors', 'survey', 'human', 'interface']
+    ['graph', 'minors', 'survey', 'human', 'interface'],
 ]
 
-common_terms = ["of", "the", "was", "are"]
-phrases_w_common_terms = [
+connector_words = ["of", "the", "was", "are"]
+phrases_w_connector_words = [
     [u'the', u'mayor', u'of', u'new', u'york', u'was', u'there'],
     [u'the', u'mayor', u'of', u'new', u'orleans', u'was', u'there'],
     [u'the', u'bank', u'of', u'america', u'offices', u'are', u'open'],
-    [u'the', u'bank', u'of', u'america', u'offices', u'are', u'closed']
+    [u'the', u'bank', u'of', u'america', u'offices', u'are', u'closed'],
 ]
 
 
@@ -1174,7 +1174,7 @@ class TestPhrasesTransformer(unittest.TestCase):
 
 class TestPhrasesTransformerCommonTerms(unittest.TestCase):
     def setUp(self):
-        self.model = PhrasesTransformer(min_count=1, threshold=1, common_terms=common_terms)
+        self.model = PhrasesTransformer(min_count=1, threshold=1, connector_words=connector_words)
         self.expected_transformations = [
             [u'the', u'mayor_of_new', u'york', u'was', u'there'],
             [u'the', u'mayor_of_new', u'orleans', u'was', u'there'],
@@ -1183,18 +1183,18 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
         ]
 
     def testFitAndTransform(self):
-        self.model.fit(phrases_w_common_terms)
+        self.model.fit(phrases_w_connector_words)
 
-        transformed = self.model.transform(phrases_w_common_terms)
+        transformed = self.model.transform(phrases_w_connector_words)
         self.assertEqual(transformed, self.expected_transformations)
 
     def testFitTransform(self):
-        transformed = self.model.fit_transform(phrases_w_common_terms)
+        transformed = self.model.fit_transform(phrases_w_connector_words)
         self.assertEqual(transformed, self.expected_transformations)
 
     def testPartialFit(self):
         # fit half of the sentences
-        self.model.fit(phrases_w_common_terms[:2])
+        self.model.fit(phrases_w_connector_words[:2])
 
         expected_transformations_0 = [
             [u'the', u'mayor_of_new', u'york', u'was', u'there'],
@@ -1203,12 +1203,12 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
             [u'the', u'bank', u'of', u'america', u'offices', u'are', u'closed']
         ]
         # transform all sentences, second half should be same as original
-        transformed_0 = self.model.transform(phrases_w_common_terms)
+        transformed_0 = self.model.transform(phrases_w_connector_words)
         self.assertEqual(transformed_0, expected_transformations_0)
 
         # fit remaining sentences, result should be the same as in the other tests
-        self.model.partial_fit(phrases_w_common_terms[2:])
-        transformed_1 = self.model.fit_transform(phrases_w_common_terms)
+        self.model.partial_fit(phrases_w_connector_words[2:])
+        transformed_1 = self.model.fit_transform(phrases_w_connector_words)
         self.assertEqual(transformed_1, self.expected_transformations)
 
         new_phrases = [[u'offices', u'are', u'open'], [u'offices', u'are', u'closed']]
@@ -1219,7 +1219,7 @@ class TestPhrasesTransformerCommonTerms(unittest.TestCase):
             [u'the', u'bank_of_america', u'offices_are_open'],
             [u'the', u'bank_of_america', u'offices_are_closed']
         ]
-        transformed_2 = self.model.transform(phrases_w_common_terms)
+        transformed_2 = self.model.transform(phrases_w_connector_words)
         self.assertEqual(transformed_2, expected_transformations_2)
 
 

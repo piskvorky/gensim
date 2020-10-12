@@ -21,7 +21,7 @@ Examples
 
     >>> from gensim.test.utils import datapath
     >>> from gensim.models.word2vec import Text8Corpus
-    >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
+    >>> from gensim.models.phrases import Phrases, ENGLISH_CONNECTOR_WORDS
     >>>
     >>> # Create training corpus. Must be a sequence of sentences (e.g. an iterable or a generator).
     >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -31,7 +31,7 @@ Examples
     ['computer', 'human', 'interface', 'computer', 'response', 'survey', 'system', 'time', 'user', 'interface']
     >>>
     >>> # Train a toy phrase model on our training corpus.
-    >>> phrase_model = Phrases(sentences, min_count=1, threshold=1, common_terms=ENGLISH_COMMON_TERMS)
+    >>> phrase_model = Phrases(sentences, min_count=1, threshold=1, connector_words=ENGLISH_CONNECTOR_WORDS)
     >>>
     >>> # Apply the trained phrases model to a new, unseen sentence.
     >>> new_sentence = ['trees', 'graph', 'minors']
@@ -75,10 +75,10 @@ logger = logging.getLogger(__name__)
 
 NEGATIVE_INFINITY = float('-inf')
 
-# Set of common English words. Tokens from this set are "ignored" during phrase detection:
-# 1) Phrases may not start with these words.
+# Words from this set are "ignored" during phrase detection:
+# 1) Phrases may not start nor end with these words.
 # 2) Phrases may include any number of these words inside.
-ENGLISH_COMMON_TERMS = frozenset(
+ENGLISH_CONNECTOR_WORDS = frozenset(
     " a an the "  # articles; we never care about these in MWEs
     " for of with without at from to in on by "  # prepositions; incomplete on purpose, to minimize FNs
     " and or "  # conjunctions; incomplete on purpose, to minimize FNs
@@ -209,8 +209,8 @@ class _PhrasesTransformation(interfaces.TransformationABC):
     :class:`~gensim.models.phrases.FrozenPhrases`.
 
     """
-    def __init__(self, common_terms):
-        self.common_terms = frozenset(common_terms)
+    def __init__(self, connector_words):
+        self.connector_words = frozenset(connector_words)
 
     def score_candidate(self, word_a, word_b, in_between):
         """Score a single phrase candidate.
@@ -241,8 +241,8 @@ class _PhrasesTransformation(interfaces.TransformationABC):
         """
         start_token, in_between = None, []
         for word in sentence:
-            if word not in self.common_terms:
-                # The current word is a normal token, not a stop word, which means it's a potential
+            if word not in self.connector_words:
+                # The current word is a normal token, not a connector word, which means it's a potential
                 # beginning (or end) of a phrase.
                 if start_token:
                     # We're inside a potential phrase, of which this word is the end.
@@ -258,14 +258,14 @@ class _PhrasesTransformation(interfaces.TransformationABC):
                             yield w, None
                         start_token, in_between = word, []  # new potential phrase starts here
                 else:
-                    # Not inside a potential bigram yet; start a new potential bigram here.
+                    # Not inside a phrase yet; start a new phrase candidate here.
                     start_token, in_between = word, []
-            else:  # We're a stop word.
+            else:  # We're a connector word.
                 if start_token:
-                    # We're inside a potential bigram: add the stopword and keep growing the phrase.
+                    # We're inside a potential phrase: add the connector word and keep growing the phrase.
                     in_between.append(word)
                 else:
-                    # Not inside a bigram: emit the stopword and move on. Phrases never begin with a stopword.
+                    # Not inside a phrase: emit the connector word and move on.
                     yield word, None
         # Emit any non-phrase tokens at the end.
         if start_token:
@@ -320,10 +320,10 @@ s        """
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
+            >>> from gensim.models.phrases import Phrases, ENGLISH_CONNECTOR_WORDS
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, min_count=1, threshold=0.1, common_terms=ENGLISH_COMMON_TERMS)
+            >>> phrases = Phrases(sentences, min_count=1, threshold=0.1, connector_words=ENGLISH_CONNECTOR_WORDS)
             >>>
             >>> for phrase, score in phrases.find_phrases(sentences).items():
             ...     print(phrase, score)
@@ -389,13 +389,17 @@ s        """
                     model.scoring = npmi_scorer
                 else:
                     raise ValueError(f'failed to load {cls.__name__} model, unknown scoring "{model.scoring}"')
-        # Initialize new attributes to default values.
-        if not hasattr(model, "common_terms"):
+
+        # common_terms didn't exist pre-3.?, and was renamed to connector in 4.0.0.
+        if hasattr(model, "common_terms"):
+            model.connector_words = model.common_terms
+            del model.common_terms
+        else:
             logger.warning(
-                'older version of %s loaded without common_terms attribute, setting it to empty set',
+                'older version of %s loaded without common_terms attribute, setting connector_words to an empty set',
                 cls.__name__,
             )
-            model.common_terms = frozenset()
+            model.connector_words = frozenset()
 
         if not hasattr(model, 'corpus_word_count'):
             logger.warning('older version of %s loaded without corpus_word_count', cls.__name__)
@@ -423,7 +427,7 @@ class Phrases(_PhrasesTransformation):
     def __init__(
             self, sentences=None, min_count=5, threshold=10.0,
             max_vocab_size=40000000, delimiter='_', progress_per=10000,
-            scoring='default', common_terms=frozenset(),
+            scoring='default', connector_words=frozenset(),
         ):
         """
 
@@ -453,15 +457,17 @@ class Phrases(_PhrasesTransformation):
 
             #. "default" - :func:`~gensim.models.phrases.original_scorer`.
             #. "npmi" - :func:`~gensim.models.phrases.npmi_scorer`.
-        common_terms : set of str, optional
-            Set of "stop words" that may be included within a phrase, without affecting its scoring.
+        connector_words : set of str, optional
+            Set of words that may be included within a phrase, without affecting its scoring.
+            No phrase can start nor end with a connector word; a phrase may contain any number of
+            connector words in the middle.
 
-            **If your texts are in English, set ``common_terms=phrases.ENGLISH_COMMON_TERMS``.**
-            This will cause phrases to include common English articles and prepositions, such
-            as `bank_of_america` or `eye_of_the_beholder`.
+            **If your texts are in English, set ``connector_words=phrases.ENGLISH_CONNECTOR_WORDS``.**
+            This will cause phrases to include common English articles, prepositions and
+            conjuctions, such as `bank_of_america` or `eye_of_the_beholder`.
 
-            For other languages or specific applications domains, use custom ``common_terms``
-            that make sense there: ``common_terms=frozenset("der die das".split())`` etc.
+            For other languages or specific applications domains, use custom ``connector_words``
+            that make sense there: ``connector_words=frozenset("der die das".split())`` etc.
 
         Examples
         --------
@@ -469,11 +475,11 @@ class Phrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
+            >>> from gensim.models.phrases import Phrases, ENGLISH_CONNECTOR_WORDS
             >>>
             >>> # Load corpus and train a model.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, min_count=1, threshold=1, common_terms=ENGLISH_COMMON_TERMS)
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1, connector_words=ENGLISH_CONNECTOR_WORDS)
             >>>
             >>> # Use the model to detect phrases in a new sentence.
             >>> sent = [u'trees', u'graph', u'minors']
@@ -514,7 +520,7 @@ class Phrases(_PhrasesTransformation):
         The scoring function **must be pickleable**.
 
         """
-        super().__init__(common_terms=common_terms)
+        super().__init__(connector_words=connector_words)
         if min_count <= 0:
             raise ValueError("min_count should be at least 1")
 
@@ -569,36 +575,8 @@ class Phrases(_PhrasesTransformation):
         )
 
     @staticmethod
-    def _learn_vocab(
-            sentences, max_vocab_size, delimiter='_', common_terms=frozenset(), progress_per=10000,
-        ):
-        """Collect unigram and bigram counts from the `sentences` iterable.
-
-        Parameters
-        ----------
-        sentences : iterable of list of str
-            The `sentences` iterable can be simply a list, but for larger corpora, consider a generator that streams
-            the sentences directly from disk/network, See :class:`~gensim.models.word2vec.BrownCorpus`,
-            :class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
-            for such examples.
-        max_vocab_size : int
-            Maximum size (number of tokens) of the vocabulary. Used to control pruning of less common words,
-            to keep memory under control. 40M needs about 3.6GB of RAM. Increase/decrease
-            `max_vocab_size` depending on how much available memory you have.
-        delimiter : str, optional
-            Glue character used to join collocation tokens.
-        common_terms : set of str, optional
-            List of "stop words" that won't affect frequency count of phrases containing them.
-            Allow to detect phrases like "bank_of_america" or "eye_of_the_beholder".
-        progress_per : int
-            Log progress once every `progress_per` sentences.
-
-        Return
-        ------
-        (int, dict of (str, int), int)
-            Number of pruned words, counters for each word/bi-gram, and total number of words.
-
-        """
+    def _learn_vocab(sentences, max_vocab_size, delimiter, connector_words, progress_per):
+        """Collect unigram and bigram counts from the `sentences` iterable."""
         sentence_no, total_words, min_reduce = -1, 0, 1
         vocab = defaultdict(int)
         logger.info("collecting all words and their counts")
@@ -610,7 +588,7 @@ class Phrases(_PhrasesTransformation):
                 )
             start_token, in_between = None, []
             for word in sentence:
-                if word not in common_terms:
+                if word not in connector_words:
                     vocab[word] += 1
                     if start_token is not None:
                         phrase_tokens = itertools.chain([start_token], in_between, [word])
@@ -644,11 +622,11 @@ class Phrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
+            >>> from gensim.models.phrases import Phrases, ENGLISH_CONNECTOR_WORDS
             >>>
             >>> # Train a phrase detector from a text corpus.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, common_terms=ENGLISH_COMMON_TERMS)  # train model
+            >>> phrases = Phrases(sentences, connector_words=ENGLISH_CONNECTOR_WORDS)  # train model
             >>> assert len(phrases.vocab) == 37
             >>>
             >>> more_sentences = [
@@ -667,7 +645,7 @@ class Phrases(_PhrasesTransformation):
         # counts collected in previous learn_vocab runs.
         min_reduce, vocab, total_words = self._learn_vocab(
             sentences, max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
-            progress_per=self.progress_per, common_terms=self.common_terms,
+            progress_per=self.progress_per, connector_words=self.connector_words,
         )
 
         self.corpus_word_count += total_words
@@ -775,11 +753,11 @@ class FrozenPhrases(_PhrasesTransformation):
 
             >>> from gensim.test.utils import datapath
             >>> from gensim.models.word2vec import Text8Corpus
-            >>> from gensim.models.phrases import Phrases, ENGLISH_COMMON_TERMS
+            >>> from gensim.models.phrases import Phrases, ENGLISH_CONNECTOR_WORDS
             >>>
             >>> # Load corpus and train a model.
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
-            >>> phrases = Phrases(sentences, min_count=1, threshold=1, common_terms=ENGLISH_COMMON_TERMS)
+            >>> phrases = Phrases(sentences, min_count=1, threshold=1, connector_words=ENGLISH_CONNECTOR_WORDS)
             >>>
             >>> # Export a FrozenPhrases object that is more efficient but doesn't allow further training.
             >>> frozen_phrases = phrases.freeze()
@@ -791,7 +769,7 @@ class FrozenPhrases(_PhrasesTransformation):
         self.min_count = phrases_model.min_count
         self.delimiter = phrases_model.delimiter
         self.scoring = phrases_model.scoring
-        self.common_terms = phrases_model.common_terms
+        self.connector_words = phrases_model.connector_words
         logger.info('exporting phrases from %s', phrases_model)
         self.phrasegrams = phrases_model.export_phrases()
         logger.info('exported %s', self)
