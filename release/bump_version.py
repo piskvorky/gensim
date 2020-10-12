@@ -29,7 +29,7 @@ def bump_docs_src_conf_py(root, previous_version, new_version):
     path = os.path.join(root, 'docs', 'src', 'conf.py')
 
     short_previous_version = '.'.join(previous_version.split('.')[:2])
-    short_new_version = '.'.join(new_version.split('.')[:2])
+    short_new_version = new_version  # '.'.join(new_version.split('.')[:2])
     pattern = re.compile("^version = '%s'$" % short_previous_version, re.MULTILINE)
     repl = "version = '%s'" % short_new_version
     bump(path, pattern, repl, check=False)  # short version won't always change
