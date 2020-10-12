@@ -462,7 +462,7 @@ class Phrases(_PhrasesTransformation):
             No phrase can start nor end with a connector word; a phrase may contain any number of
             connector words in the middle.
 
-            **If your texts are in English, set ``connector_words=phrases.ENGLISH_CONNECTOR_WORDS``.**
+            **If your texts are in English, set** ``connector_words=phrases.ENGLISH_CONNECTOR_WORDS``.
             This will cause phrases to include common English articles, prepositions and
             conjuctions, such as `bank_of_america` or `eye_of_the_beholder`.
 
