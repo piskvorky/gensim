@@ -502,7 +502,7 @@ class Phrases(_PhrasesTransformation):
         -----
 
         The ``scoring="npmi"`` is more robust when dealing with common words that form part of common bigrams, and
-        ranges from -1 to 1, but is slower to calculate than the default``scoring="default"``.
+        ranges from -1 to 1, but is slower to calculate than the default ``scoring="default"``.
         The default is the PMI-like scoring as described in `Mikolov, et. al: "Distributed
         Representations of Words and Phrases and their Compositionality" <https://arxiv.org/abs/1310.4546>`_.
 
