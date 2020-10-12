@@ -35,7 +35,8 @@ Initialize & train a model:
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import common_texts
-    >>> from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+    >>> from gensim.models.doc2vec import Doc2Vec
+    >>> from gensim.corpora.utils import TaggedDocument
     >>>
     >>> documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(common_texts)]
     >>> model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
@@ -67,7 +68,7 @@ Infer vector for a new document:
 
 import logging
 import os
-from collections import namedtuple, defaultdict
+from collections import defaultdict
 from collections.abc import Iterable
 from timeit import default_timer
 
@@ -79,6 +80,9 @@ from gensim import utils, matutils  # utility fnc for pickling, common scipy ope
 from gensim.utils import deprecated
 from gensim.models import Word2Vec, FAST_VERSION  # noqa: F401
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
+
+from gensim.corpora.utils import TaggedBrownCorpus
+from gensim.corpora.utils import TaggedDocument, TaggedLineDocument
 
 logger = logging.getLogger(__name__)
 
@@ -117,28 +121,6 @@ except ImportError:
         raise NotImplementedError("Training with corpus_file argument is not supported.")
 
 
-class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
-    """Represents a document along with a tag, input document format for :class:`~gensim.models.doc2vec.Doc2Vec`.
-
-    A single document, made up of `words` (a list of unicode string tokens) and `tags` (a list of tokens).
-    Tags may be one or more unicode string tokens, but typical practice (which will also be the most memory-efficient)
-    is for the tags list to include a unique integer id as the only tag.
-
-    Replaces "sentence as a list of words" from :class:`gensim.models.word2vec.Word2Vec`.
-
-    """
-    def __str__(self):
-        """Human readable representation of the object's state, used for debugging.
-
-        Returns
-        -------
-        str
-           Human readable representation of the object's state (words and tags).
-
-        """
-        return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
-
-
 @dataclass
 class Doctag:
     """A dataclass shape-compatible with keyedvectors.SimpleVocab, extended to record
@@ -170,16 +152,16 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+        documents : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`, optional
             Input corpus, can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents` (or `corpus_file`), the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
             Documents' tags are assigned automatically and are equal to line number, as in
-            :class:`~gensim.models.doc2vec.TaggedLineDocument`.
+            :class:`~gensim.corpora.utils.TaggedLineDocument`.
         dm : {1,0}, optional
             Defines the training algorithm. If `dm=1`, 'distributed memory' (PV-DM) is used.
             Otherwise, `distributed bag of words` (PV-DBOW) is employed.
@@ -393,7 +375,7 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        job : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
+        job : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`
             The corpus chunk to be used for training this batch.
         alpha : float
             Learning rate to be used for training this batch.
@@ -448,15 +430,15 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        corpus_iterable : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+        corpus_iterable : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`, optional
             Can be simply a list of elements, but for larger corpora,consider an iterable that streams
             the documents directly from disk/network. If you don't supply `documents` (or `corpus_file`), the model is
             left uninitialized -- use if you plan to initialize it in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
-            and are equal to line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
+            and are equal to line number, as in :class:`~gensim.corpora.utils.TaggedLineDocument`.
         total_examples : int, optional
             Count of documents.
         total_words : int, optional
@@ -520,7 +502,7 @@ class Doc2Vec(Word2Vec):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
         workers : int
             Number of workers.
 
@@ -558,7 +540,7 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        job : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`
+        job : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`
             Corpus chunk.
 
         Returns
@@ -834,15 +816,16 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
-            Can be simply a list of :class:`~gensim.models.doc2vec.TaggedDocument` elements, but for larger corpora,
-            consider an iterable that streams the documents directly from disk/network.
-            See :class:`~gensim.models.doc2vec.TaggedBrownCorpus` or :class:`~gensim.models.doc2vec.TaggedLineDocument`
+        documents : iterable of list of :class:`~gensim.corpora.utils.TaggedDocument`, optional
+            Can be simply a list of :class:`~gensim.corpora.utils.TaggedDocument` elements, but
+            for larger corpora, consider an iterable that streams the documents directly from disk/network.
+            See :class:`~gensim.corpora.utils.TaggedBrownCorpus` or
+            :class:`~gensim.corpora.utils.TaggedLineDocument`
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them). Documents' tags are assigned automatically
-            and are equal to a line number, as in :class:`~gensim.models.doc2vec.TaggedLineDocument`.
+            and are equal to a line number, as in :class:`~gensim.corpora.utils.TaggedLineDocument`.
         update : bool
             If true, the new words in `documents` will be added to model's vocab.
         progress_per : int
@@ -1005,10 +988,10 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+        documents : iterable of :class:`~gensim.corpora.utils.TaggedDocument`, optional
             The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `documents` to get performance boost. Only one of `documents` or
             `corpus_file` arguments need to be passed (not both of them).
         progress_per : int
@@ -1083,86 +1066,7 @@ class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
 
 
-class TaggedBrownCorpus(object):
-    def __init__(self, dirname):
-        """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_.
-
-        Parameters
-        ----------
-        dirname : str
-            Path to folder with Brown corpus.
-
-        """
-        self.dirname = dirname
-
-    def __iter__(self):
-        """Iterate through the corpus.
-
-        Yields
-        ------
-        :class:`~gensim.models.doc2vec.TaggedDocument`
-            Document from `source`.
-
-        """
-        for fname in os.listdir(self.dirname):
-            fname = os.path.join(self.dirname, fname)
-            if not os.path.isfile(fname):
-                continue
-            with utils.open(fname, 'rb') as fin:
-                for item_no, line in enumerate(fin):
-                    line = utils.to_unicode(line)
-                    # each file line is a single document in the Brown corpus
-                    # each token is WORD/POS_TAG
-                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                    if not words:  # don't bother sending out empty documents
-                        continue
-                    yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
-
-
-class TaggedLineDocument(object):
-    def __init__(self, source):
-        """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
-
-        Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
-        automatically from the document line number (each document gets a unique integer tag).
-
-        Parameters
-        ----------
-        source : string or a file-like object
-            Path to the file on disk, or an already-open file object (must support `seek(0)`).
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>> from gensim.models.doc2vec import TaggedLineDocument
-            >>>
-            >>> for document in TaggedLineDocument(datapath("head500.noblanks.cor")):
-            ...     pass
-
-        """
-        self.source = source
-
-    def __iter__(self):
-        """Iterate through the lines in the source.
-
-        Yields
-        ------
-        :class:`~gensim.models.doc2vec.TaggedDocument`
-            Document from `source` specified in the constructor.
-
-        """
-        try:
-            # Assume it is a file-like object and try treating it as such
-            # Things that don't have seek will trigger an exception
-            self.source.seek(0)
-            for item_no, line in enumerate(self.source):
-                yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
-        except AttributeError:
-            # If it didn't work like a file, use it as a string filename
-            with utils.open(self.source, 'rb') as fin:
-                for item_no, line in enumerate(fin):
-                    yield TaggedDocument(utils.to_unicode(line).split(), [item_no])
+# Alliases of classes so that code relies on original location works
+TaggedBrownCorpus = TaggedBrownCorpus
+TaggedDocument = TaggedDocument
+TaggedLineDocument = TaggedLineDocument

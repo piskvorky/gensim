@@ -134,8 +134,9 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
         X : iterable of iterables of str
             The input corpus. X can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
+            module for such examples.
 
         Returns
         -------

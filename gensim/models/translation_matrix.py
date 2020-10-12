@@ -403,7 +403,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Source Doc2Vec model.
         target_lang_vec : :class:`~gensim.models.doc2vec.Doc2Vec`
             Target Doc2Vec model.
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, optional.
+        tagged_docs : list of :class:`~gensim.corpora.utils.TaggedDocument`, optional.
             Documents that will be used for training, both the source language document vector and
             target language document vector trained on those tagged documents.
         random_state : {None, int, array_like}, optional
@@ -425,7 +425,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
 
         Parameters
         ----------
-        tagged_docs : list of :class:`~gensim.models.doc2vec.TaggedDocument`, Documents
+        tagged_docs : list of :class:`~gensim.corpora.utils.TaggedDocument`, Documents
             that will be used for training, both the source language document vector and
             target language document vector trained on those tagged documents.
 

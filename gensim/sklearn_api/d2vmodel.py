@@ -150,7 +150,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
 
         Parameters
         ----------
-        X : {iterable of :class:`~gensim.models.doc2vec.TaggedDocument`, iterable of list of str}
+        X : {iterable of :class:`~gensim.corpora.utils.TaggedDocument`, iterable of list of str}
             A collection of tagged documents used for training the model.
 
         Returns

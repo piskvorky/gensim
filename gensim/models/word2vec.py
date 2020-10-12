@@ -50,8 +50,8 @@ from the disk or network on-the-fly, without loading your entire corpus into RAM
 
 Note the ``sentences`` iterable must be *restartable* (not just a generator), to allow the algorithm
 to stream over your dataset multiple times. For some examples of streamed iterables,
-see :class:`~gensim.models.word2vec.BrownCorpus`,
-:class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`.
+see :class:`~gensim.corpora.utils.BrownCorpus`,
+:class:`~gensim.corpora.utils.Text8Corpus` or :class:`~gensim.corpora.utils.LineSentence`.
 
 If you save the model you can continue training it later:
 
@@ -188,7 +188,6 @@ from timeit import default_timer
 from collections import defaultdict, namedtuple
 from types import GeneratorType
 import threading
-import itertools
 import copy
 from queue import Queue, Empty
 
@@ -199,6 +198,9 @@ from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
+from gensim.corpora.utils import BrownCorpus, Text8Corpus
+from gensim.corpora.utils import LineSentence, PathLineSentences
+from gensim.corpora.utils import MAX_WORDS
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +210,6 @@ try:
         train_batch_cbow,
         score_sentence_sg,
         score_sentence_cbow,
-        MAX_WORDS_IN_BATCH,
         FAST_VERSION,
     )
 except ImportError:
@@ -238,7 +239,7 @@ class Word2Vec(utils.SaveLoad):
             self, sentences=None, corpus_file=None, vector_size=100, alpha=0.025, window=5, min_count=5,
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
-            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
+            trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS, compute_loss=False, callbacks=(),
             comment=None, max_final_vocab=None,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
@@ -259,14 +260,15 @@ class Word2Vec(utils.SaveLoad):
         sentences : iterable of iterables, optional
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils` module
+            for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
             If you don't supply `sentences`, the model is left uninitialized -- use if you plan to initialize it
             in some other way.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (or none of them, in that case, the model is left uninitialized).
         vector_size : int, optional
@@ -450,10 +452,10 @@ class Word2Vec(utils.SaveLoad):
         corpus_iterable : iterable of list of str
             Can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` module for such examples.
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` module for such examples.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them).
         update : bool
@@ -966,12 +968,13 @@ class Word2Vec(utils.SaveLoad):
         corpus_iterable : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
+            module for such examples.
             See also the `tutorial on data streaming in Python
             <https://rare-technologies.com/data-streaming-in-python-generators-iterators-iterables/>`_.
         corpus_file : str, optional
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
             You may use this argument instead of `sentences` to get performance boost. Only one of `sentences` or
             `corpus_file` arguments need to be passed (not both of them).
         total_examples : int
@@ -1080,7 +1083,7 @@ class Word2Vec(utils.SaveLoad):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
         thread_id : int
             Thread index starting from 0 to `number of workers - 1`.
         offset : int
@@ -1299,7 +1302,7 @@ class Word2Vec(utils.SaveLoad):
         Parameters
         ----------
         corpus_file : str
-            Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
+            Path to a corpus file in :class:`~gensim.corpora.utils.LineSentence` format.
         cur_epoch : int, optional
             The current training epoch, needed to compute the training parameters for each job.
             For example in many implementations the learning rate would be dropping with the number of epochs.
@@ -1669,8 +1672,9 @@ class Word2Vec(utils.SaveLoad):
         sentences : iterable of list of str
             The `sentences` iterable can be simply a list of lists of tokens, but for larger corpora,
             consider an iterable that streams the sentences directly from disk/network.
-            See :class:`~gensim.models.word2vec.BrownCorpus`, :class:`~gensim.models.word2vec.Text8Corpus`
-            or :class:`~gensim.models.word2vec.LineSentence` in :mod:`~gensim.models.word2vec` module for such examples.
+            See :class:`~gensim.corpora.utils.BrownCorpus`, :class:`~gensim.corpora.utils.Text8Corpus`
+            or :class:`~gensim.corpora.utils.LineSentence` in :mod:`~gensim.corpora.utils`
+            module for such examples.
         total_sentences : int, optional
             Count of sentences.
         chunksize : int, optional
@@ -1968,163 +1972,6 @@ class Word2Vec(utils.SaveLoad):
         return self.running_training_loss
 
 
-class BrownCorpus(object):
-    def __init__(self, dirname):
-        """Iterate over sentences from the `Brown corpus <https://en.wikipedia.org/wiki/Brown_Corpus>`_
-        (part of `NLTK data <https://www.nltk.org/data.html>`_).
-
-        """
-        self.dirname = dirname
-
-    def __iter__(self):
-        for fname in os.listdir(self.dirname):
-            fname = os.path.join(self.dirname, fname)
-            if not os.path.isfile(fname):
-                continue
-            with utils.open(fname, 'rb') as fin:
-                for line in fin:
-                    line = utils.to_unicode(line)
-                    # each file line is a single sentence in the Brown corpus
-                    # each token is WORD/POS_TAG
-                    token_tags = [t.split('/') for t in line.split() if len(t.split('/')) == 2]
-                    # ignore words with non-alphabetic tags like ",", "!" etc (punctuation, weird stuff)
-                    words = ["%s/%s" % (token.lower(), tag[:2]) for token, tag in token_tags if tag[:2].isalpha()]
-                    if not words:  # don't bother sending out empty sentences
-                        continue
-                    yield words
-
-
-class Text8Corpus(object):
-    def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
-        """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
-        self.fname = fname
-        self.max_sentence_length = max_sentence_length
-
-    def __iter__(self):
-        # the entire corpus is one gigantic line -- there are no sentence marks at all
-        # so just split the sequence of tokens arbitrarily: 1 sentence = 1000 tokens
-        sentence, rest = [], b''
-        with utils.open(self.fname, 'rb') as fin:
-            while True:
-                text = rest + fin.read(8192)  # avoid loading the entire file (=1 line) into RAM
-                if text == rest:  # EOF
-                    words = utils.to_unicode(text).split()
-                    sentence.extend(words)  # return the last chunk of words, too (may be shorter/longer)
-                    if sentence:
-                        yield sentence
-                    break
-                last_token = text.rfind(b' ')  # last token may have been split in two... keep for next iteration
-                words, rest = (utils.to_unicode(text[:last_token]).split(),
-                               text[last_token:].strip()) if last_token >= 0 else ([], text)
-                sentence.extend(words)
-                while len(sentence) >= self.max_sentence_length:
-                    yield sentence[:self.max_sentence_length]
-                    sentence = sentence[self.max_sentence_length:]
-
-
-class LineSentence(object):
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-        """Iterate over a file that contains sentences: one line = one sentence.
-        Words must be already preprocessed and separated by whitespace.
-
-        Parameters
-        ----------
-        source : string or a file-like object
-            Path to the file on disk, or an already-open file object (must support `seek(0)`).
-        limit : int or None
-            Clip the file to the first `limit` lines. Do no clipping if `limit is None` (the default).
-
-        Examples
-        --------
-        .. sourcecode:: pycon
-
-            >>> from gensim.test.utils import datapath
-            >>> sentences = LineSentence(datapath('lee_background.cor'))
-            >>> for sentence in sentences:
-            ...     pass
-
-        """
-        self.source = source
-        self.max_sentence_length = max_sentence_length
-        self.limit = limit
-
-    def __iter__(self):
-        """Iterate through the lines in the source."""
-        try:
-            # Assume it is a file-like object and try treating it as such
-            # Things that don't have seek will trigger an exception
-            self.source.seek(0)
-            for line in itertools.islice(self.source, self.limit):
-                line = utils.to_unicode(line).split()
-                i = 0
-                while i < len(line):
-                    yield line[i: i + self.max_sentence_length]
-                    i += self.max_sentence_length
-        except AttributeError:
-            # If it didn't work like a file, use it as a string filename
-            with utils.open(self.source, 'rb') as fin:
-                for line in itertools.islice(fin, self.limit):
-                    line = utils.to_unicode(line).split()
-                    i = 0
-                    while i < len(line):
-                        yield line[i: i + self.max_sentence_length]
-                        i += self.max_sentence_length
-
-
-class PathLineSentences(object):
-    def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
-        """Like :class:`~gensim.models.word2vec.LineSentence`, but process all files in a directory
-        in alphabetical order by filename.
-
-        The directory must only contain files that can be read by :class:`gensim.models.word2vec.LineSentence`:
-        .bz2, .gz, and text files. Any file not ending with .bz2 or .gz is assumed to be a text file.
-
-        The format of files (either text, or compressed text files) in the path is one sentence = one line,
-        with words already preprocessed and separated by whitespace.
-
-        Warnings
-        --------
-        Does **not recurse** into subdirectories.
-
-        Parameters
-        ----------
-        source : str
-            Path to the directory.
-        limit : int or None
-            Read only the first `limit` lines from each file. Read all if limit is None (the default).
-
-        """
-        self.source = source
-        self.max_sentence_length = max_sentence_length
-        self.limit = limit
-
-        if os.path.isfile(self.source):
-            logger.debug('single file given as source, rather than a directory of files')
-            logger.debug('consider using models.word2vec.LineSentence for a single file')
-            self.input_files = [self.source]  # force code compatibility with list of files
-        elif os.path.isdir(self.source):
-            self.source = os.path.join(self.source, '')  # ensures os-specific slash at end of path
-            logger.info('reading directory %s', self.source)
-            self.input_files = os.listdir(self.source)
-            self.input_files = [self.source + filename for filename in self.input_files]  # make full paths
-            self.input_files.sort()  # makes sure it happens in filename order
-        else:  # not a file or a directory, then we can't do anything with it
-            raise ValueError('input is neither a file nor a path')
-        logger.info('files read into PathLineSentences:%s', '\n'.join(self.input_files))
-
-    def __iter__(self):
-        """iterate through the files"""
-        for file_name in self.input_files:
-            logger.info('reading file %s', file_name)
-            with utils.open(file_name, 'rb') as fin:
-                for line in itertools.islice(fin, self.limit):
-                    line = utils.to_unicode(line).split()
-                    i = 0
-                    while i < len(line):
-                        yield line[i:i + self.max_sentence_length]
-                        i += self.max_sentence_length
-
-
 class Word2VecVocab(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture."""
     pass
@@ -2195,6 +2042,12 @@ def _assign_binary_codes(wv):
 
     logger.info("built huffman tree with maximum node depth %i", max_depth)
 
+
+# Alliases of classes so that code relies on original location works
+BrownCorpus = BrownCorpus
+Text8Corpus = Text8Corpus
+LineSentence = LineSentence
+PathLineSentences = PathLineSentences
 
 # Example: ./word2vec.py -train data.txt -output vec.txt -size 200 -window 5 -sample 1e-4 \
 # -negative 5 -hs 0 -binary 0 -cbow 1 -iter 3

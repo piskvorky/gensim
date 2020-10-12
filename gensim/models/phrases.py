@@ -20,7 +20,7 @@ Examples
 .. sourcecode:: pycon
 
     >>> from gensim.test.utils import datapath
-    >>> from gensim.models.word2vec import Text8Corpus
+    >>> from gensim.corpora.utils import Text8Corpus
     >>> from gensim.models.phrases import Phrases
     >>>
     >>> # Create training corpus. Must be a sequence of sentences (e.g. an iterable or a generator).
@@ -311,7 +311,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>>
             >>> sentences = Text8Corpus(datapath('testcorpus.txt'))
@@ -423,8 +423,8 @@ class Phrases(_PhrasesTransformation):
         ----------
         sentences : iterable of list of str, optional
             The `sentences` iterable can be simply a list, but for larger corpora, consider a generator that streams
-            the sentences directly from disk/network, See :class:`~gensim.models.word2vec.BrownCorpus`,
-            :class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
+            the sentences directly from disk/network, See :class:`~gensim.corpora.utils.BrownCorpus`,
+            :class:`~gensim.corpora.utils.Text8Corpus` or :class:`~gensim.corpora.utils.LineSentence`
             for such examples.
         min_count : float, optional
             Ignore all words and bigrams with total collected count lower than this value.
@@ -474,7 +474,7 @@ class Phrases(_PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>>
             >>> # Load corpus and train a model.
@@ -563,8 +563,8 @@ class Phrases(_PhrasesTransformation):
         ----------
         sentences : iterable of list of str
             The `sentences` iterable can be simply a list, but for larger corpora, consider a generator that streams
-            the sentences directly from disk/network, See :class:`~gensim.models.word2vec.BrownCorpus`,
-            :class:`~gensim.models.word2vec.Text8Corpus` or :class:`~gensim.models.word2vec.LineSentence`
+            the sentences directly from disk/network, See :class:`~gensim.corpora.utils.BrownCorpus`,
+            :class:`~gensim.corpora.utils.Text8Corpus` or :class:`~gensim.corpora.utils.LineSentence`
             for such examples.
         max_vocab_size : int
             Maximum size (number of tokens) of the vocabulary. Used to control pruning of less common words,
@@ -628,7 +628,7 @@ class Phrases(_PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>>
             >>> # Train a phrase detector from a text corpus.
@@ -740,7 +740,7 @@ class FrozenPhrases(_PhrasesTransformation):
         .. sourcecode:: pycon
 
             >>> from gensim.test.utils import datapath
-            >>> from gensim.models.word2vec import Text8Corpus
+            >>> from gensim.corpora.utils import Text8Corpus
             >>> from gensim.models.phrases import Phrases
             >>>
             >>> # Load corpus and train a model.
@@ -809,7 +809,7 @@ if __name__ == '__main__':
     infile = sys.argv[1]
 
     from gensim.models import Phrases  # noqa:F811 for pickle
-    from gensim.models.word2vec import Text8Corpus
+    from gensim.corpora.utils import Text8Corpus
     sentences = Text8Corpus(infile)
 
     bigram = Phrases(sentences, min_count=5, threshold=100)
