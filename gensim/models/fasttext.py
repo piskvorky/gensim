@@ -20,8 +20,8 @@ around Facebook's implementation.
 This module supports loading models trained with Facebook's fastText implementation.
 It also supports continuing training from such models.
 
-For a tutorial see `this notebook
-<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/FastText_Tutorial.ipynb>`_.
+For a tutorial see :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`.
+
 
 Usage examples
 --------------
@@ -249,29 +249,6 @@ And on word analogies:
 .. sourcecode:: pycon
 
     >>> analogies_result = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
-
-Implementation Notes
---------------------
-
-These notes may help developers navigate our fastText implementation.
-The implementation is split across several submodules:
-
-- :mod:`gensim.models.fasttext`: This module. Contains FastText-specific functionality only.
-- :mod:`gensim.models.keyedvectors`: Implements generic functionality.
-- :mod:`gensim.models.word2vec`: Provides much of the basic scan & train framework.
-- :mod:`gensim.utils`: Implements model I/O (loading and saving).
-
-Our implementation relies heavily on inheritance.
-It consists of several important classes:
-
-- :class:`~gensim.models.word2vec.Word2VecVocab`: the vocabulary.
-  Keeps track of all the unique words, sometimes discarding the extremely rare ones.
-  This is sometimes called the Dictionary within Gensim.
-- :class:`~gensim.models.fasttext.FastTextKeyedVectors`: the vectors.
-  Once training is complete, this class is sufficient for calculating embeddings.
-- :class:`~gensim.models.fasttext.FastTextTrainables`: the underlying neural network.
-  The implementation uses this class to *learn* the word embeddings.
-- :class:`~gensim.models.fasttext.FastText`: ties everything together.
 
 """
 

@@ -7,6 +7,7 @@ This release contains a major refactoring.
 
 ### :+1: Improvements
 
+* Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
 * KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
 * No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
   (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
@@ -19,6 +20,10 @@ This release contains a major refactoring.
 
  * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
  * Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
+
+### :warning: Removed functionality
+
+ * Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
 
 ## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 

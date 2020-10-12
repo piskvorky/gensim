@@ -190,5 +190,4 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_similarity_queries.png')
 imgplot = plt.imshow(img)
-plt.axis('off')
-plt.show()
+_ = plt.axis('off')
