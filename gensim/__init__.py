@@ -6,7 +6,7 @@ similarities between documents.
 
 import logging
 
-from gensim import parsing, corpora, matutils, interfaces, models, similarities, summarization, utils  # noqa:F401
+from gensim import parsing, corpora, matutils, interfaces, models, similarities, utils  # noqa:F401
 
 __version__ = '4.0.0.dev0'
 

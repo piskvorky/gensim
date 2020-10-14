@@ -11,7 +11,7 @@ from .lsimodel import LsiModel  # noqa:F401
 from .tfidfmodel import TfidfModel  # noqa:F401
 from .rpmodel import RpModel  # noqa:F401
 from .logentropy_model import LogEntropyModel  # noqa:F401
-from .word2vec import Word2Vec  # noqa:F401
+from .word2vec import Word2Vec, FAST_VERSION  # noqa:F401
 from .doc2vec import Doc2Vec  # noqa:F401
 from .keyedvectors import KeyedVectors  # noqa:F401
 from .ldamulticore import LdaMulticore  # noqa:F401

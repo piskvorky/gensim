@@ -97,12 +97,3 @@ Modules:
     scripts/segment_wiki
     parsing/porter
     parsing/preprocessing
-    summarization/bm25
-    summarization/commons
-    summarization/graph
-    summarization/keywords
-    summarization/mz_entropy
-    summarization/pagerank_weighted
-    summarization/summariser
-    summarization/syntactic_unit
-    summarization/textcleaner

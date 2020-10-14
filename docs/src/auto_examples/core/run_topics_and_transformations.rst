@@ -1,10 +1,12 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_core_run_topics_and_transformations.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_core_run_topics_and_transformations.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_core_run_topics_and_transformations.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_core_run_topics_and_transformations.py:
 
 
 Topics and Transformations
@@ -18,6 +20,7 @@ Introduces transformations and demonstrates their use on a toy corpus.
 
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 
 
@@ -88,6 +91,7 @@ if you completed it, feel free to skip to the next section.
 
 
 
+
 Creating a transformation
 ++++++++++++++++++++++++++
 
@@ -101,6 +105,7 @@ a :dfn:`training corpus`:
     from gensim import models
 
     tfidf = models.TfidfModel(corpus)  # step 1 -- initialize a model
+
 
 
 
@@ -152,6 +157,7 @@ any vector from the old representation (bag-of-words integer counts) to the new 
 
 
 
+
 Or to apply a transformation to a whole corpus:
 
 
@@ -181,6 +187,7 @@ Or to apply a transformation to a whole corpus:
     [(9, 0.7071067811865475), (10, 0.7071067811865475)]
     [(9, 0.5080429008916749), (10, 0.5080429008916749), (11, 0.695546419520037)]
     [(4, 0.6282580468670046), (10, 0.45889394536615247), (11, 0.6282580468670046)]
+
 
 
 
@@ -214,6 +221,7 @@ Transformations can also be serialized, one on top of another, in a sort of chai
 
 
 
+
 Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 into a latent 2-D space (2-D because we set ``num_topics=2``). Now you're probably wondering: what do these two latent
 dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
@@ -227,6 +235,15 @@ dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+    [(0, '0.703*"trees" + 0.538*"graph" + 0.402*"minors" + 0.187*"survey" + 0.061*"system" + 0.060*"response" + 0.060*"time" + 0.058*"user" + 0.049*"computer" + 0.035*"interface"'), (1, '-0.460*"system" + -0.373*"user" + -0.332*"eps" + -0.328*"interface" + -0.320*"response" + -0.320*"time" + -0.293*"computer" + -0.280*"human" + -0.171*"survey" + 0.161*"trees"')]
 
 
 
@@ -257,15 +274,16 @@ remaining four documents to the first topic:
 
  .. code-block:: none
 
-    [(0, 0.06600783396090627), (1, -0.520070330636184)] Human machine interface for lab abc computer applications
-    [(0, 0.1966759285914279), (1, -0.760956316770005)] A survey of user opinion of computer system response time
-    [(0, 0.08992639972446735), (1, -0.7241860626752503)] The EPS user interface management system
-    [(0, 0.07585847652178428), (1, -0.6320551586003422)] System and human system engineering testing of EPS
-    [(0, 0.10150299184980327), (1, -0.5737308483002963)] Relation of user perceived response time to error measurement
-    [(0, 0.7032108939378309), (1, 0.16115180214026148)] The generation of random binary unordered trees
-    [(0, 0.8774787673119828), (1, 0.16758906864659825)] The intersection graph of paths in trees
-    [(0, 0.9098624686818573), (1, 0.14086553628719417)] Graph minors IV Widths of trees and well quasi ordering
-    [(0, 0.6165825350569281), (1, -0.053929075663891594)] Graph minors A survey
+    [(0, 0.06600783396090518), (1, -0.520070330636184)] Human machine interface for lab abc computer applications
+    [(0, 0.19667592859142694), (1, -0.7609563167700047)] A survey of user opinion of computer system response time
+    [(0, 0.08992639972446678), (1, -0.72418606267525)] The EPS user interface management system
+    [(0, 0.07585847652178407), (1, -0.6320551586003417)] System and human system engineering testing of EPS
+    [(0, 0.10150299184980252), (1, -0.5737308483002961)] Relation of user perceived response time to error measurement
+    [(0, 0.7032108939378307), (1, 0.16115180214025954)] The generation of random binary unordered trees
+    [(0, 0.8774787673119826), (1, 0.16758906864659615)] The intersection graph of paths in trees
+    [(0, 0.9098624686818572), (1, 0.14086553628719237)] Graph minors IV Widths of trees and well quasi ordering
+    [(0, 0.6165825350569278), (1, -0.05392907566389235)] Graph minors A survey
+
 
 
 
@@ -283,6 +301,7 @@ Model persistency is achieved with the :func:`save` and :func:`load` functions:
     loaded_lsi_model = models.LsiModel.load(tmp.name)
 
     os.unlink(tmp.name)
+
 
 
 
@@ -420,32 +439,24 @@ References
     import matplotlib.image as mpimg
     img = mpimg.imread('run_topics_and_transformations.png')
     imgplot = plt.imshow(img)
-    plt.axis('off')
-    plt.show()
+    _ = plt.axis('off')
 
 
 
 .. image:: /auto_examples/core/images/sphx_glr_run_topics_and_transformations_001.png
+    :alt: run topics and transformations
     :class: sphx-glr-single-img
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    /home/misha/git/gensim/docs/src/gallery/core/run_topics_and_transformations.py:293: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      plt.show()
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.844 seconds)
+   **Total running time of the script:** ( 0 minutes  0.970 seconds)
 
-**Estimated memory usage:**  44 MB
+**Estimated memory usage:**  7 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_topics_and_transformations.py:
@@ -458,13 +469,13 @@ References
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_topics_and_transformations.py <run_topics_and_transformations.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_topics_and_transformations.ipynb <run_topics_and_transformations.ipynb>`
 
