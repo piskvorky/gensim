@@ -3528,3 +3528,7 @@ a, a:visited, a:focus {
         top: 38px;
     }
 }
+
+.rst-content .section ol li>p:not(:first-child) ~ p, .rst-content .section ul li>p:not(:first-child) ~ p {
+    margin-top: 12px !important;
+}
