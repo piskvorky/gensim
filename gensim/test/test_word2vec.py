@@ -11,7 +11,6 @@ from __future__ import division
 
 import logging
 import unittest
-import pytest
 import os
 import bz2
 import sys
@@ -637,7 +636,7 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, epochs=10, workers=2)
         self.model_sanity(model, with_corpus_file=True)
 
-    @pytest.mark.skipif('BULK_TEST_REPS' not in os.environ, reason="bulk test only occasionally run locally")
+    @unittest.skipIf('BULK_TEST_REPS' not in os.environ, reason="bulk test only occasionally run locally")
     def test_method_in_bulk(self):
         """Not run by default testing, but can be run locally to help tune stochastic aspects of tests
         to very-very-rarely fail. EG:
