@@ -8,23 +8,22 @@ This release contains a major refactoring.
 ### :+1: Improvements
 
 * No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
-  (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
-* Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
-* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
+  __[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6)
+* Refactor ldamulticore to serialize less data [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__
+* KeyedVectors  & X2Vec API streamlining, consistency [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__
 * Fix for Python 3.9/3.10: remove xml.etree.cElementTree [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846), __[@hugovk](https://github.com/hugovk)__
-* Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
+* Speed up random number generation in word2vec model [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__
 * Expose max_final_vocab parameter in FastText constructor [#2867](https://github.com/RaRe-Technologies/gensim/pull/2867), __[@mpenkov](https://github.com/mpenkov)__
-* Fix similarity bug in NMSLIB indexer + documentation fixes [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
 * Fix FastText word-vectors w/ ngrams/buckets off [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891), __[@gojomo](https://github.com/gojomo)__
+* Fix similarity bug in NMSLIB indexer + documentation fixes [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
 * Fix AttributeError in WikiCorpus [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901), __[@jenishah](https://github.com/jenishah)__
 * Fix doc2vec crash for large sets of doc-vectors [#2907](https://github.com/RaRe-Technologies/gensim/pull/2907), __[@gojomo](https://github.com/gojomo)__
 * Change num_words to topn in dtm_coherence [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926), __[@MeganStodel](https://github.com/MeganStodel)__
 * Clear up job queue parameters in word2vec [#2931](https://github.com/RaRe-Technologies/gensim/pull/2931), __[@lunastera](https://github.com/lunastera)__
-* Remove Keras dependency (PR [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__)
+* Remove Keras dependency [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__
 * X2Vec SaveLoad improvements [#2939](https://github.com/RaRe-Technologies/gensim/pull/2939), __[@piskvorky](https://github.com/piskvorky)__
-* Fix deprecations in SoftCosineSimilarity (PR [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__)
-* Bump minimum Python version to 3.6 (PR [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__)
 * Fix deprecations in SoftCosineSimilarity [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__
+* Bump minimum Python version to 3.6 [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__
 * Fix save_facebook_model failure after update-vocab & other initialization streamlining [#2944](https://github.com/RaRe-Technologies/gensim/pull/2944), __[@gojomo](https://github.com/gojomo)__
 * Refactor phrases submodule [#2976](https://github.com/RaRe-Technologies/gensim/pull/2976), __[@piskvorky](https://github.com/piskvorky)__
 * Skip common English words during phrase construction [#2979](https://github.com/RaRe-Technologies/gensim/pull/2979), __[@piskvorky](https://github.com/piskvorky)__
