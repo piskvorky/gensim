@@ -7,23 +7,43 @@ This release contains a major refactoring.
 
 ### :+1: Improvements
 
-* Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
-* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
 * No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
   (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
+* Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
+* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
+* Fix for Python 3.9/3.10: remove xml.etree.cElementTree [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846), __[@hugovk](https://github.com/hugovk)__
 * Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
-* Fix deprecations in SoftCosineSimilarity (PR [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__)
+* Expose max_final_vocab parameter in FastText constructor [#2867](https://github.com/RaRe-Technologies/gensim/pull/2867), __[@mpenkov](https://github.com/mpenkov)__
+* Fix similarity bug in NMSLIB indexer + documentation fixes [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
+* Fix FastText word-vectors w/ ngrams/buckets off [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891), __[@gojomo](https://github.com/gojomo)__
+* Fix AttributeError in WikiCorpus [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901), __[@jenishah](https://github.com/jenishah)__
+* Fix doc2vec crash for large sets of doc-vectors [#2907](https://github.com/RaRe-Technologies/gensim/pull/2907), __[@gojomo](https://github.com/gojomo)__
+* Change num_words to topn in dtm_coherence [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926), __[@MeganStodel](https://github.com/MeganStodel)__
+* Clear up job queue parameters in word2vec [#2931](https://github.com/RaRe-Technologies/gensim/pull/2931), __[@lunastera](https://github.com/lunastera)__
 * Remove Keras dependency (PR [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__)
+* X2Vec SaveLoad improvements [#2939](https://github.com/RaRe-Technologies/gensim/pull/2939), __[@piskvorky](https://github.com/piskvorky)__
+* Fix deprecations in SoftCosineSimilarity (PR [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__)
 * Bump minimum Python version to 3.6 (PR [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__)
+* Fix deprecations in SoftCosineSimilarity [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__
+* Fix save_facebook_model failure after update-vocab & other initialization streamlining [#2944](https://github.com/RaRe-Technologies/gensim/pull/2944), __[@gojomo](https://github.com/gojomo)__
+* Refactor phrases submodule [#2976](https://github.com/RaRe-Technologies/gensim/pull/2976), __[@piskvorky](https://github.com/piskvorky)__
+* Skip common English words during phrase construction [#2979](https://github.com/RaRe-Technologies/gensim/pull/2979), __[@piskvorky](https://github.com/piskvorky)__
 
 ### :books: Tutorial and doc improvements
 
- * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
- * Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
+* Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
+* Clarify that license is LGPL-2.1 [#2871](https://github.com/RaRe-Technologies/gensim/pull/2871), __[@pombredanne](https://github.com/pombredanne)__
+* Make docs clearer on `alpha` parameter in LDA model [#2896](https://github.com/RaRe-Technologies/gensim/pull/2896), __[@xh2](https://github.com/xh2)__
+* Update Hoffman paper link for Online LDA [#2897](https://github.com/RaRe-Technologies/gensim/pull/2897), __[@xh2](https://github.com/xh2)__
+* Refresh docs for run_annoy tutorial [#2910](https://github.com/RaRe-Technologies/gensim/pull/2910), __[@piskvorky](https://github.com/piskvorky)__
+* Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
+* Migrate tutorials & how-tos to 4.0.0 [#2968](https://github.com/RaRe-Technologies/gensim/pull/2968), __[@piskvorky](https://github.com/piskvorky)__
+* New docs theme [#2954](https://github.com/RaRe-Technologies/gensim/pull/2954), __[@dvorakvaclav](https://github.com/dvorakvaclav)__
 
 ### :warning: Removed functionality
 
- * Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
+* Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
+* Bump minimum Python version to 3.6 [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__
 
 ## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 
