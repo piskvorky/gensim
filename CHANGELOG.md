@@ -3,33 +3,35 @@ Changes
 
 ## Unreleased
 
-This release contains a major refactoring.
 
 ### :+1: Improvements
 
-* No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
-  __[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6)
-* Refactor ldamulticore to serialize less data [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__
-* KeyedVectors  & X2Vec API streamlining, consistency [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__
+* Use less RAM in LdaMulticore [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__
+* Streamline KeyedVectors & X2Vec API, consistency [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__
 * Fix for Python 3.9/3.10: remove xml.etree.cElementTree [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846), __[@hugovk](https://github.com/hugovk)__
-* Speed up random number generation in word2vec model [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__
-* Expose max_final_vocab parameter in FastText constructor [#2867](https://github.com/RaRe-Technologies/gensim/pull/2867), __[@mpenkov](https://github.com/mpenkov)__
-* Fix FastText word-vectors w/ ngrams/buckets off [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891), __[@gojomo](https://github.com/gojomo)__
-* Fix similarity bug in NMSLIB indexer + documentation fixes [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
-* Fix AttributeError in WikiCorpus [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901), __[@jenishah](https://github.com/jenishah)__
+* Speed up random number generation in word2vec [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__
+* Expose max_final_vocab parameter in fastText constructor [#2867](https://github.com/RaRe-Technologies/gensim/pull/2867), __[@mpenkov](https://github.com/mpenkov)__
+* Fix fastText word-vectors with ngrams off [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891), __[@gojomo](https://github.com/gojomo)__
+* Fix similarity bug in NMSLIB indexer [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
+* Renamed overly broad `similarities.index` to the more appropriate `similarities.annoy` [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
+* Fixed deprecation warnings in Annoy integration. [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
+* Fix inheritance of WikiCorpus from TextCorpus [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901), __[@jenishah](https://github.com/jenishah)__
 * Fix doc2vec crash for large sets of doc-vectors [#2907](https://github.com/RaRe-Technologies/gensim/pull/2907), __[@gojomo](https://github.com/gojomo)__
-* Change num_words to topn in dtm_coherence [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926), __[@MeganStodel](https://github.com/MeganStodel)__
+* Change `num_words` to `topn` in dtm_coherence [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926), __[@MeganStodel](https://github.com/MeganStodel)__
 * Clear up job queue parameters in word2vec [#2931](https://github.com/RaRe-Technologies/gensim/pull/2931), __[@lunastera](https://github.com/lunastera)__
 * Remove Keras dependency [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__
 * X2Vec SaveLoad improvements [#2939](https://github.com/RaRe-Technologies/gensim/pull/2939), __[@piskvorky](https://github.com/piskvorky)__
+* Code style & py3 migration clean up [#2939](https://github.com/RaRe-Technologies/gensim/pull/2939), __[@piskvorky](https://github.com/piskvorky)__
 * Fix deprecations in SoftCosineSimilarity [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__
 * Bump minimum Python version to 3.6 [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__
 * Fix save_facebook_model failure after update-vocab & other initialization streamlining [#2944](https://github.com/RaRe-Technologies/gensim/pull/2944), __[@gojomo](https://github.com/gojomo)__
 * Refactor phrases submodule [#2976](https://github.com/RaRe-Technologies/gensim/pull/2976), __[@piskvorky](https://github.com/piskvorky)__
 * Skip common English words during phrase construction [#2979](https://github.com/RaRe-Technologies/gensim/pull/2979), __[@piskvorky](https://github.com/piskvorky)__
 
-### :books: Tutorial and doc improvements
+### :books: Tutorials and docs
 
+* Clean up of API docs language and formatting [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
+* Added documentation for NMSLIB indexer [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899), __[@piskvorky](https://github.com/piskvorky)__
 * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
 * Clarify that license is LGPL-2.1 [#2871](https://github.com/RaRe-Technologies/gensim/pull/2871), __[@pombredanne](https://github.com/pombredanne)__
 * Make docs clearer on `alpha` parameter in LDA model [#2896](https://github.com/RaRe-Technologies/gensim/pull/2896), __[@xh2](https://github.com/xh2)__
@@ -43,6 +45,8 @@ This release contains a major refactoring.
 
 * Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
 * Bump minimum Python version to 3.6 [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__
+* No more binary wheels for x32 platforms.
+  __[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6)
 
 ## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 
@@ -280,24 +284,24 @@ This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3
 #### Out-of-vocab word handling
 
 To achieve consistency with the reference implementation from Facebook,
-a `FastText` model will now always report any word, out-of-vocabulary or 
-not, as being in the model,  and always return some vector for any word 
+a `FastText` model will now always report any word, out-of-vocabulary or
+not, as being in the model,  and always return some vector for any word
 looked-up. Specifically:
 
-1. `'any_word' in ft_model` will always return `True`.  Previously, it 
-returned `True` only if the full word was in the vocabulary. (To test if a 
-full word is in the known vocabulary, you can consult the `wv.vocab` 
-property: `'any_word' in ft_model.wv.vocab` will return `False` if the full 
+1. `'any_word' in ft_model` will always return `True`.  Previously, it
+returned `True` only if the full word was in the vocabulary. (To test if a
+full word is in the known vocabulary, you can consult the `wv.vocab`
+property: `'any_word' in ft_model.wv.vocab` will return `False` if the full
 word wasn't learned during model training.)
-2. `ft_model['any_word']` will always return a vector.  Previously, it 
-raised `KeyError` for OOV words when the model had no vectors 
+2. `ft_model['any_word']` will always return a vector.  Previously, it
+raised `KeyError` for OOV words when the model had no vectors
 for **any** ngrams of the word.
 3. If no ngrams from the term are present in the model,
 or when no ngrams could be extracted from the term, a vector pointing
 to the origin will be returned.  Previously, a vector of NaN (not a number)
 was returned as a consequence of a divide-by-zero problem.
 4. Models may use more more memory, or take longer for word-vector
-lookup, especially after training on smaller corpuses where the previous 
+lookup, especially after training on smaller corpuses where the previous
 non-compliant behavior discarded some ngrams from consideration.
 
 #### Loading models in Facebook .bin format
@@ -310,7 +314,7 @@ Since this function is deprecated, consider using one of its alternatives (see b
 Furthermore, you must now pass the full path to the file to load, **including the file extension.**
 Previously, if you specified a model path that ends with anything other than .bin, the code automatically appended .bin to the path before loading the model.
 This behavior was [confusing](https://github.com/RaRe-Technologies/gensim/issues/2407), so we removed it.
-	
+
 ### :warning: Deprecations (will be removed in the next major release)
 
 Remove:
