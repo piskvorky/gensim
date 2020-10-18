@@ -13,8 +13,8 @@ Help script (template) for benchmarking. Run with:
 import logging
 import sys
 
-from gensim.models.word2vec import Text8Corpus, LineSentence
-from gensim.models import FastText, Word2Vec, Doc2Vec, Phrases
+from gensim.models.word2vec import Text8Corpus, LineSentence  # noqa: F401
+from gensim.models import FastText, Word2Vec, Doc2Vec, Phrases  # noqa: F401
 from gensim import __version__
 
 logger = logging.getLogger(__name__)
