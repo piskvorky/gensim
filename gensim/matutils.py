@@ -22,9 +22,6 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
 
-from six import iteritems, itervalues
-from six.moves import zip, range
-
 
 logger = logging.getLogger(__name__)
 
@@ -398,7 +395,7 @@ def sparse2full(doc, length):
 
     doc = dict(doc)
     # overwrite some of the zeroes with explicit values
-    result[list(doc)] = list(itervalues(doc))
+    result[list(doc)] = list(doc.values())
     return result
 
 
@@ -807,12 +804,12 @@ def cossim(vec1, vec2):
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
-    vec1len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec1)))
-    vec2len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec2)))
+    vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.values()))
+    vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.values()))
     assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
         vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
-    result = sum(value * vec2.get(index, 0.0) for index, value in iteritems(vec1))
+    result = sum(value * vec2.get(index, 0.0) for index, value in vec1.items())
     result /= vec1len * vec2len  # rescale by vector lengths
     return result
 
@@ -982,7 +979,7 @@ def jaccard(vec1, vec2):
         union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
         vec1, vec2 = dict(vec1), dict(vec2)
         intersection = 0.0
-        for feature_id, feature_weight in iteritems(vec1):
+        for feature_id, feature_weight in vec1.items():
             intersection += min(feature_weight, vec2.get(feature_id, 0.0))
         return 1 - float(intersection) / float(union)
     else:

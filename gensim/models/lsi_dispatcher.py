@@ -54,21 +54,18 @@ Command line arguments
 
 """
 
-from __future__ import with_statement
 import os
 import sys
 import logging
 import argparse
 import threading
 import time
-from six import iteritems, itervalues
+from queue import Queue
 
-try:
-    from Queue import Queue
-except ImportError:
-    from queue import Queue
 import Pyro4
+
 from gensim import utils
+
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +81,7 @@ MAX_JOBS_QUEUE = 10
 HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 
 
-class Dispatcher(object):
+class Dispatcher:
     """Dispatcher object that communicates and coordinates individual workers.
 
     Warnings
@@ -134,7 +131,7 @@ class Dispatcher(object):
         self.workers = {}
         with utils.getNS() as ns:
             self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')  # = self
-            for name, uri in iteritems(ns.list(prefix='gensim.lsi_worker')):
+            for name, uri in ns.list(prefix='gensim.lsi_worker').items():
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
@@ -159,7 +156,7 @@ class Dispatcher(object):
             The pyro URIs for each worker.
 
         """
-        return [worker._pyroUri for worker in itervalues(self.workers)]
+        return [worker._pyroUri for worker in self.workers.values()]
 
     @Pyro4.expose
     def getjob(self, worker_id):
@@ -226,7 +223,7 @@ class Dispatcher(object):
     @Pyro4.expose
     def reset(self):
         """Re-initialize all workers for a new decomposition."""
-        for workerid, worker in iteritems(self.workers):
+        for workerid, worker in self.workers.items():
             logger.info("resetting worker %s", workerid)
             worker.reset()
             worker.requestjob()
@@ -270,7 +267,7 @@ class Dispatcher(object):
     @Pyro4.oneway
     def exit(self):
         """Terminate all registered workers and then the dispatcher."""
-        for workerid, worker in iteritems(self.workers):
+        for workerid, worker in self.workers.items():
             logger.info("terminating worker %s", workerid)
             worker.exit()
         logger.info("terminating dispatcher")

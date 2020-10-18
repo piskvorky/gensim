@@ -14,12 +14,9 @@ and implement the missing methods.
 
 """
 
-from __future__ import with_statement
-
 import logging
 
 from gensim import utils, matutils
-from six.moves import range
 
 
 logger = logging.getLogger(__name__)
