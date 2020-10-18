@@ -535,7 +535,7 @@ class SaveLoad:
         in separate files. The automatic check is not performed in this case.
 
         """
-        logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
+        logger.info("saving %s under %s, separately %s", self, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
