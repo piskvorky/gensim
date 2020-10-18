@@ -35,4 +35,4 @@ def g():
 for pr in g():
     pr['user_login'] = pr['user']['login']
     pr['user_html_url'] = pr['user']['html_url']
-    print('* %(title)s [#%(number)d](%(html_url)s), __[@%(user_login)s](%(user_html_url)s)__' % pr)
+    print('* [#%(number)d](%(html_url)s): %(title)s, by [@%(user_login)s](%(user_html_url)s)' % pr)
