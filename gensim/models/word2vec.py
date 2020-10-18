@@ -1638,7 +1638,7 @@ class Word2Vec(utils.SaveLoad):
 
         """
         logger.info(
-            "training on a %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
+            "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
             raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
         )
 
