@@ -77,7 +77,6 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from six.moves import map, range, zip
 
 
 logger = logging.getLogger(__name__)

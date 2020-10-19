@@ -25,8 +25,9 @@ Examples
     >>> assert wordvecs.shape == (2, 10)
 
 """
+
 import numpy as np
-import six
+
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
@@ -173,7 +174,7 @@ class W2VTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        if isinstance(words, six.string_types):
+        if isinstance(words, str):
             words = [words]
         vectors = [self.gensim_model.wv[word] for word in words]
         return np.reshape(np.array(vectors), (len(words), self.vector_size))
