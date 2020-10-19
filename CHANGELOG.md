@@ -47,7 +47,7 @@ Changes
 * [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6): No more binary wheels for x32 platforms, by [menshikh-iv](https://github.com/menshikh-iv)
 * [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926): Rename `num_words` to `topn` in dtm_coherence, by [@MeganStodel](https://github.com/MeganStodel)
 * [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937): Remove Keras dependency, by [@piskvorky](https://github.com/piskvorky)
-
+* Removed all code, methods, attributes and functions marked as deprecated in 3.8.3.
 
 ---
 
