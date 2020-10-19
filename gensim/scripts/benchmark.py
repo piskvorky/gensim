@@ -6,7 +6,7 @@
 """
 Help script (template) for benchmarking. Run with:
 
-  /usr/bin/time --format "%E elapsed\n%Mk max mem" python -m gensim.scripts.benchmark ~/gensim-data/text9/text9.txt
+  /usr/bin/time --format "%E elapsed\n%Mk peak RAM" python -m gensim.scripts.benchmark ~/gensim-data/text9/text9.txt
 
 """
 

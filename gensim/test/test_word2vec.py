@@ -7,21 +7,15 @@
 """
 Automated tests for checking transformation algorithms (the models package).
 """
-from __future__ import division
 
 import logging
 import unittest
 import os
 import bz2
 import sys
-import six
 
 import numpy as np
 
-from gensim import utils
-from gensim.models import word2vec, keyedvectors
-from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences, \
-    LeeCorpus, lee_corpus_list
 from testfixtures import log_capture
 
 try:
@@ -29,6 +23,13 @@ try:
     PYEMD_EXT = True
 except (ImportError, ValueError):
     PYEMD_EXT = False
+
+from gensim import utils
+from gensim.models import word2vec, keyedvectors
+from gensim.test.utils import (
+    datapath, get_tmpfile, temporary_file, common_texts as sentences,
+    LeeCorpus, lee_corpus_list,
+)
 
 
 new_sentences = [
@@ -166,7 +167,6 @@ class TestWord2VecModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         self.assertEqual(len(model_neg.wv), 14)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testOnlineLearningFromFile(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -192,7 +192,6 @@ class TestWord2VecModel(unittest.TestCase):
             self.assertEqual(len(model_hs.wv), 14)
             self.assertEqual(len(model_neg.wv), 14)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testOnlineLearningAfterSaveFromFile(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
@@ -273,7 +272,6 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(wv.vectors, loaded_wv.vectors))
         self.assertEqual(len(wv), len(loaded_wv))
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testPersistenceFromFile(self):
         """Test storing/loading the entire model trained with corpus_file argument."""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
@@ -498,7 +496,6 @@ class TestWord2VecModel(unittest.TestCase):
         model2 = word2vec.Word2Vec(sentences, vector_size=2, min_count=1, hs=1, negative=0)
         self.models_equal(model, model2)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testTrainingFromFile(self):
         """Test word2vec training with corpus_file argument."""
         # build vocabulary, don't train yet
@@ -574,7 +571,6 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(0.1 < spearman < 1.0, "spearman {spearman} not between 0.1 and 1.0")
         self.assertTrue(0.0 <= oov < 90.0, "OOV {oov} not between 0.0 and 90.0")
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testEvaluateWordPairsFromFile(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as tf:
@@ -621,7 +617,6 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, epochs=10, workers=2)
         self.model_sanity(model)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_sg_hs_fromfile(self):
         model = word2vec.Word2Vec(sg=1, window=4, hs=1, negative=0, min_count=5, epochs=10, workers=2)
         self.model_sanity(model, with_corpus_file=True)
@@ -631,7 +626,6 @@ class TestWord2VecModel(unittest.TestCase):
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, epochs=10, workers=2)
         self.model_sanity(model)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_sg_neg_fromfile(self):
         model = word2vec.Word2Vec(sg=1, window=4, hs=0, negative=15, min_count=5, epochs=10, workers=2)
         self.model_sanity(model, with_corpus_file=True)
@@ -666,7 +660,6 @@ class TestWord2VecModel(unittest.TestCase):
         )
         self.model_sanity(model, ranks=ranks)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_cbow_hs_fromfile(self):
         model = word2vec.Word2Vec(
             sg=0, cbow_mean=1, alpha=0.1, window=2, hs=1, negative=0,
@@ -682,7 +675,6 @@ class TestWord2VecModel(unittest.TestCase):
         )
         self.model_sanity(model, ranks=ranks)
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def test_cbow_neg_fromfile(self):
         model = word2vec.Word2Vec(
             sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=15,
@@ -1062,7 +1054,6 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
             for words in sentences:
                 self.assertEqual(words, utils.to_unicode(orig.readline()).split())
 
-    @unittest.skipIf(os.name == 'nt' and six.PY2, "CythonLineSentence is not supported on Windows + Py27")
     def testCythonLineSentenceWorksWithFilename(self):
         """Does CythonLineSentence work with a filename argument?"""
         from gensim.models import word2vec_corpusfile

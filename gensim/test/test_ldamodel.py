@@ -14,7 +14,6 @@ import numbers
 import os
 import unittest
 
-import six
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -203,7 +202,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, six.string_types))
+                self.assertTrue(isinstance(k, str))
                 self.assertTrue(np.issubdtype(v, np.floating))
 
     def testGetTopicTerms(self):
@@ -466,7 +465,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         for i in model_topics:
             self.assertTrue(isinstance(i[0], int))
-            self.assertTrue(isinstance(i[1], six.string_types))
+            self.assertTrue(isinstance(i[1], str))
 
         # save back the loaded model using a post-0.13.2 version of Gensim
         post_0_13_2_fname = get_tmpfile('gensim_models_lda_post_0_13_2_model.tst')
@@ -478,7 +477,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         for i in model_topics_new:
             self.assertTrue(isinstance(i[0], int))
-            self.assertTrue(isinstance(i[1], six.string_types))
+            self.assertTrue(isinstance(i[1], str))
 
     def testDtypeBackwardCompatibility(self):
         lda_3_0_1_fname = datapath('lda_3_0_1_model')

@@ -47,23 +47,21 @@ import logging
 from numbers import Integral
 import sys
 import time
+from collections import defaultdict, Counter
 
 import numpy as np
-from collections import defaultdict, Counter
 from numpy import random as np_random, float32 as REAL
 from scipy.stats import spearmanr
-from six import string_types
-from six.moves import zip, range
-
-from gensim import utils, matutils
-from gensim.models.keyedvectors import KeyedVectors
-
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
     from autograd import numpy as grad_np
     AUTOGRAD_PRESENT = True
 except ImportError:
     AUTOGRAD_PRESENT = False
+
+from gensim import utils, matutils
+from gensim.models.keyedvectors import KeyedVectors
+
 
 logger = logging.getLogger(__name__)
 
@@ -1156,7 +1154,7 @@ class PoincareKeyedVectors(KeyedVectors):
             nodes_to_use = self.index_to_key[:restrict_vocab]
             all_distances = self.distances(node_or_vector, nodes_to_use)
 
-        if isinstance(node_or_vector, string_types + (int,)):
+        if isinstance(node_or_vector, (str, int,)):
             node_index = self.get_index(node_or_vector)
         else:
             node_index = None
@@ -1214,7 +1212,7 @@ class PoincareKeyedVectors(KeyedVectors):
             If either `node_or_vector` or any node in `other_nodes` is absent from vocab.
 
         """
-        if isinstance(node_or_vector, string_types):
+        if isinstance(node_or_vector, str):
             input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
@@ -1259,7 +1257,7 @@ class PoincareKeyedVectors(KeyedVectors):
         The position in hierarchy is based on the norm of the vector for the node.
 
         """
-        if isinstance(node_or_vector, string_types):
+        if isinstance(node_or_vector, str):
             input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
