@@ -112,7 +112,7 @@ shape = ensemble.asymmetric_distance_matrix.shape
 without_diagonal = ensemble.asymmetric_distance_matrix[~np.eye(shape[0],dtype=bool)].reshape(shape[0],-1)
 without_diagonal.min(), without_diagonal.mean(), without_diagonal.max()
 
-ensemble.recluster(eps=0.1, min_samples=2, min_cores=2)
+ensemble.recluster(eps=0.09, min_samples=2, min_cores=2)
 
 print(len(ensemble.get_topics()))
 
