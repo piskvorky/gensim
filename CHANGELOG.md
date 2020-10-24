@@ -1,6 +1,73 @@
 Changes
 =======
 
+## Unreleased
+
+This release contains a major refactoring.
+
+### :+1: Improvements
+
+* Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
+* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
+* No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
+  (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
+* Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
+* Fix deprecations in SoftCosineSimilarity (PR [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__)
+* Remove Keras dependency (PR [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__)
+* Bump minimum Python version to 3.6 (PR [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__)
+
+### :books: Tutorial and doc improvements
+
+ * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
+ * Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
+
+### :warning: Removed functionality
+
+ * Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
+
+## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
+
+## 3.8.3, 2020-05-03
+
+This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3.8.
+
+### :red_circle: Bug fixes
+
+* Bring back Py27 support (PR [#2812](https://github.com/RaRe-Technologies/gensim/pull/2812), __[@mpenkov](https://github.com/mpenkov)__)
+* Fix wrong version reported by setup.py (Issue [#2796](https://github.com/RaRe-Technologies/gensim/issues/2796))
+* Fix missing C extensions (Issues [#2794](https://github.com/RaRe-Technologies/gensim/issues/2794) and [#2802](https://github.com/RaRe-Technologies/gensim/issues/2802))
+
+### :+1: Improvements
+
+* Wheels for Python 3.8 (__[@menshikh-iv](https://github.com/menshikh-iv)__)
+* Prepare for removal of deprecated `lxml.etree.cElementTree` (PR [#2777](https://github.com/RaRe-Technologies/gensim/pull/2777), __[@tirkarthi](https://github.com/tirkarthi)__)
+
+### :books: Tutorial and doc improvements
+
+* Update test instructions in README (PR [#2814](https://github.com/RaRe-Technologies/gensim/pull/2814), __[@piskvorky](https://github.com/piskvorky)__)
+
+### :warning: Deprecations (will be removed in the next major release)
+
+* Remove
+    - `gensim.models.FastText.load_fasttext_format`: use load_facebook_vectors to load embeddings only (faster, less CPU/memory usage, does not support training continuation) and load_facebook_model to load full model (slower, more CPU/memory intensive, supports training continuation)
+    - `gensim.models.wrappers.fasttext` (obsoleted by the new native `gensim.models.fasttext` implementation)
+    - `gensim.examples`
+    - `gensim.nosy`
+    - `gensim.scripts.word2vec_standalone`
+    - `gensim.scripts.make_wiki_lemma`
+    - `gensim.scripts.make_wiki_online`
+    - `gensim.scripts.make_wiki_online_lemma`
+    - `gensim.scripts.make_wiki_online_nodebug`
+    - `gensim.scripts.make_wiki` (all of these obsoleted by the new native  `gensim.scripts.segment_wiki` implementation)
+    - "deprecated" functions and attributes
+
+* Move
+    - `gensim.scripts.make_wikicorpus` ➡ `gensim.scripts.make_wiki.py`
+    - `gensim.summarization` ➡ `gensim.models.summarization`
+    - `gensim.topic_coherence` ➡ `gensim.models._coherence`
+    - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
+    - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
 ## 3.8.2, 2020-04-10
 
 ### :red_circle: Bug fixes
@@ -70,8 +137,6 @@ Changes
     - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
 
 ## 3.8.0, 2019-07-08
-
-## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
 
 ### :star2: New Features
 
