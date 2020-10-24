@@ -14,7 +14,6 @@ import logging
 from math import sqrt
 
 import numpy as np
-from six.moves import range
 from scipy import sparse
 
 from gensim.matutils import corpus2csc
@@ -22,9 +21,11 @@ from gensim.utils import SaveLoad, is_corpus
 
 logger = logging.getLogger(__name__)
 
-NON_NEGATIVE_NORM_ASSERTION_MESSAGE = u"sparse documents must not contain any explicit " \
-    u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any " \
+NON_NEGATIVE_NORM_ASSERTION_MESSAGE = (
+    u"sparse documents must not contain any explicit "
+    u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any "
     u"nonzero bag-of-words vector x."
+)
 
 
 class TermSimilarityIndex(SaveLoad):

@@ -191,7 +191,7 @@ KEY_TYPES = (str, int, np.integer)
 
 
 class KeyedVectors(utils.SaveLoad):
-    def __init__(self, vector_size, count=0, dtype=REAL, mapfile_path=None):
+    def __init__(self, vector_size, count=0, dtype=np.float32, mapfile_path=None):
         """Mapping between keys (such as words)  and vectors for :class:`~gensim.models.Word2Vec`
         and related models.
 
@@ -204,6 +204,18 @@ class KeyedVectors(utils.SaveLoad):
         types, as the type and storage array for such attributes is established by the 1st time such
         `attr` is set.
 
+        Parameters
+        ----------
+        vector_size : int
+            Intended number of dimensions for all contained vectors.
+        count : int, optional
+            If provided, vectors wil be pre-allocated for at least this many vectors. (Otherwise
+            they can be added later.)
+        dtype : type, optional
+            Vector dimensions will default to `np.float32` (AKA `REAL` in some Gensim code) unless
+            another type is provided here.
+        mapfile_path : string, optional
+            FIXME: UNDER CONSTRUCTION / WILL CHANGE PRE-4.0.0 PER #2955 / #2975
         """
         self.vector_size = vector_size
         # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
@@ -337,34 +349,16 @@ class KeyedVectors(utils.SaveLoad):
         index = self.get_index(key)
         return self.expandos[attr][index]
 
-    def resize_vectors(self):
-        """Make underlying vectors match index_to_key size."""
-        target_count = len(self.index_to_key)
-        prev_count = len(self.vectors)
-        if prev_count == target_count:
-            return ()
-        prev_vectors = self.vectors
-        if hasattr(self, 'mapfile_path') and self.mapfile_path:
-            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
-        else:
-            self.vectors = np.zeros((target_count, self.vector_size), dtype=REAL)
-        self.vectors[0: min(prev_count, target_count), ] = prev_vectors[0: min(prev_count, target_count), ]
+    def resize_vectors(self, seed=0):
+        """Make underlying vectors match index_to_key size; random-initialize any new rows."""
+
+        target_shape = (len(self.index_to_key), self.vector_size)
+        self.vectors = prep_vectors(target_shape, prior_vectors=self.vectors, seed=seed)
+        # FIXME BEFORE 4.0.0 PER #2955 / #2975 : support memmap & cleanup
+#        if hasattr(self, 'mapfile_path') and self.mapfile_path:
+#            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
+
         self.allocate_vecattrs()
-        self.norms = None
-        return range(prev_count, target_count)
-
-    def randomly_initialize_vectors(self, indexes=None, seed=0):
-        """Initialize vectors with low-magnitude random vectors, as is typical for pre-trained
-        Word2Vec and related models.
-
-        """
-        if indexes is None:
-            indexes = range(0, len(self.vectors))
-        for i in indexes:
-            self.vectors[i] = pseudorandom_weak_vector(
-                self.vectors.shape[1],
-                seed_string=str(self.index_to_key[i]) + str(seed),
-            )
         self.norms = None
 
     def __len__(self):
@@ -1526,7 +1520,7 @@ class KeyedVectors(utils.SaveLoad):
             (in case word vectors are appended with document vectors afterwards).
         write_header : bool, optional
             If False, don't write the 1st line declaring the count of vectors and dimensions.
-        TODO: doc prefix, append, sort_attr
+        FIXME: doc prefix, append, sort_attr
         """
         if total_vec is None:
             total_vec = len(self.index_to_key)
@@ -1918,3 +1912,21 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
     else:
         once = utils.default_prng
     return (once.random(size).astype(REAL) - 0.5) / size
+
+
+def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
+    """FIXME: NAME/DOCS CHANGES PRE-4.0.0 FOR #2955/#2975 MMAP & OTHER INITIALIZATION CLEANUP WORK
+    Return a numpy array of the given shape. Reuse prior_vectors object or values
+    to extent possible. Initialize new values randomly if requested."""
+    if prior_vectors is None:
+        prior_vectors = np.zeros((0, 0))
+    if prior_vectors.shape == target_shape:
+        return prior_vectors
+    target_count, vector_size = target_shape
+    rng = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
+    new_vectors = rng.random(target_shape, dtype=dtype)  # [0.0, 1.0)
+    new_vectors *= 2.0  # [0.0, 2.0)
+    new_vectors -= 1.0  # [-1.0, 1.0)
+    new_vectors /= vector_size
+    new_vectors[0:prior_vectors.shape[0], 0:prior_vectors.shape[1]] = prior_vectors
+    return new_vectors

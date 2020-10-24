@@ -49,7 +49,6 @@ The model can be updated (trained) with new documents via
     >>> hdp.update([[(1, 2)], [(1, 1), (4, 5)]])
 
 """
-from __future__ import with_statement
 
 import logging
 import time
@@ -57,12 +56,12 @@ import warnings
 
 import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
-from six.moves import zip, range
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
 from gensim.utils import deprecated
+
 
 logger = logging.getLogger(__name__)
 

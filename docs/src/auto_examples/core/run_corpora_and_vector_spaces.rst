@@ -159,10 +159,10 @@ between the questions and ids is called a dictionary:
 
  .. code-block:: none
 
-    2020-09-30 12:28:00,819 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 12:28:00,820 : INFO : built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)
-    2020-09-30 12:28:00,821 : INFO : saving Dictionary object under /tmp/deerwester.dict, separately None
-    2020-09-30 12:28:00,822 : INFO : saved /tmp/deerwester.dict
+    2020-10-19 01:23:37,722 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2020-10-19 01:23:37,722 : INFO : built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)
+    2020-10-19 01:23:37,722 : INFO : saving Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) under /tmp/deerwester.dict, separately None
+    2020-10-19 01:23:37,723 : INFO : saved /tmp/deerwester.dict
     Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
 
 
@@ -244,11 +244,11 @@ therefore reads: in the document `"Human computer interaction"`, the words `comp
 
  .. code-block:: none
 
-    2020-09-30 12:28:01,181 : INFO : storing corpus in Matrix Market format to /tmp/deerwester.mm
-    2020-09-30 12:28:01,182 : INFO : saving sparse matrix to /tmp/deerwester.mm
-    2020-09-30 12:28:01,182 : INFO : PROGRESS: saving document #0
-    2020-09-30 12:28:01,182 : INFO : saved 9x12 matrix, density=25.926% (28/108)
-    2020-09-30 12:28:01,183 : INFO : saving MmCorpus index to /tmp/deerwester.mm.index
+    2020-10-19 01:23:38,012 : INFO : storing corpus in Matrix Market format to /tmp/deerwester.mm
+    2020-10-19 01:23:38,013 : INFO : saving sparse matrix to /tmp/deerwester.mm
+    2020-10-19 01:23:38,013 : INFO : PROGRESS: saving document #0
+    2020-10-19 01:23:38,016 : INFO : saved 9x12 matrix, density=25.926% (28/108)
+    2020-10-19 01:23:38,016 : INFO : saving MmCorpus index to /tmp/deerwester.mm.index
     [[(0, 1), (1, 1), (2, 1)], [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)], [(2, 1), (5, 1), (7, 1), (8, 1)], [(1, 1), (5, 2), (8, 1)], [(3, 1), (6, 1), (7, 1)], [(9, 1)], [(9, 1), (10, 1)], [(9, 1), (10, 1), (11, 1)], [(4, 1), (10, 1), (11, 1)]]
 
 
@@ -334,7 +334,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x125b5a128>
+    <__main__.MyCorpus object at 0x117e06828>
 
 
 
@@ -383,7 +383,6 @@ Similarly, to construct the dictionary without loading all texts into memory:
 .. code-block:: default
 
 
-    from six import iteritems
     # collect statistics about all tokens
     dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/gensim/mycorpus.txt'))
     # remove stop words and words that appear only once
@@ -392,7 +391,7 @@ Similarly, to construct the dictionary without loading all texts into memory:
         for stopword in stoplist
         if stopword in dictionary.token2id
     ]
-    once_ids = [tokenid for tokenid, docfreq in iteritems(dictionary.dfs) if docfreq == 1]
+    once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.items() if docfreq == 1]
     dictionary.filter_tokens(stop_ids + once_ids)  # remove stop words and words that appear only once
     dictionary.compactify()  # remove gaps in id sequence after words that were removed
     print(dictionary)
@@ -407,8 +406,8 @@ Similarly, to construct the dictionary without loading all texts into memory:
 
  .. code-block:: none
 
-    2020-09-30 12:28:02,652 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 12:28:02,653 : INFO : built Dictionary(42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...) from 9 documents (total 69 corpus positions)
+    2020-10-19 01:23:38,980 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2020-10-19 01:23:38,981 : INFO : built Dictionary(42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...) from 9 documents (total 69 corpus positions)
     Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
 
 
@@ -455,11 +454,11 @@ create a toy corpus of 2 documents, as a plain Python list
 
  .. code-block:: none
 
-    2020-09-30 12:28:02,781 : INFO : storing corpus in Matrix Market format to /tmp/corpus.mm
-    2020-09-30 12:28:02,782 : INFO : saving sparse matrix to /tmp/corpus.mm
-    2020-09-30 12:28:02,783 : INFO : PROGRESS: saving document #0
-    2020-09-30 12:28:02,783 : INFO : saved 2x2 matrix, density=25.000% (1/4)
-    2020-09-30 12:28:02,783 : INFO : saving MmCorpus index to /tmp/corpus.mm.index
+    2020-10-19 01:23:39,099 : INFO : storing corpus in Matrix Market format to /tmp/corpus.mm
+    2020-10-19 01:23:39,100 : INFO : saving sparse matrix to /tmp/corpus.mm
+    2020-10-19 01:23:39,100 : INFO : PROGRESS: saving document #0
+    2020-10-19 01:23:39,101 : INFO : saved 2x2 matrix, density=25.000% (1/4)
+    2020-10-19 01:23:39,101 : INFO : saving MmCorpus index to /tmp/corpus.mm.index
 
 
 
@@ -487,16 +486,16 @@ Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>
 
  .. code-block:: none
 
-    2020-09-30 12:28:02,842 : INFO : converting corpus to SVMlight format: /tmp/corpus.svmlight
-    2020-09-30 12:28:02,844 : INFO : saving SvmLightCorpus index to /tmp/corpus.svmlight.index
-    2020-09-30 12:28:02,844 : INFO : no word id mapping provided; initializing from corpus
-    2020-09-30 12:28:02,844 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
-    2020-09-30 12:28:02,844 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
-    2020-09-30 12:28:02,845 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
-    2020-09-30 12:28:02,904 : INFO : no word id mapping provided; initializing from corpus
-    2020-09-30 12:28:02,905 : INFO : storing corpus in List-Of-Words format into /tmp/corpus.low
-    2020-09-30 12:28:02,906 : WARNING : List-of-words format can only save vectors with integer elements; 1 float entries were truncated to integer value
-    2020-09-30 12:28:02,906 : INFO : saving LowCorpus index to /tmp/corpus.low.index
+    2020-10-19 01:23:39,152 : INFO : converting corpus to SVMlight format: /tmp/corpus.svmlight
+    2020-10-19 01:23:39,153 : INFO : saving SvmLightCorpus index to /tmp/corpus.svmlight.index
+    2020-10-19 01:23:39,154 : INFO : no word id mapping provided; initializing from corpus
+    2020-10-19 01:23:39,154 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
+    2020-10-19 01:23:39,154 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
+    2020-10-19 01:23:39,154 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
+    2020-10-19 01:23:39,206 : INFO : no word id mapping provided; initializing from corpus
+    2020-10-19 01:23:39,207 : INFO : storing corpus in List-Of-Words format into /tmp/corpus.low
+    2020-10-19 01:23:39,207 : WARNING : List-of-words format can only save vectors with integer elements; 1 float entries were truncated to integer value
+    2020-10-19 01:23:39,207 : INFO : saving LowCorpus index to /tmp/corpus.low.index
 
 
 
@@ -519,9 +518,9 @@ Conversely, to load a corpus iterator from a Matrix Market file:
 
  .. code-block:: none
 
-    2020-09-30 12:28:02,968 : INFO : loaded corpus index from /tmp/corpus.mm.index
-    2020-09-30 12:28:02,969 : INFO : initializing cython corpus reader from /tmp/corpus.mm
-    2020-09-30 12:28:02,970 : INFO : accepted corpus with 2 documents, 2 features, 1 non-zero entries
+    2020-10-19 01:23:39,260 : INFO : loaded corpus index from /tmp/corpus.mm.index
+    2020-10-19 01:23:39,262 : INFO : initializing cython corpus reader from /tmp/corpus.mm
+    2020-10-19 01:23:39,262 : INFO : accepted corpus with 2 documents, 2 features, 1 non-zero entries
 
 
 
@@ -620,10 +619,10 @@ To save the same Matrix Market document stream in Blei's LDA-C format,
 
  .. code-block:: none
 
-    2020-09-30 12:28:03,395 : INFO : no word id mapping provided; initializing from corpus
-    2020-09-30 12:28:03,397 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
-    2020-09-30 12:28:03,397 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
-    2020-09-30 12:28:03,398 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
+    2020-10-19 01:23:39,634 : INFO : no word id mapping provided; initializing from corpus
+    2020-10-19 01:23:39,636 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
+    2020-10-19 01:23:39,636 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
+    2020-10-19 01:23:39,636 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
 
 
 
@@ -711,9 +710,9 @@ Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apir
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  3.219 seconds)
+   **Total running time of the script:** ( 0 minutes  2.979 seconds)
 
-**Estimated memory usage:**  10 MB
+**Estimated memory usage:**  39 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_corpora_and_vector_spaces.py:

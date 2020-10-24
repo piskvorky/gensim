@@ -17,7 +17,6 @@ import unittest
 import numbers
 from os import remove
 
-import six
 import numpy as np
 
 from gensim.corpora import mmcorpus, Dictionary
@@ -27,6 +26,7 @@ from gensim.test import basetmtests
 from gensim.test.utils import (datapath,
     get_tmpfile, common_texts, common_dictionary as dictionary, common_corpus as corpus)
 from gensim.matutils import jensen_shannon
+
 # TODO:
 # Test that computing the bound on new unseen documents works as expected (this is somewhat different
 # in the author-topic model than in LDA).
@@ -413,7 +413,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, six.string_types))
+                self.assertTrue(isinstance(k, str))
                 self.assertTrue(isinstance(v, float))
 
     def testGetTopicTerms(self):
