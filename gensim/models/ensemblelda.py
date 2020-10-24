@@ -466,7 +466,6 @@ class EnsembleLda(SaveLoad):
             # for memory friendly models/ttdas, append the ttdas to itself
 
             detected_num_models = 0
-
             ttda = []
 
             # 1. ttda array, because that's the only accepted input that contains numbers
@@ -496,7 +495,6 @@ class EnsembleLda(SaveLoad):
                 self.num_models += num_new_models
 
         else:  # memory unfriendly ensembles
-
             ttda = []
 
             # 1. ttda array
@@ -891,14 +889,15 @@ class EnsembleLda(SaveLoad):
         eps : float
             dbscan distance scale
         min_samples : int, optional
-            defaults to ``int(self.num_models / 2)``, dbscan min neighbours threshold which corresponds to finding
-            stable topics and should scale with the number of models, ``self.num_models``
+            defaults to ``int(self.num_models / 2)``, dbscan min neighbours threshold required to consider
+            a topic to be a core. Should scale with the number of models, ``self.num_models``
 
         """
         if min_samples is None:
             min_samples = int(self.num_models / 2)
-
-        logger.info("fitting the clustering model")
+            logger.info("fitting the clustering model, using %s for min_samples", min_samples)
+        else:
+            logger.info("fitting the clustering model")
 
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
@@ -964,7 +963,7 @@ class EnsembleLda(SaveLoad):
             order. There is one single element for each cluster.
 
         """
-        sorted_clusters = []
+        clusters = []
 
         for label, group in grouped_by_labels.items():
             max_num_neighboring_labels = 0
@@ -976,14 +975,16 @@ class EnsembleLda(SaveLoad):
 
             neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
 
-            sorted_clusters.append({
+            clusters.append({
                 "max_num_neighboring_labels": max_num_neighboring_labels,
                 "neighboring_labels": neighboring_labels,
                 "label": label,
                 "num_cores": len([topic for topic in group if topic["is_core"]]),
             })
 
-        return sorted_clusters
+        logger.info("found %s clusters", len(clusters))
+
+        return clusters
 
     def _remove_from_all_sets(self, label, clusters):
         """Remove a label from every set in "neighboring_labels" for each core in ``clusters``."""
@@ -1022,7 +1023,7 @@ class EnsembleLda(SaveLoad):
         if min_cores is None:
             # min_cores is a number between 1 and 3, depending on the number of models
             min_cores = min(3, max(1, int(self.num_models / 4 + 1)))
-            logger.info("generating stable topics, each cluster needs at least {} cores".format(min_cores))
+            logger.info("generating stable topics, using %s for min_cores", min_cores)
         else:
             logger.info("generating stable topics")
 
