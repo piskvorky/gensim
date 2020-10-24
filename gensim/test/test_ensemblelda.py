@@ -22,7 +22,7 @@ num_models = 4
 passes = 50
 
 # windows tests fail due to the required assertion precision being too high
-rtol = 1e-04 if os.name == 'nt' else 1e-05
+rtol = 1e-03 if os.name == 'nt' else 1e-05
 
 
 class TestModel(unittest.TestCase):
