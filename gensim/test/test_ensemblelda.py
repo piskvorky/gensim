@@ -325,23 +325,6 @@ class TestModel(unittest.TestCase):
         self.assertEqual(eLDA_base_mu.num_models, len(eLDA_base_mu.tms))
         self.check_ttda(eLDA_base_mu)
 
-    def test_ldamulticore_reproducibility(self):
-        # Two LdaMulticore ensembles should be similar, but since LdaMulticore has some
-        # non-determinism due to scheduling rtol is lower
-        a = EnsembleLda(
-            corpus=common_corpus, id2word=common_dictionary,
-            num_topics=3, passes=10, num_models=3, workers=3,
-            iterations=30, random_state=2, topic_model_class='ldamulticore',
-            distance_workers=4,
-        )
-        b = EnsembleLda(
-            corpus=common_corpus, id2word=common_dictionary,
-            num_topics=3, passes=10, num_models=3, workers=3,
-            iterations=30, random_state=2, topic_model_class=LdaMulticore,
-            distance_workers=4, memory_friendly_ttda=False,
-        )
-        np.testing.assert_allclose(a.ttda, b.ttda, rtol=(rtol * 10))
-
     def test_add_and_recluster(self):
         # See if after adding a model, the model still makes sense
         num_new_models = 3
