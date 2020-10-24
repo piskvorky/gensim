@@ -1032,9 +1032,9 @@ class EnsembleLda(SaveLoad):
 
         clusters = self._aggregate_topics(grouped_by_labels)
 
-        # Start with the one that is the easiest to verify for sufficient isolated cores.
-        # Over time, invalid clusters will drop out and therefore clusters that once had a few (noise) neighbors
-        # will become more isolated, which makes it possible to mark those as stable.
+        # Clusters with noisy invalid neighbors may have a harder time being marked as stable, so start with the
+        # easy ones and potentially already remove some noise by also sorting smaller clusters to the front.
+        # This clears up the clusters a bit before checking the ones with many neighbors.
         sorted_clusters = sorted(
             clusters,
             key=lambda cluster: (
