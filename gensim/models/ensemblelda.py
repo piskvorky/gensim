@@ -122,11 +122,13 @@ class EnsembleLda(SaveLoad):
 
     """
 
-    def __init__(self, topic_model_class="ldamulticore", num_models=3,
-                 min_cores=None,  # default value from _generate_stable_topics()
-                 epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
-                 min_samples=None, masking_method="mass", masking_threshold=None,
-                 distance_workers=1, random_state=None, **gensim_kw_args):
+    def __init__(
+            self, topic_model_class="ldamulticore", num_models=3,
+            min_cores=None,  # default value from _generate_stable_topics()
+            epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
+            min_samples=None, masking_method="mass", masking_threshold=None,
+            distance_workers=1, random_state=None, **gensim_kw_args,
+    ):
         """Create and train a new EnsembleLda model.
 
         Will start training immediatelly, except if iterations, passes or num_models is 0 or if the corpus is missing.
@@ -210,7 +212,8 @@ class EnsembleLda(SaveLoad):
             raise ValueError(
                 "at least one of corpus/id2word must be specified, to establish "
                 "input space dimensionality. Corpus should be provided using the "
-                "`corpus` keyword argument.")
+                "`corpus` keyword argument."
+            )
 
         if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):
             self.topic_model_class = topic_model_class
@@ -221,7 +224,9 @@ class EnsembleLda(SaveLoad):
             }
             if topic_model_class not in kinds:
                 raise ValueError(
-                    "topic_model_class should be one of 'lda', 'ldamulticode' or a model inheriting from LdaModel")
+                    "topic_model_class should be one of 'lda', 'ldamulticode' or a model "
+                    "inheriting from LdaModel"
+                )
             self.topic_model_class = kinds[topic_model_class]
 
         self.num_models = num_models
@@ -274,8 +279,10 @@ class EnsembleLda(SaveLoad):
     def get_topic_model_class(self):
         """Get the class that is used for :meth:`gensim.models.EnsembleLda.generate_gensim_representation`."""
         if self.topic_model_class is None:
-            instruction = 'Try setting topic_model_class manually to what the individual models were based on, ' \
+            instruction = (
+                'Try setting topic_model_class manually to what the individual models were based on, '
                 'e.g. LdaMulticore.'
+            )
             try:
                 module = importlib.import_module(self.topic_model_module_string)
                 self.topic_model_class = getattr(module, self.topic_model_class_string)
@@ -285,12 +292,14 @@ class EnsembleLda(SaveLoad):
                 logger.error(
                     'Could not import the "{}" module in order to provide the "{}" class as '
                     '"topic_model_class" attribute. {}'
-                    .format(self.topic_model_class_string, self.topic_model_class_string, instruction))
+                    .format(self.topic_model_class_string, self.topic_model_class_string, instruction)
+                )
             except AttributeError:
                 logger.error(
                     'Could not import the "{}" class from the "{}" module in order to set the '
                     '"topic_model_class" attribute. {}'
-                    .format(self.topic_model_class_string, self.topic_model_module_string, instruction))
+                    .format(self.topic_model_class_string, self.topic_model_module_string, instruction)
+                )
         return self.topic_model_class
 
     def save(self, *args, **kwargs):
@@ -516,14 +525,18 @@ class EnsembleLda(SaveLoad):
             if num_new_models is not None and num_new_models + self.num_models != len(self.tms):
                 logger.info(
                     'num_new_models will be ignored. num_models should match the number of '
-                    'stored models for a memory unfriendly ensemble')
+                    'stored models for a memory unfriendly ensemble'
+                )
             self.num_models = len(self.tms)
 
         logger.info("ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
 
         if self.ttda.shape[1] != ttda.shape[1]:
-            raise ValueError("target ttda dimensions do not match. Topics must be {} but was {} elements large"
-                .format(self.ttda.shape[-1], ttda.shape[-1]))
+            raise ValueError(
+                "target ttda dimensions do not match. Topics must be {} but was {} elements large".format(
+                    self.ttda.shape[-1], ttda.shape[-1],
+                )
+            )
         self.ttda = np.append(self.ttda, ttda, axis=0)
 
         # tell recluster that the distance matrix needs to be regenerated
@@ -605,7 +618,8 @@ class EnsembleLda(SaveLoad):
             try:
                 process = Process(
                     target=self._generate_topic_models,
-                    args=(num_subprocess_models, random_states_for_worker, child_conn))
+                    args=(num_subprocess_models, random_states_for_worker, child_conn),
+                )
 
                 processes.append(process)
                 pipes.append((parent_conn, child_conn))
@@ -663,7 +677,6 @@ class EnsembleLda(SaveLoad):
         # loop, in order to collect some properties from it afterwards.
 
         for i in range(num_models):
-
             kwargs["random_state"] = random_states[i]
 
             tm = self.get_topic_model_class()(**kwargs)
@@ -698,7 +711,8 @@ class EnsembleLda(SaveLoad):
         # the chunk of ttda that's going to be calculated:
         ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
         distance_chunk = self._calculate_asymmetric_distance_matrix_chunk(
-            ttda1=ttda1, ttda2=self.ttda, threshold=threshold, start_index=ttdas_sent, method=method)
+            ttda1=ttda1, ttda2=self.ttda, threshold=threshold, start_index=ttdas_sent, method=method,
+        )
         pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
         pipe.close()
 
@@ -725,7 +739,8 @@ class EnsembleLda(SaveLoad):
         # singlecore
         if workers is not None and workers <= 1:
             self.asymmetric_distance_matrix = self._calculate_asymmetric_distance_matrix_chunk(
-                ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method)
+                ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method,
+            )
             return self.asymmetric_distance_matrix
 
         # else, if workers > 1 use multiprocessing
@@ -751,8 +766,10 @@ class EnsembleLda(SaveLoad):
                 else:
                     n_ttdas = int((len(self.ttda) - ttdas_sent) / (workers - i))
 
-                process = Process(target=self._asymmetric_distance_matrix_worker,
-                            args=(i, ttdas_sent, n_ttdas, child_conn, threshold, method))
+                process = Process(
+                    target=self._asymmetric_distance_matrix_worker,
+                    args=(i, ttdas_sent, n_ttdas, child_conn, threshold, method),
+                )
                 ttdas_sent += n_ttdas
 
                 processes.append(process)
@@ -962,14 +979,17 @@ class EnsembleLda(SaveLoad):
                 "max_num_neighboring_labels": max_num_neighboring_labels,
                 "neighboring_labels": neighboring_labels,
                 "label": label,
-                "num_cores": len([topic for topic in group if topic["is_core"]])
+                "num_cores": len([topic for topic in group if topic["is_core"]]),
             })
 
-        sorted_clusters = sorted(sorted_clusters,
+        sorted_clusters = sorted(
+            sorted_clusters,
             key=lambda cluster: (
                 cluster["max_num_neighboring_labels"],
-                cluster["label"]
-            ), reverse=False)
+                cluster["label"],
+            ),
+            reverse=False,
+        )
 
         return sorted_clusters
 
@@ -1202,7 +1222,7 @@ class CBDBSCAN():
             "is_core": False,
             "neighboring_labels": set(),
             "neighboring_topic_indices": set(),
-            "label": None
+            "label": None,
         } for _ in range(len(amatrix))]
 
         amatrix_copy = amatrix.copy()

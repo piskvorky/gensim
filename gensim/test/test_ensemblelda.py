@@ -31,13 +31,17 @@ class TestModel(unittest.TestCase):
         # the topics are equal
         random_state = 0
 
-        self.eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
-                                passes=passes, num_models=num_models, random_state=random_state,
-                                topic_model_class=LdaModel)
+        self.eLDA = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+            passes=passes, num_models=num_models, random_state=random_state,
+            topic_model_class=LdaModel,
+        )
 
-        self.eLDA_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
-                                   passes=passes, num_models=num_models, random_state=random_state,
-                                   memory_friendly_ttda=False, topic_model_class=LdaModel)
+        self.eLDA_mu = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+            passes=passes, num_models=num_models, random_state=random_state,
+            memory_friendly_ttda=False, topic_model_class=LdaModel,
+        )
 
     def check_ttda(self, ensemble):
         """tests the integrity of the ttda of any ensemble"""
@@ -68,8 +72,10 @@ class TestModel(unittest.TestCase):
         # so use some absolute tolerance measurement to check if the matrix is at least
         # close to the target.
         atol = reference.asymmetric_distance_matrix.max() * 1e-05
-        np.testing.assert_allclose(self.eLDA.asymmetric_distance_matrix,
-                                   reference.asymmetric_distance_matrix, atol=atol)
+        np.testing.assert_allclose(
+            self.eLDA.asymmetric_distance_matrix,
+            reference.asymmetric_distance_matrix, atol=atol,
+        )
 
     def test_clustering(self):
         # the following test is quite specific to the current implementation and not part of any api,
@@ -94,23 +100,31 @@ class TestModel(unittest.TestCase):
         # should not throw errors and no training should happen
 
         # 0 passes
-        eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
-                           passes=0, num_models=num_models, random_state=0)
+        eLDA = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+            passes=0, num_models=num_models, random_state=0,
+        )
         self.assertEqual(len(eLDA.ttda), 0)
 
         # no corpus
-        eLDA = EnsembleLda(id2word=common_dictionary, num_topics=num_topics,
-                           passes=passes, num_models=num_models, random_state=0)
+        eLDA = EnsembleLda(
+            id2word=common_dictionary, num_topics=num_topics,
+            passes=passes, num_models=num_models, random_state=0,
+        )
         self.assertEqual(len(eLDA.ttda), 0)
 
         # 0 iterations
-        eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
-                           iterations=0, num_models=num_models, random_state=0)
+        eLDA = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+            iterations=0, num_models=num_models, random_state=0,
+        )
         self.assertEqual(len(eLDA.ttda), 0)
 
         # 0 models
-        eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
-                           passes=passes, num_models=0, random_state=0)
+        eLDA = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, num_topics=num_topics,
+            passes=passes, num_models=0, random_state=0
+        )
         self.assertEqual(len(eLDA.ttda), 0)
 
     def test_memory_unfriendly(self):
@@ -130,10 +144,14 @@ class TestModel(unittest.TestCase):
 
     def assert_cluster_results_equal(self, a, b):
         """compares important attributes of the cluster results"""
-        np.testing.assert_array_equal([row["label"] for row in a],
-                                      [row["label"] for row in b])
-        np.testing.assert_array_equal([row["is_core"] for row in a],
-                                      [row["is_core"] for row in b])
+        np.testing.assert_array_equal(
+            [row["label"] for row in a],
+            [row["label"] for row in b],
+        )
+        np.testing.assert_array_equal(
+            [row["is_core"] for row in a],
+            [row["is_core"] for row in b],
+        )
 
     def test_persisting(self):
         fname = get_tmpfile('gensim_models_ensemblelda')
@@ -180,15 +198,19 @@ class TestModel(unittest.TestCase):
         workers = 3
 
         # memory friendly. contains List of topic word distributions
-        eLDA_multi = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, topic_model_class=LdaModel,
-                                 num_topics=num_topics, passes=passes, num_models=num_models,
-                                 random_state=random_state, ensemble_workers=workers, distance_workers=workers)
+        eLDA_multi = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, topic_model_class=LdaModel,
+            num_topics=num_topics, passes=passes, num_models=num_models,
+            random_state=random_state, ensemble_workers=workers, distance_workers=workers,
+        )
 
         # memory unfriendly. contains List of models
-        eLDA_multi_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, topic_model_class=LdaModel,
-                                    num_topics=num_topics, passes=passes, num_models=num_models,
-                                    random_state=random_state, ensemble_workers=workers, distance_workers=workers,
-                                    memory_friendly_ttda=False)
+        eLDA_multi_mu = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary, topic_model_class=LdaModel,
+            num_topics=num_topics, passes=passes, num_models=num_models,
+            random_state=random_state, ensemble_workers=workers, distance_workers=workers,
+            memory_friendly_ttda=False,
+        )
 
         np.testing.assert_allclose(self.eLDA.get_topics(), eLDA_multi.get_topics(), rtol=rtol)
         np.testing.assert_allclose(self.eLDA_mu.get_topics(), eLDA_multi_mu.get_topics(), rtol=rtol)
@@ -208,10 +230,12 @@ class TestModel(unittest.TestCase):
         num_new_topics = 3
 
         # 1. memory friendly
-        eLDA_base = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
-                                num_topics=num_new_topics, passes=1, num_models=num_new_models,
-                                iterations=1, random_state=0, topic_model_class=LdaMulticore,
-                                workers=3, ensemble_workers=2)
+        eLDA_base = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary,
+            num_topics=num_new_topics, passes=1, num_models=num_new_models,
+            iterations=1, random_state=0, topic_model_class=LdaMulticore,
+            workers=3, ensemble_workers=2,
+        )
 
         # 1.1 ttda
         a = len(eLDA_base.ttda)
@@ -254,10 +278,12 @@ class TestModel(unittest.TestCase):
         self.check_ttda(eLDA_base)
 
         # 2. memory unfriendly
-        eLDA_base_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
-                                   num_topics=num_new_topics, passes=1, num_models=num_new_models,
-                                   iterations=1, random_state=0, topic_model_class=LdaMulticore,
-                                   workers=3, ensemble_workers=2, memory_friendly_ttda=False)
+        eLDA_base_mu = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary,
+            num_topics=num_new_topics, passes=1, num_models=num_new_models,
+            iterations=1, random_state=0, topic_model_class=LdaMulticore,
+            workers=3, ensemble_workers=2, memory_friendly_ttda=False,
+        )
 
         # 2.1 a single ensemble
         a = len(eLDA_base_mu.tms)
@@ -305,14 +331,18 @@ class TestModel(unittest.TestCase):
         num_new_topics = 3
 
         # train
-        new_eLDA = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
-                               num_topics=num_new_topics, passes=10, num_models=num_new_models,
-                               iterations=30, random_state=1, topic_model_class='ldamulticore',
-                               distance_workers=4)
-        new_eLDA_mu = EnsembleLda(corpus=common_corpus, id2word=common_dictionary,
-                                  num_topics=num_new_topics, passes=10, num_models=num_new_models,
-                                  iterations=30, random_state=1, topic_model_class='ldamulticore',
-                                  distance_workers=4, memory_friendly_ttda=False)
+        new_eLDA = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary,
+            num_topics=num_new_topics, passes=10, num_models=num_new_models,
+            iterations=30, random_state=1, topic_model_class='ldamulticore',
+            distance_workers=4,
+        )
+        new_eLDA_mu = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary,
+            num_topics=num_new_topics, passes=10, num_models=num_new_models,
+            iterations=30, random_state=1, topic_model_class='ldamulticore',
+            distance_workers=4, memory_friendly_ttda=False,
+        )
         # both should be similar
         np.testing.assert_allclose(new_eLDA.ttda, new_eLDA_mu.ttda, rtol=rtol)
         np.testing.assert_allclose(new_eLDA.get_topics(), new_eLDA_mu.get_topics(), rtol=rtol)
@@ -331,8 +361,10 @@ class TestModel(unittest.TestCase):
         # 2. distance matrix
         new_eLDA._generate_asymmetric_distance_matrix()
         new_eLDA_mu._generate_asymmetric_distance_matrix()
-        np.testing.assert_allclose(new_eLDA.asymmetric_distance_matrix,
-                                   new_eLDA_mu.asymmetric_distance_matrix)
+        np.testing.assert_allclose(
+            new_eLDA.asymmetric_distance_matrix,
+            new_eLDA_mu.asymmetric_distance_matrix,
+        )
 
         # 3. CBDBSCAN results
         new_eLDA._generate_topic_clusters()
@@ -345,7 +377,7 @@ class TestModel(unittest.TestCase):
         new_eLDA._generate_stable_topics()
         new_eLDA_mu._generate_stable_topics()
         np.testing.assert_allclose(new_eLDA.get_topics(),
-                                   new_eLDA_mu.get_topics())
+            new_eLDA_mu.get_topics())
 
         new_eLDA.generate_gensim_representation()
         new_eLDA_mu.generate_gensim_representation()
