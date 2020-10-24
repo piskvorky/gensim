@@ -25,7 +25,7 @@ Examples
     [[(0, 1), (1, 1), (2, 1)], [(1, 1), (2, 1), (3, 1)]]
 
 """
-from six import string_types
+
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
@@ -91,7 +91,7 @@ class Text2BowTransformer(TransformerMixin, BaseEstimator):
             )
 
         # input as python lists
-        if isinstance(docs, string_types):
+        if isinstance(docs, str):
             docs = [docs]
         tokenized_docs = (list(self.tokenizer(doc)) for doc in docs)
         return [self.gensim_model.doc2bow(doc) for doc in tokenized_docs]

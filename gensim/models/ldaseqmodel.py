@@ -52,22 +52,26 @@ Access the document embeddings generated from the DTM
 
 """
 
-from gensim import utils, matutils
-from gensim.models import ldamodel
+import logging
+
 import numpy as np
 from scipy.special import digamma, gammaln
 from scipy import optimize
-import logging
-from six.moves import range, zip
+
+from gensim import utils, matutils
+from gensim.models import ldamodel
+
 
 logger = logging.getLogger(__name__)
 
 
 class LdaSeqModel(utils.SaveLoad):
     """Estimate Dynamic Topic Model parameters based on a training corpus."""
-    def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                 initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
-                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
+    def __init__(
+            self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
+            initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
+            random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100,
+        ):
         """
 
         Parameters

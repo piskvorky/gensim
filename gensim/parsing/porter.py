@@ -30,9 +30,6 @@ Examples
 """
 
 
-from six.moves import range
-
-
 class PorterStemmer(object):
     """Class contains implementation of Porter stemming algorithm.
 

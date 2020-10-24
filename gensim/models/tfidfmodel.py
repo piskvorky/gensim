@@ -17,11 +17,11 @@ import logging
 from functools import partial
 import re
 
+import numpy as np
+
 from gensim import interfaces, matutils, utils
 from gensim.utils import deprecated
-from six import iteritems, iterkeys
 
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -155,7 +155,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
+    return {termid: wglobal(df, total_docs) for termid, df in dfs.items()}
 
 
 def smartirs_wlocal(tf, local_scheme):
@@ -389,7 +389,7 @@ class TfidfModel(interfaces.TransformationABC):
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.cfs = dictionary.cfs.copy()
             self.dfs = dictionary.dfs.copy()
-            self.term_lens = {termid: len(term) for termid, term in iteritems(dictionary)}
+            self.term_lens = {termid: len(term) for termid, term in dictionary.items()}
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
             if not id2word:
                 self.id2word = dictionary
@@ -415,7 +415,7 @@ class TfidfModel(interfaces.TransformationABC):
             self.pivot = 1.0 * self.num_nnz / self.num_docs
         elif n_n == "b":
             self.pivot = 1.0 * sum(
-                self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in iterkeys(dictionary)
+                self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in dictionary.keys()
             ) / self.num_docs
 
     @classmethod

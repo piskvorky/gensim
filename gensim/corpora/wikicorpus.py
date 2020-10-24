@@ -34,8 +34,6 @@ from gensim import utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
 
-from six import raise_from
-
 
 logger = logging.getLogger(__name__)
 
@@ -704,14 +702,16 @@ class WikiCorpus(TextCorpus):
                         yield tokens
 
         except KeyboardInterrupt:
-            logger.warn(
+            logger.warning(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
                 articles, positions, articles_all, positions_all, self.article_min_tokens
             )
         except PicklingError as exc:
-            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
-                'make sure the function can be pickled.'.format(self.filter_articles)), exc)
+            raise PicklingError(
+                f'Can not send filtering function {self.filter_articles} to multiprocessing, '
+                'make sure the function can be pickled.'
+            ) from exc
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
