@@ -215,6 +215,20 @@ class TestModel(unittest.TestCase):
         np.testing.assert_allclose(self.eLDA.get_topics(), eLDA_multi.get_topics(), rtol=rtol)
         np.testing.assert_allclose(self.eLDA_mu.get_topics(), eLDA_multi_mu.get_topics(), rtol=rtol)
 
+    def test_add_models_to_empty(self):
+        ensemble = EnsembleLda(id2word=common_dictionary, num_models=0)
+        ensemble.add_model(self.eLDA.ttda[0:1])
+        ensemble.add_model(self.eLDA.ttda[1:])
+        ensemble.recluster()
+        np.testing.assert_allclose(ensemble.get_topics(), self.eLDA.get_topics(), rtol=rtol)
+
+        # persisting an ensemble that is entirely built from existing ttdas
+        fname = get_tmpfile('gensim_models_ensemblelda')
+        ensemble.save(fname)
+        loaded_ensemble = EnsembleLda.load(fname)
+        np.testing.assert_allclose(loaded_ensemble.get_topics(), self.eLDA.get_topics(), rtol=rtol)
+        self.test_inference(loaded_ensemble)
+
     def test_add_models(self):
         # same configuration
         num_models = self.eLDA.num_models
@@ -376,8 +390,10 @@ class TestModel(unittest.TestCase):
         # 4. finally, the stable topics
         new_eLDA._generate_stable_topics()
         new_eLDA_mu._generate_stable_topics()
-        np.testing.assert_allclose(new_eLDA.get_topics(),
-            new_eLDA_mu.get_topics())
+        np.testing.assert_allclose(
+            new_eLDA.get_topics(),
+            new_eLDA_mu.get_topics(),
+        )
 
         new_eLDA.generate_gensim_representation()
         new_eLDA_mu.generate_gensim_representation()
@@ -385,14 +401,16 @@ class TestModel(unittest.TestCase):
         # same random state, hence topics should be still similar
         np.testing.assert_allclose(new_eLDA.get_topics(), new_eLDA_mu.get_topics(), rtol=rtol)
 
-    def test_inference(self):
-        import numpy as np
+    def test_inference(self, eLDA=None):
+        if eLDA is None:
+            eLDA = self.eLDA
+
         # get the most likely token id from topic 0
-        max_id = np.argmax(self.eLDA.get_topics()[0, :])
-        self.assertGreater(self.eLDA.classic_model_representation.iterations, 0)
+        max_id = np.argmax(eLDA.get_topics()[0, :])
+        self.assertGreater(eLDA.classic_model_representation.iterations, 0)
         # topic 0 should be dominant in the inference.
         # the difference between the probabilities should be significant and larger than 0.3
-        infered = self.eLDA[[(max_id, 1)]]
+        infered = eLDA[[(max_id, 1)]]
         self.assertGreater(infered[0][1] - 0.3, infered[1][1])
 
 
