@@ -117,19 +117,19 @@ pygments_style = 'sphinx'
 # main_colour = "#ffbbbb"
 
 html_theme_options = {
-    # "rightsidebar": "false",
-    # "stickysidebar": "true",
-    # "bodyfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
-    # "headfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
-    # "sidebarbgcolor": "fuckyou",
-    # "footerbgcolor": "#771111",
-    # "relbarbgcolor": "#993333",
-    # "sidebartextcolor": "#000000",
-    # "sidebarlinkcolor": "#330000",
-    # "codebgcolor": "#fffff0",
-    # "headtextcolor": "#000080",
-    # "headbgcolor": "#f0f0ff",
-    # "bgcolor": "#ffffff",
+# "rightsidebar": "false",
+# "stickysidebar": "true",
+# "bodyfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
+# "headfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
+# "sidebarbgcolor": "fuckyou",
+# "footerbgcolor": "#771111",
+# "relbarbgcolor": "#993333",
+# "sidebartextcolor": "#000000",
+# "sidebarlinkcolor": "#330000",
+# "codebgcolor": "#fffff0",
+# "headtextcolor": "#000080",
+# "headbgcolor": "#f0f0ff",
+# "bgcolor": "#ffffff",
 }
 
 
