@@ -349,8 +349,10 @@ class EnsembleLda(SaveLoad):
         num_stable_topics = len(stable_topics)
 
         if num_stable_topics == 0:
-            logger.error("the model did not detect any stable topic. You can try to adjust epsilon: "
-                         "recluster(eps=...)")
+            logger.error(
+                "the model did not detect any stable topic. You can try to adjust epsilon: "
+                "recluster(eps=...)"
+            )
             self.classic_model_representation = None
             return
 
@@ -411,7 +413,6 @@ class EnsembleLda(SaveLoad):
         the exact same dictionary/idword mapping.
 
         In order to generate new stable topics afterwards, use:
-            1. ``self._generate_asymmetric_distance_matrix()``
             2. ``self.``:meth:`~gensim.models.ensemblelda.EnsembleLda.recluster`
 
         The ttda of another ensemble can also be used, in that case set ``num_new_models`` to the ``num_models``
@@ -966,11 +967,11 @@ class EnsembleLda(SaveLoad):
         sorted_clusters = []
 
         for label, group in grouped_by_labels.items():
-            num_neighboring_labels = 0
+            max_num_neighboring_labels = 0
             neighboring_labels = []  # will be a list of sets
 
             for topic in group:
-                max_num_neighboring_labels = max(topic["num_neighboring_labels"], num_neighboring_labels)
+                max_num_neighboring_labels = max(topic["num_neighboring_labels"], max_num_neighboring_labels)
                 neighboring_labels.append(topic["neighboring_labels"])
 
             neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
@@ -981,15 +982,6 @@ class EnsembleLda(SaveLoad):
                 "label": label,
                 "num_cores": len([topic for topic in group if topic["is_core"]]),
             })
-
-        sorted_clusters = sorted(
-            sorted_clusters,
-            key=lambda cluster: (
-                cluster["max_num_neighboring_labels"],
-                cluster["label"],
-            ),
-            reverse=False,
-        )
 
         return sorted_clusters
 
@@ -1038,7 +1030,20 @@ class EnsembleLda(SaveLoad):
 
         grouped_by_labels = self._group_by_labels(results)
 
-        sorted_clusters = self._aggregate_topics(grouped_by_labels)
+        clusters = self._aggregate_topics(grouped_by_labels)
+
+        # Start with the one that is the easiest to verify for sufficient isolated cores.
+        # Over time, invalid clusters will drop out and therefore clusters that once had a few (noise) neighbors
+        # will become more isolated, which makes it possible to mark those as stable.
+        sorted_clusters = sorted(
+            clusters,
+            key=lambda cluster: (
+                cluster["max_num_neighboring_labels"],
+                cluster["num_cores"],
+                cluster["label"],
+            ),
+            reverse=False,
+        )
 
         for cluster in sorted_clusters:
             cluster["is_valid"] = None
@@ -1054,8 +1059,6 @@ class EnsembleLda(SaveLoad):
                 cluster["is_valid"] = True
             else:
                 cluster["is_valid"] = False
-                # This modifies parent labels which is important in _contains_isolated_cores, so the result depends on
-                # where to start.
                 self._remove_from_all_sets(label, sorted_clusters)
 
         # list of all the label numbers that are valid
@@ -1081,6 +1084,8 @@ class EnsembleLda(SaveLoad):
 
         self.sorted_clusters = sorted_clusters
         self.stable_topics = stable_topics
+
+        logger.info("found %s stable topics", len(stable_topics))
 
     def recluster(self, eps=0.1, min_samples=None, min_cores=None):
         """Reapply CBDBSCAN clustering and stable topic generation.
@@ -1163,7 +1168,7 @@ class EnsembleLda(SaveLoad):
         return self.gensim_kw_args["id2word"]
 
 
-class CBDBSCAN():
+class CBDBSCAN:
     """A Variation of the DBSCAN algorithm called Checkback DBSCAN (CBDBSCAN).
 
     The algorithm works based on DBSCAN-like parameters 'eps' and 'min_samples' that respectively define how far a
