@@ -22,7 +22,7 @@ num_models = 4
 passes = 50
 
 # windows tests fail due to the required assertion precision being too high
-rtol = 1e-03 if os.name == 'nt' else 1e-05
+rtol = 1e-04 if os.name == 'nt' else 1e-05
 
 
 class TestModel(unittest.TestCase):
@@ -325,8 +325,25 @@ class TestModel(unittest.TestCase):
         self.assertEqual(eLDA_base_mu.num_models, len(eLDA_base_mu.tms))
         self.check_ttda(eLDA_base_mu)
 
+    def test_ldamulticore_reproducibility(self):
+        # Two LdaMulticore ensembles should be similar, but since LdaMulticore has some
+        # non-determinism due to scheduling rtol is lower
+        a = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary,
+            num_topics=3, passes=10, num_models=3, workers=3,
+            iterations=30, random_state=2, topic_model_class='ldamulticore',
+            distance_workers=4,
+        )
+        b = EnsembleLda(
+            corpus=common_corpus, id2word=common_dictionary,
+            num_topics=3, passes=10, num_models=3, workers=3,
+            iterations=30, random_state=2, topic_model_class=LdaMulticore,
+            distance_workers=4, memory_friendly_ttda=False,
+        )
+        np.testing.assert_allclose(a.ttda, b.ttda, rtol=(rtol * 10))
+
     def test_add_and_recluster(self):
-        # 6.2: see if after adding a model, the model still makes sense
+        # See if after adding a model, the model still makes sense
         num_new_models = 3
         num_new_topics = 3
 
@@ -334,13 +351,13 @@ class TestModel(unittest.TestCase):
         new_eLDA = EnsembleLda(
             corpus=common_corpus, id2word=common_dictionary,
             num_topics=num_new_topics, passes=10, num_models=num_new_models,
-            iterations=30, random_state=1, topic_model_class='ldamulticore',
+            iterations=30, random_state=1, topic_model_class='lda',
             distance_workers=4,
         )
         new_eLDA_mu = EnsembleLda(
             corpus=common_corpus, id2word=common_dictionary,
             num_topics=num_new_topics, passes=10, num_models=num_new_models,
-            iterations=30, random_state=1, topic_model_class='ldamulticore',
+            iterations=30, random_state=1, topic_model_class=LdaModel,
             distance_workers=4, memory_friendly_ttda=False,
         )
         # both should be similar
