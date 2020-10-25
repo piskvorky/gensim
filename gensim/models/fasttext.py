@@ -139,7 +139,7 @@ For example, you can continue training the loaded model:
 
     >>> import numpy as np
     >>>
-    >>> 'computation' in model.wv.vocab  # New word, currently out of vocab
+    >>> 'computation' in model.wv.key_to_index  # New word, currently out of vocab
     False
     >>> old_vector = np.copy(model.wv['computation'])  # Grab the existing vector
     >>> new_sentences = [
@@ -157,7 +157,7 @@ For example, you can continue training the loaded model:
     >>> new_vector = model.wv['computation']
     >>> np.allclose(old_vector, new_vector, atol=1e-4)  # Vector has changed, model has learnt something
     False
-    >>> 'computation' in model.wv.vocab  # Word is still out of vocab
+    >>> 'computation' in model.wv.key_to_index  # Word is still out of vocab
     False
 
 .. Important::
@@ -178,7 +178,7 @@ You may continue training them on new data:
 
 .. sourcecode:: pycon
 
-    >>> 'computer' in fb_model.wv.vocab  # New word, currently out of vocab
+    >>> 'computer' in fb_model.wv.key_to_index  # New word, currently out of vocab
     False
     >>> old_computer = np.copy(fb_model.wv['computer'])  # Calculate current vectors
     >>> fb_model.build_vocab(new_sentences, update=True)
@@ -186,7 +186,7 @@ You may continue training them on new data:
     >>> new_computer = fb_model.wv['computer']
     >>> np.allclose(old_computer, new_computer, atol=1e-4)  # Vector has changed, model has learnt something
     False
-    >>> 'computer' in fb_model.wv.vocab  # New word is now in the vocabulary
+    >>> 'computer' in fb_model.wv.key_to_index  # New word is now in the vocabulary
     True
 
 If you do not intend to continue training the model, consider using the
@@ -200,25 +200,25 @@ That function only loads the word embeddings (keyed vectors), consuming much les
     >>> cap_path = datapath("crime-and-punishment.bin")
     >>> wv = load_facebook_vectors(cap_path)
     >>>
-    >>> 'landlord' in wv.vocab  # Word is out of vocabulary
+    >>> 'landlord' in wv.key_to_index  # Word is out of vocabulary
     False
-    >>> oov_vector = wv['landlord']
+    >>> oov_vector = wv['landlord']  # Even OOV words have vectors in FastText
     >>>
-    >>> 'landlady' in wv.vocab  # Word is in the vocabulary
+    >>> 'landlady' in wv.key_to_index  # Word is in the vocabulary
     True
     >>> iv_vector = wv['landlady']
 
-Retrieve word-vector for vocab and out-of-vocab word:
+Retrieve the word-vector for vocab and out-of-vocab word:
 
 .. sourcecode:: pycon
 
     >>> existent_word = "computer"
-    >>> existent_word in model.wv.vocab
+    >>> existent_word in model.wv.key_to_index
     True
     >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
     >>>
     >>> oov_word = "graph-out-of-vocab"
-    >>> oov_word in model.wv.vocab
+    >>> oov_word in model.wv.key_to_index
     False
     >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
@@ -699,11 +699,11 @@ def load_facebook_model(path, encoding='utf-8'):
         >>> cap_path = datapath("crime-and-punishment.bin")
         >>> fb_model = load_facebook_model(cap_path)
         >>>
-        >>> 'landlord' in fb_model.wv.vocab  # Word is out of vocabulary
+        >>> 'landlord' in fb_model.wv.key_to_index  # Word is out of vocabulary
         False
         >>> oov_term = fb_model.wv['landlord']
         >>>
-        >>> 'landlady' in fb_model.wv.vocab  # Word is in the vocabulary
+        >>> 'landlady' in fb_model.wv.key_to_index  # Word is in the vocabulary
         True
         >>> iv_term = fb_model.wv['landlady']
         >>>
@@ -764,11 +764,11 @@ def load_facebook_vectors(path, encoding='utf-8'):
         >>> cap_path = datapath("crime-and-punishment.bin")
         >>> fbkv = load_facebook_vectors(cap_path)
         >>>
-        >>> 'landlord' in fbkv.vocab  # Word is out of vocabulary
+        >>> 'landlord' in fbkv.key_to_index  # Word is out of vocabulary
         False
         >>> oov_vector = fbkv['landlord']
         >>>
-        >>> 'landlady' in fbkv.vocab  # Word is in the vocabulary
+        >>> 'landlady' in fbkv.key_to_index  # Word is in the vocabulary
         True
         >>> iv_vector = fbkv['landlady']
 
