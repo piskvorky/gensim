@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**06:52.125** total execution time for **auto_examples_tutorials** files:
+**06:53.294** total execution time for **auto_examples_tutorials** files:
 
 +-------------------------------------------------------------------------------------+-----------+-----------+
-| :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py` (``run_ensemblelda.py``) | 06:52.125 | 1636.4 MB |
+| :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py` (``run_ensemblelda.py``) | 06:53.294 | 1628.6 MB |
 +-------------------------------------------------------------------------------------+-----------+-----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py` (``run_annoy.py``)             | 00:00.000 | 0.0 MB    |
 +-------------------------------------------------------------------------------------+-----------+-----------+

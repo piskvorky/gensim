@@ -67,11 +67,11 @@ so it won't be explained again in detail.
 
  .. code-block:: none
 
-    2020-10-25 01:05:04,690 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-10-25 01:05:10,080 : INFO : built Dictionary(238542 unique tokens: ['a', 'abacus', 'ability', 'able', 'abnormal']...) from 1701 documents (total 17005207 corpus positions)
-    2020-10-25 01:05:10,262 : INFO : discarding 218466 tokens: [('a', 1701), ('ability', 934), ('able', 1202), ('about', 1687), ('above', 1327), ('abstention', 13), ('accepted', 945), ('according', 1468), ('account', 1113), ('act', 1312)]...
-    2020-10-25 01:05:10,263 : INFO : keeping 20076 tokens which were in no less than 20 and no more than 850 (=50.0%) documents
-    2020-10-25 01:05:10,338 : INFO : resulting dictionary: Dictionary(20076 unique tokens: ['abacus', 'abnormal', 'abolished', 'abolition', 'absence']...)
+    2020-10-25 11:23:34,467 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2020-10-25 11:23:39,808 : INFO : built Dictionary(238542 unique tokens: ['a', 'abacus', 'ability', 'able', 'abnormal']...) from 1701 documents (total 17005207 corpus positions)
+    2020-10-25 11:23:39,989 : INFO : discarding 218466 tokens: [('a', 1701), ('ability', 934), ('able', 1202), ('about', 1687), ('above', 1327), ('abstention', 13), ('accepted', 945), ('according', 1468), ('account', 1113), ('act', 1312)]...
+    2020-10-25 11:23:39,989 : INFO : keeping 20076 tokens which were in no less than 20 and no more than 850 (=50.0%) documents
+    2020-10-25 11:23:40,063 : INFO : resulting dictionary: Dictionary(20076 unique tokens: ['abacus', 'abnormal', 'abolished', 'abolition', 'absence']...)
 
 
 
@@ -185,18 +185,18 @@ The number of stable topics which are clustered from all those topics is smaller
 
  .. code-block:: none
 
-    2020-10-25 01:05:13,988 : INFO : generating 8 topic models...
-    2020-10-25 01:09:45,442 : INFO : generating a 160 x 160 asymmetric distance matrix...
-    2020-10-25 01:09:46,332 : INFO : fitting the clustering model, using 4 for min_samples
-    2020-10-25 01:09:46,348 : INFO : generating stable topics, using 3 for min_cores
-    2020-10-25 01:09:46,348 : INFO : found 32 clusters
-    2020-10-25 01:09:46,350 : INFO : found 2 stable topics
-    2020-10-25 01:09:46,350 : INFO : generating classic gensim model representation based on results from the ensemble
-    2020-10-25 01:09:46,496 : INFO : using symmetric alpha at 0.5
-    2020-10-25 01:09:46,496 : INFO : using symmetric eta at 0.5
-    2020-10-25 01:09:46,497 : INFO : using serial LDA version on this node
-    2020-10-25 01:09:46,500 : INFO : running online (multi-pass) LDA training, 2 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2020-10-25 01:09:46,500 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2020-10-25 11:23:43,277 : INFO : generating 8 topic models...
+    2020-10-25 11:28:16,432 : INFO : generating a 160 x 160 asymmetric distance matrix...
+    2020-10-25 11:28:17,287 : INFO : fitting the clustering model, using 4 for min_samples
+    2020-10-25 11:28:17,315 : INFO : generating stable topics, using 3 for min_cores
+    2020-10-25 11:28:17,315 : INFO : found 21 clusters
+    2020-10-25 11:28:17,319 : INFO : found 2 stable topics
+    2020-10-25 11:28:17,319 : INFO : generating classic gensim model representation based on results from the ensemble
+    2020-10-25 11:28:17,487 : INFO : using symmetric alpha at 0.5
+    2020-10-25 11:28:17,487 : INFO : using symmetric eta at 0.5
+    2020-10-25 11:28:17,488 : INFO : using serial LDA version on this node
+    2020-10-25 11:28:17,491 : INFO : running online (multi-pass) LDA training, 2 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2020-10-25 11:28:17,491 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
     160
     2
 
@@ -226,7 +226,7 @@ Make sure to chose one that is within the range of values.
     without_diagonal = ensemble.asymmetric_distance_matrix[~np.eye(shape[0],dtype=bool)].reshape(shape[0],-1)
     without_diagonal.min(), without_diagonal.mean(), without_diagonal.max()
 
-    ensemble.recluster(eps=0.1, min_samples=2, min_cores=2)
+    ensemble.recluster(eps=0.09, min_samples=2, min_cores=2)
 
     print(len(ensemble.get_topics()))
 
@@ -240,17 +240,17 @@ Make sure to chose one that is within the range of values.
 
  .. code-block:: none
 
-    2020-10-25 01:09:46,802 : INFO : fitting the clustering model
-    2020-10-25 01:09:46,816 : INFO : generating stable topics
-    2020-10-25 01:09:46,816 : INFO : found 47 clusters
-    2020-10-25 01:09:46,819 : INFO : found 2 stable topics
-    2020-10-25 01:09:46,819 : INFO : generating classic gensim model representation based on results from the ensemble
-    2020-10-25 01:09:46,821 : INFO : using symmetric alpha at 0.5
-    2020-10-25 01:09:46,821 : INFO : using symmetric eta at 0.5
-    2020-10-25 01:09:46,823 : INFO : using serial LDA version on this node
-    2020-10-25 01:09:46,825 : INFO : running online (multi-pass) LDA training, 2 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2020-10-25 01:09:46,825 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
-    2
+    2020-10-25 11:28:17,675 : INFO : fitting the clustering model
+    2020-10-25 11:28:17,687 : INFO : generating stable topics
+    2020-10-25 11:28:17,688 : INFO : found 33 clusters
+    2020-10-25 11:28:17,690 : INFO : found 4 stable topics
+    2020-10-25 11:28:17,691 : INFO : generating classic gensim model representation based on results from the ensemble
+    2020-10-25 11:28:17,692 : INFO : using symmetric alpha at 0.25
+    2020-10-25 11:28:17,692 : INFO : using symmetric eta at 0.25
+    2020-10-25 11:28:17,694 : INFO : using serial LDA version on this node
+    2020-10-25 11:28:17,698 : INFO : running online (multi-pass) LDA training, 4 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2020-10-25 11:28:17,698 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    4
 
 
 
@@ -305,79 +305,79 @@ Afterwards the number and quality of stable topics might be different depending 
 
  .. code-block:: none
 
-    2020-10-25 01:09:47,300 : INFO : using symmetric alpha at 0.1111111111111111
-    2020-10-25 01:09:47,301 : INFO : using symmetric eta at 0.1111111111111111
-    2020-10-25 01:09:47,304 : INFO : using serial LDA version on this node
-    2020-10-25 01:09:47,314 : INFO : running online LDA training, 9 topics, 4 passes over the supplied corpus of 1701 documents, updating every 22000 documents, evaluating every ~1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2020-10-25 01:09:47,314 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
-    2020-10-25 01:09:47,315 : INFO : training LDA model using 11 processes
-    2020-10-25 01:09:47,546 : INFO : PROGRESS: pass 0, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2020-10-25 01:09:52,514 : INFO : topic #8 (0.111): 0.001*"league" + 0.001*"minister" + 0.001*"jewish" + 0.001*"animal" + 0.001*"km" + 0.001*"soviet" + 0.001*"election" + 0.001*"emperor" + 0.001*"energy" + 0.001*"cell"
-    2020-10-25 01:09:52,514 : INFO : topic #2 (0.111): 0.001*"km" + 0.001*"china" + 0.001*"county" + 0.001*"album" + 0.001*"jewish" + 0.001*"california" + 0.001*"actor" + 0.001*"economy" + 0.001*"jew" + 0.001*"band"
-    2020-10-25 01:09:52,514 : INFO : topic #6 (0.111): 0.001*"km" + 0.001*"election" + 0.001*"software" + 0.001*"user" + 0.001*"japanese" + 0.001*"female" + 0.001*"minister" + 0.001*"prime" + 0.001*"season" + 0.001*"saint"
-    2020-10-25 01:09:52,515 : INFO : topic #0 (0.111): 0.001*"actor" + 0.001*"km" + 0.001*"cell" + 0.001*"minister" + 0.001*"italian" + 0.001*"male" + 0.001*"economy" + 0.001*"energy" + 0.001*"y" + 0.001*"soviet"
-    2020-10-25 01:09:52,515 : INFO : topic #5 (0.111): 0.001*"band" + 0.001*"actor" + 0.001*"soviet" + 0.001*"album" + 0.001*"india" + 0.001*"minister" + 0.001*"ship" + 0.001*"km" + 0.001*"energy" + 0.001*"china"
-    2020-10-25 01:09:52,515 : INFO : topic diff=1.009308, rho=1.000000
-    2020-10-25 01:10:03,105 : INFO : -9.257 per-word bound, 611.7 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2020-10-25 01:10:03,105 : INFO : PROGRESS: pass 1, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2020-10-25 01:10:07,873 : INFO : topic #4 (0.111): 0.002*"album" + 0.001*"energy" + 0.001*"band" + 0.001*"blue" + 0.001*"cell" + 0.001*"emperor" + 0.001*"bc" + 0.001*"actor" + 0.001*"japanese" + 0.001*"software"
-    2020-10-25 01:10:07,873 : INFO : topic #2 (0.111): 0.001*"jewish" + 0.001*"jew" + 0.001*"carbon" + 0.001*"county" + 0.001*"california" + 0.001*"jesus" + 0.001*"china" + 0.001*"km" + 0.001*"cell" + 0.001*"gospel"
-    2020-10-25 01:10:07,873 : INFO : topic #8 (0.111): 0.002*"league" + 0.001*"season" + 0.001*"baseball" + 0.001*"jewish" + 0.001*"animal" + 0.001*"cell" + 0.001*"y" + 0.001*"ball" + 0.001*"china" + 0.001*"minister"
-    2020-10-25 01:10:07,874 : INFO : topic #1 (0.111): 0.002*"km" + 0.002*"soviet" + 0.002*"minister" + 0.002*"election" + 0.001*"est" + 0.001*"economy" + 0.001*"male" + 0.001*"chinese" + 0.001*"liberal" + 0.001*"russian"
-    2020-10-25 01:10:07,874 : INFO : topic #5 (0.111): 0.002*"band" + 0.001*"album" + 0.001*"window" + 0.001*"actor" + 0.001*"comic" + 0.001*"irish" + 0.001*"india" + 0.001*"user" + 0.001*"microsoft" + 0.001*"minister"
-    2020-10-25 01:10:07,874 : INFO : topic diff=0.149585, rho=0.592297
-    2020-10-25 01:10:18,504 : INFO : -9.186 per-word bound, 582.3 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2020-10-25 01:10:18,505 : INFO : PROGRESS: pass 2, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2020-10-25 01:10:23,685 : INFO : topic #2 (0.111): 0.002*"jewish" + 0.001*"jew" + 0.001*"jesus" + 0.001*"carbon" + 0.001*"gospel" + 0.001*"bible" + 0.001*"california" + 0.001*"hebrew" + 0.001*"cell" + 0.001*"translation"
-    2020-10-25 01:10:23,685 : INFO : topic #5 (0.111): 0.002*"band" + 0.002*"album" + 0.002*"window" + 0.001*"comic" + 0.001*"microsoft" + 0.001*"irish" + 0.001*"apple" + 0.001*"user" + 0.001*"software" + 0.001*"actor"
-    2020-10-25 01:10:23,685 : INFO : topic #4 (0.111): 0.002*"album" + 0.002*"energy" + 0.002*"band" + 0.001*"cell" + 0.001*"blue" + 0.001*"y" + 0.001*"bc" + 0.001*"guitar" + 0.001*"emperor" + 0.001*"universe"
-    2020-10-25 01:10:23,686 : INFO : topic #1 (0.111): 0.003*"km" + 0.002*"election" + 0.002*"est" + 0.002*"soviet" + 0.002*"minister" + 0.002*"economy" + 0.002*"male" + 0.001*"territory" + 0.001*"liberal" + 0.001*"elected"
-    2020-10-25 01:10:23,686 : INFO : topic #8 (0.111): 0.003*"league" + 0.001*"baseball" + 0.001*"season" + 0.001*"ball" + 0.001*"drug" + 0.001*"football" + 0.001*"cell" + 0.001*"animal" + 0.001*"park" + 0.001*"algorithm"
-    2020-10-25 01:10:23,686 : INFO : topic diff=0.178759, rho=0.509614
-    2020-10-25 01:10:34,248 : INFO : -9.123 per-word bound, 557.6 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2020-10-25 01:10:34,249 : INFO : PROGRESS: pass 3, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2020-10-25 01:10:38,910 : INFO : topic #5 (0.111): 0.002*"band" + 0.002*"album" + 0.002*"window" + 0.002*"microsoft" + 0.002*"comic" + 0.002*"irish" + 0.002*"apple" + 0.001*"software" + 0.001*"user" + 0.001*"musical"
-    2020-10-25 01:10:38,910 : INFO : topic #2 (0.111): 0.002*"jewish" + 0.002*"jew" + 0.002*"jesus" + 0.001*"carbon" + 0.001*"gospel" + 0.001*"bible" + 0.001*"hebrew" + 0.001*"christ" + 0.001*"translation" + 0.001*"judaism"
-    2020-10-25 01:10:38,910 : INFO : topic #3 (0.111): 0.002*"import" + 0.002*"card" + 0.002*"tree" + 0.001*"league" + 0.001*"bit" + 0.001*"ford" + 0.001*"fiction" + 0.001*"season" + 0.001*"fan" + 0.001*"novel"
-    2020-10-25 01:10:38,911 : INFO : topic #7 (0.111): 0.003*"actor" + 0.002*"emperor" + 0.002*"alexander" + 0.002*"bc" + 0.002*"chinese" + 0.001*"actress" + 0.001*"jewish" + 0.001*"china" + 0.001*"singer" + 0.001*"japanese"
-    2020-10-25 01:10:38,911 : INFO : topic #1 (0.111): 0.003*"km" + 0.003*"election" + 0.003*"est" + 0.003*"soviet" + 0.003*"minister" + 0.003*"economy" + 0.002*"male" + 0.002*"territory" + 0.002*"parliament" + 0.002*"elected"
-    2020-10-25 01:10:38,911 : INFO : topic diff=0.154319, rho=0.454053
-    2020-10-25 01:10:49,397 : INFO : -9.086 per-word bound, 543.5 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2020-10-25 01:10:49,473 : INFO : using symmetric alpha at 0.09090909090909091
-    2020-10-25 01:10:49,473 : INFO : using symmetric eta at 0.09090909090909091
-    2020-10-25 01:10:49,475 : INFO : using serial LDA version on this node
-    2020-10-25 01:10:49,488 : INFO : running online (multi-pass) LDA training, 11 topics, 2 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2020-10-25 01:10:49,488 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
-    2020-10-25 01:11:00,304 : INFO : -10.500 per-word bound, 1448.1 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2020-10-25 01:11:00,304 : INFO : PROGRESS: pass 0, at document #1701/1701
-    2020-10-25 01:11:03,567 : INFO : topic #4 (0.091): 0.001*"moon" + 0.001*"actor" + 0.001*"cell" + 0.001*"election" + 0.001*"minister" + 0.001*"prime" + 0.001*"software" + 0.001*"novel" + 0.001*"emperor" + 0.001*"blue"
-    2020-10-25 01:11:03,567 : INFO : topic #10 (0.091): 0.001*"emperor" + 0.001*"actor" + 0.001*"election" + 0.001*"italian" + 0.001*"soviet" + 0.001*"irish" + 0.001*"love" + 0.001*"card" + 0.001*"china" + 0.001*"ball"
-    2020-10-25 01:11:03,567 : INFO : topic #8 (0.091): 0.001*"league" + 0.001*"territory" + 0.001*"jewish" + 0.001*"minister" + 0.001*"y" + 0.001*"election" + 0.001*"india" + 0.001*"km" + 0.001*"machine" + 0.001*"map"
-    2020-10-25 01:11:03,568 : INFO : topic #3 (0.091): 0.001*"soviet" + 0.001*"km" + 0.001*"software" + 0.001*"actor" + 0.001*"india" + 0.001*"indian" + 0.001*"animal" + 0.001*"male" + 0.001*"prime" + 0.001*"philosophy"
-    2020-10-25 01:11:03,568 : INFO : topic #2 (0.091): 0.001*"actor" + 0.001*"league" + 0.001*"season" + 0.001*"cell" + 0.001*"band" + 0.001*"emperor" + 0.001*"album" + 0.001*"station" + 0.001*"female" + 0.001*"km"
-    2020-10-25 01:11:03,568 : INFO : topic diff=1.023399, rho=1.000000
-    2020-10-25 01:11:14,271 : INFO : -9.279 per-word bound, 621.1 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2020-10-25 01:11:14,271 : INFO : PROGRESS: pass 1, at document #1701/1701
-    2020-10-25 01:11:17,511 : INFO : topic #1 (0.091): 0.002*"energy" + 0.001*"season" + 0.001*"league" + 0.001*"africa" + 0.001*"chinese" + 0.001*"football" + 0.001*"blue" + 0.001*"ship" + 0.001*"machine" + 0.001*"symbol"
-    2020-10-25 01:11:17,511 : INFO : topic #4 (0.091): 0.002*"cell" + 0.002*"moon" + 0.001*"acid" + 0.001*"disease" + 0.001*"plant" + 0.001*"specie" + 0.001*"surface" + 0.001*"scientific" + 0.001*"software" + 0.001*"energy"
-    2020-10-25 01:11:17,512 : INFO : topic #8 (0.091): 0.001*"territory" + 0.001*"league" + 0.001*"jewish" + 0.001*"minister" + 0.001*"election" + 0.001*"machine" + 0.001*"india" + 0.001*"irish" + 0.001*"apple" + 0.001*"y"
-    2020-10-25 01:11:17,512 : INFO : topic #3 (0.091): 0.001*"import" + 0.001*"horse" + 0.001*"soviet" + 0.001*"km" + 0.001*"india" + 0.001*"software" + 0.001*"animal" + 0.001*"male" + 0.001*"indian" + 0.001*"lake"
-    2020-10-25 01:11:17,512 : INFO : topic #7 (0.091): 0.002*"actor" + 0.002*"emperor" + 0.001*"league" + 0.001*"software" + 0.001*"y" + 0.001*"band" + 0.001*"linux" + 0.001*"italian" + 0.001*"singer" + 0.001*"season"
-    2020-10-25 01:11:17,513 : INFO : topic diff=0.165568, rho=0.577350
-    2020-10-25 01:11:17,513 : INFO : ensemble contains 9 models and 160 topics now
-    2020-10-25 01:11:17,519 : INFO : ensemble contains 10 models and 169 topics now
-    2020-10-25 01:11:17,525 : INFO : asymmetric distance matrix is outdated due to add_model
-    2020-10-25 01:11:17,525 : INFO : generating a 180 x 180 asymmetric distance matrix...
-    2020-10-25 01:11:18,609 : INFO : fitting the clustering model, using 5 for min_samples
-    2020-10-25 01:11:18,629 : INFO : generating stable topics, using 3 for min_cores
-    2020-10-25 01:11:18,629 : INFO : found 19 clusters
-    2020-10-25 01:11:18,634 : INFO : found 1 stable topics
-    2020-10-25 01:11:18,635 : INFO : generating classic gensim model representation based on results from the ensemble
-    2020-10-25 01:11:18,635 : INFO : using symmetric alpha at 1.0
-    2020-10-25 01:11:18,635 : INFO : using symmetric eta at 1.0
-    2020-10-25 01:11:18,637 : INFO : using serial LDA version on this node
-    2020-10-25 01:11:18,638 : INFO : running online (multi-pass) LDA training, 1 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2020-10-25 01:11:18,638 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2020-10-25 11:28:17,999 : INFO : using symmetric alpha at 0.1111111111111111
+    2020-10-25 11:28:18,000 : INFO : using symmetric eta at 0.1111111111111111
+    2020-10-25 11:28:18,002 : INFO : using serial LDA version on this node
+    2020-10-25 11:28:18,013 : INFO : running online LDA training, 9 topics, 4 passes over the supplied corpus of 1701 documents, updating every 22000 documents, evaluating every ~1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2020-10-25 11:28:18,013 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2020-10-25 11:28:18,013 : INFO : training LDA model using 11 processes
+    2020-10-25 11:28:18,129 : INFO : PROGRESS: pass 0, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2020-10-25 11:28:22,666 : INFO : topic #0 (0.111): 0.001*"km" + 0.001*"band" + 0.001*"league" + 0.001*"album" + 0.001*"season" + 0.001*"emperor" + 0.001*"y" + 0.001*"actor" + 0.001*"ball" + 0.001*"machine"
+    2020-10-25 11:28:22,666 : INFO : topic #4 (0.111): 0.001*"league" + 0.001*"jewish" + 0.001*"band" + 0.001*"software" + 0.001*"emperor" + 0.001*"season" + 0.001*"album" + 0.001*"minister" + 0.001*"israel" + 0.001*"australia"
+    2020-10-25 11:28:22,666 : INFO : topic #3 (0.111): 0.001*"jewish" + 0.001*"actor" + 0.001*"y" + 0.001*"animal" + 0.001*"energy" + 0.001*"election" + 0.001*"km" + 0.001*"lake" + 0.001*"emperor" + 0.001*"cell"
+    2020-10-25 11:28:22,667 : INFO : topic #7 (0.111): 0.001*"minister" + 0.001*"km" + 0.001*"election" + 0.001*"cell" + 0.001*"soviet" + 0.001*"energy" + 0.001*"actor" + 0.001*"russian" + 0.001*"emperor" + 0.001*"band"
+    2020-10-25 11:28:22,667 : INFO : topic #6 (0.111): 0.001*"soviet" + 0.001*"blue" + 0.001*"actor" + 0.001*"italian" + 0.001*"economy" + 0.001*"car" + 0.001*"animal" + 0.001*"km" + 0.001*"channel" + 0.001*"energy"
+    2020-10-25 11:28:22,667 : INFO : topic diff=1.009925, rho=1.000000
+    2020-10-25 11:28:33,290 : INFO : -9.255 per-word bound, 611.1 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2020-10-25 11:28:33,290 : INFO : PROGRESS: pass 1, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2020-10-25 11:28:37,864 : INFO : topic #1 (0.111): 0.002*"minister" + 0.002*"km" + 0.002*"election" + 0.002*"est" + 0.002*"economy" + 0.001*"actor" + 0.001*"male" + 0.001*"india" + 0.001*"china" + 0.001*"elected"
+    2020-10-25 11:28:37,865 : INFO : topic #8 (0.111): 0.001*"software" + 0.001*"user" + 0.001*"apollo" + 0.001*"metal" + 0.001*"cell" + 0.001*"machine" + 0.001*"actor" + 0.001*"soviet" + 0.001*"lincoln" + 0.001*"disk"
+    2020-10-25 11:28:37,865 : INFO : topic #3 (0.111): 0.001*"y" + 0.001*"animal" + 0.001*"lake" + 0.001*"energy" + 0.001*"jewish" + 0.001*"window" + 0.001*"aircraft" + 0.001*"cell" + 0.001*"memory" + 0.001*"machine"
+    2020-10-25 11:28:37,865 : INFO : topic #7 (0.111): 0.002*"minister" + 0.001*"km" + 0.001*"election" + 0.001*"soviet" + 0.001*"cell" + 0.001*"est" + 0.001*"energy" + 0.001*"economy" + 0.001*"parliament" + 0.001*"russian"
+    2020-10-25 11:28:37,865 : INFO : topic #4 (0.111): 0.002*"league" + 0.001*"season" + 0.001*"jewish" + 0.001*"israel" + 0.001*"emperor" + 0.001*"baseball" + 0.001*"band" + 0.001*"software" + 0.001*"album" + 0.001*"irish"
+    2020-10-25 11:28:37,865 : INFO : topic diff=0.150801, rho=0.592297
+    2020-10-25 11:28:48,377 : INFO : -9.186 per-word bound, 582.5 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2020-10-25 11:28:48,378 : INFO : PROGRESS: pass 2, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2020-10-25 11:28:52,718 : INFO : topic #4 (0.111): 0.003*"league" + 0.002*"season" + 0.002*"jewish" + 0.001*"baseball" + 0.001*"israel" + 0.001*"emperor" + 0.001*"band" + 0.001*"irish" + 0.001*"jew" + 0.001*"hebrew"
+    2020-10-25 11:28:52,718 : INFO : topic #2 (0.111): 0.002*"album" + 0.002*"band" + 0.002*"chinese" + 0.001*"love" + 0.001*"jew" + 0.001*"japanese" + 0.001*"china" + 0.001*"artist" + 0.001*"jewish" + 0.001*"actor"
+    2020-10-25 11:28:52,718 : INFO : topic #8 (0.111): 0.002*"software" + 0.002*"apollo" + 0.001*"user" + 0.001*"disk" + 0.001*"cell" + 0.001*"metal" + 0.001*"lincoln" + 0.001*"machine" + 0.001*"alexander" + 0.001*"bit"
+    2020-10-25 11:28:52,718 : INFO : topic #3 (0.111): 0.002*"y" + 0.001*"window" + 0.001*"aircraft" + 0.001*"lake" + 0.001*"machine" + 0.001*"energy" + 0.001*"animal" + 0.001*"bit" + 0.001*"memory" + 0.001*"user"
+    2020-10-25 11:28:52,719 : INFO : topic #5 (0.111): 0.001*"cell" + 0.001*"japanese" + 0.001*"japan" + 0.001*"energy" + 0.001*"software" + 0.001*"emperor" + 0.001*"blood" + 0.001*"bc" + 0.001*"actor" + 0.001*"brain"
+    2020-10-25 11:28:52,719 : INFO : topic diff=0.173393, rho=0.509614
+    2020-10-25 11:29:03,210 : INFO : -9.128 per-word bound, 559.6 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2020-10-25 11:29:03,210 : INFO : PROGRESS: pass 3, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2020-10-25 11:29:07,566 : INFO : topic #3 (0.111): 0.002*"y" + 0.001*"aircraft" + 0.001*"window" + 0.001*"user" + 0.001*"bit" + 0.001*"machine" + 0.001*"memory" + 0.001*"internet" + 0.001*"energy" + 0.001*"lake"
+    2020-10-25 11:29:07,566 : INFO : topic #7 (0.111): 0.002*"soviet" + 0.002*"minister" + 0.002*"israel" + 0.002*"election" + 0.002*"parliament" + 0.002*"emperor" + 0.001*"israeli" + 0.001*"cell" + 0.001*"russian" + 0.001*"lebanon"
+    2020-10-25 11:29:07,566 : INFO : topic #0 (0.111): 0.003*"ball" + 0.002*"import" + 0.002*"brown" + 0.001*"band" + 0.001*"cat" + 0.001*"iraq" + 0.001*"km" + 0.001*"album" + 0.001*"california" + 0.001*"football"
+    2020-10-25 11:29:07,566 : INFO : topic #1 (0.111): 0.003*"est" + 0.003*"km" + 0.003*"minister" + 0.003*"election" + 0.002*"economy" + 0.002*"actor" + 0.002*"india" + 0.002*"male" + 0.002*"china" + 0.002*"constitution"
+    2020-10-25 11:29:07,567 : INFO : topic #6 (0.111): 0.002*"blue" + 0.002*"car" + 0.002*"engine" + 0.001*"soviet" + 0.001*"channel" + 0.001*"flag" + 0.001*"microsoft" + 0.001*"county" + 0.001*"director" + 0.001*"communist"
+    2020-10-25 11:29:07,567 : INFO : topic diff=0.148814, rho=0.454053
+    2020-10-25 11:29:18,053 : INFO : -9.094 per-word bound, 546.5 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2020-10-25 11:29:18,119 : INFO : using symmetric alpha at 0.09090909090909091
+    2020-10-25 11:29:18,119 : INFO : using symmetric eta at 0.09090909090909091
+    2020-10-25 11:29:18,121 : INFO : using serial LDA version on this node
+    2020-10-25 11:29:18,134 : INFO : running online (multi-pass) LDA training, 11 topics, 2 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2020-10-25 11:29:18,134 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2020-10-25 11:29:28,764 : INFO : -10.500 per-word bound, 1448.0 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2020-10-25 11:29:28,765 : INFO : PROGRESS: pass 0, at document #1701/1701
+    2020-10-25 11:29:31,978 : INFO : topic #4 (0.091): 0.002*"software" + 0.001*"japanese" + 0.001*"km" + 0.001*"china" + 0.001*"japan" + 0.001*"love" + 0.001*"chinese" + 0.001*"y" + 0.001*"soviet" + 0.001*"emperor"
+    2020-10-25 11:29:31,979 : INFO : topic #8 (0.091): 0.001*"actor" + 0.001*"minister" + 0.001*"card" + 0.001*"band" + 0.001*"map" + 0.001*"car" + 0.001*"muslim" + 0.001*"california" + 0.001*"soviet" + 0.001*"lord"
+    2020-10-25 11:29:31,979 : INFO : topic #1 (0.091): 0.001*"km" + 0.001*"soviet" + 0.001*"album" + 0.001*"minister" + 0.001*"cell" + 0.001*"energy" + 0.001*"jewish" + 0.001*"band" + 0.001*"jew" + 0.001*"actor"
+    2020-10-25 11:29:31,979 : INFO : topic #2 (0.091): 0.001*"election" + 0.001*"km" + 0.001*"band" + 0.001*"energy" + 0.001*"cell" + 0.001*"soviet" + 0.001*"minister" + 0.001*"china" + 0.001*"map" + 0.001*"australia"
+    2020-10-25 11:29:31,980 : INFO : topic #10 (0.091): 0.001*"actor" + 0.001*"league" + 0.001*"jewish" + 0.001*"km" + 0.001*"israel" + 0.001*"bc" + 0.001*"y" + 0.001*"ship" + 0.001*"energy" + 0.001*"minister"
+    2020-10-25 11:29:31,980 : INFO : topic diff=1.023741, rho=1.000000
+    2020-10-25 11:29:42,609 : INFO : -9.277 per-word bound, 620.6 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2020-10-25 11:29:42,609 : INFO : PROGRESS: pass 1, at document #1701/1701
+    2020-10-25 11:29:45,801 : INFO : topic #9 (0.091): 0.002*"km" + 0.001*"election" + 0.001*"economy" + 0.001*"minister" + 0.001*"est" + 0.001*"oil" + 0.001*"spanish" + 0.001*"male" + 0.001*"liberal" + 0.001*"flag"
+    2020-10-25 11:29:45,802 : INFO : topic #2 (0.091): 0.001*"energy" + 0.001*"cell" + 0.001*"election" + 0.001*"band" + 0.001*"map" + 0.001*"km" + 0.001*"specie" + 0.001*"australia" + 0.001*"metal" + 0.001*"drug"
+    2020-10-25 11:29:45,802 : INFO : topic #6 (0.091): 0.001*"actor" + 0.001*"soviet" + 0.001*"wikipedia" + 0.001*"cell" + 0.001*"jewish" + 0.001*"italian" + 0.001*"football" + 0.001*"band" + 0.001*"acid" + 0.001*"russian"
+    2020-10-25 11:29:45,802 : INFO : topic #4 (0.091): 0.002*"software" + 0.001*"japanese" + 0.001*"japan" + 0.001*"y" + 0.001*"apple" + 0.001*"love" + 0.001*"china" + 0.001*"chinese" + 0.001*"philosophy" + 0.001*"classical"
+    2020-10-25 11:29:45,803 : INFO : topic #7 (0.091): 0.002*"emperor" + 0.002*"minister" + 0.001*"male" + 0.001*"saint" + 0.001*"constitution" + 0.001*"jewish" + 0.001*"election" + 0.001*"female" + 0.001*"actor" + 0.001*"jesus"
+    2020-10-25 11:29:45,803 : INFO : topic diff=0.168078, rho=0.577350
+    2020-10-25 11:29:45,803 : INFO : ensemble contains 9 models and 160 topics now
+    2020-10-25 11:29:45,809 : INFO : ensemble contains 10 models and 169 topics now
+    2020-10-25 11:29:45,815 : INFO : asymmetric distance matrix is outdated due to add_model
+    2020-10-25 11:29:45,815 : INFO : generating a 180 x 180 asymmetric distance matrix...
+    2020-10-25 11:29:46,856 : INFO : fitting the clustering model, using 5 for min_samples
+    2020-10-25 11:29:46,890 : INFO : generating stable topics, using 3 for min_cores
+    2020-10-25 11:29:46,890 : INFO : found 18 clusters
+    2020-10-25 11:29:46,899 : INFO : found 1 stable topics
+    2020-10-25 11:29:46,899 : INFO : generating classic gensim model representation based on results from the ensemble
+    2020-10-25 11:29:46,900 : INFO : using symmetric alpha at 1.0
+    2020-10-25 11:29:46,900 : INFO : using symmetric eta at 1.0
+    2020-10-25 11:29:46,903 : INFO : using serial LDA version on this node
+    2020-10-25 11:29:46,906 : INFO : running online (multi-pass) LDA training, 1 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2020-10-25 11:29:46,906 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
     180
     1
 
@@ -387,9 +387,9 @@ Afterwards the number and quality of stable topics might be different depending 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 6 minutes  52.125 seconds)
+   **Total running time of the script:** ( 6 minutes  53.294 seconds)
 
-**Estimated memory usage:**  1636 MB
+**Estimated memory usage:**  1629 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_ensemblelda.py:
