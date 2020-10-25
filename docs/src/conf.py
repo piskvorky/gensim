@@ -258,6 +258,7 @@ def sort_key(source_dir):
         'run_lda.py',
         'run_wmd.py',
         'run_summarization.py',
+        'run_ensemblelda.py',
     ]
 
     howto_order = [
