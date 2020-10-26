@@ -587,7 +587,7 @@ class KeyedVectors(utils.SaveLoad):
         raise AttributeError(
             "The `.vectors_norm` attribute is computed dynamically since Gensim 4.0.0. "
             "Use `.get_normed_vectors()` instead.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @vectors_norm.setter
@@ -625,7 +625,7 @@ class KeyedVectors(utils.SaveLoad):
     def index2entity(self):
         raise AttributeError(
             "The index2entity attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @index2entity.setter
@@ -636,7 +636,7 @@ class KeyedVectors(utils.SaveLoad):
     def index2word(self):
         raise AttributeError(
             "The index2word attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @index2word.setter
@@ -649,7 +649,7 @@ class KeyedVectors(utils.SaveLoad):
             "The vocab attribute was removed from KeyedVector in Gensim 4.0.0.\n"
             "Use KeyedVector's .key_to_index dict, .index_to_key list, and methods "
             ".get_vecattr(key, attr) and .set_vecattr(key, attr, new_val) instead.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @vocab.setter
@@ -1435,7 +1435,7 @@ class KeyedVectors(utils.SaveLoad):
 
     @deprecated(
         "Use fill_norms() instead. "
-        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
     )
     def init_sims(self, replace=False):
         """Precompute data helpful for bulk similarity calculations.
