@@ -1539,7 +1539,7 @@ class KeyedVectors(utils.SaveLoad):
             logger.info("storing vocabulary in %s", fvocab)
             with utils.open(fvocab, mode) as vout:
                 for word in store_order_vocab_keys:
-                    vout.write(f"{prefix}{word} {self.get_vecattr(word, sort_attr)}\n")
+                    vout.write(f"{prefix}{word} {self.get_vecattr(word, sort_attr)}\n".encode('utf8'))
 
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
         assert (len(self.index_to_key), self.vector_size) == self.vectors.shape
@@ -1558,12 +1558,11 @@ class KeyedVectors(utils.SaveLoad):
         # Store the actual vectors to the output file, in the order defined by sort_attr.
         with utils.open(fname, mode) as fout:
             if write_header:
-                fout.write(f"{total_vec} {self.vector_size}".encode('utf8'))
+                fout.write(f"{total_vec} {self.vector_size}\n".encode('utf8'))
             for key in keys_to_write:
                 key_vector = self[key]
                 if binary:
-                    row = row.astype(REAL)
-                    fout.write(f"{prefix}{key} ".encode('utf8') + key_vector.tobytes())
+                    fout.write(f"{prefix}{key} ".encode('utf8') + key_vector.astype(REAL).tobytes())
                 else:
                     fout.write(f"{prefix}{key} {' '.join(repr(val) for val in key_vector)}\n".encode('utf8'))
 
