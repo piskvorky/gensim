@@ -30,7 +30,7 @@ Initialize and train a model:
 
 .. sourcecode:: pycon
 
-    >>> # from gensim.models import FastText  # FIXME: why does Sphinx dislike this import?
+    >>> from gensim.models import FastText
     >>> from gensim.test.utils import common_texts  # some example sentences
     >>>
     >>> print(common_texts[0])
@@ -488,9 +488,9 @@ class FastText(Word2Vec):
                 hashes = ft_ngram_hashes(word, self.wv.min_n, self.wv.max_n, self.wv.bucket)
                 num_ngrams += len(hashes)
             # A list (64 bytes) with one np.array (100 bytes) per key, with a total of
-            # num_ngrams uint32s (4 bytes) amongst them
-            # Only used during training, not stored with the model
-            report['buckets_word'] = 64 + (100 * len(self.wv)) + (4 * num_ngrams)  # FIXME: caching & calc sensible?
+            # num_ngrams uint32s (4 bytes) amongst them.
+            # Only used during training, not stored with the model.
+            report['buckets_word'] = 64 + (100 * len(self.wv)) + (4 * num_ngrams)  # TODO: caching & calc sensible?
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
@@ -1193,7 +1193,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Scan the vocabulary, calculate ngrams and their hashes, and cache the list of ngrams for each known word.
 
         """
-        # FIXME: evaluate if precaching even necessary, compared to recalculating as needed
+        # TODO: evaluate if precaching even necessary, compared to recalculating as needed.
         if self.bucket == 0:
             self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index_to_key)
             return

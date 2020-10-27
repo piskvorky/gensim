@@ -215,7 +215,7 @@ class KeyedVectors(utils.SaveLoad):
             Vector dimensions will default to `np.float32` (AKA `REAL` in some Gensim code) unless
             another type is provided here.
         mapfile_path : string, optional
-            FIXME: UNDER CONSTRUCTION / WILL CHANGE PRE-4.0.0 PER #2955 / #2975
+            FIXME: UNDER CONSTRUCTION / WILL CHANGE PRE-4.0.0 PER #2955 / #2975.
         """
         self.vector_size = vector_size
         # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
@@ -974,7 +974,7 @@ class KeyedVectors(utils.SaveLoad):
             one-dimensional numpy array with the size of the vocabulary.
 
         """
-        # FIXME: Update to better match & share code with most_similar()
+        # TODO: Update to better match & share code with most_similar()
         if isinstance(topn, Integral) and topn < 1:
             return []
 
@@ -1520,45 +1520,52 @@ class KeyedVectors(utils.SaveLoad):
             (in case word vectors are appended with document vectors afterwards).
         write_header : bool, optional
             If False, don't write the 1st line declaring the count of vectors and dimensions.
-        FIXME: doc prefix, append, sort_attr
+        prefix : str, optional
+            String to prepend in front of each stored word. Default = no prefix.
+        append : bool, optional
+            If set, open `fname` in `ab` mode instead of the default `wb` mode.
+        sort_attr : str, optional
+            Sort the output vectors in descending order of this attribute. Default: most frequent keys first.
+
         """
         if total_vec is None:
             total_vec = len(self.index_to_key)
         mode = 'wb' if not append else 'ab'
-        if 'count' in self.expandos:
-            # if frequency-info available, store in most-to-least-frequent order
-            store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
-        else:
-            store_order_vocab_keys = self.index_to_key
+        if sort_attr not in self.expandos:
+            raise ValueError(f"attribute {sort_attr} not present in {self}")
+        store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
 
         if fvocab is not None:
             logger.info("storing vocabulary in %s", fvocab)
             with utils.open(fvocab, mode) as vout:
                 for word in store_order_vocab_keys:
-                    vout.write(utils.to_utf8("%s%s %s\n" % (prefix, word, self.get_vecattr(word, sort_attr))))
+                    vout.write(f"{prefix}{word} {self.get_vecattr(word, sort_attr)}\n")
 
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
         assert (len(self.index_to_key), self.vector_size) == self.vectors.shape
 
-        # after (possibly-empty) initial range of int-only keys,
-        # store in sorted order: most frequent keys at the top
+        # After (possibly-empty) initial range of int-only keys,
+        # store in sorted order: most frequent keys at the top.
+        # TODO: is this still relevant in 4.0? What is this about?
+        # Needs clear comments at the very least.
         index_id_count = 0
         for i, val in enumerate(self.index_to_key):
-            if not (i == val):
+            if i != val:
                 break
             index_id_count += 1
         keys_to_write = itertools.chain(range(0, index_id_count), store_order_vocab_keys)
 
+        # Store the actual vectors to the output file, in the order defined by sort_attr.
         with utils.open(fname, mode) as fout:
             if write_header:
-                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
+                fout.write(f"{total_vec} {self.vector_size}".encode('utf8'))
             for key in keys_to_write:
-                row = self[key]
+                key_vector = self[key]
                 if binary:
                     row = row.astype(REAL)
-                    fout.write(utils.to_utf8(prefix + str(key)) + b" " + row.tobytes())
+                    fout.write(f"{prefix}{key} ".encode('utf8') + key_vector.tobytes())
                 else:
-                    fout.write(utils.to_utf8("%s%s %s\n" % (prefix, str(key), ' '.join(repr(val) for val in row))))
+                    fout.write(f"{prefix}{key} {' '.join(repr(val) for val in key_vector)}\n".encode('utf8'))
 
     @classmethod
     def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
@@ -1915,9 +1922,11 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
 
 
 def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
-    """FIXME: NAME/DOCS CHANGES PRE-4.0.0 FOR #2955/#2975 MMAP & OTHER INITIALIZATION CLEANUP WORK
-    Return a numpy array of the given shape. Reuse prior_vectors object or values
-    to extent possible. Initialize new values randomly if requested."""
+    """Return a numpy array of the given shape. Reuse prior_vectors object or values
+    to extent possible. Initialize new values randomly if requested.
+
+    FIXME: NAME/DOCS CHANGES PRE-4.0.0 FOR #2955/#2975 MMAP & OTHER INITIALIZATION CLEANUP WORK.
+    """
     if prior_vectors is None:
         prior_vectors = np.zeros((0, 0))
     if prior_vectors.shape == target_shape:
