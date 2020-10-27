@@ -1510,9 +1510,9 @@ class KeyedVectors(utils.SaveLoad):
         Parameters
         ----------
         fname : str
-            The file path used to save the vectors in.
+            File path to save the vectors to.
         fvocab : str, optional
-            File path used to save the vocabulary.
+            File path to save additional vocabulary information to. `None` to not store the vocabulary.
         binary : bool, optional
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
         total_vec : int, optional
@@ -1520,6 +1520,7 @@ class KeyedVectors(utils.SaveLoad):
             (in case word vectors are appended with document vectors afterwards).
         write_header : bool, optional
             If False, don't write the 1st line declaring the count of vectors and dimensions.
+            This is the format used by e.g. gloVe vectors.
         prefix : str, optional
             String to prepend in front of each stored word. Default = no prefix.
         append : bool, optional
@@ -1531,9 +1532,20 @@ class KeyedVectors(utils.SaveLoad):
         if total_vec is None:
             total_vec = len(self.index_to_key)
         mode = 'wb' if not append else 'ab'
-        if sort_attr not in self.expandos:
-            raise ValueError(f"attribute {sort_attr} not present in {self}")
-        store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
+
+        if sort_attr in self.expandos:
+            store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
+        else:
+            # This can happen even for the default `count`: the "native C word2vec" format does not store counts,
+            # so models loaded via load_word2vec_format() do not have the "count" attribute set. They have
+            # no attributes at all, and fall under this code path.
+            if fvocab is not None:
+                raise ValueError(f"Cannot store vocabulary with '{sort_attr}' because that attribute does not exist")
+            logger.warning(
+                "attribute %s not present in %s; will store in internal index_to_key order",
+                sort_attr, self,
+            )
+            store_order_vocab_keys = self.index_to_key
 
         if fvocab is not None:
             logger.info("storing vocabulary in %s", fvocab)
@@ -1544,10 +1556,10 @@ class KeyedVectors(utils.SaveLoad):
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
         assert (len(self.index_to_key), self.vector_size) == self.vectors.shape
 
-        # After (possibly-empty) initial range of int-only keys,
+        # After (possibly-empty) initial range of int-only keys in Doc2Vec,
         # store in sorted order: most frequent keys at the top.
-        # TODO: is this still relevant in 4.0? What is this about?
-        # Needs clear comments at the very least.
+        # XXX: get rid of this: not used much, too complex and brittle.
+        # See https://github.com/RaRe-Technologies/gensim/pull/2981#discussion_r512969788
         index_id_count = 0
         for i, val in enumerate(self.index_to_key):
             if i != val:
@@ -1567,8 +1579,10 @@ class KeyedVectors(utils.SaveLoad):
                     fout.write(f"{prefix}{key} {' '.join(repr(val) for val in key_vector)}\n".encode('utf8'))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL, no_header=False):
+    def load_word2vec_format(
+            cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+            limit=None, datatype=REAL, no_header=False,
+        ):
         """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
         Warnings
@@ -1613,7 +1627,8 @@ class KeyedVectors(utils.SaveLoad):
         """
         return _load_word2vec_format(
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
-            limit=limit, datatype=datatype, no_header=no_header)
+            limit=limit, datatype=datatype, no_header=no_header,
+        )
 
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
@@ -1817,8 +1832,10 @@ def _word2vec_detect_sizes_text(fin, limit, datatype, unicode_errors, encoding):
     return vocab_size, vector_size
 
 
-def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                          limit=sys.maxsize, datatype=REAL, no_header=False, binary_chunk_size=100 * 1024):
+def _load_word2vec_format(
+        cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+        limit=sys.maxsize, datatype=REAL, no_header=False, binary_chunk_size=100 * 1024,
+    ):
     """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
     Note that the information stored in the file is incomplete (the binary tree is missing),
@@ -1856,7 +1873,6 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         Returns the loaded model as an instance of :class:`cls`.
 
     """
-
     counts = None
     if fvocab is not None:
         logger.info("loading word counts from %s", fvocab)
@@ -1878,15 +1894,14 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
             fin = utils.open(fname, 'rb')
         else:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
+            vocab_size, vector_size = [int(x) for x in header.split()]  # throws for invalid file format
         if limit:
             vocab_size = min(vocab_size, limit)
         kv = cls(vector_size, vocab_size, dtype=datatype)
 
         if binary:
             _word2vec_read_binary(
-                fin, kv, counts,
-                vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+                fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
             )
         else:
             _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
