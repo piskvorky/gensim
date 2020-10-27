@@ -49,12 +49,11 @@ import logging
 import os
 import copy
 import multiprocessing
+from shutil import copyfile, rmtree
 
 from gensim import utils
 from gensim.models.keyedvectors import KeyedVectors
 from gensim.scripts.glove2word2vec import glove2word2vec
-
-from shutil import copyfile, rmtree
 
 
 logger = logging.getLogger(__name__)

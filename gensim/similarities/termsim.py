@@ -410,7 +410,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>> from gensim.similarities.index import AnnoyIndexer
     >>> from scikits.sparse.cholmod import cholesky
     >>>
-    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+    >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
     >>> annoy = AnnoyIndexer(model, num_trees=2)  # use annoy for faster word similarity lookups
     >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv, kwargs={'indexer': annoy})
     >>> dictionary = Dictionary(common_texts)

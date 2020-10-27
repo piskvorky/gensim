@@ -15,7 +15,7 @@ Examples
     >>> from gensim.test.utils import common_texts
     >>> from gensim.sklearn_api import D2VTransformer
     >>>
-    >>> model = D2VTransformer(min_count=1, size=5)
+    >>> model = D2VTransformer(min_count=1, vector_size=5)
     >>> docvecs = model.fit_transform(common_texts)  # represent `common_texts` as vectors
 
 """

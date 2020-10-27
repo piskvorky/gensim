@@ -61,7 +61,7 @@ Create a callback to print progress information to the console:
     ...
     >>>
     >>> epoch_logger = EpochLogger()
-    >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+    >>> w2v_model = Word2Vec(common_texts, epochs=5, vector_size=10, min_count=0, seed=42, callbacks=[epoch_logger])
     Epoch #0 start
     Epoch #0 end
     Epoch #1 start

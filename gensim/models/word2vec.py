@@ -1856,8 +1856,8 @@ class Word2Vec(utils.SaveLoad):
             and learning rate.
 
         """
-        return "%s(vocab=%s, size=%s, alpha=%s)" % (
-            self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha
+        return "%s(vocab=%s, vector_size=%s, alpha=%s)" % (
+            self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha,
         )
 
     def save(self, *args, **kwargs):
@@ -2259,9 +2259,9 @@ if __name__ == "__main__":
     corpus = LineSentence(args.train)
 
     model = Word2Vec(
-        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        corpus, vector_size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
-        negative=args.negative, cbow_mean=1, iter=args.iter
+        negative=args.negative, cbow_mean=1, epochs=args.iter,
     )
 
     if args.output:

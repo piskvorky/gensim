@@ -48,7 +48,7 @@ class IterableWithoutZeroElement:
 class TestD2VTransformer(unittest.TestCase):
     def TestWorksWithIterableNotHavingElementWithZeroIndex(self):
         a = IterableWithoutZeroElement(common_texts)
-        transformer = D2VTransformer(min_count=1, size=5)
+        transformer = D2VTransformer(min_count=1, vector_size=5)
         transformer.fit(a)
 
 
