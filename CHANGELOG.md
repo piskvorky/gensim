@@ -93,6 +93,8 @@ Production stability is important to Gensim, so we're improving the process of *
 * [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940); Fix deprecations in SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
 * [#2944](https://github.com/RaRe-Technologies/gensim/pull/2944): Fix `save_facebook_model` failure after update-vocab & other initialization streamlining, by [@gojomo](https://github.com/gojomo)
 * [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846): Fix for Python 3.9/3.10: remove `xml.etree.cElementTree`, by [@hugovk](https://github.com/hugovk)
+* [#2973](https://github.com/RaRe-Technologies/gensim/issues/2973): phrases.export_phrases() doesn't yield all bigrams
+* [#2942](https://github.com/RaRe-Technologies/gensim/issues/2942): Segfault when training doc2vec
 
 ### :warning: Removed functionality & deprecations
 
