@@ -99,7 +99,7 @@ Gensim will take care of the rest:
     >>> from gensim import utils
     >>>
     >>>
-    >>> class MyIter(object):
+    >>> class MyIter:
     ...     def __iter__(self):
     ...         path = datapath('crime-and-punishment.txt')
     ...         with utils.open(path, 'r', encoding='utf-8') as fin:
