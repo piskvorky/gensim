@@ -136,7 +136,7 @@ print(corpus)
 from smart_open import open  # for transparently opening remote files
 
 
-class MyCorpus(object):
+class MyCorpus:
     def __iter__(self):
         for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
             # assume there's one document per line, tokens separated by whitespace

@@ -78,7 +78,7 @@ SAVE_DEBUG = 0
 LDA_WORKER_PREFIX = 'gensim.lda_worker'
 
 
-class Worker(object):
+class Worker:
     """Used as a Pyro4 class with exposed methods.
 
     Exposes every non-private method and property of the class automatically to be available for remote access.

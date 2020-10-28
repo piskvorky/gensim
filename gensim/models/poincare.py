@@ -699,7 +699,7 @@ class PoincareModel(utils.SaveLoad):
                     avg_loss = 0.0
 
 
-class PoincareBatch(object):
+class PoincareBatch:
     """Compute Poincare distances, gradients and loss for a training batch.
 
     Store intermediate state to avoid recomputing multiple times.
@@ -1305,7 +1305,7 @@ class PoincareKeyedVectors(KeyedVectors):
         return self.norm(node_or_vector_2) - self.norm(node_or_vector_1)
 
 
-class PoincareRelations(object):
+class PoincareRelations:
     """Stream relations for `PoincareModel` from a tsv-like file."""
 
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
@@ -1354,7 +1354,7 @@ class PoincareRelations(object):
                 yield tuple(row)
 
 
-class NegativesBuffer(object):
+class NegativesBuffer:
     """Buffer and return negative samples."""
 
     def __init__(self, items):
@@ -1405,7 +1405,7 @@ class NegativesBuffer(object):
         return self._items[start_index:end_index]
 
 
-class ReconstructionEvaluation(object):
+class ReconstructionEvaluation:
     """Evaluate reconstruction on given network for given embedding."""
 
     def __init__(self, file_path, embedding):
@@ -1508,7 +1508,7 @@ class ReconstructionEvaluation(object):
         return np.mean(ranks), np.mean(avg_precision_scores)
 
 
-class LinkPredictionEvaluation(object):
+class LinkPredictionEvaluation:
     """Evaluate reconstruction on given network for given embedding."""
 
     def __init__(self, train_path, test_path, embedding):
@@ -1619,7 +1619,7 @@ class LinkPredictionEvaluation(object):
         return np.mean(ranks), np.mean(avg_precision_scores)
 
 
-class LexicalEntailmentEvaluation(object):
+class LexicalEntailmentEvaluation:
     """Evaluate reconstruction on given network for any embedding."""
 
     def __init__(self, filepath):

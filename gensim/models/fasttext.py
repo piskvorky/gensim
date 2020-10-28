@@ -30,7 +30,7 @@ Initialize and train a model:
 
 .. sourcecode:: pycon
 
-    >>> # from gensim.models import FastText  # FIXME: why does Sphinx dislike this import?
+    >>> from gensim.models import FastText
     >>> from gensim.test.utils import common_texts  # some example sentences
     >>>
     >>> print(common_texts[0])
@@ -50,16 +50,7 @@ in a single line:
 
 .. sourcecode:: pycon
 
-    >>> model2 = FastText(vector_size=4, window=3, min_count=1, sentences=common_texts, iter=10)
-
-.. Important::
-    This style of initialize-and-train in a single line is **deprecated**. We include it here
-    for backward compatibility only.
-
-    Please use the initialize-`build_vocab`-`train` pattern above instead, including using `epochs`
-    instead of `iter`.
-    The motivation is to simplify the API and resolve naming inconsistencies,
-    e.g. the iter parameter to the constructor is called epochs in the train function.
+    >>> model2 = FastText(vector_size=4, window=3, min_count=1, sentences=common_texts, epochs=10)
 
 The two models above are instantiated differently, but behave identically.
 For example, we can compare the embeddings they've calculated for the word "computer":
@@ -108,7 +99,7 @@ Gensim will take care of the rest:
     >>> from gensim import utils
     >>>
     >>>
-    >>> class MyIter(object):
+    >>> class MyIter:
     ...     def __iter__(self):
     ...         path = datapath('crime-and-punishment.txt')
     ...         with utils.open(path, 'r', encoding='utf-8') as fin:
@@ -139,7 +130,7 @@ For example, you can continue training the loaded model:
 
     >>> import numpy as np
     >>>
-    >>> 'computation' in model.wv.vocab  # New word, currently out of vocab
+    >>> 'computation' in model.wv.key_to_index  # New word, currently out of vocab
     False
     >>> old_vector = np.copy(model.wv['computation'])  # Grab the existing vector
     >>> new_sentences = [
@@ -157,7 +148,7 @@ For example, you can continue training the loaded model:
     >>> new_vector = model.wv['computation']
     >>> np.allclose(old_vector, new_vector, atol=1e-4)  # Vector has changed, model has learnt something
     False
-    >>> 'computation' in model.wv.vocab  # Word is still out of vocab
+    >>> 'computation' in model.wv.key_to_index  # Word is still out of vocab
     False
 
 .. Important::
@@ -178,7 +169,7 @@ You may continue training them on new data:
 
 .. sourcecode:: pycon
 
-    >>> 'computer' in fb_model.wv.vocab  # New word, currently out of vocab
+    >>> 'computer' in fb_model.wv.key_to_index  # New word, currently out of vocab
     False
     >>> old_computer = np.copy(fb_model.wv['computer'])  # Calculate current vectors
     >>> fb_model.build_vocab(new_sentences, update=True)
@@ -186,7 +177,7 @@ You may continue training them on new data:
     >>> new_computer = fb_model.wv['computer']
     >>> np.allclose(old_computer, new_computer, atol=1e-4)  # Vector has changed, model has learnt something
     False
-    >>> 'computer' in fb_model.wv.vocab  # New word is now in the vocabulary
+    >>> 'computer' in fb_model.wv.key_to_index  # New word is now in the vocabulary
     True
 
 If you do not intend to continue training the model, consider using the
@@ -200,25 +191,25 @@ That function only loads the word embeddings (keyed vectors), consuming much les
     >>> cap_path = datapath("crime-and-punishment.bin")
     >>> wv = load_facebook_vectors(cap_path)
     >>>
-    >>> 'landlord' in wv.vocab  # Word is out of vocabulary
+    >>> 'landlord' in wv.key_to_index  # Word is out of vocabulary
     False
-    >>> oov_vector = wv['landlord']
+    >>> oov_vector = wv['landlord']  # Even OOV words have vectors in FastText
     >>>
-    >>> 'landlady' in wv.vocab  # Word is in the vocabulary
+    >>> 'landlady' in wv.key_to_index  # Word is in the vocabulary
     True
     >>> iv_vector = wv['landlady']
 
-Retrieve word-vector for vocab and out-of-vocab word:
+Retrieve the word-vector for vocab and out-of-vocab word:
 
 .. sourcecode:: pycon
 
     >>> existent_word = "computer"
-    >>> existent_word in model.wv.vocab
+    >>> existent_word in model.wv.key_to_index
     True
     >>> computer_vec = model.wv[existent_word]  # numpy vector of a word
     >>>
     >>> oov_word = "graph-out-of-vocab"
-    >>> oov_word in model.wv.vocab
+    >>> oov_word in model.wv.key_to_index
     False
     >>> oov_vec = model.wv[oov_word]  # numpy vector for OOV word
 
@@ -488,9 +479,9 @@ class FastText(Word2Vec):
                 hashes = ft_ngram_hashes(word, self.wv.min_n, self.wv.max_n, self.wv.bucket)
                 num_ngrams += len(hashes)
             # A list (64 bytes) with one np.array (100 bytes) per key, with a total of
-            # num_ngrams uint32s (4 bytes) amongst them
-            # Only used during training, not stored with the model
-            report['buckets_word'] = 64 + (100 * len(self.wv)) + (4 * num_ngrams)  # FIXME: caching & calc sensible?
+            # num_ngrams uint32s (4 bytes) amongst them.
+            # Only used during training, not stored with the model.
+            report['buckets_word'] = 64 + (100 * len(self.wv)) + (4 * num_ngrams)  # TODO: caching & calc sensible?
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words, %i buckets and %i dimensions: %i bytes",
@@ -541,7 +532,7 @@ class FastText(Word2Vec):
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
         "init_sims() is now obsoleted and will be completely removed in future versions. "
-        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
     )
     def init_sims(self, replace=False):
         """
@@ -699,11 +690,11 @@ def load_facebook_model(path, encoding='utf-8'):
         >>> cap_path = datapath("crime-and-punishment.bin")
         >>> fb_model = load_facebook_model(cap_path)
         >>>
-        >>> 'landlord' in fb_model.wv.vocab  # Word is out of vocabulary
+        >>> 'landlord' in fb_model.wv.key_to_index  # Word is out of vocabulary
         False
         >>> oov_term = fb_model.wv['landlord']
         >>>
-        >>> 'landlady' in fb_model.wv.vocab  # Word is in the vocabulary
+        >>> 'landlady' in fb_model.wv.key_to_index  # Word is in the vocabulary
         True
         >>> iv_term = fb_model.wv['landlady']
         >>>
@@ -764,11 +755,11 @@ def load_facebook_vectors(path, encoding='utf-8'):
         >>> cap_path = datapath("crime-and-punishment.bin")
         >>> fbkv = load_facebook_vectors(cap_path)
         >>>
-        >>> 'landlord' in fbkv.vocab  # Word is out of vocabulary
+        >>> 'landlord' in fbkv.key_to_index  # Word is out of vocabulary
         False
         >>> oov_vector = fbkv['landlord']
         >>>
-        >>> 'landlady' in fbkv.vocab  # Word is in the vocabulary
+        >>> 'landlady' in fbkv.key_to_index  # Word is in the vocabulary
         True
         >>> iv_vector = fbkv['landlady']
 
@@ -1193,7 +1184,7 @@ class FastTextKeyedVectors(KeyedVectors):
         Scan the vocabulary, calculate ngrams and their hashes, and cache the list of ngrams for each known word.
 
         """
-        # FIXME: evaluate if precaching even necessary, compared to recalculating as needed
+        # TODO: evaluate if precaching even necessary, compared to recalculating as needed.
         if self.bucket == 0:
             self.buckets_word = [np.array([], dtype=np.uint32)] * len(self.index_to_key)
             return

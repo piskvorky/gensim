@@ -123,7 +123,7 @@ class AnnoyIndexer():
             >>> from tempfile import mkstemp
             >>>
             >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-            >>> model = Word2Vec(sentences, min_count=1, seed=1, iter=10)
+            >>> model = Word2Vec(sentences, min_count=1, seed=1, epochs=10)
             >>>
             >>> indexer = AnnoyIndexer(model, 2)
             >>> _, temp_fn = mkstemp()

@@ -18,8 +18,9 @@ from gensim import utils
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, _unpack
 from gensim.models.keyedvectors import KeyedVectors
-from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences, \
-    lee_corpus_list as list_corpus
+from gensim.test.utils import (
+    datapath, get_tmpfile, temporary_file, common_texts as sentences, lee_corpus_list as list_corpus,
+)
 from gensim.test.test_word2vec import TestWord2VecModel
 import gensim.models._fasttext_bin
 from gensim.models.fasttext_inner import compute_ngrams, compute_ngrams_bytes, ft_hash_bytes
@@ -813,7 +814,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(report['syn0_vocab'], 192)
         self.assertEqual(report['syn1'], 192)
         self.assertEqual(report['syn1neg'], 192)
-        # FIXME: these fixed numbers for particular implementation generations encumber changes without real QA
+        # TODO: these fixed numbers for particular implementation generations encumber changes without real QA
         # perhaps instead verify reports' total is within some close factor of a deep-audit of actual memory used?
         self.assertEqual(report['syn0_ngrams'], model.vector_size * np.dtype(np.float32).itemsize * BUCKET)
         self.assertEqual(report['buckets_word'], 688)
@@ -996,10 +997,10 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.model_structural_sanity(native)
 
         #
-        # Pick a word that's is in both corpuses.
+        # Pick a word that is in both corpuses.
         # Its vectors should be different between training runs.
         #
-        word = 'human'  # FIXME: this isn't actually in model, except via OOV ngrams
+        word = 'society'
         old_vector = native.wv.get_vector(word).tolist()
 
         native.train(list_corpus, total_examples=len(list_corpus), epochs=native.epochs)

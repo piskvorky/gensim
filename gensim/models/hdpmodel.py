@@ -140,7 +140,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     return likelihood, gamma
 
 
-class SuffStats(object):
+class SuffStats:
     """Stores sufficient statistics for the current chunk of document(s) whenever Hdp model is updated with new corpus.
     These stats are used when updating lambda and top level sticks. The statistics include number of documents in the
     chunk, length of words in the documents and top level truncation level.
@@ -953,7 +953,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return score
 
 
-class HdpTopicFormatter(object):
+class HdpTopicFormatter:
     """Helper class for :class:`gensim.models.hdpmodel.HdpModel` to format the output of topics."""
     (STYLE_GENSIM, STYLE_PRETTY) = (1, 2)
 
