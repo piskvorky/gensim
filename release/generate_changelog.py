@@ -22,9 +22,7 @@ release_timestamp = most_recent_release['published_at']
 
 def iter_merged_prs(since=release_timestamp):
     page = 1
-    done = False
-
-    while not done:
+    while True:
         get = requests.get(
             'https://api.github.com/repos/RaRe-Technologies/gensim/pulls',
             params={'state': 'closed', 'page': page},
@@ -35,10 +33,6 @@ def iter_merged_prs(since=release_timestamp):
             break
 
         for i, pr in enumerate(pulls):
-            if pr['created_at'] < since:
-                done = True
-                break
-
             if pr['merged_at'] and pr['merged_at'] > since:
                 yield pr
 
@@ -47,8 +41,7 @@ def iter_merged_prs(since=release_timestamp):
 
 def iter_closed_issues(since=release_timestamp):
     page = 1
-    done = False
-    while not done:
+    while True:
         get = requests.get(
             'https://api.github.com/repos/RaRe-Technologies/gensim/issues',
             params={'state': 'closed', 'page': page, 'since': since},
@@ -64,7 +57,6 @@ def iter_closed_issues(since=release_timestamp):
             #
             if 'pull_request' not in issue and issue['closed_at'] > since:
                 yield issue
-
         page += 1
 
 
