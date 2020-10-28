@@ -1085,7 +1085,7 @@ class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
 
 
-class TaggedBrownCorpus(object):
+class TaggedBrownCorpus:
     def __init__(self, dirname):
         """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_.
 
@@ -1123,7 +1123,7 @@ class TaggedBrownCorpus(object):
                     yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
-class TaggedLineDocument(object):
+class TaggedLineDocument:
     def __init__(self, source):
         """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 

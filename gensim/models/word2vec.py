@@ -1965,7 +1965,7 @@ class Word2Vec(utils.SaveLoad):
         return self.running_training_loss
 
 
-class BrownCorpus(object):
+class BrownCorpus:
     def __init__(self, dirname):
         """Iterate over sentences from the `Brown corpus <https://en.wikipedia.org/wiki/Brown_Corpus>`_
         (part of `NLTK data <https://www.nltk.org/data.html>`_).
@@ -1991,7 +1991,7 @@ class BrownCorpus(object):
                     yield words
 
 
-class Text8Corpus(object):
+class Text8Corpus:
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
         self.fname = fname
@@ -2019,7 +2019,7 @@ class Text8Corpus(object):
                     sentence = sentence[self.max_sentence_length:]
 
 
-class LineSentence(object):
+class LineSentence:
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """Iterate over a file that contains sentences: one line = one sentence.
         Words must be already preprocessed and separated by whitespace.
@@ -2068,7 +2068,7 @@ class LineSentence(object):
                         i += self.max_sentence_length
 
 
-class PathLineSentences(object):
+class PathLineSentences:
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """Like :class:`~gensim.models.word2vec.LineSentence`, but process all files in a directory
         in alphabetical order by filename.

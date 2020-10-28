@@ -159,15 +159,6 @@ this vector algebra for yourself. That demo runs ``word2vec`` on the
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:00:40,474 : INFO : loading projection weights from /Users/kofola3/gensim-data/word2vec-google-news-300/word2vec-google-news-300.gz
-    2020-09-30 17:01:46,484 : INFO : loaded (3000000, 300) matrix from /Users/kofola3/gensim-data/word2vec-google-news-300/word2vec-google-news-300.gz
-
 
 
 
@@ -351,8 +342,8 @@ would handle a larger corpus.
     from gensim.test.utils import datapath
     from gensim import utils
 
-    class MyCorpus(object):
-        """An interator that yields sentences (lists of str)."""
+    class MyCorpus:
+        """An iterator that yields sentences (lists of str)."""
 
         def __iter__(self):
             corpus_path = datapath('lee_background.cor')
@@ -363,15 +354,6 @@ would handle a larger corpus.
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:00,362 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 17:02:00,366 : INFO : built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)
 
 
 
@@ -397,46 +379,6 @@ training parameters much for now, we'll revisit them later.
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:00,550 : INFO : collecting all words and their counts
-    2020-09-30 17:02:00,551 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2020-09-30 17:02:00,657 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
-    2020-09-30 17:02:00,657 : INFO : Loading a fresh vocabulary
-    2020-09-30 17:02:00,668 : INFO : effective_min_count=5 retains 1750 unique words (25% of original 6981, drops 5231)
-    2020-09-30 17:02:00,668 : INFO : effective_min_count=5 leaves 49335 word corpus (84% of original 58152, drops 8817)
-    2020-09-30 17:02:00,683 : INFO : deleting the raw counts dictionary of 6981 items
-    2020-09-30 17:02:00,741 : INFO : sample=0.001 downsamples 51 most-common words
-    2020-09-30 17:02:00,741 : INFO : downsampling leaves estimated 35935 word corpus (72.8% of prior 49335)
-    2020-09-30 17:02:00,769 : INFO : estimated required memory for 1750 words and 100 dimensions: 2275000 bytes
-    2020-09-30 17:02:00,770 : INFO : resetting layer weights
-    2020-09-30 17:02:00,875 : INFO : training model with 3 workers on 1750 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
-    2020-09-30 17:02:00,993 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:00,994 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:00,999 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:00,999 : INFO : EPOCH - 1 : training on 58152 raw words (35967 effective words) took 0.1s, 305737 effective words/s
-    2020-09-30 17:02:01,099 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:01,103 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:01,106 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:01,106 : INFO : EPOCH - 2 : training on 58152 raw words (35955 effective words) took 0.1s, 343839 effective words/s
-    2020-09-30 17:02:01,210 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:01,218 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:01,220 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:01,220 : INFO : EPOCH - 3 : training on 58152 raw words (35878 effective words) took 0.1s, 316674 effective words/s
-    2020-09-30 17:02:01,326 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:01,333 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:01,336 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:01,336 : INFO : EPOCH - 4 : training on 58152 raw words (35809 effective words) took 0.1s, 312256 effective words/s
-    2020-09-30 17:02:01,434 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:01,438 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:01,441 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:01,441 : INFO : EPOCH - 5 : training on 58152 raw words (35998 effective words) took 0.1s, 344237 effective words/s
-    2020-09-30 17:02:01,441 : INFO : training on a 290760 raw words (179607 effective words) took 0.6s, 317010 effective words/s
 
 
 
@@ -522,20 +464,6 @@ You can store/load models using the standard gensim methods:
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:01,737 : INFO : saving Word2Vec object under /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d, separately None
-    2020-09-30 17:02:01,740 : INFO : not storing attribute cum_table
-    2020-09-30 17:02:01,785 : INFO : saved /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
-    2020-09-30 17:02:01,786 : INFO : loading Word2Vec object from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
-    2020-09-30 17:02:01,801 : INFO : loading wv recursively from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d.wv.* with mmap=None
-    2020-09-30 17:02:01,801 : INFO : setting ignored attribute cum_table to None
-    2020-09-30 17:02:01,821 : INFO : loaded /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
-
 
 
 
@@ -575,46 +503,6 @@ default value of min_count=5
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:01,918 : INFO : collecting all words and their counts
-    2020-09-30 17:02:01,921 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2020-09-30 17:02:02,011 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
-    2020-09-30 17:02:02,011 : INFO : Loading a fresh vocabulary
-    2020-09-30 17:02:02,018 : INFO : effective_min_count=10 retains 889 unique words (12% of original 6981, drops 6092)
-    2020-09-30 17:02:02,018 : INFO : effective_min_count=10 leaves 43776 word corpus (75% of original 58152, drops 14376)
-    2020-09-30 17:02:02,028 : INFO : deleting the raw counts dictionary of 6981 items
-    2020-09-30 17:02:02,029 : INFO : sample=0.001 downsamples 55 most-common words
-    2020-09-30 17:02:02,029 : INFO : downsampling leaves estimated 29691 word corpus (67.8% of prior 43776)
-    2020-09-30 17:02:02,041 : INFO : estimated required memory for 889 words and 100 dimensions: 1155700 bytes
-    2020-09-30 17:02:02,041 : INFO : resetting layer weights
-    2020-09-30 17:02:02,083 : INFO : training model with 3 workers on 889 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
-    2020-09-30 17:02:02,184 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:02,190 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:02,192 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:02,192 : INFO : EPOCH - 1 : training on 58152 raw words (29629 effective words) took 0.1s, 276020 effective words/s
-    2020-09-30 17:02:02,287 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:02,292 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:02,295 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:02,295 : INFO : EPOCH - 2 : training on 58152 raw words (29624 effective words) took 0.1s, 290768 effective words/s
-    2020-09-30 17:02:02,394 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:02,397 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:02,400 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:02,400 : INFO : EPOCH - 3 : training on 58152 raw words (29769 effective words) took 0.1s, 286475 effective words/s
-    2020-09-30 17:02:02,496 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:02,499 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:02,501 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:02,502 : INFO : EPOCH - 4 : training on 58152 raw words (29578 effective words) took 0.1s, 293835 effective words/s
-    2020-09-30 17:02:02,598 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:02,601 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:02,604 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:02,604 : INFO : EPOCH - 5 : training on 58152 raw words (29707 effective words) took 0.1s, 292782 effective words/s
-    2020-09-30 17:02:02,604 : INFO : training on a 290760 raw words (148307 effective words) took 0.5s, 284858 effective words/s
-
 
 
 
@@ -639,46 +527,6 @@ accurate) models. Reasonable values are in the tens to hundreds.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:02,626 : INFO : collecting all words and their counts
-    2020-09-30 17:02:02,628 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2020-09-30 17:02:02,722 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
-    2020-09-30 17:02:02,722 : INFO : Loading a fresh vocabulary
-    2020-09-30 17:02:02,734 : INFO : effective_min_count=5 retains 1750 unique words (25% of original 6981, drops 5231)
-    2020-09-30 17:02:02,734 : INFO : effective_min_count=5 leaves 49335 word corpus (84% of original 58152, drops 8817)
-    2020-09-30 17:02:02,748 : INFO : deleting the raw counts dictionary of 6981 items
-    2020-09-30 17:02:02,748 : INFO : sample=0.001 downsamples 51 most-common words
-    2020-09-30 17:02:02,748 : INFO : downsampling leaves estimated 35935 word corpus (72.8% of prior 49335)
-    2020-09-30 17:02:02,770 : INFO : estimated required memory for 1750 words and 200 dimensions: 3675000 bytes
-    2020-09-30 17:02:02,770 : INFO : resetting layer weights
-    2020-09-30 17:02:02,864 : INFO : training model with 3 workers on 1750 vocabulary and 200 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
-    2020-09-30 17:02:02,973 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:02,979 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:02,982 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:02,982 : INFO : EPOCH - 1 : training on 58152 raw words (35994 effective words) took 0.1s, 307729 effective words/s
-    2020-09-30 17:02:03,087 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:03,093 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:03,097 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:03,097 : INFO : EPOCH - 2 : training on 58152 raw words (35944 effective words) took 0.1s, 317636 effective words/s
-    2020-09-30 17:02:03,202 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:03,208 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:03,212 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:03,212 : INFO : EPOCH - 3 : training on 58152 raw words (36007 effective words) took 0.1s, 314282 effective words/s
-    2020-09-30 17:02:03,320 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:03,327 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:03,330 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:03,330 : INFO : EPOCH - 4 : training on 58152 raw words (35992 effective words) took 0.1s, 307219 effective words/s
-    2020-09-30 17:02:03,436 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:03,442 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:03,445 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:03,446 : INFO : EPOCH - 5 : training on 58152 raw words (36003 effective words) took 0.1s, 314793 effective words/s
-    2020-09-30 17:02:03,446 : INFO : training on a 290760 raw words (179940 effective words) took 0.6s, 309327 effective words/s
-
 
 
 
@@ -700,51 +548,6 @@ is for training parallelization, to speed up training:
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:03,470 : INFO : collecting all words and their counts
-    2020-09-30 17:02:03,472 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2020-09-30 17:02:03,571 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
-    2020-09-30 17:02:03,571 : INFO : Loading a fresh vocabulary
-    2020-09-30 17:02:03,582 : INFO : effective_min_count=5 retains 1750 unique words (25% of original 6981, drops 5231)
-    2020-09-30 17:02:03,582 : INFO : effective_min_count=5 leaves 49335 word corpus (84% of original 58152, drops 8817)
-    2020-09-30 17:02:03,595 : INFO : deleting the raw counts dictionary of 6981 items
-    2020-09-30 17:02:03,595 : INFO : sample=0.001 downsamples 51 most-common words
-    2020-09-30 17:02:03,595 : INFO : downsampling leaves estimated 35935 word corpus (72.8% of prior 49335)
-    2020-09-30 17:02:03,616 : INFO : estimated required memory for 1750 words and 100 dimensions: 2275000 bytes
-    2020-09-30 17:02:03,616 : INFO : resetting layer weights
-    2020-09-30 17:02:03,704 : INFO : training model with 4 workers on 1750 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
-    2020-09-30 17:02:03,809 : INFO : worker thread finished; awaiting finish of 3 more threads
-    2020-09-30 17:02:03,810 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:03,810 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:03,815 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:03,816 : INFO : EPOCH - 1 : training on 58152 raw words (35953 effective words) took 0.1s, 326539 effective words/s
-    2020-09-30 17:02:03,912 : INFO : worker thread finished; awaiting finish of 3 more threads
-    2020-09-30 17:02:03,913 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:03,915 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:03,920 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:03,920 : INFO : EPOCH - 2 : training on 58152 raw words (35895 effective words) took 0.1s, 348415 effective words/s
-    2020-09-30 17:02:04,017 : INFO : worker thread finished; awaiting finish of 3 more threads
-    2020-09-30 17:02:04,018 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,021 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,024 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,024 : INFO : EPOCH - 3 : training on 58152 raw words (35907 effective words) took 0.1s, 347822 effective words/s
-    2020-09-30 17:02:04,127 : INFO : worker thread finished; awaiting finish of 3 more threads
-    2020-09-30 17:02:04,127 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,128 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,134 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,134 : INFO : EPOCH - 4 : training on 58152 raw words (35909 effective words) took 0.1s, 333947 effective words/s
-    2020-09-30 17:02:04,232 : INFO : worker thread finished; awaiting finish of 3 more threads
-    2020-09-30 17:02:04,232 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,233 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,238 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,238 : INFO : EPOCH - 5 : training on 58152 raw words (35957 effective words) took 0.1s, 347693 effective words/s
-    2020-09-30 17:02:04,238 : INFO : training on a 290760 raw words (179621 effective words) took 0.5s, 335988 effective words/s
 
 
 
@@ -811,21 +614,8 @@ Gensim supports the same evaluation set, in exactly the same format:
 
  .. code-block:: none
 
-    2020-09-30 17:02:04,350 : INFO : Evaluating word analogies for top 300000 words in the model on /Volumes/work/workspace/gensim/trunk/gensim/test/test_data/questions-words.txt
-    2020-09-30 17:02:04,358 : INFO : capital-common-countries: 0.0% (0/6)
-    2020-09-30 17:02:04,376 : INFO : capital-world: 0.0% (0/2)
-    2020-09-30 17:02:04,392 : INFO : family: 0.0% (0/6)
-    2020-09-30 17:02:04,409 : INFO : gram3-comparative: 0.0% (0/20)
-    2020-09-30 17:02:04,416 : INFO : gram4-superlative: 0.0% (0/12)
-    2020-09-30 17:02:04,423 : INFO : gram5-present-participle: 0.0% (0/20)
-    2020-09-30 17:02:04,435 : INFO : gram6-nationality-adjective: 0.0% (0/30)
-    2020-09-30 17:02:04,445 : INFO : gram7-past-tense: 0.0% (0/20)
-    2020-09-30 17:02:04,457 : INFO : gram8-plural: 3.3% (1/30)
-    2020-09-30 17:02:04,462 : INFO : Quadruplets with out-of-vocabulary words: 99.3%
-    2020-09-30 17:02:04,465 : INFO : NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use "dummy4unknown=True"
-    2020-09-30 17:02:04,465 : INFO : Total accuracy: 0.7% (1/146)
 
-    (0.00684931506849315, [{'section': 'capital-common-countries', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'KABUL', 'AFGHANISTAN')]}, {'section': 'capital-world', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE')]}, {'section': 'currency', 'correct': [], 'incorrect': []}, {'section': 'city-in-state', 'correct': [], 'incorrect': []}, {'section': 'family', 'correct': [], 'incorrect': [('HE', 'SHE', 'HIS', 'HER'), ('HE', 'SHE', 'MAN', 'WOMAN'), ('HIS', 'HER', 'MAN', 'WOMAN'), ('HIS', 'HER', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HIS', 'HER')]}, {'section': 'gram1-adjective-to-adverb', 'correct': [], 'incorrect': []}, {'section': 'gram2-opposite', 'correct': [], 'incorrect': []}, {'section': 'gram3-comparative', 'correct': [], 'incorrect': [('GOOD', 'BETTER', 'GREAT', 'GREATER'), ('GOOD', 'BETTER', 'LONG', 'LONGER'), ('GOOD', 'BETTER', 'LOW', 'LOWER'), ('GOOD', 'BETTER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'LONG', 'LONGER'), ('GREAT', 'GREATER', 'LOW', 'LOWER'), ('GREAT', 'GREATER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'LOW', 'LOWER'), ('LONG', 'LONGER', 'SMALL', 'SMALLER'), ('LONG', 'LONGER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'SMALL', 'SMALLER'), ('LOW', 'LOWER', 'GOOD', 'BETTER'), ('LOW', 'LOWER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'GOOD', 'BETTER'), ('SMALL', 'SMALLER', 'GREAT', 'GREATER'), ('SMALL', 'SMALLER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'LOW', 'LOWER')]}, {'section': 'gram4-superlative', 'correct': [], 'incorrect': [('BIG', 'BIGGEST', 'GOOD', 'BEST'), ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'), ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'GREAT', 'GREATEST'), ('GOOD', 'BEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'), ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'BIG', 'BIGGEST'), ('LARGE', 'LARGEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'GREAT', 'GREATEST')]}, {'section': 'gram5-present-participle', 'correct': [], 'incorrect': [('GO', 'GOING', 'LOOK', 'LOOKING'), ('GO', 'GOING', 'PLAY', 'PLAYING'), ('GO', 'GOING', 'RUN', 'RUNNING'), ('GO', 'GOING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'PLAY', 'PLAYING'), ('LOOK', 'LOOKING', 'RUN', 'RUNNING'), ('LOOK', 'LOOKING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'RUN', 'RUNNING'), ('PLAY', 'PLAYING', 'SAY', 'SAYING'), ('PLAY', 'PLAYING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'SAY', 'SAYING'), ('RUN', 'RUNNING', 'GO', 'GOING'), ('RUN', 'RUNNING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'GO', 'GOING'), ('SAY', 'SAYING', 'LOOK', 'LOOKING'), ('SAY', 'SAYING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'RUN', 'RUNNING')]}, {'section': 'gram6-nationality-adjective', 'correct': [], 'incorrect': [('AUSTRALIA', 'AUSTRALIAN', 'FRANCE', 'FRENCH'), ('AUSTRALIA', 'AUSTRALIAN', 'INDIA', 'INDIAN'), ('AUSTRALIA', 'AUSTRALIAN', 'ISRAEL', 'ISRAELI'), ('AUSTRALIA', 'AUSTRALIAN', 'JAPAN', 'JAPANESE'), ('AUSTRALIA', 'AUSTRALIAN', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'INDIA', 'INDIAN'), ('FRANCE', 'FRENCH', 'ISRAEL', 'ISRAELI'), ('FRANCE', 'FRENCH', 'JAPAN', 'JAPANESE'), ('FRANCE', 'FRENCH', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'ISRAEL', 'ISRAELI'), ('INDIA', 'INDIAN', 'JAPAN', 'JAPANESE'), ('INDIA', 'INDIAN', 'SWITZERLAND', 'SWISS'), ('INDIA', 'INDIAN', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'JAPAN', 'JAPANESE'), ('ISRAEL', 'ISRAELI', 'SWITZERLAND', 'SWISS'), ('ISRAEL', 'ISRAELI', 'AUSTRALIA', 'AUSTRALIAN'), ('ISRAEL', 'ISRAELI', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'SWITZERLAND', 'SWISS'), ('JAPAN', 'JAPANESE', 'AUSTRALIA', 'AUSTRALIAN'), ('JAPAN', 'JAPANESE', 'FRANCE', 'FRENCH'), ('JAPAN', 'JAPANESE', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'AUSTRALIA', 'AUSTRALIAN'), ('SWITZERLAND', 'SWISS', 'FRANCE', 'FRENCH'), ('SWITZERLAND', 'SWISS', 'INDIA', 'INDIAN'), ('SWITZERLAND', 'SWISS', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'JAPAN', 'JAPANESE')]}, {'section': 'gram7-past-tense', 'correct': [], 'incorrect': [('GOING', 'WENT', 'PAYING', 'PAID'), ('GOING', 'WENT', 'PLAYING', 'PLAYED'), ('GOING', 'WENT', 'SAYING', 'SAID'), ('GOING', 'WENT', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'PLAYING', 'PLAYED'), ('PAYING', 'PAID', 'SAYING', 'SAID'), ('PAYING', 'PAID', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'SAYING', 'SAID'), ('PLAYING', 'PLAYED', 'TAKING', 'TOOK'), ('PLAYING', 'PLAYED', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'TAKING', 'TOOK'), ('SAYING', 'SAID', 'GOING', 'WENT'), ('SAYING', 'SAID', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'GOING', 'WENT'), ('TAKING', 'TOOK', 'PAYING', 'PAID'), ('TAKING', 'TOOK', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'SAYING', 'SAID')]}, {'section': 'gram8-plural', 'correct': [('CAR', 'CARS', 'BUILDING', 'BUILDINGS')], 'incorrect': [('BUILDING', 'BUILDINGS', 'CAR', 'CARS'), ('BUILDING', 'BUILDINGS', 'CHILD', 'CHILDREN'), ('BUILDING', 'BUILDINGS', 'MAN', 'MEN'), ('BUILDING', 'BUILDINGS', 'ROAD', 'ROADS'), ('BUILDING', 'BUILDINGS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'CHILD', 'CHILDREN'), ('CAR', 'CARS', 'MAN', 'MEN'), ('CAR', 'CARS', 'ROAD', 'ROADS'), ('CAR', 'CARS', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'MAN', 'MEN'), ('CHILD', 'CHILDREN', 'ROAD', 'ROADS'), ('CHILD', 'CHILDREN', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'CAR', 'CARS'), ('MAN', 'MEN', 'ROAD', 'ROADS'), ('MAN', 'MEN', 'WOMAN', 'WOMEN'), ('MAN', 'MEN', 'BUILDING', 'BUILDINGS'), ('MAN', 'MEN', 'CAR', 'CARS'), ('MAN', 'MEN', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'WOMAN', 'WOMEN'), ('ROAD', 'ROADS', 'BUILDING', 'BUILDINGS'), ('ROAD', 'ROADS', 'CAR', 'CARS'), ('ROAD', 'ROADS', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'BUILDING', 'BUILDINGS'), ('WOMAN', 'WOMEN', 'CAR', 'CARS'), ('WOMAN', 'WOMEN', 'CHILD', 'CHILDREN'), ('WOMAN', 'WOMEN', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'ROAD', 'ROADS')]}, {'section': 'gram9-plural-verbs', 'correct': [], 'incorrect': []}, {'section': 'Total accuracy', 'correct': [('CAR', 'CARS', 'BUILDING', 'BUILDINGS')], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('HE', 'SHE', 'HIS', 'HER'), ('HE', 'SHE', 'MAN', 'WOMAN'), ('HIS', 'HER', 'MAN', 'WOMAN'), ('HIS', 'HER', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HIS', 'HER'), ('GOOD', 'BETTER', 'GREAT', 'GREATER'), ('GOOD', 'BETTER', 'LONG', 'LONGER'), ('GOOD', 'BETTER', 'LOW', 'LOWER'), ('GOOD', 'BETTER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'LONG', 'LONGER'), ('GREAT', 'GREATER', 'LOW', 'LOWER'), ('GREAT', 'GREATER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'LOW', 'LOWER'), ('LONG', 'LONGER', 'SMALL', 'SMALLER'), ('LONG', 'LONGER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'SMALL', 'SMALLER'), ('LOW', 'LOWER', 'GOOD', 'BETTER'), ('LOW', 'LOWER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'GOOD', 'BETTER'), ('SMALL', 'SMALLER', 'GREAT', 'GREATER'), ('SMALL', 'SMALLER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'LOW', 'LOWER'), ('BIG', 'BIGGEST', 'GOOD', 'BEST'), ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'), ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'GREAT', 'GREATEST'), ('GOOD', 'BEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'), ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'BIG', 'BIGGEST'), ('LARGE', 'LARGEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'GREAT', 'GREATEST'), ('GO', 'GOING', 'LOOK', 'LOOKING'), ('GO', 'GOING', 'PLAY', 'PLAYING'), ('GO', 'GOING', 'RUN', 'RUNNING'), ('GO', 'GOING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'PLAY', 'PLAYING'), ('LOOK', 'LOOKING', 'RUN', 'RUNNING'), ('LOOK', 'LOOKING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'RUN', 'RUNNING'), ('PLAY', 'PLAYING', 'SAY', 'SAYING'), ('PLAY', 'PLAYING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'SAY', 'SAYING'), ('RUN', 'RUNNING', 'GO', 'GOING'), ('RUN', 'RUNNING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'GO', 'GOING'), ('SAY', 'SAYING', 'LOOK', 'LOOKING'), ('SAY', 'SAYING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'RUN', 'RUNNING'), ('AUSTRALIA', 'AUSTRALIAN', 'FRANCE', 'FRENCH'), ('AUSTRALIA', 'AUSTRALIAN', 'INDIA', 'INDIAN'), ('AUSTRALIA', 'AUSTRALIAN', 'ISRAEL', 'ISRAELI'), ('AUSTRALIA', 'AUSTRALIAN', 'JAPAN', 'JAPANESE'), ('AUSTRALIA', 'AUSTRALIAN', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'INDIA', 'INDIAN'), ('FRANCE', 'FRENCH', 'ISRAEL', 'ISRAELI'), ('FRANCE', 'FRENCH', 'JAPAN', 'JAPANESE'), ('FRANCE', 'FRENCH', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'ISRAEL', 'ISRAELI'), ('INDIA', 'INDIAN', 'JAPAN', 'JAPANESE'), ('INDIA', 'INDIAN', 'SWITZERLAND', 'SWISS'), ('INDIA', 'INDIAN', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'JAPAN', 'JAPANESE'), ('ISRAEL', 'ISRAELI', 'SWITZERLAND', 'SWISS'), ('ISRAEL', 'ISRAELI', 'AUSTRALIA', 'AUSTRALIAN'), ('ISRAEL', 'ISRAELI', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'SWITZERLAND', 'SWISS'), ('JAPAN', 'JAPANESE', 'AUSTRALIA', 'AUSTRALIAN'), ('JAPAN', 'JAPANESE', 'FRANCE', 'FRENCH'), ('JAPAN', 'JAPANESE', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'AUSTRALIA', 'AUSTRALIAN'), ('SWITZERLAND', 'SWISS', 'FRANCE', 'FRENCH'), ('SWITZERLAND', 'SWISS', 'INDIA', 'INDIAN'), ('SWITZERLAND', 'SWISS', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'JAPAN', 'JAPANESE'), ('GOING', 'WENT', 'PAYING', 'PAID'), ('GOING', 'WENT', 'PLAYING', 'PLAYED'), ('GOING', 'WENT', 'SAYING', 'SAID'), ('GOING', 'WENT', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'PLAYING', 'PLAYED'), ('PAYING', 'PAID', 'SAYING', 'SAID'), ('PAYING', 'PAID', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'SAYING', 'SAID'), ('PLAYING', 'PLAYED', 'TAKING', 'TOOK'), ('PLAYING', 'PLAYED', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'TAKING', 'TOOK'), ('SAYING', 'SAID', 'GOING', 'WENT'), ('SAYING', 'SAID', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'GOING', 'WENT'), ('TAKING', 'TOOK', 'PAYING', 'PAID'), ('TAKING', 'TOOK', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'SAYING', 'SAID'), ('BUILDING', 'BUILDINGS', 'CAR', 'CARS'), ('BUILDING', 'BUILDINGS', 'CHILD', 'CHILDREN'), ('BUILDING', 'BUILDINGS', 'MAN', 'MEN'), ('BUILDING', 'BUILDINGS', 'ROAD', 'ROADS'), ('BUILDING', 'BUILDINGS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'CHILD', 'CHILDREN'), ('CAR', 'CARS', 'MAN', 'MEN'), ('CAR', 'CARS', 'ROAD', 'ROADS'), ('CAR', 'CARS', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'MAN', 'MEN'), ('CHILD', 'CHILDREN', 'ROAD', 'ROADS'), ('CHILD', 'CHILDREN', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'CAR', 'CARS'), ('MAN', 'MEN', 'ROAD', 'ROADS'), ('MAN', 'MEN', 'WOMAN', 'WOMEN'), ('MAN', 'MEN', 'BUILDING', 'BUILDINGS'), ('MAN', 'MEN', 'CAR', 'CARS'), ('MAN', 'MEN', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'WOMAN', 'WOMEN'), ('ROAD', 'ROADS', 'BUILDING', 'BUILDINGS'), ('ROAD', 'ROADS', 'CAR', 'CARS'), ('ROAD', 'ROADS', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'BUILDING', 'BUILDINGS'), ('WOMAN', 'WOMEN', 'CAR', 'CARS'), ('WOMAN', 'WOMEN', 'CHILD', 'CHILDREN'), ('WOMAN', 'WOMEN', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'ROAD', 'ROADS')]}])
+    (0.0, [{'section': 'capital-common-countries', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'KABUL', 'AFGHANISTAN')]}, {'section': 'capital-world', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE')]}, {'section': 'currency', 'correct': [], 'incorrect': []}, {'section': 'city-in-state', 'correct': [], 'incorrect': []}, {'section': 'family', 'correct': [], 'incorrect': [('HE', 'SHE', 'HIS', 'HER'), ('HE', 'SHE', 'MAN', 'WOMAN'), ('HIS', 'HER', 'MAN', 'WOMAN'), ('HIS', 'HER', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HIS', 'HER')]}, {'section': 'gram1-adjective-to-adverb', 'correct': [], 'incorrect': []}, {'section': 'gram2-opposite', 'correct': [], 'incorrect': []}, {'section': 'gram3-comparative', 'correct': [], 'incorrect': [('GOOD', 'BETTER', 'GREAT', 'GREATER'), ('GOOD', 'BETTER', 'LONG', 'LONGER'), ('GOOD', 'BETTER', 'LOW', 'LOWER'), ('GOOD', 'BETTER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'LONG', 'LONGER'), ('GREAT', 'GREATER', 'LOW', 'LOWER'), ('GREAT', 'GREATER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'LOW', 'LOWER'), ('LONG', 'LONGER', 'SMALL', 'SMALLER'), ('LONG', 'LONGER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'SMALL', 'SMALLER'), ('LOW', 'LOWER', 'GOOD', 'BETTER'), ('LOW', 'LOWER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'GOOD', 'BETTER'), ('SMALL', 'SMALLER', 'GREAT', 'GREATER'), ('SMALL', 'SMALLER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'LOW', 'LOWER')]}, {'section': 'gram4-superlative', 'correct': [], 'incorrect': [('BIG', 'BIGGEST', 'GOOD', 'BEST'), ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'), ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'GREAT', 'GREATEST'), ('GOOD', 'BEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'), ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'BIG', 'BIGGEST'), ('LARGE', 'LARGEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'GREAT', 'GREATEST')]}, {'section': 'gram5-present-participle', 'correct': [], 'incorrect': [('GO', 'GOING', 'LOOK', 'LOOKING'), ('GO', 'GOING', 'PLAY', 'PLAYING'), ('GO', 'GOING', 'RUN', 'RUNNING'), ('GO', 'GOING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'PLAY', 'PLAYING'), ('LOOK', 'LOOKING', 'RUN', 'RUNNING'), ('LOOK', 'LOOKING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'RUN', 'RUNNING'), ('PLAY', 'PLAYING', 'SAY', 'SAYING'), ('PLAY', 'PLAYING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'SAY', 'SAYING'), ('RUN', 'RUNNING', 'GO', 'GOING'), ('RUN', 'RUNNING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'GO', 'GOING'), ('SAY', 'SAYING', 'LOOK', 'LOOKING'), ('SAY', 'SAYING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'RUN', 'RUNNING')]}, {'section': 'gram6-nationality-adjective', 'correct': [], 'incorrect': [('AUSTRALIA', 'AUSTRALIAN', 'FRANCE', 'FRENCH'), ('AUSTRALIA', 'AUSTRALIAN', 'INDIA', 'INDIAN'), ('AUSTRALIA', 'AUSTRALIAN', 'ISRAEL', 'ISRAELI'), ('AUSTRALIA', 'AUSTRALIAN', 'JAPAN', 'JAPANESE'), ('AUSTRALIA', 'AUSTRALIAN', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'INDIA', 'INDIAN'), ('FRANCE', 'FRENCH', 'ISRAEL', 'ISRAELI'), ('FRANCE', 'FRENCH', 'JAPAN', 'JAPANESE'), ('FRANCE', 'FRENCH', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'ISRAEL', 'ISRAELI'), ('INDIA', 'INDIAN', 'JAPAN', 'JAPANESE'), ('INDIA', 'INDIAN', 'SWITZERLAND', 'SWISS'), ('INDIA', 'INDIAN', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'JAPAN', 'JAPANESE'), ('ISRAEL', 'ISRAELI', 'SWITZERLAND', 'SWISS'), ('ISRAEL', 'ISRAELI', 'AUSTRALIA', 'AUSTRALIAN'), ('ISRAEL', 'ISRAELI', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'SWITZERLAND', 'SWISS'), ('JAPAN', 'JAPANESE', 'AUSTRALIA', 'AUSTRALIAN'), ('JAPAN', 'JAPANESE', 'FRANCE', 'FRENCH'), ('JAPAN', 'JAPANESE', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'AUSTRALIA', 'AUSTRALIAN'), ('SWITZERLAND', 'SWISS', 'FRANCE', 'FRENCH'), ('SWITZERLAND', 'SWISS', 'INDIA', 'INDIAN'), ('SWITZERLAND', 'SWISS', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'JAPAN', 'JAPANESE')]}, {'section': 'gram7-past-tense', 'correct': [], 'incorrect': [('GOING', 'WENT', 'PAYING', 'PAID'), ('GOING', 'WENT', 'PLAYING', 'PLAYED'), ('GOING', 'WENT', 'SAYING', 'SAID'), ('GOING', 'WENT', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'PLAYING', 'PLAYED'), ('PAYING', 'PAID', 'SAYING', 'SAID'), ('PAYING', 'PAID', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'SAYING', 'SAID'), ('PLAYING', 'PLAYED', 'TAKING', 'TOOK'), ('PLAYING', 'PLAYED', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'TAKING', 'TOOK'), ('SAYING', 'SAID', 'GOING', 'WENT'), ('SAYING', 'SAID', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'GOING', 'WENT'), ('TAKING', 'TOOK', 'PAYING', 'PAID'), ('TAKING', 'TOOK', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'SAYING', 'SAID')]}, {'section': 'gram8-plural', 'correct': [], 'incorrect': [('BUILDING', 'BUILDINGS', 'CAR', 'CARS'), ('BUILDING', 'BUILDINGS', 'CHILD', 'CHILDREN'), ('BUILDING', 'BUILDINGS', 'MAN', 'MEN'), ('BUILDING', 'BUILDINGS', 'ROAD', 'ROADS'), ('BUILDING', 'BUILDINGS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'CHILD', 'CHILDREN'), ('CAR', 'CARS', 'MAN', 'MEN'), ('CAR', 'CARS', 'ROAD', 'ROADS'), ('CAR', 'CARS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'MAN', 'MEN'), ('CHILD', 'CHILDREN', 'ROAD', 'ROADS'), ('CHILD', 'CHILDREN', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'CAR', 'CARS'), ('MAN', 'MEN', 'ROAD', 'ROADS'), ('MAN', 'MEN', 'WOMAN', 'WOMEN'), ('MAN', 'MEN', 'BUILDING', 'BUILDINGS'), ('MAN', 'MEN', 'CAR', 'CARS'), ('MAN', 'MEN', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'WOMAN', 'WOMEN'), ('ROAD', 'ROADS', 'BUILDING', 'BUILDINGS'), ('ROAD', 'ROADS', 'CAR', 'CARS'), ('ROAD', 'ROADS', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'BUILDING', 'BUILDINGS'), ('WOMAN', 'WOMEN', 'CAR', 'CARS'), ('WOMAN', 'WOMEN', 'CHILD', 'CHILDREN'), ('WOMAN', 'WOMEN', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'ROAD', 'ROADS')]}, {'section': 'gram9-plural-verbs', 'correct': [], 'incorrect': []}, {'section': 'Total accuracy', 'correct': [], 'incorrect': [('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('KABUL', 'AFGHANISTAN', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'CANBERRA', 'AUSTRALIA'), ('PARIS', 'FRANCE', 'KABUL', 'AFGHANISTAN'), ('CANBERRA', 'AUSTRALIA', 'KABUL', 'AFGHANISTAN'), ('KABUL', 'AFGHANISTAN', 'PARIS', 'FRANCE'), ('HE', 'SHE', 'HIS', 'HER'), ('HE', 'SHE', 'MAN', 'WOMAN'), ('HIS', 'HER', 'MAN', 'WOMAN'), ('HIS', 'HER', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HE', 'SHE'), ('MAN', 'WOMAN', 'HIS', 'HER'), ('GOOD', 'BETTER', 'GREAT', 'GREATER'), ('GOOD', 'BETTER', 'LONG', 'LONGER'), ('GOOD', 'BETTER', 'LOW', 'LOWER'), ('GOOD', 'BETTER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'LONG', 'LONGER'), ('GREAT', 'GREATER', 'LOW', 'LOWER'), ('GREAT', 'GREATER', 'SMALL', 'SMALLER'), ('GREAT', 'GREATER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'LOW', 'LOWER'), ('LONG', 'LONGER', 'SMALL', 'SMALLER'), ('LONG', 'LONGER', 'GOOD', 'BETTER'), ('LONG', 'LONGER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'SMALL', 'SMALLER'), ('LOW', 'LOWER', 'GOOD', 'BETTER'), ('LOW', 'LOWER', 'GREAT', 'GREATER'), ('LOW', 'LOWER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'GOOD', 'BETTER'), ('SMALL', 'SMALLER', 'GREAT', 'GREATER'), ('SMALL', 'SMALLER', 'LONG', 'LONGER'), ('SMALL', 'SMALLER', 'LOW', 'LOWER'), ('BIG', 'BIGGEST', 'GOOD', 'BEST'), ('BIG', 'BIGGEST', 'GREAT', 'GREATEST'), ('BIG', 'BIGGEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'GREAT', 'GREATEST'), ('GOOD', 'BEST', 'LARGE', 'LARGEST'), ('GOOD', 'BEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'LARGE', 'LARGEST'), ('GREAT', 'GREATEST', 'BIG', 'BIGGEST'), ('GREAT', 'GREATEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'BIG', 'BIGGEST'), ('LARGE', 'LARGEST', 'GOOD', 'BEST'), ('LARGE', 'LARGEST', 'GREAT', 'GREATEST'), ('GO', 'GOING', 'LOOK', 'LOOKING'), ('GO', 'GOING', 'PLAY', 'PLAYING'), ('GO', 'GOING', 'RUN', 'RUNNING'), ('GO', 'GOING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'PLAY', 'PLAYING'), ('LOOK', 'LOOKING', 'RUN', 'RUNNING'), ('LOOK', 'LOOKING', 'SAY', 'SAYING'), ('LOOK', 'LOOKING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'RUN', 'RUNNING'), ('PLAY', 'PLAYING', 'SAY', 'SAYING'), ('PLAY', 'PLAYING', 'GO', 'GOING'), ('PLAY', 'PLAYING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'SAY', 'SAYING'), ('RUN', 'RUNNING', 'GO', 'GOING'), ('RUN', 'RUNNING', 'LOOK', 'LOOKING'), ('RUN', 'RUNNING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'GO', 'GOING'), ('SAY', 'SAYING', 'LOOK', 'LOOKING'), ('SAY', 'SAYING', 'PLAY', 'PLAYING'), ('SAY', 'SAYING', 'RUN', 'RUNNING'), ('AUSTRALIA', 'AUSTRALIAN', 'FRANCE', 'FRENCH'), ('AUSTRALIA', 'AUSTRALIAN', 'INDIA', 'INDIAN'), ('AUSTRALIA', 'AUSTRALIAN', 'ISRAEL', 'ISRAELI'), ('AUSTRALIA', 'AUSTRALIAN', 'JAPAN', 'JAPANESE'), ('AUSTRALIA', 'AUSTRALIAN', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'INDIA', 'INDIAN'), ('FRANCE', 'FRENCH', 'ISRAEL', 'ISRAELI'), ('FRANCE', 'FRENCH', 'JAPAN', 'JAPANESE'), ('FRANCE', 'FRENCH', 'SWITZERLAND', 'SWISS'), ('FRANCE', 'FRENCH', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'ISRAEL', 'ISRAELI'), ('INDIA', 'INDIAN', 'JAPAN', 'JAPANESE'), ('INDIA', 'INDIAN', 'SWITZERLAND', 'SWISS'), ('INDIA', 'INDIAN', 'AUSTRALIA', 'AUSTRALIAN'), ('INDIA', 'INDIAN', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'JAPAN', 'JAPANESE'), ('ISRAEL', 'ISRAELI', 'SWITZERLAND', 'SWISS'), ('ISRAEL', 'ISRAELI', 'AUSTRALIA', 'AUSTRALIAN'), ('ISRAEL', 'ISRAELI', 'FRANCE', 'FRENCH'), ('ISRAEL', 'ISRAELI', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'SWITZERLAND', 'SWISS'), ('JAPAN', 'JAPANESE', 'AUSTRALIA', 'AUSTRALIAN'), ('JAPAN', 'JAPANESE', 'FRANCE', 'FRENCH'), ('JAPAN', 'JAPANESE', 'INDIA', 'INDIAN'), ('JAPAN', 'JAPANESE', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'AUSTRALIA', 'AUSTRALIAN'), ('SWITZERLAND', 'SWISS', 'FRANCE', 'FRENCH'), ('SWITZERLAND', 'SWISS', 'INDIA', 'INDIAN'), ('SWITZERLAND', 'SWISS', 'ISRAEL', 'ISRAELI'), ('SWITZERLAND', 'SWISS', 'JAPAN', 'JAPANESE'), ('GOING', 'WENT', 'PAYING', 'PAID'), ('GOING', 'WENT', 'PLAYING', 'PLAYED'), ('GOING', 'WENT', 'SAYING', 'SAID'), ('GOING', 'WENT', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'PLAYING', 'PLAYED'), ('PAYING', 'PAID', 'SAYING', 'SAID'), ('PAYING', 'PAID', 'TAKING', 'TOOK'), ('PAYING', 'PAID', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'SAYING', 'SAID'), ('PLAYING', 'PLAYED', 'TAKING', 'TOOK'), ('PLAYING', 'PLAYED', 'GOING', 'WENT'), ('PLAYING', 'PLAYED', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'TAKING', 'TOOK'), ('SAYING', 'SAID', 'GOING', 'WENT'), ('SAYING', 'SAID', 'PAYING', 'PAID'), ('SAYING', 'SAID', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'GOING', 'WENT'), ('TAKING', 'TOOK', 'PAYING', 'PAID'), ('TAKING', 'TOOK', 'PLAYING', 'PLAYED'), ('TAKING', 'TOOK', 'SAYING', 'SAID'), ('BUILDING', 'BUILDINGS', 'CAR', 'CARS'), ('BUILDING', 'BUILDINGS', 'CHILD', 'CHILDREN'), ('BUILDING', 'BUILDINGS', 'MAN', 'MEN'), ('BUILDING', 'BUILDINGS', 'ROAD', 'ROADS'), ('BUILDING', 'BUILDINGS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'CHILD', 'CHILDREN'), ('CAR', 'CARS', 'MAN', 'MEN'), ('CAR', 'CARS', 'ROAD', 'ROADS'), ('CAR', 'CARS', 'WOMAN', 'WOMEN'), ('CAR', 'CARS', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'MAN', 'MEN'), ('CHILD', 'CHILDREN', 'ROAD', 'ROADS'), ('CHILD', 'CHILDREN', 'WOMAN', 'WOMEN'), ('CHILD', 'CHILDREN', 'BUILDING', 'BUILDINGS'), ('CHILD', 'CHILDREN', 'CAR', 'CARS'), ('MAN', 'MEN', 'ROAD', 'ROADS'), ('MAN', 'MEN', 'WOMAN', 'WOMEN'), ('MAN', 'MEN', 'BUILDING', 'BUILDINGS'), ('MAN', 'MEN', 'CAR', 'CARS'), ('MAN', 'MEN', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'WOMAN', 'WOMEN'), ('ROAD', 'ROADS', 'BUILDING', 'BUILDINGS'), ('ROAD', 'ROADS', 'CAR', 'CARS'), ('ROAD', 'ROADS', 'CHILD', 'CHILDREN'), ('ROAD', 'ROADS', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'BUILDING', 'BUILDINGS'), ('WOMAN', 'WOMEN', 'CAR', 'CARS'), ('WOMAN', 'WOMEN', 'CHILD', 'CHILDREN'), ('WOMAN', 'WOMEN', 'MAN', 'MEN'), ('WOMAN', 'WOMEN', 'ROAD', 'ROADS')]}])
 
 
 
@@ -859,11 +649,8 @@ are less similar because they are related but not interchangeable.
 
  .. code-block:: none
 
-    2020-09-30 17:02:04,681 : INFO : Pearson correlation coefficient against /Volumes/work/workspace/gensim/trunk/gensim/test/test_data/wordsim353.tsv: 0.1072
-    2020-09-30 17:02:04,682 : INFO : Spearman rank-order correlation coefficient against /Volumes/work/workspace/gensim/trunk/gensim/test/test_data/wordsim353.tsv: 0.0977
-    2020-09-30 17:02:04,682 : INFO : Pairs with unknown words ratio: 83.0%
 
-    ((0.10718629411012633, 0.41498744701424156), SpearmanrResult(correlation=0.09773516803468056, pvalue=0.4575366217424267), 83.0028328611898)
+    ((0.1014236962315867, 0.44065378924434523), SpearmanrResult(correlation=0.07441989763914543, pvalue=0.5719973648460552), 83.0028328611898)
 
 
 
@@ -900,50 +687,6 @@ and `new vocabulary words <online_w2v_tutorial.ipynb>`_:
 
 
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 17:02:04,775 : INFO : loading Word2Vec object from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
-    2020-09-30 17:02:04,788 : INFO : loading wv recursively from /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d.wv.* with mmap=None
-    2020-09-30 17:02:04,789 : INFO : setting ignored attribute cum_table to None
-    2020-09-30 17:02:04,809 : INFO : loaded /var/folders/w0/f7blghz9277068cnyyd3nd200000gn/T/gensim-model-36yeu47d
-    2020-09-30 17:02:04,809 : INFO : collecting all words and their counts
-    2020-09-30 17:02:04,809 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2020-09-30 17:02:04,810 : INFO : collected 13 word types from a corpus of 13 raw words and 1 sentences
-    2020-09-30 17:02:04,810 : INFO : Updating model with new vocabulary
-    2020-09-30 17:02:04,819 : INFO : New added 0 unique words (0% of original 13) and increased the count of 0 pre-existing words (0% of original 13)
-    2020-09-30 17:02:04,819 : INFO : deleting the raw counts dictionary of 13 items
-    2020-09-30 17:02:04,819 : INFO : sample=0.001 downsamples 0 most-common words
-    2020-09-30 17:02:04,819 : INFO : downsampling leaves estimated 0 word corpus (0.0% of prior 0)
-    2020-09-30 17:02:04,838 : INFO : estimated required memory for 1750 words and 100 dimensions: 2275000 bytes
-    2020-09-30 17:02:04,838 : INFO : updating layer weights
-    2020-09-30 17:02:04,839 : WARNING : Effective 'alpha' higher than previous training cycles
-    2020-09-30 17:02:04,839 : INFO : training model with 3 workers on 1750 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
-    2020-09-30 17:02:04,842 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,843 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,843 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,843 : INFO : EPOCH - 1 : training on 13 raw words (6 effective words) took 0.0s, 5326 effective words/s
-    2020-09-30 17:02:04,844 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,845 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,845 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,845 : INFO : EPOCH - 2 : training on 13 raw words (5 effective words) took 0.0s, 6975 effective words/s
-    2020-09-30 17:02:04,846 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,846 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,846 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,846 : INFO : EPOCH - 3 : training on 13 raw words (5 effective words) took 0.0s, 8539 effective words/s
-    2020-09-30 17:02:04,847 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,847 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,847 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,848 : INFO : EPOCH - 4 : training on 13 raw words (6 effective words) took 0.0s, 11100 effective words/s
-    2020-09-30 17:02:04,848 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:04,849 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:04,849 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:04,849 : INFO : EPOCH - 5 : training on 13 raw words (5 effective words) took 0.0s, 9718 effective words/s
-    2020-09-30 17:02:04,849 : INFO : training on a 65 raw words (27 effective words) took 0.0s, 2900 effective words/s
 
 
 
@@ -994,40 +737,7 @@ attribute ``running_training_loss`` and can be retrieved using the function
 
  .. code-block:: none
 
-    2020-09-30 17:02:05,025 : INFO : collecting all words and their counts
-    2020-09-30 17:02:05,027 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2020-09-30 17:02:05,112 : INFO : collected 6981 word types from a corpus of 58152 raw words and 300 sentences
-    2020-09-30 17:02:05,112 : INFO : Loading a fresh vocabulary
-    2020-09-30 17:02:05,152 : INFO : effective_min_count=1 retains 6981 unique words (100% of original 6981, drops 0)
-    2020-09-30 17:02:05,152 : INFO : effective_min_count=1 leaves 58152 word corpus (100% of original 58152, drops 0)
-    2020-09-30 17:02:05,207 : INFO : deleting the raw counts dictionary of 6981 items
-    2020-09-30 17:02:05,207 : INFO : sample=0.001 downsamples 43 most-common words
-    2020-09-30 17:02:05,207 : INFO : downsampling leaves estimated 45723 word corpus (78.6% of prior 58152)
-    2020-09-30 17:02:05,294 : INFO : estimated required memory for 6981 words and 100 dimensions: 9075300 bytes
-    2020-09-30 17:02:05,294 : INFO : resetting layer weights
-    2020-09-30 17:02:05,651 : INFO : training model with 3 workers on 6981 vocabulary and 100 features, using sg=1 hs=0 sample=0.001 negative=5 window=5
-    2020-09-30 17:02:05,800 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:05,839 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:05,841 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:05,841 : INFO : EPOCH - 1 : training on 58152 raw words (45692 effective words) took 0.2s, 242729 effective words/s
-    2020-09-30 17:02:06,028 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:06,032 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:06,037 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:06,037 : INFO : EPOCH - 2 : training on 58152 raw words (45778 effective words) took 0.2s, 234367 effective words/s
-    2020-09-30 17:02:06,218 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:06,222 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:06,225 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:06,225 : INFO : EPOCH - 3 : training on 58152 raw words (45684 effective words) took 0.2s, 244363 effective words/s
-    2020-09-30 17:02:06,400 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:06,407 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:06,409 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:06,409 : INFO : EPOCH - 4 : training on 58152 raw words (45651 effective words) took 0.2s, 249862 effective words/s
-    2020-09-30 17:02:06,558 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2020-09-30 17:02:06,597 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2020-09-30 17:02:06,600 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2020-09-30 17:02:06,600 : INFO : EPOCH - 5 : training on 58152 raw words (45745 effective words) took 0.2s, 240328 effective words/s
-    2020-09-30 17:02:06,600 : INFO : training on a 290760 raw words (228550 effective words) took 0.9s, 240759 effective words/s
-    1365568.125
+    1369454.25
 
 
 
@@ -1165,55 +875,55 @@ standard deviation of the test duration.
 
  .. code-block:: none
 
-    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.3307774066925049, 'train_time_std': 0.00578659163388716}
-    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.3314487934112549, 'train_time_std': 0.004201913501261655}
-    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.5213752587636312, 'train_time_std': 0.008047867089155704}
-    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.5293020407358805, 'train_time_std': 0.005368254032954145}
-    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.571751594543457, 'train_time_std': 0.001023259266794945}
-    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.5736987590789795, 'train_time_std': 0.00740075638673385}
-    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 1.1089734236399333, 'train_time_std': 0.029923990619945186}
-    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 1.2068419456481934, 'train_time_std': 0.006783016321594606}
-    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.9139569600423177, 'train_time_std': 0.04541121423444599}
-    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.9152584075927734, 'train_time_std': 0.05191135337399049}
-    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.6703286170959473, 'train_time_std': 0.11292966925292192}
-    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.583152135213216, 'train_time_std': 0.04577290669842482}
-    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 1.811710516611735, 'train_time_std': 0.01081321887556254}
-    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 1.8143157164255779, 'train_time_std': 0.026406013455100835}
-    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 3.5845812956492105, 'train_time_std': 0.08968344917541199}
-    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 3.6167975266774497, 'train_time_std': 0.14609390508721276}
-    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 8.021462361017862, 'train_time_std': 0.21593094159548987}
-    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 7.931290070215861, 'train_time_std': 0.25084118769867136}
-    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 15.51533571879069, 'train_time_std': 0.8857355166766315}
-    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 15.930208921432495, 'train_time_std': 0.6417048653898146}
-    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 21.687038342158, 'train_time_std': 0.3261330075856754}
-    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 21.280882279078167, 'train_time_std': 0.12885843584913614}
-    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 43.11969208717346, 'train_time_std': 0.8133788671881127}
-    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 40.59294398625692, 'train_time_std': 0.47622639550838375}
+    Word2vec model #0: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.25217413902282715, 'train_time_std': 0.020226552024939795}
+    Word2vec model #1: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.25898512204488117, 'train_time_std': 0.026276375796854143}
+    Word2vec model #2: {'train_data': '25kB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 0.4194076855977376, 'train_time_std': 0.0021983060310549808}
+    Word2vec model #3: {'train_data': '25kB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 0.4308760166168213, 'train_time_std': 0.0009999532723555815}
+    Word2vec model #4: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 0.47211599349975586, 'train_time_std': 0.015136686417800442}
+    Word2vec model #5: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 0.4695216814676921, 'train_time_std': 0.0033446725418043747}
+    Word2vec model #6: {'train_data': '25kB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 0.9502590497334799, 'train_time_std': 0.005153258425238986}
+    Word2vec model #7: {'train_data': '25kB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 0.9424160321553549, 'train_time_std': 0.009776048211734903}
+    Word2vec model #8: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 0.6441135406494141, 'train_time_std': 0.00934594899599891}
+    Word2vec model #9: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 0.656217098236084, 'train_time_std': 0.02703627277086478}
+    Word2vec model #10: {'train_data': '1MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 1.3150715033213298, 'train_time_std': 0.09457246701267184}
+    Word2vec model #11: {'train_data': '1MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 1.205832560857137, 'train_time_std': 0.005158620074483131}
+    Word2vec model #12: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 1.5065066814422607, 'train_time_std': 0.036966116484319765}
+    Word2vec model #13: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 1.537813663482666, 'train_time_std': 0.01020688183426915}
+    Word2vec model #14: {'train_data': '1MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 3.302257219950358, 'train_time_std': 0.04523242606424026}
+    Word2vec model #15: {'train_data': '1MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 3.4928714434305825, 'train_time_std': 0.19327551634697}
+    Word2vec model #16: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 0, 'train_time_mean': 7.446084260940552, 'train_time_std': 0.7894319693665308}
+    Word2vec model #17: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 0, 'train_time_mean': 7.060012976328532, 'train_time_std': 0.2136692186366028}
+    Word2vec model #18: {'train_data': '10MB', 'compute_loss': True, 'sg': 0, 'hs': 1, 'train_time_mean': 14.277136087417603, 'train_time_std': 0.7441633349142932}
+    Word2vec model #19: {'train_data': '10MB', 'compute_loss': False, 'sg': 0, 'hs': 1, 'train_time_mean': 13.758649031321207, 'train_time_std': 0.37393987718126326}
+    Word2vec model #20: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 0, 'train_time_mean': 20.35730775197347, 'train_time_std': 0.41241047454786994}
+    Word2vec model #21: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 0, 'train_time_mean': 21.380844751993816, 'train_time_std': 1.6909472056783184}
+    Word2vec model #22: {'train_data': '10MB', 'compute_loss': True, 'sg': 1, 'hs': 1, 'train_time_mean': 44.4877184232076, 'train_time_std': 1.1314265197889173}
+    Word2vec model #23: {'train_data': '10MB', 'compute_loss': False, 'sg': 1, 'hs': 1, 'train_time_mean': 44.517534812291466, 'train_time_std': 1.4472790491207064}
         compute_loss  hs  sg train_data  train_time_mean  train_time_std
-    4           True   0   1       25kB         0.571752        0.001023
-    5          False   0   1       25kB         0.573699        0.007401
-    6           True   1   1       25kB         1.108973        0.029924
-    7          False   1   1       25kB         1.206842        0.006783
-    0           True   0   0       25kB         0.330777        0.005787
-    1          False   0   0       25kB         0.331449        0.004202
-    2           True   1   0       25kB         0.521375        0.008048
-    3          False   1   0       25kB         0.529302        0.005368
-    12          True   0   1        1MB         1.811711        0.010813
-    13         False   0   1        1MB         1.814316        0.026406
-    14          True   1   1        1MB         3.584581        0.089683
-    15         False   1   1        1MB         3.616798        0.146094
-    8           True   0   0        1MB         0.913957        0.045411
-    9          False   0   0        1MB         0.915258        0.051911
-    10          True   1   0        1MB         1.670329        0.112930
-    11         False   1   0        1MB         1.583152        0.045773
-    20          True   0   1       10MB        21.687038        0.326133
-    21         False   0   1       10MB        21.280882        0.128858
-    22          True   1   1       10MB        43.119692        0.813379
-    23         False   1   1       10MB        40.592944        0.476226
-    16          True   0   0       10MB         8.021462        0.215931
-    17         False   0   0       10MB         7.931290        0.250841
-    18          True   1   0       10MB        15.515336        0.885736
-    19         False   1   0       10MB        15.930209        0.641705
+    4           True   0   1       25kB         0.472116        0.015137
+    5          False   0   1       25kB         0.469522        0.003345
+    6           True   1   1       25kB         0.950259        0.005153
+    7          False   1   1       25kB         0.942416        0.009776
+    0           True   0   0       25kB         0.252174        0.020227
+    1          False   0   0       25kB         0.258985        0.026276
+    2           True   1   0       25kB         0.419408        0.002198
+    3          False   1   0       25kB         0.430876        0.001000
+    12          True   0   1        1MB         1.506507        0.036966
+    13         False   0   1        1MB         1.537814        0.010207
+    14          True   1   1        1MB         3.302257        0.045232
+    15         False   1   1        1MB         3.492871        0.193276
+    8           True   0   0        1MB         0.644114        0.009346
+    9          False   0   0        1MB         0.656217        0.027036
+    10          True   1   0        1MB         1.315072        0.094572
+    11         False   1   0        1MB         1.205833        0.005159
+    20          True   0   1       10MB        20.357308        0.412410
+    21         False   0   1       10MB        21.380845        1.690947
+    22          True   1   1       10MB        44.487718        1.131427
+    23         False   1   1       10MB        44.517535        1.447279
+    16          True   0   0       10MB         7.446084        0.789432
+    17         False   0   0       10MB         7.060013        0.213669
+    18          True   1   0       10MB        14.277136        0.744163
+    19         False   1   0       10MB        13.758649        0.373940
 
 
 
@@ -1333,9 +1043,9 @@ Links
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 11 minutes  46.634 seconds)
+   **Total running time of the script:** ( 11 minutes  26.674 seconds)
 
-**Estimated memory usage:**  6399 MB
+**Estimated memory usage:**  7177 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_word2vec.py:

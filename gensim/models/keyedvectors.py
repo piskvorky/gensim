@@ -1720,7 +1720,7 @@ Doc2VecKeyedVectors = KeyedVectors
 EuclideanKeyedVectors = KeyedVectors
 
 
-class CompatVocab(object):
+class CompatVocab:
     def __init__(self, **kwargs):
         """A single vocabulary item, used internally for collecting per-word frequency/sampling info,
         and for constructing binary trees (incl. both word leaves and inner nodes).

@@ -19,7 +19,7 @@ import gensim
 from gensim.test.utils import get_tmpfile
 
 
-class BigCorpus(object):
+class BigCorpus:
     """A corpus of a large number of docs & large vocab"""
 
     def __init__(self, words_only=False, num_terms=200000, num_docs=1000000, doc_len=100):

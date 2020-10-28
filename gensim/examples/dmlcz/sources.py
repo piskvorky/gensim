@@ -32,7 +32,7 @@ PAT_TAG = re.compile(r'<(.*?)>(.*)</.*?>')
 logger = logging.getLogger('gensim.corpora.sources')
 
 
-class ArticleSource(object):
+class ArticleSource:
     """
     Objects of this class describe a single source of articles.
 

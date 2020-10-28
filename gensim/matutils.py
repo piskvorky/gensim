@@ -336,7 +336,7 @@ def scipy2sparse(vec, eps=1e-9):
     return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
 
 
-class Scipy2Corpus(object):
+class Scipy2Corpus:
     """Convert a sequence of dense/sparse vectors into a streamed Gensim corpus object.
 
     See Also
@@ -508,7 +508,7 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
     return result.astype(dtype)
 
 
-class Dense2Corpus(object):
+class Dense2Corpus:
     """Treat dense numpy array as a streamed Gensim corpus in the bag-of-words format.
 
     Notes
@@ -555,7 +555,7 @@ class Dense2Corpus(object):
         return len(self.dense)
 
 
-class Sparse2Corpus(object):
+class Sparse2Corpus:
     """Convert a matrix in scipy.sparse format into a streaming Gensim corpus.
 
     See Also
@@ -1132,7 +1132,7 @@ def qr_destroy(la):
     return q, r
 
 
-class MmWriter(object):
+class MmWriter:
     """Store a corpus in `Matrix Market format <https://math.nist.gov/MatrixMarket/formats.html>`_,
     using :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 

@@ -87,7 +87,7 @@ HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 LDA_DISPATCHER_PREFIX = 'gensim.lda_dispatcher'
 
 
-class Dispatcher(object):
+class Dispatcher:
     """Dispatcher object that communicates and coordinates individual workers.
 
     Warnings
