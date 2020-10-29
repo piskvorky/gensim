@@ -162,7 +162,7 @@ def d2v_train_epoch_dbow(
     cdef int sent_idx, idx_start, idx_end
 
     cdef vector[string] doc_words
-    cdef int _doc_tag = start_doctag
+    cdef long long _doc_tag = start_doctag
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=train_words,
@@ -302,7 +302,7 @@ def d2v_train_epoch_dm(
     cdef REAL_t count, inv_count = 1.0
 
     cdef vector[string] doc_words
-    cdef int _doc_tag = start_doctag
+    cdef long long _doc_tag = start_doctag
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
@@ -455,7 +455,7 @@ def d2v_train_epoch_dm_concat(
     cdef int sent_idx, idx_start, idx_end
 
     cdef vector[string] doc_words
-    cdef int _doc_tag = start_doctag
+    cdef long long _doc_tag = start_doctag
 
     init_d2v_config(
         &c, model, _alpha, learn_doctags, learn_words, learn_hidden, train_words=False,
@@ -469,6 +469,17 @@ def d2v_train_epoch_dm_concat(
             effective_words = 0
 
             doc_words = input_stream.read_sentence()
+
+            # FIXME? These next 2 lines look fishy to me (gojomo). First, skipping to
+            # 'total_documents' (end) seems it'd do nothing useful. Second, assigning
+            # into what is typically a count (`doctag_len`) from a boolean test is
+            # sketchy, even if in the current limitations of this mode (corpus_file)
+            # only '1' is a workable value. But, this code seems to pass at least
+            # one real has-some-function test (test_dmc_hs_fromfile), and this mode
+            # is rarely used, & I haven't written this code & would prefer to see the
+            # whole duplicate-logic of corpus_file mode removed in favor of an approach
+            # with less duplication. So I'm not sure anything is broken & it's far from
+            # a near-term priority - thus leaving this note.
             _doc_tag = total_documents
             c.doctag_len = _doc_tag < c.docvecs_count
 

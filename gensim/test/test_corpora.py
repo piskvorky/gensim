@@ -30,7 +30,7 @@ from gensim.test.utils import datapath, get_tmpfile, common_corpus
 AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
 
-class DummyTransformer(object):
+class DummyTransformer:
     def __getitem__(self, bow):
         if len(next(iter(bow))) == 2:
             # single bag of words
@@ -768,6 +768,11 @@ class TestWikiCorpus(TestTextCorpus):
         for text in texts:
             for word in table_markup:
                 self.assertTrue(word not in text)
+
+    def test_get_stream(self):
+        wiki = self.corpus_class(self.enwiki)
+        sample_text_wiki = next(wiki.getstream()).decode()[1:14]
+        self.assertEqual(sample_text_wiki, "mediawiki xml")
 
     # #TODO: sporadic failure to be investigated
     # def test_get_texts_returns_generator_of_lists(self):

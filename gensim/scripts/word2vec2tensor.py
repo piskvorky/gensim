@@ -70,7 +70,7 @@ def word2vec2tensor(word2vec_model_path, tensor_filename, binary=False):
     outfiletsvmeta = tensor_filename + '_metadata.tsv'
 
     with utils.open(outfiletsv, 'wb') as file_vector, utils.open(outfiletsvmeta, 'wb') as file_metadata:
-        for word in model.index2word:
+        for word in model.index_to_key:
             file_metadata.write(gensim.utils.to_utf8(word) + gensim.utils.to_utf8('\n'))
             vector_row = '\t'.join(str(x) for x in model[word])
             file_vector.write(gensim.utils.to_utf8(vector_row) + gensim.utils.to_utf8('\n'))

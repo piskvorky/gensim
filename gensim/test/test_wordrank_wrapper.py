@@ -39,7 +39,6 @@ class TestWordrank(unittest.TestCase):
         vocab_size, dim = 76, 50
         self.assertEqual(model.vectors.shape, (vocab_size, dim))
         self.assertEqual(len(model), vocab_size)
-        os.remove(self.wr_file + '.w2vformat')
 
     def testEnsemble(self):
         """Test ensemble of two embeddings"""
@@ -47,7 +46,6 @@ class TestWordrank(unittest.TestCase):
             return
         new_emb = self.test_model.ensemble_embedding(self.wr_file, self.wr_file)
         self.assertEqual(new_emb.shape, (76, 50))
-        os.remove(self.wr_file + '.w2vformat')
 
     def testPersistence(self):
         """Test storing/loading the entire model"""

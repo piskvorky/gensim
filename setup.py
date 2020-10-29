@@ -13,7 +13,7 @@ Run with::
 import distutils.cmd
 import distutils.log
 import itertools
-import os.path
+import os
 import platform
 import shutil
 import sys
@@ -207,7 +207,7 @@ Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.
 
 For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
 
-Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.5, 3.6, 3.7 and 3.8.
+Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.6, 3.7 and 3.8.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 
@@ -267,7 +267,7 @@ visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
 # packages included for build-testing everywhere
 core_testenv = [
     'pytest',
-    'pytest-rerunfailures',
+#    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
     'nmslib',
@@ -280,13 +280,6 @@ core_testenv = [
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req + ['pyemd', ]
-if sys.version_info >= (3, 7):
-    # HACK: Installing tensorflow causes a segfault in Travis on py3.6. Other Pythons work – a mystery.
-    # See https://github.com/RaRe-Technologies/gensim/pull/2814#issuecomment-621477948
-    linux_testenv += [
-        'tensorflow',
-        'keras==2.3.1',
-    ]
 
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
@@ -339,7 +332,6 @@ CYTHON_STR = 'Cython==0.29.14'
 install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
-    'six >= 1.5.0',
     'smart_open >= 1.8.1',
     "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
@@ -352,7 +344,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='3.8.1',
+    version='4.0.0.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -382,7 +374,6 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -393,7 +384,7 @@ setup(
     ],
 
     test_suite="gensim.test",
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,

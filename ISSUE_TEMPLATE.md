@@ -22,6 +22,7 @@ Please provide the output of:
 ```python
 import platform; print(platform.platform())
 import sys; print("Python", sys.version)
+import struct; print("Bits", 8 * struct.calcsize("P"))
 import numpy; print("NumPy", numpy.__version__)
 import scipy; print("SciPy", scipy.__version__)
 import gensim; print("gensim", gensim.__version__)

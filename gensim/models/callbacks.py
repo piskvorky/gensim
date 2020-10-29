@@ -61,7 +61,7 @@ Create a callback to print progress information to the console:
     ...
     >>>
     >>> epoch_logger = EpochLogger()
-    >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+    >>> w2v_model = Word2Vec(common_texts, epochs=5, vector_size=10, min_count=0, seed=42, callbacks=[epoch_logger])
     Epoch #0 start
     Epoch #0 end
     Epoch #1 start
@@ -106,7 +106,7 @@ except ImportError:
     VISDOM_INSTALLED = False
 
 
-class Metric(object):
+class Metric:
     """Base Metric class for topic model evaluation metrics.
 
     Concrete implementations include:
@@ -442,7 +442,7 @@ class ConvergenceMetric(Metric):
         return np.sum(diff_diagonal)
 
 
-class Callback(object):
+class Callback:
     """A class representing routines called reactively at specific phases during trained.
 
     These can be used to log or visualize the training progress using any of the metric scores developed before.
@@ -568,7 +568,7 @@ class Callback(object):
         return current_metrics
 
 
-class CallbackAny2Vec(object):
+class CallbackAny2Vec:
     """Base class to build callbacks for :class:`~gensim.models.word2vec.Word2Vec` & subclasses.
 
     Callbacks are used to apply custom functions over the model at specific points

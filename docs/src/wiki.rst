@@ -1,3 +1,5 @@
+:orphan:
+
 .. _wiki:
 
 Experiments on the English Wikipedia

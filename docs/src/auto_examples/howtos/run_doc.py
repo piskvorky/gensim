@@ -2,10 +2,8 @@ r"""
 How to Author Gensim Documentation
 ==================================
 
-Some tips of how to author documentation for ``gensim``.
+How to author documentation for Gensim.
 """
-
-import sys
 
 ###############################################################################
 # Background

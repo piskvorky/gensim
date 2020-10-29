@@ -3,35 +3,19 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains methods for parsing and preprocessing strings. Let's consider the most noticeable:
-
-* :func:`~gensim.parsing.preprocessing.remove_stopwords` - remove all stopwords from string
-* :func:`~gensim.parsing.preprocessing.preprocess_string` -  preprocess string (in default NLP meaning)
+"""This module contains methods for parsing and preprocessing strings.
 
 Examples
----------
+--------
+
 .. sourcecode:: pycon
 
-    >>> from gensim.parsing.preprocessing import remove_stopwords
+    >>> from gensim.parsing.preprocessing import remove_stopwords, preprocess_string
     >>> remove_stopwords("Better late than never, but better never late.")
     u'Better late never, better late.'
     >>>
     >>> preprocess_string("<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?")
     [u'hel', u'rld', u'weather', u'todai', u'isn']
-
-
-Data:
------
-
-.. data:: STOPWORDS - Set of stopwords from Stone, Denis, Kwantes (2010).
-.. data:: RE_PUNCT - Regexp for search an punctuation.
-.. data:: RE_TAGS - Regexp for search an tags.
-.. data:: RE_NUMERIC - Regexp for search an numbers.
-.. data:: RE_NONALPHA - Regexp for search an non-alphabetic character.
-.. data:: RE_AL_NUM - Regexp for search a position between letters and digits.
-.. data:: RE_NUM_AL - Regexp for search a position between digits and letters .
-.. data:: RE_WHITESPACE - Regexp for search space characters.
-.. data:: DEFAULT_FILTERS - List of function for string preprocessing.
 
 """
 

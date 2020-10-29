@@ -14,7 +14,6 @@ import copy
 import logging
 import numbers
 import numpy as np
-import six
 
 from gensim import matutils
 from gensim.models import nmf
@@ -108,7 +107,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, six.string_types))
+                self.assertTrue(isinstance(k, str))
                 self.assertTrue(np.issubdtype(v, float))
 
     def testGetTopicTerms(self):

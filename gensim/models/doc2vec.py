@@ -5,7 +5,11 @@
 # Copyright (C) 2018 RaRe Technologies s.r.o.
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Learn paragraph and document embeddings via the distributed memory and distributed bag of words models from
+"""
+Introduction
+============
+
+Learn paragraph and document embeddings via the distributed memory and distributed bag of words models from
 `Quoc Le and Tomas Mikolov: "Distributed Representations of Sentences and Documents"
 <http://arxiv.org/pdf/1405.4053v2.pdf>`_.
 
@@ -63,25 +67,17 @@ Infer vector for a new document:
 
 import logging
 import os
-
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue  # noqa:F401
-
 from collections import namedtuple, defaultdict
 from collections.abc import Iterable
 from timeit import default_timer
-from dataclasses import dataclass
 
+from dataclasses import dataclass
 from numpy import zeros, float32 as REAL, vstack, integer, dtype
 import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
-from gensim.models import Word2Vec
-from six.moves import range
-from six import string_types, integer_types, itervalues
+from gensim.models import Word2Vec, FAST_VERSION  # noqa: F401
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
@@ -290,6 +286,9 @@ class Doc2Vec(Word2Vec):
 
         self.vector_size = vector_size
         self.dv = dv or KeyedVectors(self.vector_size, mapfile_path=dv_mapfile)
+        # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+        # advanced users should directly resize/adjust as desired after any vocab growth
+        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
         super(Doc2Vec, self).__init__(
             sentences=corpus_iterable,
@@ -300,7 +299,8 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
-            **kwargs)
+            **kwargs,
+        )
 
     @property
     def dm(self):
@@ -333,11 +333,10 @@ class Doc2Vec(Word2Vec):
         self.wv.norms = None
         self.dv.norms = None
 
-    def reset_weights(self):
-        super(Doc2Vec, self).reset_weights()
-        self.dv.resize_vectors()
-        self.dv.randomly_initialize_vectors()
-        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
+    def init_weights(self):
+        super(Doc2Vec, self).init_weights()
+        # to not use an identical rnd stream as words, deterministically change seed (w/ 1000th prime)
+        self.dv.resize_vectors(seed=self.seed + 7919)
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
@@ -362,7 +361,7 @@ class Doc2Vec(Word2Vec):
         self.dv.key_to_index = other_model.dv.key_to_index
         self.dv.index_to_key = other_model.dv.index_to_key
         self.dv.expandos = other_model.dv.expandos
-        self.reset_weights()
+        self.init_weights()
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
@@ -611,7 +610,7 @@ class Doc2Vec(Word2Vec):
             The inferred paragraph vector for the new document.
 
         """
-        if isinstance(doc_words, string_types):
+        if isinstance(doc_words, str):  # a common mistake; fail with a nicer error
             raise TypeError("Parameter doc_words of infer_vector() must be a list of strings (not a single string).")
 
         alpha = alpha or self.alpha
@@ -663,7 +662,7 @@ class Doc2Vec(Word2Vec):
             The vector representations of each tag as a matrix (will be 1D if `tag` was a single tag)
 
         """
-        if isinstance(tag, string_types + integer_types + (integer,)):
+        if isinstance(tag, (str, int, integer,)):
             if tag not in self.wv:
                 return self.dv[tag]
             return self.wv[tag]
@@ -749,14 +748,27 @@ class Doc2Vec(Word2Vec):
                 write_header=write_header, append=append,
                 sort_attr='doc_count')
 
+    @deprecated(
+        "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
+        "init_sims() is now obsoleted and will be completely removed in future versions. "
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
+    )
     def init_sims(self, replace=False):
-        """Pre-compute L2-normalized vectors.
+        """
+        Precompute L2-normalized vectors. Obsoleted.
+
+        If you need a single unit-normalized vector for some key, call
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.get_vector` instead:
+        ``doc2vec_model.dv.get_vector(key, norm=True)``.
+
+        To refresh norms after you performed some atypical out-of-band vector tampering,
+        call `:meth:`~gensim.models.keyedvectors.KeyedVectors.fill_norms()` instead.
 
         Parameters
         ----------
         replace : bool
-            If True - forget the original vectors and only keep the normalized ones to saved RAM (also you can't
-            continue training if call it with `replace=True`).
+            If True, forget the original trained vectors and only keep the normalized ones.
+            You lose information if you do this.
 
         """
         self.dv.init_sims(replace=replace)
@@ -790,7 +802,7 @@ class Doc2Vec(Word2Vec):
         except AttributeError as ae:
             logger.error(
                 "Model load error. Was model saved using code from an older Gensim Version? "
-                "Try loading older model using gensim-3.8.1, then re-saving, to restore "
+                "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae
 
@@ -900,13 +912,13 @@ class Doc2Vec(Word2Vec):
             If true, the new provided words in `word_freq` dict will be added to model's vocab.
 
         """
-        logger.info("Processing provided word frequencies")
+        logger.info("processing provided word frequencies")
         # Instead of scanning text, this will assign provided word frequencies dictionary(word_freq)
-        # to be directly the raw vocab
+        # to be directly the raw vocab.
         raw_vocab = word_freq
         logger.info(
-            "collected %i different raw word, with total frequency of %i",
-            len(raw_vocab), sum(itervalues(raw_vocab))
+            "collected %i different raw words, with total frequency of %i",
+            len(raw_vocab), sum(raw_vocab.values()),
         )
 
         # Since no documents are provided, this is to control the corpus_count
@@ -931,11 +943,11 @@ class Doc2Vec(Word2Vec):
         doctags_list = []
         for document_no, document in enumerate(corpus_iterable):
             if not checked_string_types:
-                if isinstance(document.words, string_types):
+                if isinstance(document.words, str):
                     logger.warning(
                         "Each 'words' should be a list of words (usually unicode strings). "
                         "First 'words' here is instead plain %s.",
-                        type(document.words)
+                        type(document.words),
                     )
                 checked_string_types += 1
             if document_no % progress_per == 0:
@@ -950,7 +962,7 @@ class Doc2Vec(Word2Vec):
 
             for tag in document.tags:
                 # Note a document tag during initial corpus scan, for structure sizing.
-                if isinstance(tag, integer_types + (integer,)):
+                if isinstance(tag, (int, integer,)):
                     max_rawint = max(max_rawint, tag)
                 else:
                     if tag in doctags_lookup:
@@ -1073,7 +1085,7 @@ class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
 
 
-class TaggedBrownCorpus(object):
+class TaggedBrownCorpus:
     def __init__(self, dirname):
         """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_.
 
@@ -1111,7 +1123,7 @@ class TaggedBrownCorpus(object):
                     yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
-class TaggedLineDocument(object):
+class TaggedLineDocument:
     def __init__(self, source):
         """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 

@@ -36,23 +36,16 @@ class TestLdaCallback(unittest.TestCase):
         self.port = 8097
 
     def testCallbackUpdateGraph(self):
-
-        # Popen have no context-manager in 2.7, for this reason - try/finally.
-        try:
-            # spawn visdom.server
-            proc = subprocess.Popen(['python', '-m', 'visdom.server', '-port', str(self.port)])
-
+        with subprocess.Popen(['python', '-m', 'visdom.server', '-port', str(self.port)]) as proc:
             # wait for visdom server startup (any better way?)
-            time.sleep(3)
-
             viz = Visdom(server=self.host, port=self.port)
+            for attempt in range(5):
+                time.sleep(1.0)  # seconds
+                if viz.check_connection():
+                    break
             assert viz.check_connection()
-
-            # clear screen
             viz.close()
-
             self.model.update(self.corpus)
-        finally:
             proc.kill()
 
 

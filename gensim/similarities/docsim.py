@@ -77,8 +77,6 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from .termsim import SparseTermSimilarityMatrix
-from six.moves import map, range, zip
 
 
 logger = logging.getLogger(__name__)
@@ -892,7 +890,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
         >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
         >>>
-        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv)
         >>> dictionary = Dictionary(common_texts)
         >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
@@ -931,13 +929,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             A term similarity index that computes cosine similarities between word embeddings.
 
         """
-        if scipy.sparse.issparse(similarity_matrix):
-            logger.warn(
-                "Support for passing an unencapsulated sparse matrix will be removed in 4.0.0, pass "
-                "a SparseTermSimilarityMatrix instance instead")
-            self.similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix)
-        else:
-            self.similarity_matrix = similarity_matrix
+        self.similarity_matrix = similarity_matrix
 
         self.corpus = corpus
         self.num_best = num_best
@@ -978,7 +970,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         is_corpus, query = utils.is_corpus(query)
         if not is_corpus and isinstance(query, numpy.ndarray):
             query = [self.corpus[i] for i in query]  # convert document indexes to actual documents
-        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=True)
+        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=(True, True))
 
         if scipy.sparse.issparse(result):
             return numpy.asarray(result.todense())
@@ -1014,7 +1006,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
-        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
         >>> index = WmdSimilarity(common_texts, model)
         >>> # Make query.

@@ -14,7 +14,8 @@ for online training.
 
 The core estimation code is based on the `onlineldavb.py script
 <https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+Online Learning for Latent Dirichlet Allocation, NIPS 2010
+<https://scholar.google.com/citations?hl=en&user=IeHKeGYAAAAJ&view_op=list_works>`_.
 
 The algorithm:
 
@@ -89,10 +90,8 @@ import numbers
 import os
 
 import numpy as np
-import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import range
 from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
@@ -379,7 +378,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             our a-priori belief for the each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Default; uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
@@ -462,7 +462,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, six.string_types):
+        if isinstance(eta, str):
             if eta == 'asymmetric':
                 raise ValueError("The 'asymmetric' option cannot be used for eta")
 
@@ -536,7 +536,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If `name` == 'alpha', then the prior can be:
 
                 * an 1D array of length equal to the number of expected topics,
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
@@ -554,14 +555,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         is_auto = False
 
-        if isinstance(prior, six.string_types):
+        if isinstance(prior, str):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
             elif prior == 'asymmetric':
-                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
@@ -667,7 +672,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
-        integer_types = six.integer_types + (np.integer,)
+        integer_types = (int, np.integer,)
         epsilon = np.finfo(self.dtype).eps
         for d, doc in enumerate(chunk):
             if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
@@ -1578,7 +1583,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
-            if isinstance(ignore, six.string_types):
+            if isinstance(ignore, str):
                 ignore = [ignore]
             ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list({'state', 'dispatcher', 'id2word'} | set(ignore))
@@ -1590,15 +1595,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or \
+        if (isinstance(self.alpha, str) and self.alpha == 'auto') or \
                 (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or \
+        if (isinstance(self.eta, str) and self.eta == 'auto') or \
                 (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
-            if isinstance(separately, six.string_types):
+            if isinstance(separately, str):
                 separately = [separately]
             separately = [e for e in separately if e]  # make sure None and '' are not in the list
             separately = list(set(separately_explicit) | set(separately))

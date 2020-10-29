@@ -1,4 +1,10 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#
+# Authors: Michael Penkov <m@penkov.dev>
+# Copyright (C) 2019 RaRe Technologies s.r.o.
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+
 """Load models from the native binary format released by Facebook.
 
 The main entry point is the :func:`~gensim.models._fasttext_bin.load` function.
@@ -29,7 +35,6 @@ See Also
 
 """
 
-import codecs
 import collections
 import gzip
 import io
@@ -37,7 +42,6 @@ import logging
 import struct
 
 import numpy as np
-import six
 
 _END_OF_WORD_MARKER = b'\x00'
 
@@ -543,7 +547,7 @@ def _dict_save(fout, model, encoding):
     # prunedidx_size_=-1, -1 value denotes no prunning index (prunning is only supported in supervised mode)
     fout.write(np.int64(-1))
 
-    for word in model.wv.index2word:
+    for word in model.wv.index_to_key:
         word_count = model.wv.get_vecattr(word, 'count')
         fout.write(word.encode(encoding))
         fout.write(_END_OF_WORD_MARKER)
@@ -668,7 +672,3 @@ def save(model, fout, fb_fasttext_parameters, encoding):
             _save_to_stream(model, fout_stream, fb_fasttext_parameters, encoding)
     else:
         _save_to_stream(model, fout, fb_fasttext_parameters, encoding)
-
-
-if six.PY2:
-    codecs.register_error('backslashreplace', _backslashreplace_backport)
