@@ -276,42 +276,48 @@ class NormalFactorsTestCase(unittest.TestCase):
 
     def test_1factor_product_distribution(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, = matutils.normal_factors(self.size, rand_obj, k=1)
+        x = matutils.normal_factors(self.size, rand_obj, k=1)
         factor_product = np.ravel(x)
         _, p_value = stats.kstest(factor_product, 'norm')
         self.assertGreater(p_value, self.alpha)
 
     def test_2factor_product_distribution(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, y = matutils.normal_factors(self.size, rand_obj)
+        x = matutils.normal_factors(self.size, rand_obj)
+        y = matutils.normal_factors(self.size, rand_obj)
         factor_product = np.ravel(x * y)
         _, p_value = stats.kstest(factor_product, 'norm')
         self.assertGreater(p_value, self.alpha)
 
     def test_3factor_product_distribution(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, y, z = matutils.normal_factors(self.size, rand_obj, k=3)
+        x = matutils.normal_factors(self.size, rand_obj, k=3)
+        y = matutils.normal_factors(self.size, rand_obj, k=3)
+        z = matutils.normal_factors(self.size, rand_obj, k=3)
         factor_product = np.ravel(x * y * z)
         _, p_value = stats.kstest(factor_product, 'norm')
         self.assertGreater(p_value, self.alpha)
 
     def test_2factor_tuple_size(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        factors = matutils.normal_factors(self.size, rand_obj)
+        factor = matutils.normal_factors(self.size, rand_obj)
         expected_shape = self.size
-        self.assertEqual(factors[0].shape, expected_shape)
-        self.assertEqual(factors[1].shape, expected_shape)
+        self.assertEqual(factor.shape, expected_shape)
 
     def test_2factor_int_size(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        factors = matutils.normal_factors(self.size[0], rand_obj)
+        factor = matutils.normal_factors(self.size[0], rand_obj)
         expected_shape = (self.size[0],)
-        self.assertEqual(factors[0].shape, expected_shape)
-        self.assertEqual(factors[1].shape, expected_shape)
+        self.assertEqual(factor.shape, expected_shape)
+
+    def test_negative_loc(self):
+        rand_obj = np.random.default_rng(seed=self.seed)
+        with self.assertRaises(ValueError):
+            matutils.normal_factors(self.size, rand_obj, loc=-self.loc)
 
     def test_1factor_positive_loc(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, = matutils.normal_factors(self.size, rand_obj, loc=self.loc, k=1)
+        x = matutils.normal_factors(self.size, rand_obj, loc=self.loc, k=1)
         factor_product = np.ravel(x)
         expected_loc = self.loc
         actual_loc = np.mean(factor_product)
@@ -319,7 +325,8 @@ class NormalFactorsTestCase(unittest.TestCase):
 
     def test_2factor_positive_loc(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, y = matutils.normal_factors(self.size, rand_obj, loc=self.loc)
+        x = matutils.normal_factors(self.size, rand_obj, loc=self.loc)
+        y = matutils.normal_factors(self.size, rand_obj, loc=self.loc)
         factor_product = np.ravel(x * y)
         expected_loc = self.loc
         actual_loc = np.mean(factor_product)
@@ -327,44 +334,22 @@ class NormalFactorsTestCase(unittest.TestCase):
 
     def test_3factor_positive_loc(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, y, z = matutils.normal_factors(self.size, rand_obj, loc=self.loc, k=3)
+        x = matutils.normal_factors(self.size, rand_obj, loc=self.loc, k=3)
+        y = matutils.normal_factors(self.size, rand_obj, loc=self.loc, k=3)
+        z = matutils.normal_factors(self.size, rand_obj, loc=self.loc, k=3)
         factor_product = np.ravel(x * y * z)
         expected_loc = self.loc
-        actual_loc = np.mean(factor_product)
-        self.assertAlmostEqual(expected_loc, actual_loc, places=0)
-
-    def test_1factor_negative_loc(self):
-        rand_obj = np.random.default_rng(seed=self.seed)
-        x, = matutils.normal_factors(self.size, rand_obj, loc=-self.loc, k=1)
-        factor_product = np.ravel(x)
-        expected_loc = -self.loc
-        actual_loc = np.mean(factor_product)
-        self.assertAlmostEqual(expected_loc, actual_loc, places=0)
-
-    def test_2factor_negative_loc(self):
-        rand_obj = np.random.default_rng(seed=self.seed)
-        x, y = matutils.normal_factors(self.size, rand_obj, loc=-self.loc)
-        factor_product = np.ravel(x * y)
-        expected_loc = -self.loc
-        actual_loc = np.mean(factor_product)
-        self.assertAlmostEqual(expected_loc, actual_loc, places=0)
-
-    def test_3factor_negative_loc(self):
-        rand_obj = np.random.default_rng(seed=self.seed)
-        x, y, z = matutils.normal_factors(self.size, rand_obj, loc=-self.loc, k=3)
-        factor_product = np.ravel(x * y * z)
-        expected_loc = -self.loc
         actual_loc = np.mean(factor_product)
         self.assertAlmostEqual(expected_loc, actual_loc, places=0)
 
     def test_negative_scale(self):
         rand_obj = np.random.default_rng(seed=self.seed)
         with self.assertRaises(ValueError):
-            matutils.normal_factors(self.size, rand_obj, scale=-self.scale, k=1)
+            matutils.normal_factors(self.size, rand_obj, scale=-self.scale)
 
     def test_1factor_positive_scale(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, = matutils.normal_factors(self.size, rand_obj, scale=self.scale, k=1)
+        x = matutils.normal_factors(self.size, rand_obj, scale=self.scale, k=1)
         factor_product = np.ravel(x)
         expected_scale = self.scale
         actual_scale = np.std(factor_product)
@@ -372,7 +357,8 @@ class NormalFactorsTestCase(unittest.TestCase):
 
     def test_2factor_positive_scale(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, y = matutils.normal_factors(self.size, rand_obj, scale=self.scale)
+        x = matutils.normal_factors(self.size, rand_obj, scale=self.scale)
+        y = matutils.normal_factors(self.size, rand_obj, scale=self.scale)
         factor_product = np.ravel(x * y)
         expected_scale = self.scale
         actual_scale = np.std(factor_product)
@@ -380,7 +366,9 @@ class NormalFactorsTestCase(unittest.TestCase):
 
     def test_3factor_positive_scale(self):
         rand_obj = np.random.default_rng(seed=self.seed)
-        x, y, z = matutils.normal_factors(self.size, rand_obj, scale=self.scale, k=3)
+        x = matutils.normal_factors(self.size, rand_obj, scale=self.scale, k=3)
+        y = matutils.normal_factors(self.size, rand_obj, scale=self.scale, k=3)
+        z = matutils.normal_factors(self.size, rand_obj, scale=self.scale, k=3)
         factor_product = np.ravel(x * y * z)
         expected_scale = self.scale
         actual_scale = np.std(factor_product)
