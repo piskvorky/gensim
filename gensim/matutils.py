@@ -1342,7 +1342,7 @@ class MmWriter:
             self.fout.close()
 
 
-def normal_factors(size, rand_obj, loc=0.0, scale=1.0, k=2, iterations=30):
+def normal_factor(size, rand_obj, loc=0.0, scale=1.0, k=2, iterations=30):
     r"""Draw random samples from a k-factor of the normal distribution.
 
     The product of k independent k-factors is normally distributed. [Pinelis2018]_
