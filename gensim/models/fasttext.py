@@ -275,6 +275,7 @@ It consists of several important classes:
 
 """
 
+from math import sqrt
 import logging
 import os
 
@@ -482,7 +483,9 @@ class FastText(Word2Vec):
             # with no eligible char-ngram lengths, no buckets need be allocated
             bucket = 0
 
-        self.wv = FastTextKeyedVectors(vector_size, position_dependent_vector_size, min_n, max_n, bucket)
+        self.wv = FastTextKeyedVectors(
+            vector_size, position_dependent_weights, position_dependent_vector_size, min_n, max_n,
+            bucket)
         self.wv.bucket = bucket
 
         super(FastText, self).__init__(
@@ -505,9 +508,7 @@ class FastText(Word2Vec):
         """
         super(FastText, self).prepare_weights(update=update)
         if not update:
-            self.wv.init_ngrams_weights(self.seed)
-            if self.position_dependent_weights:
-                self.wv.init_positional_weights(self.window)
+            self.wv.init_ngrams_weights(self.seed, self.window)
             # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
             # advanced users should directly resize/adjust as necessary
             self.wv.vectors_vocab_lockf = ones(1, dtype=REAL)
@@ -598,9 +599,7 @@ class FastText(Word2Vec):
 
         """
         if not update:
-            self.wv.init_ngrams_weights(self.seed)
-            if self.position_dependent_weights:
-                self.wv.init_positional_weights(self.window)
+            self.wv.init_ngrams_weights(self.seed, self.window)
         elif not len(self.wv):
             raise RuntimeError(
                 "You cannot do an online vocabulary-update of a model which has no prior vocabulary. "
@@ -1172,7 +1171,7 @@ def save_facebook_model(model, path, encoding="utf-8", lr_update_rate=100, word_
 
 
 class FastTextKeyedVectors(KeyedVectors):
-    def __init__(self, vector_size, position_dependent_vector_size, min_n, max_n, bucket):
+    def __init__(self, vector_size, position_dependent_weights, position_dependent_vector_size, min_n, max_n, bucket):
         """Vectors and vocab for :class:`~gensim.models.fasttext.FastText`.
 
         Implements significant parts of the FastText algorithm.  For example,
@@ -1188,6 +1187,8 @@ class FastTextKeyedVectors(KeyedVectors):
         ----------
         vector_size : int
             The dimensionality of all vectors.
+        position_dependent_weights : bool
+            Whether position-dependent weight vectors will also be stored.
         position_dependent_vector_size : int
             How many features of the trained vector features should be
             position-dependent. Decreasing the number of position-dependent
@@ -1222,11 +1223,12 @@ class FastTextKeyedVectors(KeyedVectors):
 
         """
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size)
+        self.position_dependent_weights = position_dependent_weights
         self.position_dependent_vector_size = position_dependent_vector_size  # fka pdw_size
         self.vectors_vocab = None  # fka syn0_vocab
         self.vectors_ngrams = None  # fka syn0_ngrams
+        self.vectors_positions = None  # fka syn0_positions
         self.buckets_word = None
-        self.vectors_positions = None
         self.min_n = min_n
         self.max_n = max_n
         self.bucket = bucket  # count of buckets, fka num_ngram_vectors
@@ -1343,7 +1345,7 @@ class FastTextKeyedVectors(KeyedVectors):
             else:
                 return word_vec
 
-    def init_ngrams_weights(self, seed):
+    def init_ngrams_weights(self, seed, window):
         """Initialize the vocabulary and ngrams weights prior to training.
 
         Creates the weight matrices and initializes them with uniform random values.
@@ -1352,6 +1354,8 @@ class FastTextKeyedVectors(KeyedVectors):
         ----------
         seed : float
             The seed for the PRNG.
+        window : int
+            The size of the window used during the training.
 
         Note
         ----
@@ -1362,10 +1366,9 @@ class FastTextKeyedVectors(KeyedVectors):
 
         rand_obj = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
 
-        lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
         vocab_shape = (len(self), self.vector_size)
         ngrams_shape = (self.bucket, self.vector_size)
-        self.vectors_vocab = rand_obj.uniform(lo, hi, vocab_shape).astype(REAL)
+        positions_shape = (2 * window, self.position_dependent_vector_size)
         #
         # We could have initialized vectors_ngrams at construction time, but we
         # do it here for two reasons:
@@ -1375,22 +1378,14 @@ class FastTextKeyedVectors(KeyedVectors):
         #    vectors_ngrams, and vectors_vocab cannot happen at construction
         #    time because the vocab is not initialized at that stage.
         #
+        if self.position_dependent_weights:
+            hi = sqrt(sqrt(3.0) / self.vector_size)
+            lo = -hi
+            self.vectors_positions = rand_obj.uniform(lo, hi, positions_shape).astype(REAL)
+        else:
+            lo, hi = -1.0 / self.vector_size, 1.0 / self.vector_size
+        self.vectors_vocab = rand_obj.uniform(lo, hi, vocab_shape).astype(REAL)
         self.vectors_ngrams = rand_obj.uniform(lo, hi, ngrams_shape).astype(REAL)
-
-    def init_positional_weights(self, window):
-        """Initialize the positional weights prior to training.
-
-        Creates the weight matrix and initializes it with uniform random values.
-
-        Parameters
-        ----------
-        window : int
-            The size of the window used during the training.
-
-        """
-
-        positional_shape = (2 * window, self.position_dependent_vector_size)
-        self.vectors_positions = np.ones(positional_shape, dtype=REAL)
 
     def update_ngrams_weights(self, seed, old_vocab_len):
         """Update the vocabulary weights for training continuation.
@@ -1413,7 +1408,8 @@ class FastTextKeyedVectors(KeyedVectors):
         rand_obj.seed(seed)
 
         new_vocab = len(self) - old_vocab_len
-        self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj)
+        self.vectors_vocab = _pad_random(self.vectors_vocab, new_vocab, rand_obj,
+                                         squared=self.position_dependent_weights)
 
     def init_post_load(self, fb_vectors):
         """Perform initialization after loading a native Facebook model.
@@ -1480,11 +1476,16 @@ class FastTextKeyedVectors(KeyedVectors):
            )
 
 
-def _pad_random(m, new_rows, rand):
+def _pad_random(m, new_rows, rand, squared=False):
     """Pad a matrix with additional rows filled with random values."""
     _, columns = m.shape
-    low, high = -1.0 / columns, 1.0 / columns
-    suffix = rand.uniform(low, high, (new_rows, columns)).astype(REAL)
+    shape = (new_rows, columns)
+    if squared:
+        high = sqrt(sqrt(3.0) / columns)
+        low = -high
+    else:
+        low, high = -1.0 / columns, 1.0 / columns
+    suffix = rand.uniform(low, high, shape).astype(REAL)
     return vstack([m, suffix])
 
 
