@@ -342,12 +342,6 @@ if need_cython():
     install_requires.append(CYTHON_STR)
     setup_requires.append(CYTHON_STR)
 
-install_requires = [
-    NUMPY_STR,
-    'scipy >= 1.0.0',
-    'six >= 1.5.0',
-]
-
 setup(
     name='gensim',
     version='4.0.0beta',
