@@ -14,7 +14,6 @@ import copy
 import logging
 import numbers
 import numpy as np
-import six
 
 from gensim import matutils
 from gensim.models import nmf
@@ -98,7 +97,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         vec = matutils.sparse2full(transformed, 2)
         expected = [0.35023746, 0.64976251]
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-4))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
 
     def testTopTopics(self):
         top_topics = self.model.top_topics(common_corpus)
@@ -108,7 +107,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, six.string_types))
+                self.assertTrue(isinstance(k, str))
                 self.assertTrue(np.issubdtype(v, float))
 
     def testGetTopicTerms(self):

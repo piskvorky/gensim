@@ -61,7 +61,7 @@ import logging
 import multiprocessing
 import re
 import sys
-from xml.etree import cElementTree
+from xml.etree import ElementTree
 from functools import partial
 
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
@@ -90,8 +90,9 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
 
     Yields
     ------
-    (str, list of (str, str), (Optionally) dict of str: str)
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
+    (str, list of (str, str), (Optionally) list of (str, str))
+        Structure contains (title, [(section_heading, section_content), ...],
+        (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
     with gensim.utils.open(file_path, 'rb') as xml_fileobj:
@@ -182,7 +183,7 @@ def extract_page_xmls(f):
         XML strings for page tags.
 
     """
-    elems = (elem for _, elem in cElementTree.iterparse(f, events=("end",)))
+    elems = (elem for _, elem in ElementTree.iterparse(f, events=("end",)))
 
     elem = next(elems)
     namespace = get_namespace(elem.tag)
@@ -191,7 +192,7 @@ def extract_page_xmls(f):
 
     for elem in elems:
         if elem.tag == page_tag:
-            yield cElementTree.tostring(elem)
+            yield ElementTree.tostring(elem)
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
             # except that we don't need to prune backlinks from the parent
@@ -215,11 +216,12 @@ def segment(page_xml, include_interlinks=False):
 
     Returns
     -------
-    (str, list of (str, str), (Optionally) dict of (str: str))
-        Structure contains (title, [(section_heading, section_content), ...], (Optionally) {interlinks}).
+    (str, list of (str, str), (Optionally) list of (str, str))
+        Structure contains (title, [(section_heading, section_content), ...],
+        (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
-    elem = cElementTree.fromstring(page_xml)
+    elem = ElementTree.fromstring(page_xml)
     filter_namespaces = ('0',)
     namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
@@ -313,8 +315,9 @@ class _WikiSectionsCorpus(WikiCorpus):
 
         Yields
         ------
-        (str, list of (str, str), dict of (str: str))
-            Structure contains (title, [(section_heading, section_content), ...], (Optionally){interlinks}).
+        (str, list of (str, str), list of (str, str))
+            Structure contains (title, [(section_heading, section_content), ...],
+            (Optionally)[(interlink_article, interlink_text), ...]).
 
         """
         skipped_namespace, skipped_length, skipped_redirect = 0, 0, 0
@@ -373,12 +376,13 @@ if __name__ == "__main__":
     parser.add_argument(
         '-m', '--min-article-character',
         help="Ignore articles with fewer characters than this (article stubs). Default: %(default)s.",
+        type=int,
         default=200
     )
     parser.add_argument(
         '-i', '--include-interlinks',
         help='Include a mapping for interlinks to other articles in the dump. The mappings format is: '
-             '"interlinks": {"article_title_1": "interlink_text_1", "article_title_2": "interlink_text_2", ...}',
+             '"interlinks": [("article_title_1", "interlink_text_1"), ("article_title_2", "interlink_text_2"), ...]',
         action='store_true'
     )
     args = parser.parse_args()

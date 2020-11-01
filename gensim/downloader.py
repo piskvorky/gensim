@@ -50,6 +50,7 @@ GENSIM_DATA_DIR environment variable.  For example:
 By default, this subdirectory is ~/gensim-data.
 
 """
+
 from __future__ import absolute_import
 import argparse
 import os

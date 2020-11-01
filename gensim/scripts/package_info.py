@@ -27,7 +27,6 @@ import os
 import numpy
 import scipy
 import gensim
-from gensim.models.word2vec import FAST_VERSION
 
 
 def package_info():
@@ -47,7 +46,6 @@ def package_info():
         "SciPy": scipy.__version__,
         "Gensim": gensim.__version__,
         "Location": os.path.abspath(__file__),
-        "FAST_VERSION": FAST_VERSION
     }
 
 

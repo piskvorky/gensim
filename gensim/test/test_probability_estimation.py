@@ -16,7 +16,7 @@ from gensim.corpora.hashdictionary import HashDictionary
 from gensim.topic_coherence import probability_estimation
 
 
-class BaseTestCases(object):
+class BaseTestCases:
 
     class ProbabilityEstimationBase(unittest.TestCase):
         texts = [

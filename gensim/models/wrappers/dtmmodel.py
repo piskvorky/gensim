@@ -97,8 +97,10 @@ class DtmModel(utils.SaveLoad):
              Max em optimization iterations in LDA.
         alpha : int, optional
             Hyperparameter that affects sparsity of the document-topics for the LDA models in each timeslice.
-        top_chain_var : int, optional
-            Hyperparameter that affects.
+        top_chain_var : float, optional
+            This hyperparameter controls one of the key aspect of topic evolution which is the speed at which
+            these topics evolve. A smaller top_chain_var leads to similar word distributions over multiple timeslice.
+
         rng_seed : int, optional
              Random seed.
         initialize_lda : bool, optional
@@ -602,7 +604,7 @@ class DtmModel(utils.SaveLoad):
         """
         coherence_topics = []
         for topic_no in range(0, self.num_topics):
-            topic = self.show_topic(topicid=topic_no, time=time, num_words=num_words)
+            topic = self.show_topic(topicid=topic_no, time=time, topn=num_words)
             coherence_topic = []
             for prob, word in topic:
                 coherence_topic.append(word)

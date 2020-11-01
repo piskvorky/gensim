@@ -1,19 +1,17 @@
 """
-Testing the test sharded corpus.
+Tests for ShardedCorpus.
 """
+
 import os
-
 import unittest
-
 import random
-import numpy as np
 import shutil
 
+import numpy as np
 from scipy import sparse
-from gensim.utils import is_corpus
 
+from gensim.utils import is_corpus, mock_data
 from gensim.corpora.sharded_corpus import ShardedCorpus
-from gensim.utils import mock_data, range
 
 #############################################################################
 

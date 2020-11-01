@@ -25,15 +25,14 @@ import multiprocessing
 import re
 import signal
 from pickle import PicklingError
-from xml.etree.cElementTree import \
-    iterparse  # LXML isn't faster, so let's go with the built-in solution
+# LXML isn't faster, so let's go with the built-in solution
+from xml.etree.ElementTree import iterparse
+
 
 from gensim import utils
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
-
-from six import raise_from
 
 
 logger = logging.getLogger(__name__)
@@ -164,23 +163,24 @@ def find_interlinks(raw):
 
     Returns
     -------
-    dict
-        Mapping from the linked article to the actual text found.
+    list
+        List of tuples in format [(linked article, the actual text found), ...].
 
     """
     filtered = filter_wiki(raw, promote_remaining=False, simplify_links=False)
     interlinks_raw = re.findall(RE_P16, filtered)
 
-    interlinks = {}
+    interlinks = []
     for parts in [i.split('|') for i in interlinks_raw]:
         actual_title = parts[0]
         try:
             interlink_text = parts[1]
-            interlinks[actual_title] = interlink_text
         except IndexError:
-            interlinks[actual_title] = actual_title
+            interlink_text = actual_title
+        interlink_tuple = (actual_title, interlink_text)
+        interlinks.append(interlink_tuple)
 
-    legit_interlinks = {i: j for i, j in interlinks.items() if '[' not in i and ']' not in i}
+    legit_interlinks = [(i, j) for i, j in interlinks if '[' not in i and ']' not in i]
     return legit_interlinks
 
 
@@ -637,6 +637,10 @@ class WikiCorpus(TextCorpus):
         else:
             self.dictionary = dictionary
 
+    @property
+    def input(self):
+        return self.fname
+
     def get_texts(self):
         """Iterate over the dump, yielding a list of tokens for each article that passed
         the length and namespace filtering.
@@ -672,10 +676,11 @@ class WikiCorpus(TextCorpus):
         positions, positions_all = 0, 0
 
         tokenization_params = (self.tokenizer_func, self.token_min_len, self.token_max_len, self.lower)
-        texts = \
-            ((text, self.lemmatize, title, pageid, tokenization_params)
-             for title, text, pageid
-             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles))
+        texts = (
+            (text, self.lemmatize, title, pageid, tokenization_params)
+            for title, text, pageid
+            in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles)
+        )
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
@@ -697,19 +702,21 @@ class WikiCorpus(TextCorpus):
                         yield tokens
 
         except KeyboardInterrupt:
-            logger.warn(
+            logger.warning(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+                articles, positions, articles_all, positions_all, self.article_min_tokens
             )
         except PicklingError as exc:
-            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
-                'make sure the function can be pickled.'.format(self.filter_articles)), exc)
+            raise PicklingError(
+                f'Can not send filtering function {self.filter_articles} to multiprocessing, '
+                'make sure the function can be pickled.'
+            ) from exc
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+                articles, positions, articles_all, positions_all, self.article_min_tokens
             )
             self.length = articles  # cache corpus length
         finally:

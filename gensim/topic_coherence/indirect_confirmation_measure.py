@@ -182,7 +182,7 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
     return topic_coherences
 
 
-class ContextVectorComputer(object):
+class ContextVectorComputer:
     """Lazily compute context vectors for topic segments.
 
     Parameters

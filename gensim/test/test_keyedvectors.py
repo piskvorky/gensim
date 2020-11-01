@@ -14,77 +14,18 @@ import unittest
 
 import numpy as np
 
-from gensim.corpora import Dictionary
-from gensim.models.keyedvectors import KeyedVectors as EuclideanKeyedVectors, WordEmbeddingSimilarityIndex, \
-    FastTextKeyedVectors
+from gensim.models.keyedvectors import KeyedVectors, REAL, pseudorandom_weak_vector
 from gensim.test.utils import datapath
-
 import gensim.models.keyedvectors
-
 
 logger = logging.getLogger(__name__)
 
 
-class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
+class TestKeyedVectors(unittest.TestCase):
     def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
-            datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
-
-    def test_most_similar(self):
-        """Test most_similar returns expected results."""
-
-        # check the handling of out-of-dictionary terms
-        index = WordEmbeddingSimilarityIndex(self.vectors)
-        self.assertLess(0, len(list(index.most_similar(u"holiday", topn=10))))
-        self.assertEqual(0, len(list(index.most_similar(u"out-of-dictionary term", topn=10))))
-
-        # check that the topn works as expected
-        index = WordEmbeddingSimilarityIndex(self.vectors)
-        results = list(index.most_similar(u"holiday", topn=10))
-        self.assertLess(0, len(results))
-        self.assertGreaterEqual(10, len(results))
-        results = list(index.most_similar(u"holiday", topn=20))
-        self.assertLess(10, len(results))
-        self.assertGreaterEqual(20, len(results))
-
-        # check that the term itself is not returned
-        index = WordEmbeddingSimilarityIndex(self.vectors)
-        terms = [term for term, similarity in index.most_similar(u"holiday", topn=len(self.vectors.vocab))]
-        self.assertFalse(u"holiday" in terms)
-
-        # check that the threshold works as expected
-        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=0.0)
-        results = list(index.most_similar(u"holiday", topn=10))
-        self.assertLess(0, len(results))
-        self.assertGreaterEqual(10, len(results))
-
-        index = WordEmbeddingSimilarityIndex(self.vectors, threshold=1.0)
-        results = list(index.most_similar(u"holiday", topn=10))
-        self.assertEqual(0, len(results))
-
-        # check that the exponent works as expected
-        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=1.0)
-        first_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
-        index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
-        second_similarities = np.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
-        self.assertTrue(np.allclose(first_similarities**2.0, second_similarities))
-
-
-class TestEuclideanKeyedVectors(unittest.TestCase):
-    def setUp(self):
-        self.vectors = EuclideanKeyedVectors.load_word2vec_format(
-            datapath('euclidean_vectors.bin'), binary=True, datatype=np.float64)
-
-    def test_similarity_matrix(self):
-        """Test similarity_matrix returns expected results."""
-
-        documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
-        dictionary = Dictionary(documents)
-        similarity_matrix = self.vectors.similarity_matrix(dictionary).todense()
-
-        # checking the existence of ones on the main diagonal
-        self.assertTrue(
-            (np.diag(similarity_matrix) == np.ones(similarity_matrix.shape[0])).all())
+        self.vectors = KeyedVectors.load_word2vec_format(datapath('euclidean_vectors.bin'), binary=True)
+        self.model_path = datapath("w2v_keyedvectors_load_test.modeldata")
+        self.vocab_path = datapath("w2v_keyedvectors_load_test.vocab")
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
@@ -104,7 +45,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertEqual(len(self.vectors.most_similar('war', topn=10)), 10)
 
         predicted = self.vectors.most_similar('war', topn=None)
-        self.assertEqual(len(predicted), len(self.vectors.vocab))
+        self.assertEqual(len(predicted), len(self.vectors))
 
         predicted = self.vectors.most_similar('war', topn=0)
         self.assertEqual(len(predicted), 0)
@@ -119,12 +60,9 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             'respectable', 'beneficial', 'just', 'upright', 'adept', 'expert', 'practiced', 'proficient',
             'skillful', 'skilful', 'dear', 'near', 'dependable', 'safe', 'secure', 'right', 'ripe', 'well',
             'effective', 'in_effect', 'in_force', 'serious', 'sound', 'salutary', 'honest', 'undecomposed',
-            'unspoiled', 'unspoilt', 'thoroughly', 'soundly'
-        ]   # synonyms for "good" as per wordnet
-        cos_sim = []
-        for i in range(len(wordnet_syn)):
-            if wordnet_syn[i] in self.vectors.vocab:
-                cos_sim.append(self.vectors.similarity("good", wordnet_syn[i]))
+            'unspoiled', 'unspoilt', 'thoroughly', 'soundly',
+        ]  # synonyms for "good" as per wordnet
+        cos_sim = [self.vectors.similarity("good", syn) for syn in wordnet_syn if syn in self.vectors]
         cos_sim = sorted(cos_sim, reverse=True)  # cosine_similarity of "good" with wordnet_syn in decreasing order
         # computing relative_cosine_similarity of two similar words
         rcs_wordnet = self.vectors.similarity("good", "nice") / sum(cos_sim[i] for i in range(10))
@@ -142,7 +80,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
 
     def test_most_similar_restrict_vocab(self):
         """Test most_similar returns handles restrict_vocab correctly."""
-        expected = set(self.vectors.index2word[:5])
+        expected = set(self.vectors.index_to_key[:5])
         predicted = set(result[0] for result in self.vectors.most_similar('war', topn=5, restrict_vocab=5))
         self.assertEqual(expected, predicted)
 
@@ -171,7 +109,7 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
             'administration',
             'terrorism',
             'call',
-            'israel'
+            'israel',
         ]
         predicted = [result[0] for result in self.vectors.similar_by_word('war', topn=5)]
         self.assertEqual(expected, predicted)
@@ -199,37 +137,33 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'war'), 1))
         self.assertTrue(np.allclose(self.vectors.similarity('war', 'conflict'), 0.93305397))
 
-    def test_words_closer_than(self):
+    def test_closer_than(self):
         """Test words_closer_than returns expected value for distinct and identical nodes."""
-        self.assertEqual(self.vectors.words_closer_than('war', 'war'), [])
+        self.assertEqual(self.vectors.closer_than('war', 'war'), [])
         expected = set(['conflict', 'administration'])
-        self.assertEqual(set(self.vectors.words_closer_than('war', 'terrorism')), expected)
+        self.assertEqual(set(self.vectors.closer_than('war', 'terrorism')), expected)
 
     def test_rank(self):
         """Test rank returns expected value for distinct and identical nodes."""
         self.assertEqual(self.vectors.rank('war', 'war'), 1)
         self.assertEqual(self.vectors.rank('war', 'terrorism'), 3)
 
-    def test_wv_property(self):
-        """Test that the deprecated `wv` property returns `self`. To be removed in v4.0.0."""
-        self.assertTrue(self.vectors is self.vectors)
-
     def test_add_single(self):
         """Test that adding entity in a manual way works correctly."""
-        entities = ['___some_entity{}_not_present_in_keyed_vectors___'.format(i) for i in range(5)]
+        entities = [f'___some_entity{i}_not_present_in_keyed_vectors___' for i in range(5)]
         vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
         # Test `add` on already filled kv.
         for ent, vector in zip(entities, vectors):
-            self.vectors.add(ent, vector)
+            self.vectors.add_vectors(ent, vector)
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
         # Test `add` on empty kv.
-        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv = KeyedVectors(self.vectors.vector_size)
         for ent, vector in zip(entities, vectors):
-            kv.add(ent, vector)
+            kv.add_vectors(ent, vector)
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
@@ -240,131 +174,60 @@ class TestEuclideanKeyedVectors(unittest.TestCase):
         vectors = [np.random.randn(self.vectors.vector_size) for _ in range(5)]
 
         # Test `add` on already filled kv.
-        vocab_size = len(self.vectors.vocab)
-        self.vectors.add(entities, vectors, replace=False)
-        self.assertEqual(vocab_size + len(entities), len(self.vectors.vocab))
+        vocab_size = len(self.vectors)
+        self.vectors.add_vectors(entities, vectors, replace=False)
+        self.assertEqual(vocab_size + len(entities), len(self.vectors))
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
 
         # Test `add` on empty kv.
-        kv = EuclideanKeyedVectors(self.vectors.vector_size)
+        kv = KeyedVectors(self.vectors.vector_size)
         kv[entities] = vectors
-        self.assertEqual(len(kv.vocab), len(entities))
+        self.assertEqual(len(kv), len(entities))
 
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
 
+    def test_add_type(self):
+        kv = KeyedVectors(2)
+        assert kv.vectors.dtype == REAL
+
+        words, vectors = ["a"], np.array([1., 1.], dtype=np.float64).reshape(1, -1)
+        kv.add_vectors(words, vectors)
+
+        assert kv.vectors.dtype == REAL
+
     def test_set_item(self):
         """Test that __setitem__ works correctly."""
-        vocab_size = len(self.vectors.vocab)
+        vocab_size = len(self.vectors)
 
         # Add new entity.
         entity = '___some_new_entity___'
         vector = np.random.randn(self.vectors.vector_size)
         self.vectors[entity] = vector
 
-        self.assertEqual(len(self.vectors.vocab), vocab_size + 1)
+        self.assertEqual(len(self.vectors), vocab_size + 1)
         self.assertTrue(np.allclose(self.vectors[entity], vector))
 
         # Replace vector for entity in vocab.
-        vocab_size = len(self.vectors.vocab)
+        vocab_size = len(self.vectors)
         vector = np.random.randn(self.vectors.vector_size)
         self.vectors['war'] = vector
 
-        self.assertEqual(len(self.vectors.vocab), vocab_size)
+        self.assertEqual(len(self.vectors), vocab_size)
         self.assertTrue(np.allclose(self.vectors['war'], vector))
 
         # __setitem__ on several entities.
-        vocab_size = len(self.vectors.vocab)
+        vocab_size = len(self.vectors)
         entities = ['war', '___some_new_entity1___', '___some_new_entity2___', 'terrorism', 'conflict']
         vectors = [np.random.randn(self.vectors.vector_size) for _ in range(len(entities))]
 
         self.vectors[entities] = vectors
 
-        self.assertEqual(len(self.vectors.vocab), vocab_size + 2)
+        self.assertEqual(len(self.vectors), vocab_size + 2)
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(self.vectors[ent], vector))
-
-    def test_ft_kv_backward_compat_w_360(self):
-        kv = EuclideanKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
-        ft_kv = FastTextKeyedVectors.load(datapath("ft_kv_3.6.0.model.gz"))
-
-        expected = ['trees', 'survey', 'system', 'graph', 'interface']
-        actual = [word for (word, similarity) in kv.most_similar("human", topn=5)]
-
-        self.assertEqual(actual, expected)
-
-        actual = [word for (word, similarity) in ft_kv.most_similar("human", topn=5)]
-
-        self.assertEqual(actual, expected)
-
-
-class L2NormTest(unittest.TestCase):
-    def test(self):
-        m = np.array(range(1, 10), dtype=np.float32)
-        m.shape = (3, 3)
-
-        norm = gensim.models.keyedvectors._l2_norm(m)
-        self.assertFalse(np.allclose(m, norm))
-
-        gensim.models.keyedvectors._l2_norm(m, replace=True)
-        self.assertTrue(np.allclose(m, norm))
-
-
-class UnpackTest(unittest.TestCase):
-    def test_copy_sanity(self):
-        m = np.array(range(9))
-        m.shape = (3, 3)
-        hash2index = {10: 0, 11: 1, 12: 2}
-
-        n = gensim.models.keyedvectors._unpack_copy(m, 25, hash2index)
-        self.assertTrue(np.all(m[0] == n[10]))
-        self.assertTrue(np.all(m[1] == n[11]))
-        self.assertTrue(np.all(m[2] == n[12]))
-
-    def test_sanity(self):
-        m = np.array(range(9))
-        m.shape = (3, 3)
-        hash2index = {10: 0, 11: 1, 12: 2}
-
-        n = gensim.models.keyedvectors._unpack(m, 25, hash2index)
-        self.assertTrue(np.all(np.array([0, 1, 2]) == n[10]))
-        self.assertTrue(np.all(np.array([3, 4, 5]) == n[11]))
-        self.assertTrue(np.all(np.array([6, 7, 8]) == n[12]))
-
-    def test_tricky(self):
-        m = np.array(range(9))
-        m.shape = (3, 3)
-        hash2index = {1: 0, 0: 1, 12: 2}
-
-        n = gensim.models.keyedvectors._unpack(m, 25, hash2index)
-        self.assertTrue(np.all(np.array([3, 4, 5]) == n[0]))
-        self.assertTrue(np.all(np.array([0, 1, 2]) == n[1]))
-        self.assertTrue(np.all(np.array([6, 7, 8]) == n[12]))
-
-    def test_identity(self):
-        m = np.array(range(9))
-        m.shape = (3, 3)
-        hash2index = {0: 0, 1: 1, 2: 2}
-
-        n = gensim.models.keyedvectors._unpack(m, 25, hash2index)
-        self.assertTrue(np.all(np.array([0, 1, 2]) == n[0]))
-        self.assertTrue(np.all(np.array([3, 4, 5]) == n[1]))
-        self.assertTrue(np.all(np.array([6, 7, 8]) == n[2]))
-
-
-class Gensim320Test(unittest.TestCase):
-    def test(self):
-        path = datapath('old_keyedvectors_320.dat')
-        vectors = gensim.models.keyedvectors.KeyedVectors.load(path)
-        self.assertTrue(vectors.word_vec('computer') is not None)
-
-
-class Word2VecKeyedVectorsTest(unittest.TestCase):
-    def setUp(self):
-        self.model_path = datapath("w2v_keyedvectors_load_test.modeldata")
-        self.vocab_path = datapath("w2v_keyedvectors_load_test.vocab")
 
     def test_load_model_and_vocab_file_strict(self):
         """Test loading model and voacab files which have decoding errors: strict mode"""
@@ -376,10 +239,10 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
         """Test loading model and voacab files which have decoding errors: replace mode"""
         model = gensim.models.KeyedVectors.load_word2vec_format(
             self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="replace")
-        self.assertEqual(model.vocab[u'ありがとう�'].count, 123)
-        self.assertEqual(model.vocab[u'どういたしまして�'].count, 789)
-        self.assertEqual(model.vocab[u'ありがとう�'].index, 0)
-        self.assertEqual(model.vocab[u'どういたしまして�'].index, 1)
+        self.assertEqual(model.get_vecattr(u'ありがとう�', 'count'), 123)
+        self.assertEqual(model.get_vecattr(u'どういたしまして�', 'count'), 789)
+        self.assertEqual(model.key_to_index[u'ありがとう�'], 0)
+        self.assertEqual(model.key_to_index[u'どういたしまして�'], 1)
         self.assertTrue(np.array_equal(
             model.get_vector(u'ありがとう�'), np.array([.6, .6, .6], dtype=np.float32)))
         self.assertTrue(np.array_equal(
@@ -389,15 +252,143 @@ class Word2VecKeyedVectorsTest(unittest.TestCase):
         """Test loading model and voacab files which have decoding errors: ignore mode"""
         model = gensim.models.KeyedVectors.load_word2vec_format(
             self.model_path, fvocab=self.vocab_path, binary=False, unicode_errors="ignore")
-        print(model.vocab.keys())
-        self.assertEqual(model.vocab[u'ありがとう'].count, 123)
-        self.assertEqual(model.vocab[u'どういたしまして'].count, 789)
-        self.assertEqual(model.vocab[u'ありがとう'].index, 0)
-        self.assertEqual(model.vocab[u'どういたしまして'].index, 1)
+        self.assertEqual(model.get_vecattr(u'ありがとう', 'count'), 123)
+        self.assertEqual(model.get_vecattr(u'どういたしまして', 'count'), 789)
+        self.assertEqual(model.key_to_index[u'ありがとう'], 0)
+        self.assertEqual(model.key_to_index[u'どういたしまして'], 1)
         self.assertTrue(np.array_equal(
             model.get_vector(u'ありがとう'), np.array([.6, .6, .6], dtype=np.float32)))
         self.assertTrue(np.array_equal(
             model.get_vector(u'どういたしまして'), np.array([.1, .2, .3], dtype=np.float32)))
+
+    def test_save_reload(self):
+        randkv = KeyedVectors(vector_size=100)
+        count = 20
+        keys = [str(i) for i in range(count)]
+        weights = [pseudorandom_weak_vector(randkv.vector_size) for _ in range(count)]
+        randkv.add_vectors(keys, weights)
+        tmpfiletxt = gensim.test.utils.get_tmpfile("tmp_kv.txt")
+        randkv.save_word2vec_format(tmpfiletxt, binary=False)
+        reloadtxtkv = KeyedVectors.load_word2vec_format(tmpfiletxt, binary=False)
+        self.assertEqual(randkv.index_to_key, reloadtxtkv.index_to_key)
+        self.assertTrue((randkv.vectors == reloadtxtkv.vectors).all())
+        tmpfilebin = gensim.test.utils.get_tmpfile("tmp_kv.bin")
+        randkv.save_word2vec_format(tmpfilebin, binary=True)
+        reloadbinkv = KeyedVectors.load_word2vec_format(tmpfilebin, binary=True)
+        self.assertEqual(randkv.index_to_key, reloadbinkv.index_to_key)
+        self.assertTrue((randkv.vectors == reloadbinkv.vectors).all())
+
+    def test_no_header(self):
+        randkv = KeyedVectors(vector_size=100)
+        count = 20
+        keys = [str(i) for i in range(count)]
+        weights = [pseudorandom_weak_vector(randkv.vector_size) for _ in range(count)]
+        randkv.add_vectors(keys, weights)
+        tmpfiletxt = gensim.test.utils.get_tmpfile("tmp_kv.txt")
+        randkv.save_word2vec_format(tmpfiletxt, binary=False, write_header=False)
+        reloadtxtkv = KeyedVectors.load_word2vec_format(tmpfiletxt, binary=False, no_header=True)
+        self.assertEqual(randkv.index_to_key, reloadtxtkv.index_to_key)
+        self.assertTrue((randkv.vectors == reloadtxtkv.vectors).all())
+
+
+class Gensim320Test(unittest.TestCase):
+    def test(self):
+        path = datapath('old_keyedvectors_320.dat')
+        vectors = gensim.models.keyedvectors.KeyedVectors.load(path)
+        self.assertTrue(vectors.get_vector('computer') is not None)
+
+
+def save_dict_to_word2vec_formated_file(fname, word2vec_dict):
+    with gensim.utils.open(fname, "wb") as f:
+        num_words = len(word2vec_dict)
+        vector_length = len(list(word2vec_dict.values())[0])
+
+        header = "%d %d\n" % (num_words, vector_length)
+        f.write(header.encode(encoding="ascii"))
+
+        for word, vector in word2vec_dict.items():
+            f.write(word.encode())
+            f.write(' '.encode())
+            f.write(np.array(vector).astype(np.float32).tobytes())
+
+
+class LoadWord2VecFormatTest(unittest.TestCase):
+
+    def assert_dict_equal_to_model(self, d, m):
+        self.assertEqual(len(d), len(m))
+
+        for word in d.keys():
+            self.assertSequenceEqual(list(d[word]), list(m[word]))
+
+    def verify_load2vec_binary_result(self, w2v_dict, binary_chunk_size, limit):
+        tmpfile = gensim.test.utils.get_tmpfile("tmp_w2v")
+        save_dict_to_word2vec_formated_file(tmpfile, w2v_dict)
+        w2v_model = \
+            gensim.models.keyedvectors._load_word2vec_format(
+                cls=gensim.models.KeyedVectors,
+                fname=tmpfile,
+                binary=True,
+                limit=limit,
+                binary_chunk_size=binary_chunk_size)
+        if limit is None:
+            limit = len(w2v_dict)
+
+        w2v_keys_postprocessed = list(w2v_dict.keys())[:limit]
+        w2v_dict_postprocessed = {k.lstrip(): w2v_dict[k] for k in w2v_keys_postprocessed}
+
+        self.assert_dict_equal_to_model(w2v_dict_postprocessed, w2v_model)
+
+    def test_load_word2vec_format_basic(self):
+        w2v_dict = {"abc": [1, 2, 3],
+                    "cde": [4, 5, 6],
+                    "def": [7, 8, 9]}
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=None)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=16, limit=None)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=1024, limit=None)
+
+        w2v_dict = {"abc": [1, 2, 3],
+                    "cdefg": [4, 5, 6],
+                    "d": [7, 8, 9]}
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=None)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=16, limit=None)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=1024, limit=None)
+
+    def test_load_word2vec_format_limit(self):
+        w2v_dict = {"abc": [1, 2, 3],
+                    "cde": [4, 5, 6],
+                    "def": [7, 8, 9]}
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=1)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=16, limit=1)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=1024, limit=1)
+
+        w2v_dict = {"abc": [1, 2, 3],
+                    "cde": [4, 5, 6],
+                    "def": [7, 8, 9]}
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=2)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=16, limit=2)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=1024, limit=2)
+
+        w2v_dict = {"abc": [1, 2, 3],
+                    "cdefg": [4, 5, 6],
+                    "d": [7, 8, 9]}
+
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=1)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=16, limit=1)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=1024, limit=1)
+
+        w2v_dict = {"abc": [1, 2, 3],
+                    "cdefg": [4, 5, 6],
+                    "d": [7, 8, 9]}
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=2)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=16, limit=2)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=1024, limit=2)
+
+    def test_load_word2vec_format_space_stripping(self):
+        w2v_dict = {"\nabc": [1, 2, 3],
+                    "cdefdg": [4, 5, 6],
+                    "\n\ndef": [7, 8, 9]}
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=None)
+        self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=1)
 
 
 if __name__ == '__main__':

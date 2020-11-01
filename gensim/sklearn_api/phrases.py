@@ -27,12 +27,12 @@ Examples
     >>> assert ['I', 'love', 'computer_science'] == m.fit_transform(texts)[0]
 
 """
-from six import string_types
+
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
 from gensim import models
-from gensim.models.phrases import Phraser
+from gensim.models.phrases import FrozenPhrases, ENGLISH_CONNECTOR_WORDS  # noqa:F401
 
 
 class PhrasesTransformer(TransformerMixin, BaseEstimator):
@@ -44,8 +44,10 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
     <https://svn.spraakdata.gu.se/repos/gerlof/pub/www/Docs/npmi-pfd.pdf>`_.
 
     """
-    def __init__(self, min_count=5, threshold=10.0, max_vocab_size=40000000,
-                 delimiter=b'_', progress_per=10000, scoring='default', common_terms=frozenset()):
+    def __init__(
+            self, min_count=5, threshold=10.0, max_vocab_size=40000000,
+            delimiter='_', progress_per=10000, scoring='default', connector_words=frozenset(),
+        ):
         """
 
         Parameters
@@ -58,7 +60,7 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             Maximum size of the vocabulary. Used to control pruning of less common words, to keep memory under control.
             The default of 40M needs about 3.6GB of RAM.
         delimiter : str, optional
-            Character used to join collocation tokens, should be a byte string (e.g. b'_').
+            Character used to join collocation tokens (e.g. '_').
         progress_per : int, optional
             Training will report to the logger every that many phrases are learned.
         scoring : str or function, optional
@@ -88,9 +90,17 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
 
             A scoring function without any of these parameters (even if the parameters are not used) will
             raise a ValueError on initialization of the Phrases class. The scoring function must be pickleable.
-        common_terms : set of str, optional
-            List of "stop words" that won't affect frequency count of expressions containing them.
-            Allow to detect expressions like "bank_of_america" or "eye_of_the_beholder".
+        connector_words : set of str, optional
+            Set of words that may be included within a phrase, without affecting its scoring.
+            No phrase can start nor end with a connector word; a phrase may contain any number of
+            connector words in the middle.
+
+            **If your texts are in English, set ``connector_words=phrases.ENGLISH_CONNECTOR_WORDS``.**
+            This will cause phrases to include common English articles, prepositions and
+            conjuctions, such as `bank_of_america` or `eye_of_the_beholder`.
+
+            For other languages or specific applications domains, use custom ``connector_words``
+            that make sense there: ``connector_words=frozenset("der die das".split())`` etc.
 
         """
         self.gensim_model = None
@@ -101,11 +111,11 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.delimiter = delimiter
         self.progress_per = progress_per
         self.scoring = scoring
-        self.common_terms = common_terms
+        self.connector_words = connector_words
 
     def __setstate__(self, state):
         self.__dict__ = state
-        self.common_terms = frozenset()
+        self.connector_words = frozenset()
         self.phraser = None
 
     def fit(self, X, y=None):
@@ -125,9 +135,9 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
         self.gensim_model = models.Phrases(
             sentences=X, min_count=self.min_count, threshold=self.threshold,
             max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
-            progress_per=self.progress_per, scoring=self.scoring, common_terms=self.common_terms
+            progress_per=self.progress_per, scoring=self.scoring, connector_words=self.connector_words,
         )
-        self.phraser = Phraser(self.gensim_model)
+        self.phraser = FrozenPhrases(self.gensim_model)
         return self
 
     def transform(self, docs):
@@ -152,10 +162,10 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             )
 
         if self.phraser is None:
-            self.phraser = Phraser(self.gensim_model)
+            self.phraser = FrozenPhrases(self.gensim_model)
 
         # input as python lists
-        if isinstance(docs[0], string_types):
+        if isinstance(docs[0], str):
             docs = [docs]
 
         return [self.phraser[doc] for doc in docs]
@@ -182,9 +192,9 @@ class PhrasesTransformer(TransformerMixin, BaseEstimator):
             self.gensim_model = models.Phrases(
                 sentences=X, min_count=self.min_count, threshold=self.threshold,
                 max_vocab_size=self.max_vocab_size, delimiter=self.delimiter,
-                progress_per=self.progress_per, scoring=self.scoring, common_terms=self.common_terms
+                progress_per=self.progress_per, scoring=self.scoring, connector_words=self.connector_words,
             )
 
         self.gensim_model.add_vocab(X)
-        self.phraser = Phraser(self.gensim_model)
+        self.phraser = FrozenPhrases(self.gensim_model)
         return self

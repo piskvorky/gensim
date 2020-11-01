@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-"""Produce translation matrix to translate the word from one language to another language, using either
-standard nearest neighbour method or globally corrected neighbour retrieval method [1]_.
+"""Produce a translation matrix to translate words from one language to another, using either
+a standard nearest neighbour method or a globally corrected neighbour retrieval method [1]_.
 
 This method can be used to augment the existing phrase tables with more candidate translations, or
 filter out errors from the translation tables and known dictionaries [2]_. What's more, It also work
@@ -10,6 +10,7 @@ for any two sets of named-vectors where there are some paired-guideposts to lear
 
 Examples
 --------
+
 How to make translation between two set of word-vectors
 =======================================================
 
@@ -84,7 +85,7 @@ Apply model
 
 .. sourcecode:: pycon
 
-    >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
+    >>> result = model_trans.infer_vector(dst_model.dv[data[3].tags])
 
 
 References
@@ -97,19 +98,18 @@ References
 """
 
 import warnings
+from collections import OrderedDict
+
 import numpy as np
 
-from collections import OrderedDict
 from gensim import utils
-from six import string_types
 
 
-class Space(object):
+class Space:
     """An auxiliary class for storing the the words space."""
 
     def __init__(self, matrix, index2word):
         """
-
         Parameters
         ----------
         matrix : iterable of numpy.ndarray
@@ -151,12 +151,12 @@ class Space(object):
             # if the lexicon is not provided, using the all the Keyedvectors's words as default
             for item in lexicon:
                 words.append(item)
-                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.get_index(item)])
 
         else:
-            for item in lang_vec.vocab.keys():
+            for item in lang_vec.index_to_key:
                 words.append(item)
-                mat.append(lang_vec.vectors[lang_vec.vocab[item].index])
+                mat.append(lang_vec.vectors[lang_vec.get_index(item)])
 
         return Space(mat, words)
 
@@ -256,7 +256,7 @@ class TranslationMatrix(utils.SaveLoad):
         self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
 
     def save(self, *args, **kwargs):
-        """Save the model to file but ignoring the `source_space` and `target_space`"""
+        """Save the model to a file. Ignores (doesn't store) the `source_space` and `target_space` attributes."""
         kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
         super(TranslationMatrix, self).save(*args, **kwargs)
 
@@ -266,12 +266,12 @@ class TranslationMatrix(utils.SaveLoad):
         Parameters
         ----------
         words_space : :class:`~gensim.models.translation_matrix.Space`
-            Object that constructed for those words to be translate.
+            `Space` object constructed for the words to be translated.
 
         Returns
         -------
         :class:`~gensim.models.translation_matrix.Space`
-            Object that constructed for those mapped words.
+            `Space` object constructed for the mapped words.
 
         """
         return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
@@ -301,8 +301,7 @@ class TranslationMatrix(utils.SaveLoad):
             Ordered dict where each item is `word`: [`translated_word_1`, `translated_word_2`, ...]
 
         """
-
-        if isinstance(source_words, string_types):
+        if isinstance(source_words, str):
             # pass only one word to translate
             source_words = [source_words]
 
@@ -329,7 +328,7 @@ class TranslationMatrix(utils.SaveLoad):
                     "When using the globally corrected neighbour retrieval method, "
                     "the `sample_num` parameter(i.e. the number of words sampled from source space) must be provided."
                 )
-            lexicon = set(source_lang_vec.index2word)
+            lexicon = set(source_lang_vec.index_to_key)
             addition = min(sample_num, len(lexicon) - len(source_words))
             lexicon = self.random_state.choice(list(lexicon.difference(source_words)), addition)
             source_space = Space.build(source_lang_vec, set(source_words).union(set(lexicon)))
@@ -392,7 +391,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         >>> model_trans = BackMappingTranslationMatrix(src_model, dst_model)
         >>> trans_matrix = model_trans.train(data)
         >>>
-        >>> result = model_trans.infer_vector(dst_model.docvecs[data[3].tags])
+        >>> result = model_trans.infer_vector(dst_model.dv[data[3].tags])
 
     """
     def __init__(self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None):
@@ -436,8 +435,8 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             Translation matrix that mapping from the source model's vector to target model's vector.
 
         """
-        m1 = [self.source_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
-        m2 = [self.target_lang_vec.docvecs[item.tags].flatten() for item in tagged_docs]
+        m1 = [self.source_lang_vec.dv[item.tags].flatten() for item in tagged_docs]
+        m2 = [self.target_lang_vec.dv[item.tags].flatten() for item in tagged_docs]
 
         self.translation_matrix = np.linalg.lstsq(m2, m1, -1)[0]
         return self.translation_matrix

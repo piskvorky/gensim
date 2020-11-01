@@ -7,8 +7,7 @@
 Unit tests for the `corpora.Dictionary` class.
 """
 
-
-from collections import Mapping
+from collections.abc import Mapping
 from itertools import chain
 import logging
 import unittest
@@ -21,8 +20,6 @@ import gensim
 from gensim.corpora import Dictionary
 from gensim.utils import to_utf8
 from gensim.test.utils import get_tmpfile, common_texts
-from six import PY3
-from six.moves import zip
 
 
 class TestDictionary(unittest.TestCase):
@@ -124,8 +121,10 @@ class TestDictionary(unittest.TestCase):
     def testFilter(self):
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=2, no_above=1.0, keep_n=4)
-        expected = {0: 3, 1: 3, 2: 3, 3: 3}
-        self.assertEqual(d.dfs, expected)
+        dfs_expected = {0: 3, 1: 3, 2: 3, 3: 3}
+        cfs_expected = {0: 4, 1: 3, 2: 3, 3: 3}
+        self.assertEqual(d.dfs, dfs_expected)
+        self.assertEqual(d.cfs, cfs_expected)
 
     def testFilterKeepTokens_keepTokens(self):
         # provide keep_tokens argument, keep the tokens given
@@ -336,12 +335,6 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(list(d.items()), list(d.iteritems()))
         self.assertEqual(list(d.keys()), list(d.iterkeys()))
         self.assertEqual(list(d.values()), list(d.itervalues()))
-
-        # XXX Do we want list results from the dict members in Py3 too?
-        if not PY3:
-            self.assertTrue(isinstance(d.items(), list))
-            self.assertTrue(isinstance(d.keys(), list))
-            self.assertTrue(isinstance(d.values(), list))
 
     def test_patch_with_special_tokens(self):
         special_tokens = {'pad': 0, 'space': 1, 'quake': 3}

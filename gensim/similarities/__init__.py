@@ -13,5 +13,6 @@ from .docsim import (  # noqa:F401
 from .termsim import (  # noqa:F401
     TermSimilarityIndex,
     UniformTermSimilarityIndex,
+    WordEmbeddingSimilarityIndex,
     SparseTermSimilarityMatrix)
 from .levenshtein import LevenshteinSimilarityIndex  # noqa:F401

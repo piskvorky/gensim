@@ -9,12 +9,10 @@
 from __future__ import with_statement
 
 
-from itertools import chain
 import logging
 import math
 
 from gensim import utils
-from gensim.utils import deprecated
 
 import numpy as np
 import scipy.sparse
@@ -23,9 +21,6 @@ import scipy.linalg
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
-
-from six import iteritems, itervalues, string_types
-from six.moves import zip, range
 
 
 logger = logging.getLogger(__name__)
@@ -193,9 +188,9 @@ def pad(mat, padrow, padcol):
     if padcol < 0:
         padcol = 0
     rows, cols = mat.shape
-    return np.bmat([
-        [mat, np.matrix(np.zeros((rows, padcol)))],
-        [np.matrix(np.zeros((padrow, cols + padcol)))],
+    return np.block([
+        [mat, np.zeros((rows, padcol))],
+        [np.zeros((padrow, cols + padcol))],
     ])
 
 
@@ -341,7 +336,7 @@ def scipy2sparse(vec, eps=1e-9):
     return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
 
 
-class Scipy2Corpus(object):
+class Scipy2Corpus:
     """Convert a sequence of dense/sparse vectors into a streamed Gensim corpus object.
 
     See Also
@@ -400,7 +395,7 @@ def sparse2full(doc, length):
 
     doc = dict(doc)
     # overwrite some of the zeroes with explicit values
-    result[list(doc)] = list(itervalues(doc))
+    result[list(doc)] = list(doc.values())
     return result
 
 
@@ -513,7 +508,7 @@ def corpus2dense(corpus, num_terms, num_docs=None, dtype=np.float32):
     return result.astype(dtype)
 
 
-class Dense2Corpus(object):
+class Dense2Corpus:
     """Treat dense numpy array as a streamed Gensim corpus in the bag-of-words format.
 
     Notes
@@ -560,7 +555,7 @@ class Dense2Corpus(object):
         return len(self.dense)
 
 
-class Sparse2Corpus(object):
+class Sparse2Corpus:
     """Convert a matrix in scipy.sparse format into a streaming Gensim corpus.
 
     See Also
@@ -809,89 +804,14 @@ def cossim(vec1, vec2):
     vec1, vec2 = dict(vec1), dict(vec2)
     if not vec1 or not vec2:
         return 0.0
-    vec1len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec1)))
-    vec2len = 1.0 * math.sqrt(sum(val * val for val in itervalues(vec2)))
+    vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.values()))
+    vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.values()))
     assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
         vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
-    result = sum(value * vec2.get(index, 0.0) for index, value in iteritems(vec1))
+    result = sum(value * vec2.get(index, 0.0) for index, value in vec1.items())
     result /= vec1len * vec2len  # rescale by vector lengths
     return result
-
-
-@deprecated(
-    "Function will be removed in 4.0.0, use "
-    "gensim.similarities.termsim.SparseTermSimilarityMatrix.inner_product instead")
-def softcossim(vec1, vec2, similarity_matrix):
-    """Get Soft Cosine Measure between two vectors given a term similarity matrix.
-
-    Return Soft Cosine Measure between two sparse vectors given a sparse term similarity matrix
-    in the :class:`scipy.sparse.csc_matrix` format. The similarity is a number between `<-1.0, 1.0>`,
-    higher is more similar.
-
-    Notes
-    -----
-    Soft Cosine Measure was perhaps first defined by `Grigori Sidorov et al.,
-    "Soft Similarity and Soft Cosine Measure: Similarity of Features in Vector Space Model"
-    <http://www.cys.cic.ipn.mx/ojs/index.php/CyS/article/view/2043/1921>`_.
-
-    Parameters
-    ----------
-    vec1 : list of (int, float)
-        A query vector in the BoW format.
-    vec2 : list of (int, float)
-        A document vector in the BoW format.
-    similarity_matrix : {:class:`scipy.sparse.csc_matrix`, :class:`scipy.sparse.csr_matrix`}
-        A term similarity matrix. If the matrix is :class:`scipy.sparse.csr_matrix`, it is going
-        to be transposed. If you rely on the fact that there is at most a constant number of
-        non-zero elements in a single column, it is your responsibility to ensure that the matrix
-        is symmetric.
-
-    Returns
-    -------
-    `similarity_matrix.dtype`
-        The Soft Cosine Measure between `vec1` and `vec2`.
-
-    Raises
-    ------
-    ValueError
-        When the term similarity matrix is in an unknown format.
-
-    See Also
-    --------
-    :meth:`gensim.models.keyedvectors.WordEmbeddingsKeyedVectors.similarity_matrix`
-        A term similarity matrix produced from term embeddings.
-    :class:`gensim.similarities.docsim.SoftCosineSimilarity`
-        A class for performing corpus-based similarity queries with Soft Cosine Measure.
-
-    """
-    if not isinstance(similarity_matrix, scipy.sparse.csc_matrix):
-        if isinstance(similarity_matrix, scipy.sparse.csr_matrix):
-            similarity_matrix = similarity_matrix.T
-        else:
-            raise ValueError('unknown similarity matrix format')
-
-    if not vec1 or not vec2:
-        return 0.0
-
-    vec1 = dict(vec1)
-    vec2 = dict(vec2)
-    word_indices = sorted(set(chain(vec1, vec2)))
-    dtype = similarity_matrix.dtype
-    vec1 = np.fromiter((vec1[i] if i in vec1 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
-    vec2 = np.fromiter((vec2[i] if i in vec2 else 0 for i in word_indices), dtype=dtype, count=len(word_indices))
-    dense_matrix = similarity_matrix[[[i] for i in word_indices], word_indices].todense()
-    vec1len = vec1.T.dot(dense_matrix).dot(vec1)[0, 0]
-    vec2len = vec2.T.dot(dense_matrix).dot(vec2)[0, 0]
-
-    assert \
-        vec1len > 0.0 and vec2len > 0.0, \
-        u"sparse documents must not contain any explicit zero entries and the similarity matrix S " \
-        u"must satisfy x^T * S * x > 0 for any nonzero bag-of-words vector x."
-
-    result = vec1.T.dot(dense_matrix).dot(vec2)[0, 0]
-    result /= math.sqrt(vec1len) * math.sqrt(vec2len)  # rescale by vector lengths
-    return np.clip(result, -1.0, 1.0)
 
 
 def isbow(vec):
@@ -1059,7 +979,7 @@ def jaccard(vec1, vec2):
         union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
         vec1, vec2 = dict(vec1), dict(vec2)
         intersection = 0.0
-        for feature_id, feature_weight in iteritems(vec1):
+        for feature_id, feature_weight in vec1.items():
             intersection += min(feature_weight, vec2.get(feature_id, 0.0))
         return 1 - float(intersection) / float(union)
     else:
@@ -1212,7 +1132,7 @@ def qr_destroy(la):
     return q, r
 
 
-class MmWriter(object):
+class MmWriter:
     """Store a corpus in `Matrix Market format <https://math.nist.gov/MatrixMarket/formats.html>`_,
     using :class:`~gensim.corpora.mmcorpus.MmCorpus`.
 
@@ -1423,184 +1343,6 @@ class MmWriter(object):
 
 
 try:
-    # try to load fast, cythonized code if possible
-    from gensim.corpora._mmreader import MmReader
+    from gensim.corpora._mmreader import MmReader  # noqa: F401
 except ImportError:
-    FAST_VERSION = -1
-
-    class MmReader(object):
-        """Matrix market file reader, used internally in :class:`~gensim.corpora.mmcorpus.MmCorpus`.
-
-        Wrap a term-document matrix on disk (in matrix-market format), and present it
-        as an object which supports iteration over the rows (~documents).
-
-        Attributes
-        ----------
-        num_docs : int
-            Number of documents in market matrix file.
-        num_terms : int
-            Number of terms.
-        num_nnz : int
-            Number of non-zero terms.
-
-        Notes
-        -----
-        Note that the file is read into memory one document at a time, not the whole matrix at once
-        (unlike e.g. `scipy.io.mmread` and other implementations).
-        This allows us to process corpora which are larger than the available RAM.
-
-        """
-        def __init__(self, input, transposed=True):
-            """
-
-            Parameters
-            ----------
-            input : {str, file-like object}
-                Path to the input file in MM format or a file-like object that supports `seek()`
-                (e.g. smart_open objects).
-            transposed : bool, optional
-                Do lines represent `doc_id, term_id, value`, instead of `term_id, doc_id, value`?
-
-            """
-            logger.info("initializing corpus reader from %s", input)
-            self.input, self.transposed = input, transposed
-            with utils.open_file(self.input) as lines:
-                try:
-                    header = utils.to_unicode(next(lines)).strip()
-                    if not header.lower().startswith('%%matrixmarket matrix coordinate real general'):
-                        raise ValueError(
-                            "File %s not in Matrix Market format with coordinate real general; instead found: \n%s" %
-                            (self.input, header)
-                        )
-                except StopIteration:
-                    pass
-
-                self.num_docs = self.num_terms = self.num_nnz = 0
-                for lineno, line in enumerate(lines):
-                    line = utils.to_unicode(line)
-                    if not line.startswith('%'):
-                        self.num_docs, self.num_terms, self.num_nnz = (int(x) for x in line.split())
-                        if not self.transposed:
-                            self.num_docs, self.num_terms = self.num_terms, self.num_docs
-                        break
-
-            logger.info(
-                "accepted corpus with %i documents, %i features, %i non-zero entries",
-                self.num_docs, self.num_terms, self.num_nnz
-            )
-
-        def __len__(self):
-            """Get the corpus size: total number of documents."""
-            return self.num_docs
-
-        def __str__(self):
-            return ("MmCorpus(%i documents, %i features, %i non-zero entries)" %
-                    (self.num_docs, self.num_terms, self.num_nnz))
-
-        def skip_headers(self, input_file):
-            """Skip file headers that appear before the first document.
-
-            Parameters
-            ----------
-            input_file : iterable of str
-                Iterable taken from file in MM format.
-
-            """
-            for line in input_file:
-                if line.startswith(b'%'):
-                    continue
-                break
-
-        def __iter__(self):
-            """Iterate through all documents in the corpus.
-
-            Notes
-            ------
-            Note that the total number of vectors returned is always equal to the number of rows specified
-            in the header: empty documents are inserted and yielded where appropriate, even if they are not explicitly
-            stored in the Matrix Market file.
-
-            Yields
-            ------
-            (int, list of (int, number))
-                Document id and document in sparse bag-of-words format.
-
-            """
-            with utils.file_or_filename(self.input) as lines:
-                self.skip_headers(lines)
-
-                previd = -1
-                for line in lines:
-                    docid, termid, val = utils.to_unicode(line).split()  # needed for python3
-                    if not self.transposed:
-                        termid, docid = docid, termid
-                    # -1 because matrix market indexes are 1-based => convert to 0-based
-                    docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
-                    assert previd <= docid, "matrix columns must come in ascending order"
-                    if docid != previd:
-                        # change of document: return the document read so far (its id is prevId)
-                        if previd >= 0:
-                            yield previd, document  # noqa:F821
-
-                        # return implicit (empty) documents between previous id and new id
-                        # too, to keep consistent document numbering and corpus length
-                        for previd in range(previd + 1, docid):
-                            yield previd, []
-
-                        # from now on start adding fields to a new document, with a new id
-                        previd = docid
-                        document = []
-
-                    document.append((termid, val,))  # add another field to the current document
-
-            # handle the last document, as a special case
-            if previd >= 0:
-                yield previd, document
-
-            # return empty documents between the last explicit document and the number
-            # of documents as specified in the header
-            for previd in range(previd + 1, self.num_docs):
-                yield previd, []
-
-        def docbyoffset(self, offset):
-            """Get the document at file offset `offset` (in bytes).
-
-            Parameters
-            ----------
-            offset : int
-                File offset, in bytes, of the desired document.
-
-            Returns
-            ------
-            list of (int, str)
-                Document in sparse bag-of-words format.
-
-            """
-            # empty documents are not stored explicitly in MM format, so the index marks
-            # them with a special offset, -1.
-            if offset == -1:
-                return []
-            if isinstance(self.input, string_types):
-                fin, close_fin = utils.open(self.input, 'rb'), True
-            else:
-                fin, close_fin = self.input, False
-
-            fin.seek(offset)  # works for gzip/bz2 input, too
-            previd, document = -1, []
-            for line in fin:
-                docid, termid, val = line.split()
-                if not self.transposed:
-                    termid, docid = docid, termid
-                # -1 because matrix market indexes are 1-based => convert to 0-based
-                docid, termid, val = int(docid) - 1, int(termid) - 1, float(val)
-                assert previd <= docid, "matrix columns must come in ascending order"
-                if docid != previd:
-                    if previd >= 0:
-                        break
-                    previd = docid
-
-                document.append((termid, val,))  # add another field to the current document
-
-            if close_fin:
-                fin.close()
-            return document
+    raise utils.NO_CYTHON

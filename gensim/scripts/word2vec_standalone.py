@@ -120,9 +120,9 @@ if __name__ == "__main__":
     corpus = LineSentence(args.train)
 
     model = Word2Vec(
-        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        corpus, vector_size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, alpha=args.alpha, sg=skipgram,
-        hs=args.hs, negative=args.negative, cbow_mean=1, iter=args.iter
+        hs=args.hs, negative=args.negative, cbow_mean=1, epochs=args.iter,
     )
 
     if args.output:

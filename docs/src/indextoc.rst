@@ -3,9 +3,6 @@
    :maxdepth: 1
 
    intro
-   install
-   tutorial
-   distributed
-   support
-   wiki
+   auto_examples/index
    apiref
+   support
