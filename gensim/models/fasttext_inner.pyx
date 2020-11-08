@@ -402,15 +402,14 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
     if not c.cbow_mean:  # divide error over summed window vectors
         sscal(&c.size, &inv_count, c.work, &ONE)
 
-    inv_count = ONEF / c.size
-
     n = j - i + c.window
     for m in range(j, k):
         if m == i:
             continue
-        memcpy(c.neu1, &c.syn0_positions[n * c.pdw_size], c.pdw_size * cython.sizeof(REAL_t))
+        count = ONEF
+        memset(c.neu1, 0, c.pdw_size * cython.sizeof(REAL_t))
         our_hadamard_product(
-            c.pdw_size, inv_count,
+            c.pdw_size, ONEF,
             &c.syn0_vocab[c.indexes[m] * c.size],
             c.work,
             c.neu1)
@@ -425,8 +424,9 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
                 &c.work[c.pdw_size], &ONE,
                 &c.syn0_vocab[c.indexes[m] * c.size + c.pdw_size], &ONE)
         for o in range(c.subwords_idx_len[m]):
+            count += ONEF
             our_hadamard_product(
-                c.pdw_size, inv_count,
+                c.pdw_size, ONEF,
                 &c.syn0_ngrams[c.subwords_idx[m][o] * c.size],
                 c.work,
                 c.neu1)
@@ -440,7 +440,8 @@ cdef void fasttext_fast_sentence_cbow_neg_pdw(FastTextConfig *c, int i, int j, i
                     &nonpositional_size, &c.ngrams_lockf[c.subwords_idx[m][o] % c.ngrams_lockf_len],
                     &c.work[c.pdw_size], &ONE,
                     &c.syn0_ngrams[c.subwords_idx[m][o] * c.size + c.pdw_size], &ONE)
-        memcpy(&c.syn0_positions[n * c.pdw_size], c.neu1, c.pdw_size * cython.sizeof(REAL_t))
+        inv_count = ONEF / count  # divide position vector update by the number of summed gradients
+        our_saxpy(&c.pdw_size, &inv_count, c.neu1, &ONE, &c.syn0_positions[n * c.pdw_size], &ONE)
         n += 1
 
 
