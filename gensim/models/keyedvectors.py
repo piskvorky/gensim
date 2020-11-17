@@ -742,11 +742,11 @@ class KeyedVectors(utils.SaveLoad):
             clip_start = 0
             clip_end = restrict_vocab
 
-        if isinstance(positive, KEY_TYPES + (ndarray,)) and not negative:
+        if isinstance(positive, KEY_TYPES + (ndarray,)):
             # allow passing a single string-key or vector for the positive argument
             positive = [positive]
 
-        if isinstance(negative, KEY_TYPES + (ndarray,)) and not positive:
+        if isinstance(negative, KEY_TYPES + (ndarray,)):
             # allow passing a single string-key or vector for the negative argument
             negative = [negative]
 
