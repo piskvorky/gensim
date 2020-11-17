@@ -746,6 +746,9 @@ class KeyedVectors(utils.SaveLoad):
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
+        if isinstance(negative, KEY_TYPES) and not positive:
+            negative = [negative]
+
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
             (item, 1.0) if isinstance(item, KEY_TYPES + (ndarray,))
