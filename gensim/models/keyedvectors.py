@@ -989,9 +989,13 @@ class KeyedVectors(utils.SaveLoad):
 
         self.fill_norms()
 
-        if isinstance(positive, str) and not negative:
-            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
+        if isinstance(positive, KEY_TYPES + (ndarray,)):
+            # allow passing a single string-key or vector for the positive argument
             positive = [positive]
+
+        if isinstance(negative, KEY_TYPES + (ndarray,)):
+            # allow passing a single string-key or vector for the negative argument
+            negative = [negative]
 
         all_words = {
             self.get_index(word) for word in positive + negative
