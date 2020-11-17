@@ -742,11 +742,11 @@ class KeyedVectors(utils.SaveLoad):
             clip_start = 0
             clip_end = restrict_vocab
 
-        if isinstance(positive, KEY_TYPES) and not negative:
+        if isinstance(positive, KEY_TYPES + (ndarray,)) and not negative:
             # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
             positive = [positive]
 
-        if isinstance(negative, KEY_TYPES) and not positive:
+        if isinstance(negative, KEY_TYPES + (ndarray,)) and not positive:
             negative = [negative]
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
