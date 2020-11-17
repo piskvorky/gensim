@@ -743,10 +743,11 @@ class KeyedVectors(utils.SaveLoad):
             clip_end = restrict_vocab
 
         if isinstance(positive, KEY_TYPES + (ndarray,)) and not negative:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
+            # allow passing a single string-key or vector for the positive argument
             positive = [positive]
 
         if isinstance(negative, KEY_TYPES + (ndarray,)) and not positive:
+            # allow passing a single string-key or vector for the negative argument
             negative = [negative]
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
