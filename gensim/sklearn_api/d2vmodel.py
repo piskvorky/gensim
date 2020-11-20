@@ -160,7 +160,11 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             The trained model.
 
         """
-        if isinstance([i for i in X[:1]][0], doc2vec.TaggedDocument):
+        def _get_first(some_iterable):
+            """Return first element of some iterable."""
+            for elem in some_iterable:
+                return elem
+        if isinstance(_get_first(_get_first(X)), doc2vec.TaggedDocument):
             d2v_sentences = X
         else:
             d2v_sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(X)]
