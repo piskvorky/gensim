@@ -887,8 +887,9 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         >>> from gensim.test.utils import common_texts
         >>> from gensim.corpora import Dictionary
-        >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
+        >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
+        >>> from gensim.similarities import WordEmbeddingSimilarityIndex
         >>>
         >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv)

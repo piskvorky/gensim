@@ -405,8 +405,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
     --------
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora import Dictionary
-    >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
-    >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
+    >>> from gensim.models import Word2Vec
+    >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix, WordEmbeddingSimilarityIndex
     >>> from gensim.similarities.index import AnnoyIndexer
     >>> from scikits.sparse.cholmod import cholesky
     >>>
