@@ -272,12 +272,12 @@ class LdaMallet(utils.SaveLoad, basemodel.BaseTopicModel):
         self.convert_input(corpus, infer=False)
         cmd = self.mallet_path + ' train-topics --input %s --num-topics %s  --alpha %s --optimize-interval %s '\
             '--num-threads %s --output-state %s --output-doc-topics %s --output-topic-keys %s '\
-            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s  --random-seed %s'
+            '--num-iterations %s --inferencer-filename %s --doc-topics-threshold %s  --random-seed %s --diagnostics-file %s'
 
         cmd = cmd % (
             self.fcorpusmallet(), self.num_topics, self.alpha, self.optimize_interval,
             self.workers, self.fstate(), self.fdoctopics(), self.ftopickeys(), self.iterations,
-            self.finferencer(), self.topic_threshold, str(self.random_seed)
+            self.finferencer(), self.topic_threshold, str(self.random_seed), f"diagnostics_{self.num_topics}.xml"
         )
         # NOTE "--keep-sequence-bigrams" / "--use-ngrams true" poorer results + runs out of memory
         logger.info("training MALLET LDA with %s", cmd)
