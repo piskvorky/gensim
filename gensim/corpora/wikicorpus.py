@@ -706,6 +706,7 @@ class WikiCorpus(TextCorpus):
                     articles += 1
                     positions += len(tokens)
                     if self.metadata and not dictionary_mode:
+                        print('yielding metadata')
                         yield (tokens, (pageid, title))
                     else:
                         yield tokens
