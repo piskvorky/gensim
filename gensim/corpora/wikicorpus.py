@@ -657,7 +657,7 @@ class WikiCorpus(TextCorpus):
         
         Parameters
         ----------
-        dictionary_mode : bool
+        dictionary_mode : bool, optional
             If True, yields list of str.
             If False, yield depends on self.metadata (see 'Yields' below).
 
