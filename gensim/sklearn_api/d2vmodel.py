@@ -40,7 +40,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
                  dv_mapfile=None, comment=None, trim_rule=None, vector_size=100, alpha=0.025, window=5,
                  min_count=5, max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  hs=0, negative=5, cbow_mean=1,
-                 hashfxn=hash, epochs=5, sorted_vocab=1, batch_words=10000):
+                 hashfxn=hash, epochs=5, transform_epochs=None, sorted_vocab=1, batch_words=10000):
         """
 
         Parameters
@@ -111,6 +111,10 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             A hashing function. Used to create an initial random reproducible vector by hashing the random seed.
         epochs : int, optional
             Number of epochs to iterate through the corpus.
+        transform_epochs : int, optional
+            Number of times to train the new document. Larger values take more time, but may improve
+            quality and run-to-run stability of inferred vectors. If unspecified, the `epochs` value
+            from model initialization will be reused.
         sorted_vocab : bool, optional
             Whether the vocabulary should be sorted internally.
         batch_words : int, optional
@@ -143,6 +147,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         self.cbow_mean = int(cbow_mean)
         self.hashfxn = hashfxn
         self.epochs = epochs
+        self.transform_epochs = transform_epochs
         self.sorted_vocab = sorted_vocab
         self.batch_words = batch_words
 
@@ -198,5 +203,5 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
         # The input as array of array
         if isinstance(docs[0], str):
             docs = [docs]
-        vectors = [self.gensim_model.infer_vector(doc) for doc in docs]
+        vectors = [self.gensim_model.infer_vector(doc, epochs=self.transform_epochs) for doc in docs]
         return np.reshape(np.array(vectors), (len(docs), self.gensim_model.vector_size))
