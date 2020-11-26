@@ -636,7 +636,7 @@ class WikiCorpus(TextCorpus):
         self.lower = lower
 
         if dictionary is None:
-            self.dictionary = Dictionary(self.get_texts())
+            self.dictionary = Dictionary(self.get_texts(dictionary_mode=True))
         else:
             self.dictionary = dictionary
 
@@ -644,7 +644,7 @@ class WikiCorpus(TextCorpus):
     def input(self):
         return self.fname
 
-    def get_texts(self):
+    def get_texts(self, dictionary_mode=False):
         """Iterate over the dump, yielding a list of tokens for each article that passed
         the length and namespace filtering.
 
@@ -654,6 +654,12 @@ class WikiCorpus(TextCorpus):
         -----
         This iterates over the **texts**. If you want vectors, just use the standard corpus interface
         instead of this method:
+        
+        Parameters
+        ----------
+        dictionary_mode : bool
+            If True, yields list of str.
+            If False, yield depends on self.metadata (see 'Yields' below).
 
         Examples
         --------
@@ -699,7 +705,7 @@ class WikiCorpus(TextCorpus):
                         continue
                     articles += 1
                     positions += len(tokens)
-                    if self.metadata:
+                    if self.metadata and not dictionary_mode:
                         yield (tokens, (pageid, title))
                     else:
                         yield tokens
