@@ -705,10 +705,12 @@ class WikiCorpus(TextCorpus):
                         continue
                     articles += 1
                     positions += len(tokens)
+                    print('dictionary_mode: ', dictionary_mode)
                     if self.metadata and not dictionary_mode:
                         print('yielding metadata')
                         yield (tokens, (pageid, title))
                     else:
+                        print('not yielding metadata')
                         yield tokens
 
         except KeyboardInterrupt:
