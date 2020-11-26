@@ -576,7 +576,8 @@ class WikiCorpus(TextCorpus):
     """
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None, metadata=False):
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None, 
+                 metadata=False):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -612,6 +613,8 @@ class WikiCorpus(TextCorpus):
             If set, each XML article element will be passed to this callable before being processed. Only articles
             where the callable returns an XML element are processed, returning None allows filtering out
             some articles based on customised rules.
+        metadata: bool, optional
+                if True - write article titles to corpus
 
         Warnings
         --------
