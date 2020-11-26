@@ -614,7 +614,7 @@ class WikiCorpus(TextCorpus):
             where the callable returns an XML element are processed, returning None allows filtering out
             some articles based on customised rules.
         metadata: bool, optional
-                if True - write article titles to corpus
+                Whether to write articles titles to serialized corpus.
 
         Warnings
         --------
@@ -635,7 +635,6 @@ class WikiCorpus(TextCorpus):
         self.token_max_len = token_max_len
         self.lower = lower
         
-        print('version updated')
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts(dictionary_mode=True))
         else:
@@ -706,12 +705,9 @@ class WikiCorpus(TextCorpus):
                         continue
                     articles += 1
                     positions += len(tokens)
-                    print('dictionary_mode: ', dictionary_mode)
                     if self.metadata and not dictionary_mode:
-                        print('yielding metadata')
                         yield (tokens, (pageid, title))
                     else:
-                        print('not yielding metadata')
                         yield tokens
 
         except KeyboardInterrupt:
