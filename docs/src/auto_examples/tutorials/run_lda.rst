@@ -1,16 +1,20 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_lda.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_tutorials_run_lda.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_lda.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_tutorials_run_lda.py:
 
 
 LDA Model
 =========
 
 Introduces Gensim's LDA model and demonstrates its use on the NIPS corpus.
+
+
 
 .. code-block:: default
 
@@ -24,23 +28,23 @@ Introduces Gensim's LDA model and demonstrates its use on the NIPS corpus.
 
 
 
-The purpose of this tutorial is to demonstrate training an LDA model and
-obtaining good results.
+
+The purpose of this tutorial is to demonstrate how to train and tune an LDA model.
 
 In this tutorial we will:
 
-* Load data.
-* Pre-process data.
-* Transform documents to a vectorized form.
+* Load input data.
+* Pre-process that data.
+* Transform documents into bag-of-words vectors.
 * Train an LDA model.
 
 This tutorial will **not**:
 
 * Explain how Latent Dirichlet Allocation works
 * Explain how the LDA model performs inference
-* Teach you how to use Gensim's LDA implementation in its entirety
+* Teach you all the parameters and options for Gensim's LDA implementation
 
-If you are not familiar with the LDA model or how to use it in Gensim, I
+If you are not familiar with the LDA model or how to use it in Gensim, I (Olavur Mortensen)
 suggest you read up on that before continuing with this tutorial. Basic
 understanding of the LDA model should suffice. Examples:
 
@@ -86,9 +90,9 @@ also do that for you.
 
     def extract_documents(url='https://cs.nyu.edu/~roweis/data/nips12raw_str602.tgz'):
         fname = url.split('/')[-1]
-    
+
         # Download the file to local storage first.
-        # We can't read it on the fly because of 
+        # We can't read it on the fly because of
         # https://github.com/RaRe-Technologies/smart_open/issues/331
         if not os.path.isfile(fname):
             with smart_open.open(url, "rb") as fin:
@@ -98,7 +102,7 @@ also do that for you.
                         if not buf:
                             break
                         fout.write(buf)
-                         
+
         with tarfile.open(fname, mode='r:gz') as tar:
             # Ignore directory entries, as well as files like README, etc.
             files = [
@@ -117,7 +121,8 @@ also do that for you.
 
 
 
-So we have a list of 1740 documents, where each document is a Unicode string. 
+
+So we have a list of 1740 documents, where each document is a Unicode string.
 If you're thinking about using your own corpus, then you need to make sure
 that it's in the same format (list of Unicode strings) before proceeding
 with the rest of this tutorial.
@@ -151,6 +156,8 @@ with the rest of this tutorial.
     the entropy)? Switching theory would suggest no relation at all, since all Boolean 
     functions can be implemented using a circuit with very low connectivity (e.g., 
     using two-input NAND gates). However, for a network that learns a pr
+
+
 
 
 Pre-process and vectorize the documents
@@ -198,6 +205,7 @@ don't tend to be useful, and the dataset contains a lot of them.
 
 
 
+
 We use the WordNet lemmatizer from NLTK. A lemmatizer is preferred over a
 stemmer in this case because it produces more readable words. Output that is
 easy to read is very desirable in topic modelling.
@@ -212,6 +220,7 @@ easy to read is very desirable in topic modelling.
 
     lemmatizer = WordNetLemmatizer()
     docs = [[lemmatizer.lemmatize(token) for token in doc] for doc in docs]
+
 
 
 
@@ -255,6 +264,7 @@ original data, because we would like to keep the words "machine" and
 
 
 
+
 We remove rare words and common words based on their *document frequency*.
 Below we remove words that appear in less than 20 documents or in more than
 50% of the documents. Consider trying to remove words only based on their
@@ -280,6 +290,7 @@ frequency, or maybe combining that with this approach.
 
 
 
+
 Finally, we transform the documents to a vectorized form. We simply compute
 the frequency of each word, including the bigrams.
 
@@ -290,6 +301,7 @@ the frequency of each word, including the bigrams.
 
     # Bag-of-words representation of the documents.
     corpus = [dictionary.doc2bow(doc) for doc in docs]
+
 
 
 
@@ -319,6 +331,8 @@ Let's see how many tokens and documents we have to train on.
 
     Number of unique tokens: 8644
     Number of documents: 1740
+
+
 
 
 Training
@@ -401,6 +415,7 @@ the model that we usually would have to specify explicitly.
 
 
 
+
 We can compute the topic coherence of each topic. Below we display the
 average topic coherence and print the topics in order of topic coherence.
 
@@ -440,217 +455,219 @@ methods on the blog at http://rare-technologies.com/lda-training-tips/ !
 
  .. code-block:: none
 
-    Average topic coherence: -1.1241.
-    [([(0.025163664, 'neuron'),
-       (0.014695453, 'cell'),
-       (0.009174355, 'spike'),
-       (0.008574755, 'synaptic'),
-       (0.007183699, 'firing'),
-       (0.006625933, 'activity'),
-       (0.005360948, 'connection'),
-       (0.005293554, 'dynamic'),
-       (0.004822483, 'response'),
-       (0.004687287, 'potential'),
-       (0.004228337, 'memory'),
-       (0.003953116, 'synapsis'),
-       (0.0038689172, 'fig'),
-       (0.0038664965, 'simulation'),
-       (0.0037337197, 'phase'),
-       (0.0034825401, 'excitatory'),
-       (0.0034173392, 'inhibitory'),
-       (0.0032120293, 'signal'),
-       (0.0031823071, 'membrane'),
-       (0.0030939183, 'threshold')],
-      -0.9630445183762313),
-     ([(0.012538756, 'visual'),
-       (0.010721944, 'cell'),
-       (0.010432726, 'stimulus'),
-       (0.009539313, 'response'),
-       (0.009375428, 'field'),
-       (0.008074537, 'motion'),
-       (0.007172039, 'direction'),
-       (0.0067870775, 'eye'),
-       (0.006605871, 'orientation'),
-       (0.0060072606, 'map'),
-       (0.005874502, 'signal'),
-       (0.0057511893, 'spatial'),
-       (0.0052507855, 'activity'),
-       (0.0051356875, 'frequency'),
-       (0.005135085, 'cortex'),
-       (0.0048966897, 'neuron'),
-       (0.0047698235, 'receptive'),
-       (0.004372744, 'receptive_field'),
-       (0.0043261987, 'position'),
-       (0.00429431, 'movement')],
-      -1.0239601445556414),
-     ([(0.0083479555, 'noise'),
-       (0.0068552294, 'matrix'),
-       (0.0053806016, 'generalization'),
-       (0.005088047, 'gradient'),
-       (0.004749316, 'gaussian'),
-       (0.004203275, 'solution'),
-       (0.004060732, 'hidden'),
-       (0.0038100502, 'variance'),
-       (0.0036777114, 'optimal'),
-       (0.003360351, 'minimum'),
-       (0.0029607583, 'approximation'),
-       (0.0029424587, 'regression'),
-       (0.0029251142, 'prediction'),
-       (0.0029126815, 'hidden_unit'),
-       (0.0028326688, 'field'),
-       (0.0027481643, 'eq'),
-       (0.0027452093, 'curve'),
-       (0.0027210945, 'component'),
-       (0.0026757186, 'training_set'),
-       (0.0025839263, 'convergence')],
-      -1.0264554313733174),
-     ([(0.016699685, 'layer'),
-       (0.010172412, 'hidden'),
-       (0.009873925, 'net'),
-       (0.0069913934, 'signal'),
-       (0.005923669, 'architecture'),
-       (0.005888097, 'node'),
-       (0.0053476817, 'recognition'),
-       (0.0052034874, 'back'),
-       (0.005092546, 'trained'),
-       (0.0049700774, 'character'),
-       (0.0049465224, 'propagation'),
-       (0.0043775956, 'connection'),
-       (0.003985166, 'rule'),
-       (0.0039540627, 'hidden_layer'),
-       (0.0039305384, 'back_propagation'),
-       (0.0037728392, 'hidden_unit'),
-       (0.0036262535, 'map'),
-       (0.0033271443, 'memory'),
-       (0.0032461125, 'recurrent'),
-       (0.003240172, 'classification')],
-      -1.0502625308865845),
-     ([(0.029825492, 'image'),
-       (0.014187608, 'object'),
-       (0.00787895, 'recognition'),
-       (0.0060228026, 'face'),
-       (0.0057333205, 'distance'),
-       (0.005409843, 'pixel'),
-       (0.004563485, 'view'),
-       (0.0041269716, 'human'),
-       (0.0035166328, 'region'),
-       (0.0033159077, 'scale'),
-       (0.003022337, 'transformation'),
-       (0.0029435642, 'vision'),
-       (0.00290788, 'classification'),
-       (0.002907101, 'visual'),
-       (0.0029046696, 'scene'),
-       (0.0027043023, 'shape'),
-       (0.002684278, 'similarity'),
-       (0.0026817669, 'location'),
-       (0.002623082, 'hand'),
-       (0.0025962282, 'class')],
-      -1.097725649478162),
-     ([(0.0077803913, 'class'),
-       (0.00701301, 'bound'),
-       (0.006212604, 'tree'),
-       (0.0053535043, 'let'),
-       (0.0050069927, 'sample'),
-       (0.004901047, 'theorem'),
-       (0.0048944, 'node'),
-       (0.0048409384, 'approximation'),
-       (0.0044921115, 'rule'),
-       (0.0043274118, 'xi'),
-       (0.0042111403, 'log'),
-       (0.0034545094, 'threshold'),
-       (0.0032513374, 'dimension'),
-       (0.0031659885, 'estimate'),
-       (0.0029222067, 'decision'),
-       (0.0029162255, 'density'),
-       (0.0027602788, 'polynomial'),
-       (0.0027468363, 'proof'),
-       (0.0026415242, 'complexity'),
-       (0.0025608365, 'classification')],
-      -1.1117463109554),
-     ([(0.013324664, 'control'),
-       (0.011131293, 'action'),
-       (0.008681728, 'policy'),
-       (0.007468294, 'reinforcement'),
-       (0.006033033, 'optimal'),
-       (0.0058535463, 'controller'),
-       (0.0054354914, 'dynamic'),
-       (0.0052186167, 'robot'),
-       (0.004936079, 'reinforcement_learning'),
-       (0.0046352767, 'environment'),
-       (0.004009696, 'reward'),
-       (0.0039904723, 'trajectory'),
-       (0.003791848, 'goal'),
-       (0.0033601716, 'path'),
-       (0.0032013957, 'decision'),
-       (0.002936101, 'sutton'),
-       (0.0029276484, 'td'),
-       (0.0028193546, 'cost'),
-       (0.0027700174, 'trial'),
-       (0.0027414286, 'learn')],
-      -1.142543624221162),
-     ([(0.011205725, 'speech'),
-       (0.010960422, 'word'),
-       (0.008931443, 'mixture'),
-       (0.008391879, 'recognition'),
-       (0.00627159, 'gaussian'),
-       (0.0059411423, 'likelihood'),
-       (0.005645111, 'classifier'),
-       (0.0050329296, 'class'),
-       (0.0048486707, 'sequence'),
-       (0.004785308, 'kernel'),
-       (0.00473608, 'hmm'),
-       (0.004446403, 'context'),
-       (0.0044057737, 'estimate'),
-       (0.0042781103, 'density'),
-       (0.0042298213, 'speaker'),
-       (0.004190155, 'rbf'),
-       (0.004078858, 'classification'),
-       (0.0036422184, 'estimation'),
-       (0.0036205945, 'prior'),
-       (0.0036079672, 'hidden')],
-      -1.179015820296614),
-     ([(0.017962778, 'circuit'),
-       (0.014027779, 'chip'),
-       (0.013046392, 'analog'),
-       (0.008767594, 'voltage'),
-       (0.008703562, 'neuron'),
-       (0.006658798, 'signal'),
-       (0.0065101394, 'vlsi'),
-       (0.00574142, 'implementation'),
-       (0.0054374044, 'bit'),
-       (0.0047924053, 'processor'),
-       (0.0042650327, 'pulse'),
-       (0.004172195, 'channel'),
-       (0.003977853, 'design'),
-       (0.003924252, 'gate'),
-       (0.0039178976, 'digital'),
-       (0.0038753191, 'transistor'),
-       (0.0037934151, 'device'),
-       (0.0037664415, 'hardware'),
-       (0.0037505976, 'cell'),
-       (0.0036221847, 'synapse')],
-      -1.217220238817786),
-     ([(0.0052642035, 'net'),
-       (0.005045612, 'hidden'),
-       (0.0046278588, 'sequence'),
-       (0.004625344, 'machine'),
-       (0.004386533, 'solution'),
-       (0.004208156, 'language'),
-       (0.004180493, 'node'),
-       (0.0038425317, 'string'),
-       (0.0037875888, 'hidden_unit'),
-       (0.0037045274, 'cost'),
-       (0.003578985, 'optimization'),
-       (0.00333463, 'constraint'),
-       (0.0033199114, 'table'),
-       (0.0033088576, 'recurrent'),
-       (0.003233348, 'code'),
-       (0.0031989065, 'symbol'),
-       (0.003080977, 'activation'),
-       (0.003000487, 'matrix'),
-       (0.002989608, 'search'),
-       (0.0026564174, 'grammar')],
-      -1.4290562789759915)]
+    Average topic coherence: -1.1379.
+    [([(0.0081748655, 'bound'),
+       (0.007108706, 'let'),
+       (0.006066193, 'theorem'),
+       (0.005790631, 'optimal'),
+       (0.0051151128, 'approximation'),
+       (0.004763562, 'convergence'),
+       (0.0043320647, 'class'),
+       (0.00422147, 'generalization'),
+       (0.0037292794, 'proof'),
+       (0.0036608914, 'threshold'),
+       (0.0034258896, 'sample'),
+       (0.003380618, 'loss'),
+       (0.0033234654, 'stochastic'),
+       (0.003273838, 'finite'),
+       (0.0031302413, 'dimension'),
+       (0.002831012, 'complexity'),
+       (0.002805536, 'assume'),
+       (0.0028052146, 'condition'),
+       (0.0027610834, 'gradient'),
+       (0.002696474, 'xi')],
+      -0.9567457219908955),
+     ([(0.010490722, 'control'),
+       (0.009010948, 'action'),
+       (0.0059598447, 'reinforcement'),
+       (0.0047827456, 'policy'),
+       (0.0044869035, 'controller'),
+       (0.0044079036, 'robot'),
+       (0.004191326, 'dynamic'),
+       (0.0037420355, 'reinforcement_learning'),
+       (0.003445968, 'environment'),
+       (0.003406964, 'goal'),
+       (0.0033234078, 'memory'),
+       (0.003115369, 'optimal'),
+       (0.0029810574, 'net'),
+       (0.00296787, 'architecture'),
+       (0.002944391, 'path'),
+       (0.0028523172, 'search'),
+       (0.002817304, 'cost'),
+       (0.0027405526, 'trajectory'),
+       (0.0027168898, 'machine'),
+       (0.0026868598, 'learn')],
+      -0.9629919861002044),
+     ([(0.011724874, 'gaussian'),
+       (0.009415354, 'component'),
+       (0.008502817, 'density'),
+       (0.007683166, 'matrix'),
+       (0.0075845774, 'mixture'),
+       (0.0074258945, 'noise'),
+       (0.0065725176, 'likelihood'),
+       (0.005647718, 'prior'),
+       (0.0055691865, 'bayesian'),
+       (0.0055141784, 'signal'),
+       (0.0054192273, 'source'),
+       (0.0051946733, 'posterior'),
+       (0.0047219293, 'variance'),
+       (0.0046686446, 'log'),
+       (0.004505882, 'independent'),
+       (0.004505833, 'estimate'),
+       (0.003942736, 'covariance'),
+       (0.0038371435, 'filter'),
+       (0.0038362807, 'field'),
+       (0.003637417, 'sample')],
+      -0.9809388920586589),
+     ([(0.024790926, 'neuron'),
+       (0.01242704, 'cell'),
+       (0.010831918, 'spike'),
+       (0.007468995, 'response'),
+       (0.0074320505, 'firing'),
+       (0.0073920223, 'signal'),
+       (0.007372279, 'stimulus'),
+       (0.007049763, 'circuit'),
+       (0.0066122883, 'synaptic'),
+       (0.0055389544, 'channel'),
+       (0.0050250995, 'potential'),
+       (0.0050005503, 'voltage'),
+       (0.004911659, 'noise'),
+       (0.004659519, 'chip'),
+       (0.0043042223, 'threshold'),
+       (0.004287492, 'analog'),
+       (0.004195864, 'synapsis'),
+       (0.0041318936, 'frequency'),
+       (0.00403522, 'synapse'),
+       (0.003926733, 'activity')],
+      -1.081720021366841),
+     ([(0.010492251, 'classifier'),
+       (0.0091541875, 'class'),
+       (0.009068395, 'classification'),
+       (0.0067783683, 'recognition'),
+       (0.0057456596, 'image'),
+       (0.005456874, 'training_set'),
+       (0.005113385, 'layer'),
+       (0.0046058227, 'trained'),
+       (0.004544005, 'character'),
+       (0.004493871, 'hidden'),
+       (0.0041203136, 'face'),
+       (0.003932627, 'distance'),
+       (0.003555957, 'prediction'),
+       (0.003515055, 'generalization'),
+       (0.0033360128, 'net'),
+       (0.0031907677, 'validation'),
+       (0.003140232, 'digit'),
+       (0.003125957, 'sample'),
+       (0.0030787578, 'table'),
+       (0.002857956, 'test_set')],
+      -1.0859109300715886),
+     ([(0.015192852, 'image'),
+       (0.012347493, 'visual'),
+       (0.009574526, 'field'),
+       (0.009226306, 'cell'),
+       (0.008833845, 'motion'),
+       (0.007704693, 'direction'),
+       (0.007618932, 'object'),
+       (0.006610031, 'response'),
+       (0.005630947, 'position'),
+       (0.0052231583, 'eye'),
+       (0.0051186606, 'spatial'),
+       (0.0047765267, 'movement'),
+       (0.004564768, 'velocity'),
+       (0.0045033526, 'orientation'),
+       (0.0043742936, 'stimulus'),
+       (0.004288555, 'location'),
+       (0.003991875, 'receptive'),
+       (0.0038655174, 'map'),
+       (0.0038587663, 'pixel'),
+       (0.003796966, 'motor')],
+      -1.182742215838901),
+     ([(0.013556894, 'neuron'),
+       (0.0074776006, 'memory'),
+       (0.0069611296, 'connection'),
+       (0.0068744384, 'dynamic'),
+       (0.0068192147, 'cell'),
+       (0.0062380563, 'activity'),
+       (0.0059009716, 'phase'),
+       (0.004971466, 'map'),
+       (0.0043283263, 'synaptic'),
+       (0.0041240565, 'attractor'),
+       (0.003905218, 'fig'),
+       (0.0038343568, 'simulation'),
+       (0.0035775776, 'field'),
+       (0.0035449031, 'layer'),
+       (0.0033309432, 'hopfield'),
+       (0.0033046217, 'cortex'),
+       (0.003234431, 'correlation'),
+       (0.0031754398, 'matrix'),
+       (0.003062395, 'frequency'),
+       (0.0030611386, 'capacity')],
+      -1.1977843845453149),
+     ([(0.011207352, 'rule'),
+       (0.009743068, 'hidden'),
+       (0.0063162767, 'layer'),
+       (0.0061172424, 'hidden_unit'),
+       (0.0050221244, 'net'),
+       (0.0040374184, 'image'),
+       (0.003990155, 'activation'),
+       (0.0035164147, 'node'),
+       (0.003386315, 'gradient'),
+       (0.0031175737, 'object'),
+       (0.002975623, 'learn'),
+       (0.0029010042, 'trained'),
+       (0.0028902746, 'connectionist'),
+       (0.00257973, 'string'),
+       (0.002564398, 'recurrent'),
+       (0.0024508797, 'language'),
+       (0.0024454794, 'distributed'),
+       (0.0024281202, 'symbol'),
+       (0.0024280634, 'noise'),
+       (0.002418099, 'generalization')],
+      -1.2755725782614098),
+     ([(0.005421432, 'kernel'),
+       (0.0047018067, 'constraint'),
+       (0.004656475, 'xi'),
+       (0.004605332, 'matrix'),
+       (0.0045576654, 'solution'),
+       (0.0044916016, 'nonlinear'),
+       (0.004330045, 'object'),
+       (0.0042089145, 'optimization'),
+       (0.0040005683, 'cluster'),
+       (0.003932736, 'image'),
+       (0.0035181807, 'regression'),
+       (0.0034628492, 'estimate'),
+       (0.003388594, 'clustering'),
+       (0.0033658948, 'dimensional'),
+       (0.0033489629, 'graph'),
+       (0.003346669, 'distance'),
+       (0.0031878203, 'transformation'),
+       (0.0031517735, 'support'),
+       (0.0031086474, 'inverse'),
+       (0.0030645302, 'em')],
+      -1.3165861629697555),
+     ([(0.018751133, 'speech'),
+       (0.015273304, 'word'),
+       (0.014435461, 'recognition'),
+       (0.011104881, 'sequence'),
+       (0.008624092, 'node'),
+       (0.008493986, 'hidden'),
+       (0.0070799952, 'context'),
+       (0.0067633255, 'hmm'),
+       (0.006759897, 'net'),
+       (0.0067320624, 'layer'),
+       (0.0065835468, 'speaker'),
+       (0.005791399, 'architecture'),
+       (0.0053024716, 'signal'),
+       (0.0049707727, 'acoustic'),
+       (0.004757795, 'recurrent'),
+       (0.0047305888, 'tree'),
+       (0.0046766074, 'phoneme'),
+       (0.004537447, 'frame'),
+       (0.0040487116, 'speech_recognition'),
+       (0.0039719325, 'markov')],
+      -1.3380601736164677)]
+
+
 
 
 Things to experiment with
@@ -679,9 +696,9 @@ References
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  11.266 seconds)
+   **Total running time of the script:** ( 3 minutes  15.684 seconds)
 
-**Estimated memory usage:**  547 MB
+**Estimated memory usage:**  494 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_lda.py:
@@ -694,13 +711,13 @@ References
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_lda.py <run_lda.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_lda.ipynb <run_lda.ipynb>`
 
@@ -709,4 +726,4 @@ References
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

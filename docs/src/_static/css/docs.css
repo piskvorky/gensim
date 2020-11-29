@@ -3528,3 +3528,29 @@ a, a:visited, a:focus {
         top: 38px;
     }
 }
+
+.rst-content .section ol li>p:not(:first-child) ~ p, .rst-content .section ul li>p:not(:first-child) ~ p {
+    margin-top: 12px !important;
+}
+
+.notification {
+    width: 100%;
+    height: auto;
+    background-color: #B70431;
+    color: #fff;
+    padding: .675rem;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    font-size: .875rem;
+    line-height: 1.425;
+    text-align: center;
+}
+
+.notification a {
+    color: #FFFFFF;
+    text-decoration: underline;
+}
+
+.notification a:hover {
+    text-decoration: none;
+}

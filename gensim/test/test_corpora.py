@@ -30,7 +30,7 @@ from gensim.test.utils import datapath, get_tmpfile, common_corpus
 AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
 
 
-class DummyTransformer(object):
+class DummyTransformer:
     def __getitem__(self, bow):
         if len(next(iter(bow))) == 2:
             # single bag of words

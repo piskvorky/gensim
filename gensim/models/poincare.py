@@ -47,23 +47,21 @@ import logging
 from numbers import Integral
 import sys
 import time
+from collections import defaultdict, Counter
 
 import numpy as np
-from collections import defaultdict, Counter
 from numpy import random as np_random, float32 as REAL
 from scipy.stats import spearmanr
-from six import string_types
-from six.moves import zip, range
-
-from gensim import utils, matutils
-from gensim.models.keyedvectors import KeyedVectors
-
 try:
     from autograd import grad  # Only required for optionally verifying gradients while training
     from autograd import numpy as grad_np
     AUTOGRAD_PRESENT = True
 except ImportError:
     AUTOGRAD_PRESENT = False
+
+from gensim import utils, matutils
+from gensim.models.keyedvectors import KeyedVectors
+
 
 logger = logging.getLogger(__name__)
 
@@ -701,7 +699,7 @@ class PoincareModel(utils.SaveLoad):
                     avg_loss = 0.0
 
 
-class PoincareBatch(object):
+class PoincareBatch:
     """Compute Poincare distances, gradients and loss for a training batch.
 
     Store intermediate state to avoid recomputing multiple times.
@@ -1156,7 +1154,7 @@ class PoincareKeyedVectors(KeyedVectors):
             nodes_to_use = self.index_to_key[:restrict_vocab]
             all_distances = self.distances(node_or_vector, nodes_to_use)
 
-        if isinstance(node_or_vector, string_types + (int,)):
+        if isinstance(node_or_vector, (str, int,)):
             node_index = self.get_index(node_or_vector)
         else:
             node_index = None
@@ -1214,7 +1212,7 @@ class PoincareKeyedVectors(KeyedVectors):
             If either `node_or_vector` or any node in `other_nodes` is absent from vocab.
 
         """
-        if isinstance(node_or_vector, string_types):
+        if isinstance(node_or_vector, str):
             input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
@@ -1259,7 +1257,7 @@ class PoincareKeyedVectors(KeyedVectors):
         The position in hierarchy is based on the norm of the vector for the node.
 
         """
-        if isinstance(node_or_vector, string_types):
+        if isinstance(node_or_vector, str):
             input_vector = self.get_vector(node_or_vector)
         else:
             input_vector = node_or_vector
@@ -1307,7 +1305,7 @@ class PoincareKeyedVectors(KeyedVectors):
         return self.norm(node_or_vector_2) - self.norm(node_or_vector_1)
 
 
-class PoincareRelations(object):
+class PoincareRelations:
     """Stream relations for `PoincareModel` from a tsv-like file."""
 
     def __init__(self, file_path, encoding='utf8', delimiter='\t'):
@@ -1356,7 +1354,7 @@ class PoincareRelations(object):
                 yield tuple(row)
 
 
-class NegativesBuffer(object):
+class NegativesBuffer:
     """Buffer and return negative samples."""
 
     def __init__(self, items):
@@ -1407,7 +1405,7 @@ class NegativesBuffer(object):
         return self._items[start_index:end_index]
 
 
-class ReconstructionEvaluation(object):
+class ReconstructionEvaluation:
     """Evaluate reconstruction on given network for given embedding."""
 
     def __init__(self, file_path, embedding):
@@ -1510,7 +1508,7 @@ class ReconstructionEvaluation(object):
         return np.mean(ranks), np.mean(avg_precision_scores)
 
 
-class LinkPredictionEvaluation(object):
+class LinkPredictionEvaluation:
     """Evaluate reconstruction on given network for given embedding."""
 
     def __init__(self, train_path, test_path, embedding):
@@ -1621,7 +1619,7 @@ class LinkPredictionEvaluation(object):
         return np.mean(ranks), np.mean(avg_precision_scores)
 
 
-class LexicalEntailmentEvaluation(object):
+class LexicalEntailmentEvaluation:
     """Evaluate reconstruction on given network for any embedding."""
 
     def __init__(self, filepath):

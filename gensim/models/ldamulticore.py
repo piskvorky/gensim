@@ -84,15 +84,14 @@ Query, or update the model using new, unseen documents
 """
 
 import logging
+import queue
+from multiprocessing import Pool, Queue, cpu_count
 
 import numpy as np
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
-import six
-from six.moves import queue, range
-from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +172,7 @@ class LdaMulticore(LdaModel):
         self.workers = max(1, cpu_count() - 1) if workers is None else workers
         self.batch = batch
 
-        if isinstance(alpha, six.string_types) and alpha == 'auto':
+        if isinstance(alpha, str) and alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
 
         super(LdaMulticore, self).__init__(

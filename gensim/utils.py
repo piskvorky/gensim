@@ -535,7 +535,7 @@ class SaveLoad:
         in separate files. The automatic check is not performed in this case.
 
         """
-        logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
+        logger.info("saving %s under %s, separately %s", self, fname, separately)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
@@ -1679,9 +1679,9 @@ def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
         import warnings
         warnings.warn("The light flag is no longer supported by pattern.")
 
-    # tokenization in `pattern` is weird; it gets thrown off by non-letters,
-    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
-    # FIXME this throws away all fancy parsing cues, including sentence structure,
+    # Tokenization in `pattern` is weird; it gets thrown off by non-letters,
+    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little.
+    # XXX: this throws away all fancy parsing cues, including sentence structure,
     # abbreviations etc.
     content = ' '.join(tokenize(content, lower=True, errors='ignore'))
 

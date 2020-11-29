@@ -26,7 +26,7 @@ Example usage
     >>> from gensim.models import Word2Vec
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, iter=10, seed=2)
+    >>> model = Word2Vec(sentences, min_count=1, epochs=10, seed=2)
     >>>
     >>> indexer = NmslibIndexer(model)
     >>> model.wv.most_similar("cat", topn=2, indexer=indexer)
@@ -42,7 +42,7 @@ Load and save example
     >>> from tempfile import mkstemp
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, seed=2, iter=10)
+    >>> model = Word2Vec(sentences, min_count=1, seed=2, epochs=10)
     >>>
     >>> indexer = NmslibIndexer(model)
     >>> _, temp_fn = mkstemp()

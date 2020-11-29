@@ -67,7 +67,7 @@ For example, using the Word2Vec algorithm to train the vectors
     >>> from gensim.test.utils import lee_corpus_list
     >>> from gensim.models import Word2Vec
     >>>
-    >>> model = Word2Vec(lee_corpus_list, size=24, epochs=100)
+    >>> model = Word2Vec(lee_corpus_list, vector_size=24, epochs=100)
     >>> word_vectors = model.wv
 
 Persist the word vectors to disk with
@@ -191,7 +191,7 @@ KEY_TYPES = (str, int, np.integer)
 
 
 class KeyedVectors(utils.SaveLoad):
-    def __init__(self, vector_size, count=0, dtype=REAL, mapfile_path=None):
+    def __init__(self, vector_size, count=0, dtype=np.float32, mapfile_path=None):
         """Mapping between keys (such as words)  and vectors for :class:`~gensim.models.Word2Vec`
         and related models.
 
@@ -204,6 +204,18 @@ class KeyedVectors(utils.SaveLoad):
         types, as the type and storage array for such attributes is established by the 1st time such
         `attr` is set.
 
+        Parameters
+        ----------
+        vector_size : int
+            Intended number of dimensions for all contained vectors.
+        count : int, optional
+            If provided, vectors wil be pre-allocated for at least this many vectors. (Otherwise
+            they can be added later.)
+        dtype : type, optional
+            Vector dimensions will default to `np.float32` (AKA `REAL` in some Gensim code) unless
+            another type is provided here.
+        mapfile_path : string, optional
+            FIXME: UNDER CONSTRUCTION / WILL CHANGE PRE-4.0.0 PER #2955 / #2975.
         """
         self.vector_size = vector_size
         # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
@@ -337,34 +349,16 @@ class KeyedVectors(utils.SaveLoad):
         index = self.get_index(key)
         return self.expandos[attr][index]
 
-    def resize_vectors(self):
-        """Make underlying vectors match index_to_key size."""
-        target_count = len(self.index_to_key)
-        prev_count = len(self.vectors)
-        if prev_count == target_count:
-            return ()
-        prev_vectors = self.vectors
-        if hasattr(self, 'mapfile_path') and self.mapfile_path:
-            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
-        else:
-            self.vectors = np.zeros((target_count, self.vector_size), dtype=REAL)
-        self.vectors[0: min(prev_count, target_count), ] = prev_vectors[0: min(prev_count, target_count), ]
+    def resize_vectors(self, seed=0):
+        """Make underlying vectors match index_to_key size; random-initialize any new rows."""
+
+        target_shape = (len(self.index_to_key), self.vector_size)
+        self.vectors = prep_vectors(target_shape, prior_vectors=self.vectors, seed=seed)
+        # FIXME BEFORE 4.0.0 PER #2955 / #2975 : support memmap & cleanup
+#        if hasattr(self, 'mapfile_path') and self.mapfile_path:
+#            self.vectors = np.memmap(self.mapfile_path, shape=(target_count, self.vector_size), mode='w+', dtype=REAL)
+
         self.allocate_vecattrs()
-        self.norms = None
-        return range(prev_count, target_count)
-
-    def randomly_initialize_vectors(self, indexes=None, seed=0):
-        """Initialize vectors with low-magnitude random vectors, as is typical for pre-trained
-        Word2Vec and related models.
-
-        """
-        if indexes is None:
-            indexes = range(0, len(self.vectors))
-        for i in indexes:
-            self.vectors[i] = pseudorandom_weak_vector(
-                self.vectors.shape[1],
-                seed_string=str(self.index_to_key[i]) + str(seed),
-            )
         self.norms = None
 
     def __len__(self):
@@ -593,7 +587,7 @@ class KeyedVectors(utils.SaveLoad):
         raise AttributeError(
             "The `.vectors_norm` attribute is computed dynamically since Gensim 4.0.0. "
             "Use `.get_normed_vectors()` instead.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @vectors_norm.setter
@@ -631,7 +625,7 @@ class KeyedVectors(utils.SaveLoad):
     def index2entity(self):
         raise AttributeError(
             "The index2entity attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @index2entity.setter
@@ -642,7 +636,7 @@ class KeyedVectors(utils.SaveLoad):
     def index2word(self):
         raise AttributeError(
             "The index2word attribute has been replaced by index_to_key since Gensim 4.0.0.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @index2word.setter
@@ -655,7 +649,7 @@ class KeyedVectors(utils.SaveLoad):
             "The vocab attribute was removed from KeyedVector in Gensim 4.0.0.\n"
             "Use KeyedVector's .key_to_index dict, .index_to_key list, and methods "
             ".get_vecattr(key, attr) and .set_vecattr(key, attr, new_val) instead.\n"
-            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+            "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
         )
 
     @vocab.setter
@@ -980,7 +974,7 @@ class KeyedVectors(utils.SaveLoad):
             one-dimensional numpy array with the size of the vocabulary.
 
         """
-        # FIXME: Update to better match & share code with most_similar()
+        # TODO: Update to better match & share code with most_similar()
         if isinstance(topn, Integral) and topn < 1:
             return []
 
@@ -1211,9 +1205,6 @@ class KeyedVectors(utils.SaveLoad):
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """Compute performance of the model on an analogy test set.
 
-        This is modern variant of :meth:`~gensim.models.keyedvectors.KeyedVectors.accuracy`, see
-        `discussion on GitHub #1935 <https://github.com/RaRe-Technologies/gensim/pull/1935>`_.
-
         The accuracy is reported (printed to log and returned as a score) for each section separately,
         plus there's one aggregate summary at the end.
 
@@ -1342,8 +1333,9 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Spearman rank-order correlation coefficient against %s: %.4f', pairs, spearman[0])
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
-    def evaluate_word_pairs(self, pairs, delimiter='\t', restrict_vocab=300000,
-                            case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_pairs(
+            self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
+        ):
         """Compute correlation of the model with human similarity judgments.
 
         Notes
@@ -1443,7 +1435,7 @@ class KeyedVectors(utils.SaveLoad):
 
     @deprecated(
         "Use fill_norms() instead. "
-        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
     )
     def init_sims(self, replace=False):
         """Precompute data helpful for bulk similarity calculations.
@@ -1508,17 +1500,19 @@ class KeyedVectors(utils.SaveLoad):
 
         return rcs
 
-    def save_word2vec_format(self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
-                             prefix='', append=False, sort_attr='count'):
+    def save_word2vec_format(
+            self, fname, fvocab=None, binary=False, total_vec=None, write_header=True,
+            prefix='', append=False, sort_attr='count',
+        ):
         """Store the input-hidden weight matrix in the same format used by the original
         C word2vec-tool, for compatibility.
 
         Parameters
         ----------
         fname : str
-            The file path used to save the vectors in.
+            File path to save the vectors to.
         fvocab : str, optional
-            File path used to save the vocabulary.
+            File path to save additional vocabulary information to. `None` to not store the vocabulary.
         binary : bool, optional
             If True, the data wil be saved in binary word2vec format, else it will be saved in plain text.
         total_vec : int, optional
@@ -1526,49 +1520,69 @@ class KeyedVectors(utils.SaveLoad):
             (in case word vectors are appended with document vectors afterwards).
         write_header : bool, optional
             If False, don't write the 1st line declaring the count of vectors and dimensions.
-        TODO: doc prefix, append, sort_attr
+            This is the format used by e.g. gloVe vectors.
+        prefix : str, optional
+            String to prepend in front of each stored word. Default = no prefix.
+        append : bool, optional
+            If set, open `fname` in `ab` mode instead of the default `wb` mode.
+        sort_attr : str, optional
+            Sort the output vectors in descending order of this attribute. Default: most frequent keys first.
+
         """
         if total_vec is None:
             total_vec = len(self.index_to_key)
         mode = 'wb' if not append else 'ab'
-        if 'count' in self.expandos:
-            # if frequency-info available, store in most-to-least-frequent order
+
+        if sort_attr in self.expandos:
             store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
         else:
+            # This can happen even for the default `count`: the "native C word2vec" format does not store counts,
+            # so models loaded via load_word2vec_format() do not have the "count" attribute set. They have
+            # no attributes at all, and fall under this code path.
+            if fvocab is not None:
+                raise ValueError(f"Cannot store vocabulary with '{sort_attr}' because that attribute does not exist")
+            logger.warning(
+                "attribute %s not present in %s; will store in internal index_to_key order",
+                sort_attr, self,
+            )
             store_order_vocab_keys = self.index_to_key
 
         if fvocab is not None:
             logger.info("storing vocabulary in %s", fvocab)
             with utils.open(fvocab, mode) as vout:
                 for word in store_order_vocab_keys:
-                    vout.write(utils.to_utf8("%s%s %s\n" % (prefix, word, self.get_vecattr(word, sort_attr))))
+                    vout.write(f"{prefix}{word} {self.get_vecattr(word, sort_attr)}\n".encode('utf8'))
 
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
         assert (len(self.index_to_key), self.vector_size) == self.vectors.shape
 
-        # after (possibly-empty) initial range of int-only keys,
-        # store in sorted order: most frequent keys at the top
+        # After (possibly-empty) initial range of int-only keys in Doc2Vec,
+        # store in sorted order: most frequent keys at the top.
+        # XXX: get rid of this: not used much, too complex and brittle.
+        # See https://github.com/RaRe-Technologies/gensim/pull/2981#discussion_r512969788
         index_id_count = 0
         for i, val in enumerate(self.index_to_key):
-            if not (i == val):
+            if i != val:
                 break
             index_id_count += 1
         keys_to_write = itertools.chain(range(0, index_id_count), store_order_vocab_keys)
 
+        # Store the actual vectors to the output file, in the order defined by sort_attr.
         with utils.open(fname, mode) as fout:
             if write_header:
-                fout.write(utils.to_utf8("%s %s\n" % (total_vec, self.vector_size)))
+                fout.write(f"{total_vec} {self.vector_size}\n".encode('utf8'))
             for key in keys_to_write:
-                row = self[key]
+                key_vector = self[key]
                 if binary:
-                    row = row.astype(REAL)
-                    fout.write(utils.to_utf8(prefix + str(key)) + b" " + row.tobytes())
+                    fout.write(f"{prefix}{key} ".encode('utf8') + key_vector.astype(REAL).tobytes())
                 else:
-                    fout.write(utils.to_utf8("%s%s %s\n" % (prefix, str(key), ' '.join(repr(val) for val in row))))
+                    fout.write(f"{prefix}{key} {' '.join(repr(val) for val in key_vector)}\n".encode('utf8'))
 
     @classmethod
-    def load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                             limit=None, datatype=REAL, no_header=False):
+    def load_word2vec_format(
+            cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+            limit=None, datatype=REAL, no_header=False,
+        ):
         """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
         Warnings
@@ -1613,7 +1627,8 @@ class KeyedVectors(utils.SaveLoad):
         """
         return _load_word2vec_format(
             cls, fname, fvocab=fvocab, binary=binary, encoding=encoding, unicode_errors=unicode_errors,
-            limit=limit, datatype=datatype, no_header=no_header)
+            limit=limit, datatype=datatype, no_header=no_header,
+        )
 
     def intersect_word2vec_format(self, fname, lockf=0.0, binary=False, encoding='utf8', unicode_errors='strict'):
         """Merge in an input-hidden weight matrix loaded from the original C word2vec-tool format,
@@ -1705,7 +1720,7 @@ Doc2VecKeyedVectors = KeyedVectors
 EuclideanKeyedVectors = KeyedVectors
 
 
-class CompatVocab(object):
+class CompatVocab:
     def __init__(self, **kwargs):
         """A single vocabulary item, used internally for collecting per-word frequency/sampling info,
         and for constructing binary trees (incl. both word leaves and inner nodes).
@@ -1817,8 +1832,10 @@ def _word2vec_detect_sizes_text(fin, limit, datatype, unicode_errors, encoding):
     return vocab_size, vector_size
 
 
-def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
-                          limit=sys.maxsize, datatype=REAL, no_header=False, binary_chunk_size=100 * 1024):
+def _load_word2vec_format(
+        cls, fname, fvocab=None, binary=False, encoding='utf8', unicode_errors='strict',
+        limit=sys.maxsize, datatype=REAL, no_header=False, binary_chunk_size=100 * 1024,
+    ):
     """Load the input-hidden weight matrix from the original C word2vec-tool format.
 
     Note that the information stored in the file is incomplete (the binary tree is missing),
@@ -1856,7 +1873,6 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
         Returns the loaded model as an instance of :class:`cls`.
 
     """
-
     counts = None
     if fvocab is not None:
         logger.info("loading word counts from %s", fvocab)
@@ -1878,15 +1894,14 @@ def _load_word2vec_format(cls, fname, fvocab=None, binary=False, encoding='utf8'
             fin = utils.open(fname, 'rb')
         else:
             header = utils.to_unicode(fin.readline(), encoding=encoding)
-            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
+            vocab_size, vector_size = [int(x) for x in header.split()]  # throws for invalid file format
         if limit:
             vocab_size = min(vocab_size, limit)
         kv = cls(vector_size, vocab_size, dtype=datatype)
 
         if binary:
             _word2vec_read_binary(
-                fin, kv, counts,
-                vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+                fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
             )
         else:
             _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
@@ -1918,3 +1933,23 @@ def pseudorandom_weak_vector(size, seed_string=None, hashfxn=hash):
     else:
         once = utils.default_prng
     return (once.random(size).astype(REAL) - 0.5) / size
+
+
+def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
+    """Return a numpy array of the given shape. Reuse prior_vectors object or values
+    to extent possible. Initialize new values randomly if requested.
+
+    FIXME: NAME/DOCS CHANGES PRE-4.0.0 FOR #2955/#2975 MMAP & OTHER INITIALIZATION CLEANUP WORK.
+    """
+    if prior_vectors is None:
+        prior_vectors = np.zeros((0, 0))
+    if prior_vectors.shape == target_shape:
+        return prior_vectors
+    target_count, vector_size = target_shape
+    rng = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
+    new_vectors = rng.random(target_shape, dtype=dtype)  # [0.0, 1.0)
+    new_vectors *= 2.0  # [0.0, 2.0)
+    new_vectors -= 1.0  # [-1.0, 1.0)
+    new_vectors /= vector_size
+    new_vectors[0:prior_vectors.shape[0], 0:prior_vectors.shape[1]] = prior_vectors
+    return new_vectors

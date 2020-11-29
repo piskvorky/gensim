@@ -267,7 +267,7 @@ visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
 # packages included for build-testing everywhere
 core_testenv = [
     'pytest',
-    'pytest-rerunfailures',
+#    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
     'nmslib',
@@ -332,7 +332,6 @@ CYTHON_STR = 'Cython==0.29.14'
 install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
-    'six >= 1.5.0',
     'smart_open >= 1.8.1',
     "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
@@ -345,7 +344,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.0.0.dev0',
+    version='4.0.0beta',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

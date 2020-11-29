@@ -1,16 +1,19 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_compare_lda.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_howtos_run_compare_lda.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_compare_lda.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_howtos_run_compare_lda.py:
 
 
 How to Compare LDA Models
 =========================
 
-Demonstrates how you can compare a topic model with itself or other models.
+Demonstrates how you can visualize and compare trained topic models.
+
 
 
 .. code-block:: default
@@ -26,13 +29,13 @@ Demonstrates how you can compare a topic model with itself or other models.
 
 
 
+
 First, clean up the 20 Newsgroups dataset. We will use it to fit LDA.
 ---------------------------------------------------------------------
 
 
 
 .. code-block:: default
-
 
 
     from string import punctuation
@@ -50,7 +53,7 @@ First, clean up the 20 Newsgroups dataset. We will use it to fit LDA.
     translate_tab = {ord(p): u" " for p in punctuation}
 
     def text2tokens(raw_text):
-        """Convert a raw text to a list of stemmed tokens."""
+        """Split the raw_text string into a list of stemmed tokens."""
         clean_text = raw_text.lower().translate(translate_tab)
         tokens = [token.strip() for token in tokenizer.tokenize(clean_text)]
         tokens = [token for token in tokens if token not in eng_stopwords]
@@ -72,6 +75,7 @@ First, clean up the 20 Newsgroups dataset. We will use it to fit LDA.
 
 
 
+
 Second, fit two LDA models.
 ---------------------------
 
@@ -85,13 +89,14 @@ Second, fit two LDA models.
 
     lda_fst = LdaMulticore(
         corpus=d2b_dataset, num_topics=num_topics, id2word=dictionary,
-        workers=4, eval_every=None, passes=10, batch=True
+        workers=4, eval_every=None, passes=10, batch=True,
     )
 
     lda_snd = LdaMulticore(
         corpus=d2b_dataset, num_topics=num_topics, id2word=dictionary,
-        workers=4, eval_every=None, passes=20, batch=True
+        workers=4, eval_every=None, passes=20, batch=True,
     )
+
 
 
 
@@ -109,7 +114,6 @@ If you're viewing the static version of the page, you'll get a similar matplotli
 
 
 .. code-block:: default
-
 
 
     def plot_difference_plotly(mdiff, title="", annotation=None):
@@ -157,6 +161,7 @@ If you're viewing the static version of the page, you'll get a similar matplotli
     else:
         py.init_notebook_mode()
         plot_difference = plot_difference_plotly
+
 
 
 
@@ -236,6 +241,7 @@ In each **annotation[i][j]** cell you'll find **[tokens from intersection, token
 
 
 
+
 Case 1: How topics within ONE model correlate with each other.
 --------------------------------------------------------------
 
@@ -256,7 +262,8 @@ Short description:
 
 * :raw-html-m2r:`<span style="color:blue">almost blue cell</span>` - strongly correlated topics.
 
-In an ideal world, we would like to see different topics decorrelated between themselves. In this case, our matrix would look like this:
+In an ideal world, we would like to see different topics decorrelated between themselves.
+In this case, our matrix would look like this:
 
 
 
@@ -274,7 +281,9 @@ In an ideal world, we would like to see different topics decorrelated between th
 
 
 .. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_001.png
+    :alt: Topic difference (one model) in ideal world
     :class: sphx-glr-single-img
+
 
 
 
@@ -284,11 +293,7 @@ Unfortunately, in real life, not everything is so good, and the matrix looks dif
 
 Short description (interactive annotations only):
 
-
-
 * ``+++ make, world, well`` - words from the intersection of topics = present in both topics;
-
-
 
 * ``--- money, day, still`` - words from the symmetric difference of topics = present in one topic but not the other.
 
@@ -305,22 +310,24 @@ Short description (interactive annotations only):
 
 
 .. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_002.png
+    :alt: Topic difference (one model) [jaccard distance]
     :class: sphx-glr-single-img
 
 
 
 
-If you compare a model with itself, you want to see as many red elements as possible (except diagonal). With this picture, you can look at the not very red elements and understand which topics in the model are very similar and why (you can read annotation if you move your pointer to cell).
 
+If you compare a model with itself, you want to see as many red elements as
+possible (except on the diagonal). With this picture, you can look at the
+"not very red elements" and understand which topics in the model are very
+similar and why (you can read annotation if you move your pointer to cell).
 
-
-
-Jaccard is stable and robust distance function, but this function not enough sensitive for some purposes. Let's try to use Hellinger distance now.
+Jaccard is a stable and robust distance function, but sometimes not sensitive
+enough. Let's try to use the Hellinger distance instead.
 
 
 
 .. code-block:: default
-
 
 
     mdiff, annotation = lda_fst.diff(lda_fst, distance='hellinger', num_words=50)
@@ -330,16 +337,17 @@ Jaccard is stable and robust distance function, but this function not enough sen
 
 
 .. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_003.png
+    :alt: Topic difference (one model)[hellinger distance]
     :class: sphx-glr-single-img
+
 
 
 
 
 You see that everything has become worse, but remember that everything depends on the task.
 
-
-
-You need to choose the function with which your personal point of view about topics similarity and your task (from my experience, Jaccard is fine).
+Choose a distance function that matches your upstream task better: what kind of "similarity" is
+relevant to you. From my (Ivan's) experience, Jaccard is fine.
 
 
 Case 2: How topics from DIFFERENT models correlate with each other.
@@ -363,20 +371,23 @@ You can do this by constructing a matrix with the difference.
 
 
 .. image:: /auto_examples/howtos/images/sphx_glr_run_compare_lda_004.png
+    :alt: Topic difference (two models)[jaccard distance]
     :class: sphx-glr-single-img
 
 
 
 
-Looking at this matrix, you can find similar and different topics (and relevant tokens which describe the intersection and difference).
+
+Looking at this matrix, you can find similar and different topics between the two models.
+The plot also includes relevant tokens describing the topics' intersection and difference.
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 4 minutes  15.023 seconds)
+   **Total running time of the script:** ( 3 minutes  55.324 seconds)
 
-**Estimated memory usage:**  389 MB
+**Estimated memory usage:**  303 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_compare_lda.py:
@@ -389,13 +400,13 @@ Looking at this matrix, you can find similar and different topics (and relevant 
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_compare_lda.py <run_compare_lda.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_compare_lda.ipynb <run_compare_lda.ipynb>`
 

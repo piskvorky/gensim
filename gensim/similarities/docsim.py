@@ -77,7 +77,6 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from six.moves import map, range, zip
 
 
 logger = logging.getLogger(__name__)
@@ -891,7 +890,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
         >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
         >>>
-        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv)
         >>> dictionary = Dictionary(common_texts)
         >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
@@ -1007,7 +1006,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
-        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
         >>> index = WmdSimilarity(common_texts, model)
         >>> # Make query.

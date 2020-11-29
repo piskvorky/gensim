@@ -15,12 +15,13 @@ Examples
     >>> from gensim.test.utils import common_texts
     >>> from gensim.sklearn_api import D2VTransformer
     >>>
-    >>> model = D2VTransformer(min_count=1, size=5)
+    >>> model = D2VTransformer(min_count=1, vector_size=5)
     >>> docvecs = model.fit_transform(common_texts)  # represent `common_texts` as vectors
 
 """
+
 import numpy as np
-from six import string_types
+
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.exceptions import NotFittedError
 
@@ -195,7 +196,7 @@ class D2VTransformer(TransformerMixin, BaseEstimator):
             )
 
         # The input as array of array
-        if isinstance(docs[0], string_types):
+        if isinstance(docs[0], str):
             docs = [docs]
         vectors = [self.gensim_model.infer_vector(doc) for doc in docs]
         return np.reshape(np.array(vectors), (len(docs), self.gensim_model.vector_size))

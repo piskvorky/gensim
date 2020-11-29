@@ -15,7 +15,6 @@ from collections import Counter
 
 import numpy as np
 import scipy.sparse as sps
-from six import iteritems, string_types
 
 from gensim import utils
 from gensim.models.word2vec import Word2Vec
@@ -68,7 +67,7 @@ def _ids_to_words(ids, dictionary):
     return top_words
 
 
-class BaseAnalyzer(object):
+class BaseAnalyzer:
     """Base class for corpus and text analyzers.
 
     Attributes
@@ -127,7 +126,7 @@ class BaseAnalyzer(object):
         raise NotImplementedError("Base classes should implement analyze_text.")
 
     def __getitem__(self, word_or_words):
-        if isinstance(word_or_words, string_types) or not hasattr(word_or_words, '__iter__'):
+        if isinstance(word_or_words, str) or not hasattr(word_or_words, '__iter__'):
             return self.get_occurrences(word_or_words)
         else:
             return self.get_co_occurrences(*word_or_words)
@@ -250,7 +249,7 @@ class InvertedIndexBased(BaseAnalyzer):
         return len(s1.intersection(s2))
 
     def index_to_dict(self):
-        contiguous2id = {n: word_id for word_id, n in iteritems(self.id2contiguous)}
+        contiguous2id = {n: word_id for word_id, n in self.id2contiguous.items()}
         return {contiguous2id[n]: doc_id_set for n, doc_id_set in enumerate(self._inverted_index)}
 
 
@@ -359,7 +358,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self._counter.clear()
 
         super(WordOccurrenceAccumulator, self).accumulate(texts, window_size)
-        for combo, count in iteritems(self._counter):
+        for combo, count in self._counter.items():
             self._co_occurrences[combo] += count
 
         return self

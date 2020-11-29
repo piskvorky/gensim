@@ -556,7 +556,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def testFastText(self):
-        class LeeReader(object):
+        class LeeReader:
             def __init__(self, fn):
                 self.fn = fn
 
@@ -715,7 +715,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertLoadedIndexEqual(index, model)
 
     def test_fasttext(self):
-        class LeeReader(object):
+        class LeeReader:
             def __init__(self, fn):
                 self.fn = fn
 

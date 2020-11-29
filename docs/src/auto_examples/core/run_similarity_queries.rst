@@ -1,10 +1,12 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_core_run_similarity_queries.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_core_run_similarity_queries.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_core_run_similarity_queries.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_core_run_similarity_queries.py:
 
 
 Similarity Queries
@@ -18,6 +20,7 @@ Demonstrates querying a corpus for similar documents.
 
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 
 
@@ -78,6 +81,7 @@ if you completed it, feel free to skip to the next section.
 
 
 
+
 Similarity interface
 --------------------
 
@@ -104,6 +108,7 @@ LSI space:
 
     from gensim import models
     lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2)
+
 
 
 
@@ -142,7 +147,8 @@ no random-walk static ranks, just a semantic extension over the boolean keyword 
 
  .. code-block:: none
 
-    [(0, 0.46182100453271613), (1, 0.07002766527900031)]
+    [(0, 0.4618210045327157), (1, -0.07002766527900028)]
+
 
 
 
@@ -173,6 +179,7 @@ might also be indexing a different corpus altogether.
 
 
 
+
 .. warning::
   The class :class:`similarities.MatrixSimilarity` is only appropriate when the whole
   set of vectors fits into memory. For example, a corpus of one million documents
@@ -191,6 +198,7 @@ Index persistency is handled via the standard :func:`save` and :func:`load` func
 
     index.save('/tmp/deerwester.index')
     index = similarities.MatrixSimilarity.load('/tmp/deerwester.index')
+
 
 
 
@@ -230,6 +238,7 @@ To obtain similarities of our query document against the nine indexed documents:
 
 
 
+
 Cosine measure returns similarities in the range `<-1, 1>` (the greater, the more similar),
 so that the first document has a score of 0.99809301 etc.
 
@@ -263,6 +272,7 @@ order, and obtain the final answer to the query `"Human computer interaction"`:
     -0.09879464 Graph minors IV Widths of trees and well quasi ordering
     -0.10639259 The intersection graph of paths in trees
     -0.12416792 The generation of random binary unordered trees
+
 
 
 
@@ -304,32 +314,24 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
     import matplotlib.image as mpimg
     img = mpimg.imread('run_similarity_queries.png')
     imgplot = plt.imshow(img)
-    plt.axis('off')
-    plt.show()
+    _ = plt.axis('off')
 
 
 
 .. image:: /auto_examples/core/images/sphx_glr_run_similarity_queries_001.png
+    :alt: run similarity queries
     :class: sphx-glr-single-img
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    /Volumes/work/workspace/vew/gensim3.6/lib/python3.6/site-packages/matplotlib/figure.py:445: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      % get_backend())
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.211 seconds)
+   **Total running time of the script:** ( 0 minutes  0.834 seconds)
 
-**Estimated memory usage:**  39 MB
+**Estimated memory usage:**  7 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_similarity_queries.py:
@@ -342,13 +344,13 @@ on large datasets easily, and to facilitate prototyping of new algorithms for re
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_similarity_queries.py <run_similarity_queries.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_similarity_queries.ipynb <run_similarity_queries.ipynb>`
 
