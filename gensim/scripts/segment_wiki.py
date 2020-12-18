@@ -268,7 +268,7 @@ class _WikiSectionsCorpus(WikiCorpus):
     """
 
     def __init__(self, fileobj, min_article_character=200, processes=None,
-                 lemmatize=utils.has_pattern(), filter_namespaces=('0',), include_interlinks=False):
+                 filter_namespaces=('0',), include_interlinks=False):
         """
         Parameters
         ----------
@@ -278,9 +278,6 @@ class _WikiSectionsCorpus(WikiCorpus):
             Minimal number of character for article (except titles and leading gaps).
         processes : int, optional
             Number of processes, max(1, multiprocessing.cpu_count() - 1) if None.
-        lemmatize : bool, optional
-            If `pattern` package is installed, use fancier shallow parsing to get token lemmas.
-            Otherwise, use simple regexp tokenization.
         filter_namespaces : tuple of int, optional
             Enumeration of namespaces that will be ignored.
         include_interlinks: bool
@@ -293,7 +290,6 @@ class _WikiSectionsCorpus(WikiCorpus):
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
-        self.lemmatize = lemmatize
         self.min_article_character = min_article_character
         self.include_interlinks = include_interlinks
 
