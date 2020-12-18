@@ -328,6 +328,7 @@ install_requires = [
     'scipy >= 0.18.1',
     'smart_open >= 1.8.1',
     "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
+    'six',
 ]
 
 setup_requires = [NUMPY_STR]
