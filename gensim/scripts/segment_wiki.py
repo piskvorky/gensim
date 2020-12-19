@@ -268,7 +268,7 @@ class _WikiSectionsCorpus(WikiCorpus):
     """
 
     def __init__(self, fileobj, min_article_character=200, processes=None,
-                 filter_namespaces=('0',), include_interlinks=False):
+                 lemmatize=None, filter_namespaces=('0',), include_interlinks=False):
         """
         Parameters
         ----------
@@ -284,6 +284,12 @@ class _WikiSectionsCorpus(WikiCorpus):
             Whether or not interlinks should be included in the output
 
         """
+        if lemmatize is not None:
+            raise NotImplementedError(
+                'The lemmatize parameter is no longer supported. '
+                'If you need to lemmatize, use e.g. <https://github.com/clips/pattern>.'
+            )
+
         self.fileobj = fileobj
         self.filter_namespaces = filter_namespaces
         self.metadata = False
