@@ -464,7 +464,7 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
 
     Parameters
     ----------
-    args : (str, bool, str, int)
+    args : (str, str, int)
         Article text, article title, page identificator.
     tokenizer_func : function
         Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
@@ -567,7 +567,7 @@ class WikiCorpus(TextCorpus):
         >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
-    def __init__(self, fname, processes=None, dictionary=None,
+    def __init__(self, fname, processes=None, lemmatize=None, dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
                  token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
         """Initialize the corpus.
@@ -608,6 +608,13 @@ class WikiCorpus(TextCorpus):
         Unless a dictionary is provided, this scans the corpus once, to determine its vocabulary.
 
         """
+        if lemmatize is not None:
+            raise NotImplementedError(
+                'The lemmatize parameter is no longer supported. '
+                'If you need to lemmatize, use e.g. <https://github.com/clips/pattern>. '
+                'Perform lemmatization as part of your tokenization function and '
+                'pass it as the tokenizer_func parameter to this initializer.'
+            )
         self.fname = fname
         self.filter_namespaces = filter_namespaces
         self.filter_articles = filter_articles
