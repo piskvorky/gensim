@@ -287,7 +287,7 @@ class _WikiSectionsCorpus(WikiCorpus):
         if lemmatize is not None:
             raise NotImplementedError(
                 'The lemmatize parameter is no longer supported since Gensim 4.0.0. '
-                'If you need to lemmatize, use e.g. <https://github.com/clips/pattern>.'
+                'If you need to lemmatize, use e.g. https://github.com/clips/pattern to preprocess your corpus before submitting it to Gensim.'
             )
 
         self.fileobj = fileobj
