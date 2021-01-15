@@ -78,7 +78,7 @@ jobs:
         echo ::group::Install run
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
-    - name: Upload wheels
+    - name: Upload wheels to s3://gensim-wheels
       if: always()
       run: |
             pip install wheelhouse-uploader
