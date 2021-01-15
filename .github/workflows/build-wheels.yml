@@ -23,13 +23,13 @@ jobs:
         include:
         - os: ubuntu-latest
           python-version: 3.7
-          skip-nw-test: 1
+          skip-network-tests: 1
         - os: ubuntu-latest
           python-version: 3.8
-          skip-nw-test: 1
+          skip-network-tests: 1
         - os: macos-latest
-          os-name: osx
-          skip-nw-test: 1
+          travis-os-name: osx  # For multibuild
+          skip-network-tests: 1
     env:
       PKG_NAME: gensim
       REPO_DIR: gensim
@@ -39,15 +39,15 @@ jobs:
       MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
       TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest mock cython nmslib pyemd testfixtures scikit-learn pyemd
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
-      TRAVIS_OS_NAME: ${{ matrix.os-name }}
-      SKIP_NETWORK_TESTS: ${{ matrix.skip-nw-test }}
+      TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
+      SKIP_NETWORK_TESTS: ${{ matrix.skip-network-tests }}
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
         fetch-depth: 0
-    - name: Print some Environment variable
+    - name: Print environment variables
       run: |
         echo "PLAT: ${PLAT}"
         echo "DOCKER_TEST_IMAGE: ${DOCKER_TEST_IMAGE}"
