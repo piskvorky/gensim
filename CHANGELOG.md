@@ -104,6 +104,7 @@ Production stability is important to Gensim, so we're improving the process of *
 * [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926): Rename `num_words` to `topn` in dtm_coherence, by [@MeganStodel](https://github.com/MeganStodel)
 * [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937): Remove Keras dependency, by [@piskvorky](https://github.com/piskvorky)
 * Removed all code, methods, attributes and functions marked as deprecated in [Gensim 3.8.3](https://github.com/RaRe-Technologies/gensim/releases/tag/3.8.3).
+* Removed pattern dependency (PR [#3012](https://github.com/RaRe-Technologies/gensim/pull/3012), [@mpenkov](https://github.com/mpenkov)).  If you need to lemmatize, do it prior to passing the corpus to gensim.
 
 ---
 
