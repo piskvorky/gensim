@@ -698,7 +698,7 @@ class TestWikiCorpus(TestTextCorpus):
         """
         define a custom tokenizer function and use it
         """
-        wc = self.corpus_class(self.enwiki, processes=1, lemmatize=False, tokenizer_func=custom_tokenizer,
+        wc = self.corpus_class(self.enwiki, processes=1, tokenizer_func=custom_tokenizer,
                         token_max_len=16, token_min_len=1, lower=False)
         row = wc.get_texts()
         list_tokens = next(row)
@@ -711,7 +711,7 @@ class TestWikiCorpus(TestTextCorpus):
         """
         Set the parameter lower to True and check that upper case 'Anarchism' token doesnt exist
         """
-        corpus = self.corpus_class(self.enwiki, processes=1, lower=True, lemmatize=False)
+        corpus = self.corpus_class(self.enwiki, processes=1, lower=True)
         row = corpus.get_texts()
         list_tokens = next(row)
         self.assertTrue(u'Anarchism' not in list_tokens)
@@ -721,7 +721,7 @@ class TestWikiCorpus(TestTextCorpus):
         """
         Set the parameter lower to False and check that upper case Anarchism' token exists
         """
-        corpus = self.corpus_class(self.enwiki, processes=1, lower=False, lemmatize=False)
+        corpus = self.corpus_class(self.enwiki, processes=1, lower=False)
         row = corpus.get_texts()
         list_tokens = next(row)
         self.assertTrue(u'Anarchism' in list_tokens)
@@ -732,14 +732,14 @@ class TestWikiCorpus(TestTextCorpus):
         Don't set the parameter token_min_len and check that 'a' as a token doesn't exist
         Default token_min_len=2
         """
-        corpus = self.corpus_class(self.enwiki, processes=1, lemmatize=False)
+        corpus = self.corpus_class(self.enwiki, processes=1)
         self.assertTrue(u'a' not in next(corpus.get_texts()))
 
     def test_min_token_len_set(self):
         """
         Set the parameter token_min_len to 1 and check that 'a' as a token exists
         """
-        corpus = self.corpus_class(self.enwiki, processes=1, token_min_len=1, lemmatize=False)
+        corpus = self.corpus_class(self.enwiki, processes=1, token_min_len=1)
         self.assertTrue(u'a' in next(corpus.get_texts()))
 
     def test_max_token_len_not_set(self):
@@ -747,14 +747,14 @@ class TestWikiCorpus(TestTextCorpus):
         Don't set the parameter token_max_len and check that 'collectivisation' as a token doesn't exist
         Default token_max_len=15
         """
-        corpus = self.corpus_class(self.enwiki, processes=1, lemmatize=False)
+        corpus = self.corpus_class(self.enwiki, processes=1)
         self.assertTrue(u'collectivization' not in next(corpus.get_texts()))
 
     def test_max_token_len_set(self):
         """
         Set the parameter token_max_len to 16 and check that 'collectivisation' as a token exists
         """
-        corpus = self.corpus_class(self.enwiki, processes=1, token_max_len=16, lemmatize=False)
+        corpus = self.corpus_class(self.enwiki, processes=1, token_max_len=16)
         self.assertTrue(u'collectivization' in next(corpus.get_texts()))
 
     def test_removed_table_markup(self):

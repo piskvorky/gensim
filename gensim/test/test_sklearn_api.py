@@ -365,6 +365,7 @@ class TestLdaWrapper(unittest.TestCase):
         passed = numpy.allclose(transformed_vec, expected_vec, atol=1e-1)
         self.assertTrue(passed)
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         model = LdaTransformer(num_topics=2, passes=10, minimum_probability=0, random_state=numpy.random.seed(0))
         with open(datapath('mini_newsgroup'), 'rb') as f:
@@ -458,6 +459,7 @@ class TestLsiWrapper(unittest.TestCase):
         passed = numpy.allclose(transformed[0], expected, atol=1)
         self.assertTrue(passed)
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         model = LsiTransformer(num_topics=2)
         with open(datapath('mini_newsgroup'), 'rb') as f:
@@ -540,6 +542,7 @@ class TestLdaSeqWrapper(unittest.TestCase):
         self.assertEqual(transformed_vecs.shape[0], 1)
         self.assertEqual(transformed_vecs.shape[1], self.model.num_topics)
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         with open(datapath('mini_newsgroup'), 'rb') as f:
@@ -615,6 +618,7 @@ class TestRpWrapper(unittest.TestCase):
         self.assertEqual(matrix.shape[0], 1)
         self.assertEqual(matrix.shape[1], self.model.num_topics)
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         numpy.random.seed(0)  # set fixed seed to get similar values everytime
         model = RpTransformer(num_topics=2)
@@ -950,6 +954,7 @@ class TestText2BowTransformer(unittest.TestCase):
         model_params = self.model.get_params()
         self.assertEqual(model_params["prune_at"], 1000000)
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
@@ -1016,6 +1021,7 @@ class TestTfIdfTransformer(unittest.TestCase):
         self.model.fit(self.corpus)
         self.assertEqual(getattr(self.model.gensim_model, 'smartirs'), 'nnn')
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()
@@ -1089,6 +1095,7 @@ class TestHdpTransformer(unittest.TestCase):
         self.model.fit(self.corpus)
         self.assertEqual(getattr(self.model.gensim_model, 'm_var_converge'), 0.05)
 
+    @unittest.skip('see https://github.com/RaRe-Technologies/gensim/issues/3016')
     def testPipeline(self):
         with open(datapath('mini_newsgroup'), 'rb') as f:
             compressed_content = f.read()

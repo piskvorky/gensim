@@ -304,12 +304,6 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinxcontrib-napoleon',
     'matplotlib',  # expected by sphinx-gallery
     'plotly',
-    #
-    # Pattern is a PITA to install, it requires mysqlclient, which in turn
-    # requires MySQL dev tools be installed. We don't need it for building
-    # documentation.
-    #
-    # 'Pattern==3.6',  # Need 3.6 or later for Py3 support
     'memory_profiler',
     'annoy',
     'Pyro4',
@@ -327,7 +321,7 @@ NUMPY_STR = 'numpy >= 1.11.3'
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.14'
+CYTHON_STR = 'Cython==0.29.21'
 
 install_requires = [
     NUMPY_STR,
