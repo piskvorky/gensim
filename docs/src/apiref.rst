@@ -61,17 +61,6 @@ Modules:
     similarities/termsim
     similarities/annoy
     similarities/nmslib
-    sklearn_api/atmodel
-    sklearn_api/d2vmodel
-    sklearn_api/hdp
-    sklearn_api/ldamodel
-    sklearn_api/ldaseqmodel
-    sklearn_api/lsimodel
-    sklearn_api/phrases
-    sklearn_api/rpmodel
-    sklearn_api/text2bow
-    sklearn_api/tfidf
-    sklearn_api/w2vmodel
     test/utils
     topic_coherence/aggregation
     topic_coherence/direct_confirmation_measure

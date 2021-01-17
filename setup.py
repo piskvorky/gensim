@@ -275,7 +275,6 @@ core_testenv = [
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
-    'scikit-learn',
 ]
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
@@ -313,7 +312,6 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'memory_profiler',
     'annoy',
     'Pyro4',
-    'scikit-learn',
     'nltk',
     'testfixtures',
     'statsmodels',
@@ -327,7 +325,7 @@ NUMPY_STR = 'numpy >= 1.11.3'
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.14'
+CYTHON_STR = 'Cython==0.29.21'
 
 install_requires = [
     NUMPY_STR,
