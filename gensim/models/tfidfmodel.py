@@ -69,11 +69,6 @@ def resolve_weights(smartirs):
     ValueError
         If `smartirs` is not a string of length 3 or one of the decomposed value
         doesn't fit the list of permissible values.
-
-    See Also
-    --------
-    ~gensim.sklearn_api.tfidf.TfIdfTransformer, TfidfModel : Classes that also use the SMART scheme.
-
     """
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
         match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
