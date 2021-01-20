@@ -715,7 +715,7 @@ class Phrases(_PhrasesTransformation):
 
         """
         result, source_vocab = {}, self.vocab
-        for token in source_vocab:
+        for token in source_vocab.copy():
             unigrams = token.split(self.delimiter)
             if len(unigrams) < 2:
                 continue  # no phrases here
