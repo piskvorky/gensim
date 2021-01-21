@@ -37,7 +37,7 @@ install:
     - build_wheel $REPO_DIR $PLAT
 script:
     - install_run $PLAT
-after_success:
+after_script:
     - ls -laht ${TRAVIS_BUILD_DIR}/wheelhouse/
     - pip install wheelhouse-uploader
     - python -m wheelhouse_uploader upload --local-folder ${TRAVIS_BUILD_DIR}/wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
