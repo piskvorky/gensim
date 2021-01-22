@@ -15,7 +15,6 @@ import cython
 import numpy as np
 
 from gensim.utils import any2utf8
-from six import iteritems
 
 cimport numpy as np
 
