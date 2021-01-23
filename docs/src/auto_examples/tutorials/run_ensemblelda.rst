@@ -82,11 +82,11 @@ so it won't be explained again in detail.
 
  .. code-block:: none
 
-    2021-01-23 12:02:54,189 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2021-01-23 12:03:00,997 : INFO : built Dictionary(238542 unique tokens: ['a', 'abacus', 'ability', 'able', 'abnormal']...) from 1701 documents (total 17005207 corpus positions)
-    2021-01-23 12:03:01,199 : INFO : discarding 218466 tokens: [('a', 1701), ('ability', 934), ('able', 1202), ('about', 1687), ('above', 1327), ('abstention', 13), ('accepted', 945), ('according', 1468), ('account', 1113), ('act', 1312)]...
-    2021-01-23 12:03:01,199 : INFO : keeping 20076 tokens which were in no less than 20 and no more than 850 (=50.0%) documents
-    2021-01-23 12:03:01,288 : INFO : resulting dictionary: Dictionary(20076 unique tokens: ['abacus', 'abnormal', 'abolished', 'abolition', 'absence']...)
+    2021-01-23 15:15:53,986 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2021-01-23 15:16:00,703 : INFO : built Dictionary(238542 unique tokens: ['a', 'abacus', 'ability', 'able', 'abnormal']...) from 1701 documents (total 17005207 corpus positions)
+    2021-01-23 15:16:00,901 : INFO : discarding 218466 tokens: [('a', 1701), ('ability', 934), ('able', 1202), ('about', 1687), ('above', 1327), ('abstention', 13), ('accepted', 945), ('according', 1468), ('account', 1113), ('act', 1312)]...
+    2021-01-23 15:16:00,901 : INFO : keeping 20076 tokens which were in no less than 20 and no more than 850 (=50.0%) documents
+    2021-01-23 15:16:00,984 : INFO : resulting dictionary: Dictionary(20076 unique tokens: ['abacus', 'abnormal', 'abolished', 'abolition', 'absence']...)
 
 
 
@@ -215,18 +215,18 @@ The number of stable topics which are clustered from all those topics is smaller
 
  .. code-block:: none
 
-    2021-01-23 12:03:05,136 : INFO : generating 8 topic models...
-    2021-01-23 12:11:47,694 : INFO : generating a 160 x 160 asymmetric distance matrix...
-    2021-01-23 12:11:49,175 : INFO : fitting the clustering model, using 4 for min_samples
-    2021-01-23 12:11:49,206 : INFO : generating stable topics, using 3 for min_cores
-    2021-01-23 12:11:49,206 : INFO : found 26 clusters
-    2021-01-23 12:11:49,209 : INFO : found 1 stable topics
-    2021-01-23 12:11:49,209 : INFO : generating classic gensim model representation based on results from the ensemble
-    2021-01-23 12:11:49,398 : INFO : using symmetric alpha at 1.0
-    2021-01-23 12:11:49,398 : INFO : using symmetric eta at 1.0
-    2021-01-23 12:11:49,400 : INFO : using serial LDA version on this node
-    2021-01-23 12:11:49,402 : INFO : running online (multi-pass) LDA training, 1 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2021-01-23 12:11:49,402 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2021-01-23 15:16:04,680 : INFO : generating 8 topic models...
+    2021-01-23 15:24:25,880 : INFO : generating a 160 x 160 asymmetric distance matrix...
+    2021-01-23 15:24:27,354 : INFO : fitting the clustering model, using 4 for min_samples
+    2021-01-23 15:24:27,387 : INFO : generating stable topics, using 3 for min_cores
+    2021-01-23 15:24:27,387 : INFO : found 25 clusters
+    2021-01-23 15:24:27,391 : INFO : found 1 stable topics
+    2021-01-23 15:24:27,391 : INFO : generating classic gensim model representation based on results from the ensemble
+    2021-01-23 15:24:27,592 : INFO : using symmetric alpha at 1.0
+    2021-01-23 15:24:27,592 : INFO : using symmetric eta at 1.0
+    2021-01-23 15:24:27,594 : INFO : using serial LDA version on this node
+    2021-01-23 15:24:27,596 : INFO : running online (multi-pass) LDA training, 1 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2021-01-23 15:24:27,596 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
     160
     1
 
@@ -273,18 +273,18 @@ Make sure to chose one that is within the range of values in ``asymmetric_distan
 
  .. code-block:: none
 
-    0.07280884735152338 0.12813543590172502 0.2606207782381612
-    2021-01-23 12:11:49,575 : INFO : fitting the clustering model
-    2021-01-23 12:11:49,589 : INFO : generating stable topics
-    2021-01-23 12:11:49,589 : INFO : found 35 clusters
-    2021-01-23 12:11:49,593 : INFO : found 4 stable topics
-    2021-01-23 12:11:49,593 : INFO : generating classic gensim model representation based on results from the ensemble
-    2021-01-23 12:11:49,594 : INFO : using symmetric alpha at 0.25
-    2021-01-23 12:11:49,594 : INFO : using symmetric eta at 0.25
-    2021-01-23 12:11:49,596 : INFO : using serial LDA version on this node
-    2021-01-23 12:11:49,602 : INFO : running online (multi-pass) LDA training, 4 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2021-01-23 12:11:49,603 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
-    4
+    0.0664596363067147 0.12630570073794478 0.2773686345664633
+    2021-01-23 15:24:27,763 : INFO : fitting the clustering model
+    2021-01-23 15:24:27,777 : INFO : generating stable topics
+    2021-01-23 15:24:27,777 : INFO : found 22 clusters
+    2021-01-23 15:24:27,782 : INFO : found 3 stable topics
+    2021-01-23 15:24:27,782 : INFO : generating classic gensim model representation based on results from the ensemble
+    2021-01-23 15:24:27,784 : INFO : using symmetric alpha at 0.3333333333333333
+    2021-01-23 15:24:27,784 : INFO : using symmetric eta at 0.3333333333333333
+    2021-01-23 15:24:27,785 : INFO : using serial LDA version on this node
+    2021-01-23 15:24:27,790 : INFO : running online (multi-pass) LDA training, 3 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2021-01-23 15:24:27,790 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    3
 
 
 
@@ -342,79 +342,79 @@ Afterwards the number and quality of stable topics might be different depending 
 
  .. code-block:: none
 
-    2021-01-23 12:11:49,879 : INFO : using symmetric alpha at 0.1111111111111111
-    2021-01-23 12:11:49,879 : INFO : using symmetric eta at 0.1111111111111111
-    2021-01-23 12:11:49,881 : INFO : using serial LDA version on this node
-    2021-01-23 12:11:49,895 : INFO : running online LDA training, 9 topics, 4 passes over the supplied corpus of 1701 documents, updating every 14000 documents, evaluating every ~1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2021-01-23 12:11:49,895 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
-    2021-01-23 12:11:49,896 : INFO : training LDA model using 7 processes
-    2021-01-23 12:11:49,969 : INFO : PROGRESS: pass 0, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2021-01-23 12:11:57,803 : INFO : topic #6 (0.111): 0.001*"emperor" + 0.001*"cell" + 0.001*"minister" + 0.001*"energy" + 0.001*"chinese" + 0.001*"female" + 0.001*"animal" + 0.001*"award" + 0.001*"spanish" + 0.001*"season"
-    2021-01-23 12:11:57,803 : INFO : topic #1 (0.111): 0.001*"band" + 0.001*"league" + 0.001*"km" + 0.001*"car" + 0.001*"india" + 0.001*"bc" + 0.001*"actor" + 0.001*"jewish" + 0.001*"album" + 0.001*"minister"
-    2021-01-23 12:11:57,804 : INFO : topic #3 (0.111): 0.001*"actor" + 0.001*"band" + 0.001*"novel" + 0.001*"election" + 0.001*"album" + 0.001*"km" + 0.001*"chinese" + 0.001*"energy" + 0.001*"russian" + 0.001*"male"
-    2021-01-23 12:11:57,804 : INFO : topic #5 (0.111): 0.001*"soviet" + 0.001*"minister" + 0.001*"km" + 0.001*"election" + 0.001*"lord" + 0.001*"software" + 0.001*"plant" + 0.001*"african" + 0.001*"territory" + 0.001*"est"
-    2021-01-23 12:11:57,805 : INFO : topic #8 (0.111): 0.001*"km" + 0.001*"soviet" + 0.001*"africa" + 0.001*"japanese" + 0.001*"chinese" + 0.001*"energy" + 0.001*"minister" + 0.001*"band" + 0.001*"user" + 0.001*"china"
-    2021-01-23 12:11:57,805 : INFO : topic diff=1.009632, rho=1.000000
-    2021-01-23 12:12:18,557 : INFO : -9.256 per-word bound, 611.4 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2021-01-23 12:12:18,557 : INFO : PROGRESS: pass 1, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2021-01-23 12:12:26,238 : INFO : topic #4 (0.111): 0.001*"league" + 0.001*"ball" + 0.001*"minister" + 0.001*"cell" + 0.001*"engine" + 0.001*"bc" + 0.001*"soviet" + 0.001*"software" + 0.001*"election" + 0.001*"album"
-    2021-01-23 12:12:26,239 : INFO : topic #1 (0.111): 0.001*"league" + 0.001*"band" + 0.001*"car" + 0.001*"window" + 0.001*"album" + 0.001*"microsoft" + 0.001*"km" + 0.001*"india" + 0.001*"ball" + 0.001*"season"
-    2021-01-23 12:12:26,240 : INFO : topic #6 (0.111): 0.002*"emperor" + 0.001*"cell" + 0.001*"jewish" + 0.001*"chinese" + 0.001*"animal" + 0.001*"energy" + 0.001*"award" + 0.001*"fiction" + 0.001*"orthodox" + 0.001*"japanese"
-    2021-01-23 12:12:26,241 : INFO : topic #5 (0.111): 0.002*"soviet" + 0.001*"election" + 0.001*"minister" + 0.001*"km" + 0.001*"est" + 0.001*"territory" + 0.001*"lord" + 0.001*"economy" + 0.001*"african" + 0.001*"plant"
-    2021-01-23 12:12:26,241 : INFO : topic #8 (0.111): 0.002*"km" + 0.001*"est" + 0.001*"africa" + 0.001*"chinese" + 0.001*"japanese" + 0.001*"energy" + 0.001*"election" + 0.001*"minister" + 0.001*"economy" + 0.001*"y"
-    2021-01-23 12:12:26,242 : INFO : topic diff=0.148485, rho=0.592297
-    2021-01-23 12:12:46,644 : INFO : -9.193 per-word bound, 585.4 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2021-01-23 12:12:46,645 : INFO : PROGRESS: pass 2, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2021-01-23 12:12:54,251 : INFO : topic #6 (0.111): 0.002*"emperor" + 0.002*"jewish" + 0.001*"cell" + 0.001*"jesus" + 0.001*"orthodox" + 0.001*"christ" + 0.001*"animal" + 0.001*"jew" + 0.001*"fiction" + 0.001*"chinese"
-    2021-01-23 12:12:54,252 : INFO : topic #5 (0.111): 0.003*"soviet" + 0.002*"election" + 0.002*"minister" + 0.001*"km" + 0.001*"economy" + 0.001*"territory" + 0.001*"parliament" + 0.001*"est" + 0.001*"lord" + 0.001*"elected"
-    2021-01-23 12:12:54,253 : INFO : topic #2 (0.111): 0.002*"actor" + 0.001*"love" + 0.001*"lincoln" + 0.001*"mary" + 0.001*"emperor" + 0.001*"bc" + 0.001*"album" + 0.001*"energy" + 0.001*"band" + 0.001*"ford"
-    2021-01-23 12:12:54,253 : INFO : topic #3 (0.111): 0.002*"band" + 0.002*"album" + 0.001*"bass" + 0.001*"instrument" + 0.001*"novel" + 0.001*"actor" + 0.001*"blue" + 0.001*"card" + 0.001*"kong" + 0.001*"chinese"
-    2021-01-23 12:12:54,254 : INFO : topic #7 (0.111): 0.002*"software" + 0.001*"horse" + 0.001*"y" + 0.001*"blue" + 0.001*"file" + 0.001*"actor" + 0.001*"moon" + 0.001*"apollo" + 0.001*"video" + 0.001*"season"
-    2021-01-23 12:12:54,254 : INFO : topic diff=0.174918, rho=0.509614
-    2021-01-23 12:13:15,179 : INFO : -9.137 per-word bound, 563.0 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2021-01-23 12:13:15,179 : INFO : PROGRESS: pass 3, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
-    2021-01-23 12:13:22,431 : INFO : topic #2 (0.111): 0.002*"actor" + 0.002*"love" + 0.001*"lincoln" + 0.001*"mary" + 0.001*"henry" + 0.001*"emperor" + 0.001*"bc" + 0.001*"ford" + 0.001*"louis" + 0.001*"singer"
-    2021-01-23 12:13:22,431 : INFO : topic #7 (0.111): 0.002*"software" + 0.002*"y" + 0.001*"horse" + 0.001*"file" + 0.001*"moon" + 0.001*"blue" + 0.001*"apollo" + 0.001*"video" + 0.001*"user" + 0.001*"color"
-    2021-01-23 12:13:22,432 : INFO : topic #0 (0.111): 0.002*"india" + 0.002*"actor" + 0.002*"aircraft" + 0.002*"import" + 0.002*"km" + 0.002*"ship" + 0.002*"minister" + 0.002*"italian" + 0.002*"irish" + 0.001*"indian"
-    2021-01-23 12:13:22,433 : INFO : topic #5 (0.111): 0.003*"soviet" + 0.002*"election" + 0.002*"minister" + 0.002*"economy" + 0.002*"parliament" + 0.002*"km" + 0.001*"territory" + 0.001*"liberal" + 0.001*"vote" + 0.001*"elected"
-    2021-01-23 12:13:22,433 : INFO : topic #8 (0.111): 0.003*"km" + 0.002*"est" + 0.002*"africa" + 0.002*"chinese" + 0.002*"economy" + 0.002*"election" + 0.002*"energy" + 0.001*"lake" + 0.001*"male" + 0.001*"african"
-    2021-01-23 12:13:22,434 : INFO : topic diff=0.152037, rho=0.454053
-    2021-01-23 12:13:42,802 : INFO : -9.102 per-word bound, 549.3 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2021-01-23 12:13:42,889 : INFO : using symmetric alpha at 0.09090909090909091
-    2021-01-23 12:13:42,890 : INFO : using symmetric eta at 0.09090909090909091
-    2021-01-23 12:13:42,895 : INFO : using serial LDA version on this node
-    2021-01-23 12:13:42,928 : INFO : running online (multi-pass) LDA training, 11 topics, 2 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2021-01-23 12:13:42,929 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
-    2021-01-23 12:14:03,840 : INFO : -10.500 per-word bound, 1447.8 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2021-01-23 12:14:03,840 : INFO : PROGRESS: pass 0, at document #1701/1701
-    2021-01-23 12:14:09,469 : INFO : topic #3 (0.091): 0.001*"soviet" + 0.001*"emperor" + 0.001*"band" + 0.001*"india" + 0.001*"energy" + 0.001*"actor" + 0.001*"indian" + 0.001*"canadian" + 0.001*"minister" + 0.001*"italian"
-    2021-01-23 12:14:09,470 : INFO : topic #4 (0.091): 0.001*"import" + 0.001*"minister" + 0.001*"bc" + 0.001*"lord" + 0.001*"ball" + 0.001*"km" + 0.001*"chinese" + 0.001*"season" + 0.001*"internet" + 0.001*"japanese"
-    2021-01-23 12:14:09,470 : INFO : topic #5 (0.091): 0.001*"km" + 0.001*"chinese" + 0.001*"cell" + 0.001*"actor" + 0.001*"israel" + 0.001*"election" + 0.001*"minister" + 0.001*"china" + 0.001*"economy" + 0.001*"energy"
-    2021-01-23 12:14:09,471 : INFO : topic #1 (0.091): 0.001*"lake" + 0.001*"y" + 0.001*"soviet" + 0.001*"irish" + 0.001*"km" + 0.001*"actor" + 0.001*"league" + 0.001*"band" + 0.001*"male" + 0.001*"jewish"
-    2021-01-23 12:14:09,471 : INFO : topic #6 (0.091): 0.001*"cell" + 0.001*"actor" + 0.001*"emperor" + 0.001*"election" + 0.001*"album" + 0.001*"band" + 0.001*"lake" + 0.001*"china" + 0.001*"minister" + 0.001*"la"
-    2021-01-23 12:14:09,472 : INFO : topic diff=1.023212, rho=1.000000
-    2021-01-23 12:14:30,022 : INFO : -9.278 per-word bound, 620.9 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
-    2021-01-23 12:14:30,023 : INFO : PROGRESS: pass 1, at document #1701/1701
-    2021-01-23 12:14:35,544 : INFO : topic #7 (0.091): 0.001*"emperor" + 0.001*"blue" + 0.001*"bear" + 0.001*"soviet" + 0.001*"actor" + 0.001*"alexander" + 0.001*"constitution" + 0.001*"bc" + 0.001*"mary" + 0.001*"county"
-    2021-01-23 12:14:35,545 : INFO : topic #4 (0.091): 0.002*"import" + 0.001*"lord" + 0.001*"ball" + 0.001*"bc" + 0.001*"internet" + 0.001*"chinese" + 0.001*"season" + 0.001*"japanese" + 0.001*"jewish" + 0.001*"carbon"
-    2021-01-23 12:14:35,545 : INFO : topic #3 (0.091): 0.002*"band" + 0.001*"india" + 0.001*"instrument" + 0.001*"soviet" + 0.001*"emperor" + 0.001*"actor" + 0.001*"bass" + 0.001*"indian" + 0.001*"album" + 0.001*"canadian"
-    2021-01-23 12:14:35,546 : INFO : topic #8 (0.091): 0.002*"jewish" + 0.002*"ball" + 0.002*"jew" + 0.002*"actor" + 0.001*"soviet" + 0.001*"minister" + 0.001*"football" + 0.001*"russian" + 0.001*"australian" + 0.001*"japanese"
-    2021-01-23 12:14:35,547 : INFO : topic #5 (0.091): 0.001*"km" + 0.001*"chinese" + 0.001*"israel" + 0.001*"energy" + 0.001*"flag" + 0.001*"moon" + 0.001*"cell" + 0.001*"speed" + 0.001*"china" + 0.001*"software"
-    2021-01-23 12:14:35,547 : INFO : topic diff=0.163866, rho=0.577350
-    2021-01-23 12:14:35,548 : INFO : ensemble contains 9 models and 160 topics now
-    2021-01-23 12:14:35,557 : INFO : ensemble contains 10 models and 169 topics now
-    2021-01-23 12:14:35,564 : INFO : asymmetric distance matrix is outdated due to add_model
-    2021-01-23 12:14:35,565 : INFO : generating a 180 x 180 asymmetric distance matrix...
-    2021-01-23 12:14:37,408 : INFO : fitting the clustering model, using 5 for min_samples
-    2021-01-23 12:14:37,438 : INFO : generating stable topics, using 3 for min_cores
-    2021-01-23 12:14:37,438 : INFO : found 21 clusters
-    2021-01-23 12:14:37,442 : INFO : found 1 stable topics
-    2021-01-23 12:14:37,442 : INFO : generating classic gensim model representation based on results from the ensemble
-    2021-01-23 12:14:37,444 : INFO : using symmetric alpha at 1.0
-    2021-01-23 12:14:37,444 : INFO : using symmetric eta at 1.0
-    2021-01-23 12:14:37,446 : INFO : using serial LDA version on this node
-    2021-01-23 12:14:37,448 : INFO : running online (multi-pass) LDA training, 1 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
-    2021-01-23 12:14:37,448 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2021-01-23 15:24:28,057 : INFO : using symmetric alpha at 0.1111111111111111
+    2021-01-23 15:24:28,058 : INFO : using symmetric eta at 0.1111111111111111
+    2021-01-23 15:24:28,059 : INFO : using serial LDA version on this node
+    2021-01-23 15:24:28,074 : INFO : running online LDA training, 9 topics, 4 passes over the supplied corpus of 1701 documents, updating every 14000 documents, evaluating every ~1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2021-01-23 15:24:28,074 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2021-01-23 15:24:28,074 : INFO : training LDA model using 7 processes
+    2021-01-23 15:24:28,150 : INFO : PROGRESS: pass 0, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2021-01-23 15:24:36,133 : INFO : topic #3 (0.111): 0.001*"minister" + 0.001*"actor" + 0.001*"china" + 0.001*"band" + 0.001*"km" + 0.001*"blue" + 0.001*"album" + 0.001*"economy" + 0.001*"soviet" + 0.001*"bc"
+    2021-01-23 15:24:36,133 : INFO : topic #1 (0.111): 0.001*"software" + 0.001*"album" + 0.001*"minister" + 0.001*"election" + 0.001*"emperor" + 0.001*"male" + 0.001*"league" + 0.001*"lord" + 0.001*"band" + 0.001*"jewish"
+    2021-01-23 15:24:36,134 : INFO : topic #2 (0.111): 0.001*"soviet" + 0.001*"china" + 0.001*"league" + 0.001*"actor" + 0.001*"km" + 0.001*"prime" + 0.001*"band" + 0.001*"energy" + 0.001*"economy" + 0.001*"season"
+    2021-01-23 15:24:36,134 : INFO : topic #4 (0.111): 0.001*"election" + 0.001*"league" + 0.001*"band" + 0.001*"km" + 0.001*"cell" + 0.001*"soviet" + 0.001*"philosophy" + 0.001*"lake" + 0.001*"software" + 0.001*"economy"
+    2021-01-23 15:24:36,135 : INFO : topic #8 (0.111): 0.001*"soviet" + 0.001*"jewish" + 0.001*"energy" + 0.001*"jew" + 0.001*"minister" + 0.001*"band" + 0.001*"russian" + 0.001*"album" + 0.001*"emperor" + 0.001*"lord"
+    2021-01-23 15:24:36,135 : INFO : topic diff=1.009252, rho=1.000000
+    2021-01-23 15:24:55,469 : INFO : -9.258 per-word bound, 612.2 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2021-01-23 15:24:55,469 : INFO : PROGRESS: pass 1, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2021-01-23 15:25:02,694 : INFO : topic #4 (0.111): 0.001*"election" + 0.001*"lake" + 0.001*"apple" + 0.001*"philosophy" + 0.001*"software" + 0.001*"league" + 0.001*"km" + 0.001*"user" + 0.001*"band" + 0.001*"window"
+    2021-01-23 15:25:02,695 : INFO : topic #1 (0.111): 0.002*"album" + 0.001*"software" + 0.001*"lord" + 0.001*"emperor" + 0.001*"band" + 0.001*"league" + 0.001*"minister" + 0.001*"saint" + 0.001*"novel" + 0.001*"season"
+    2021-01-23 15:25:02,695 : INFO : topic #2 (0.111): 0.002*"soviet" + 0.002*"league" + 0.001*"china" + 0.001*"season" + 0.001*"actor" + 0.001*"km" + 0.001*"ball" + 0.001*"prime" + 0.001*"chinese" + 0.001*"economy"
+    2021-01-23 15:25:02,696 : INFO : topic #6 (0.111): 0.001*"israel" + 0.001*"km" + 0.001*"cell" + 0.001*"user" + 0.001*"minister" + 0.001*"video" + 0.001*"jewish" + 0.001*"machine" + 0.001*"import" + 0.001*"internet"
+    2021-01-23 15:25:02,697 : INFO : topic #0 (0.111): 0.001*"energy" + 0.001*"actor" + 0.001*"soviet" + 0.001*"blue" + 0.001*"tree" + 0.001*"ball" + 0.001*"russian" + 0.001*"software" + 0.001*"fiction" + 0.001*"file"
+    2021-01-23 15:25:02,697 : INFO : topic diff=0.143090, rho=0.592297
+    2021-01-23 15:25:21,875 : INFO : -9.195 per-word bound, 586.3 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2021-01-23 15:25:21,876 : INFO : PROGRESS: pass 2, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2021-01-23 15:25:29,503 : INFO : topic #7 (0.111): 0.001*"economy" + 0.001*"africa" + 0.001*"bc" + 0.001*"diamond" + 0.001*"horse" + 0.001*"irish" + 0.001*"county" + 0.001*"election" + 0.001*"file" + 0.001*"car"
+    2021-01-23 15:25:29,503 : INFO : topic #5 (0.111): 0.003*"km" + 0.002*"est" + 0.002*"actor" + 0.002*"election" + 0.002*"minister" + 0.002*"india" + 0.001*"italian" + 0.001*"male" + 0.001*"female" + 0.001*"constitution"
+    2021-01-23 15:25:29,504 : INFO : topic #2 (0.111): 0.002*"league" + 0.002*"season" + 0.002*"soviet" + 0.002*"china" + 0.001*"ball" + 0.001*"chinese" + 0.001*"football" + 0.001*"baseball" + 0.001*"canadian" + 0.001*"nfl"
+    2021-01-23 15:25:29,505 : INFO : topic #0 (0.111): 0.001*"energy" + 0.001*"ball" + 0.001*"tree" + 0.001*"engine" + 0.001*"soviet" + 0.001*"blue" + 0.001*"actor" + 0.001*"fiction" + 0.001*"file" + 0.001*"russian"
+    2021-01-23 15:25:29,505 : INFO : topic #8 (0.111): 0.002*"jewish" + 0.002*"jew" + 0.002*"emperor" + 0.002*"soviet" + 0.001*"orthodox" + 0.001*"christ" + 0.001*"jesus" + 0.001*"russian" + 0.001*"cell" + 0.001*"holy"
+    2021-01-23 15:25:29,506 : INFO : topic diff=0.176887, rho=0.509614
+    2021-01-23 15:25:48,495 : INFO : -9.132 per-word bound, 561.0 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2021-01-23 15:25:48,495 : INFO : PROGRESS: pass 3, dispatched chunk #0 = documents up to #1701/1701, outstanding queue size 1
+    2021-01-23 15:25:56,501 : INFO : topic #2 (0.111): 0.003*"league" + 0.003*"season" + 0.002*"soviet" + 0.002*"ball" + 0.002*"football" + 0.002*"chinese" + 0.002*"baseball" + 0.002*"china" + 0.002*"nfl" + 0.001*"finland"
+    2021-01-23 15:25:56,502 : INFO : topic #3 (0.111): 0.002*"card" + 0.002*"aircraft" + 0.002*"blue" + 0.001*"band" + 0.001*"comic" + 0.001*"kong" + 0.001*"album" + 0.001*"bridge" + 0.001*"hong" + 0.001*"love"
+    2021-01-23 15:25:56,503 : INFO : topic #6 (0.111): 0.002*"cell" + 0.001*"user" + 0.001*"import" + 0.001*"gun" + 0.001*"disease" + 0.001*"specie" + 0.001*"video" + 0.001*"device" + 0.001*"animal" + 0.001*"weapon"
+    2021-01-23 15:25:56,503 : INFO : topic #7 (0.111): 0.001*"irish" + 0.001*"horse" + 0.001*"bc" + 0.001*"diamond" + 0.001*"economy" + 0.001*"liberal" + 0.001*"car" + 0.001*"africa" + 0.001*"county" + 0.001*"file"
+    2021-01-23 15:25:56,504 : INFO : topic #0 (0.111): 0.002*"energy" + 0.001*"engine" + 0.001*"tree" + 0.001*"ball" + 0.001*"acid" + 0.001*"soviet" + 0.001*"file" + 0.001*"fiction" + 0.001*"blue" + 0.001*"classical"
+    2021-01-23 15:25:56,505 : INFO : topic diff=0.154924, rho=0.454053
+    2021-01-23 15:26:15,743 : INFO : -9.092 per-word bound, 545.7 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2021-01-23 15:26:15,821 : INFO : using symmetric alpha at 0.09090909090909091
+    2021-01-23 15:26:15,822 : INFO : using symmetric eta at 0.09090909090909091
+    2021-01-23 15:26:15,824 : INFO : using serial LDA version on this node
+    2021-01-23 15:26:15,855 : INFO : running online (multi-pass) LDA training, 11 topics, 2 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2021-01-23 15:26:15,855 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
+    2021-01-23 15:26:35,321 : INFO : -10.499 per-word bound, 1447.2 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2021-01-23 15:26:35,321 : INFO : PROGRESS: pass 0, at document #1701/1701
+    2021-01-23 15:26:40,838 : INFO : topic #4 (0.091): 0.001*"software" + 0.001*"election" + 0.001*"jewish" + 0.001*"actor" + 0.001*"minister" + 0.001*"territory" + 0.001*"league" + 0.001*"channel" + 0.001*"user" + 0.001*"japan"
+    2021-01-23 15:26:40,839 : INFO : topic #3 (0.091): 0.001*"soviet" + 0.001*"cell" + 0.001*"energy" + 0.001*"software" + 0.001*"km" + 0.001*"economy" + 0.001*"minister" + 0.001*"bc" + 0.001*"china" + 0.001*"league"
+    2021-01-23 15:26:40,839 : INFO : topic #7 (0.091): 0.001*"album" + 0.001*"irish" + 0.001*"ball" + 0.001*"y" + 0.001*"minister" + 0.001*"actor" + 0.001*"chinese" + 0.001*"election" + 0.001*"band" + 0.001*"la"
+    2021-01-23 15:26:40,840 : INFO : topic #8 (0.091): 0.001*"soviet" + 0.001*"album" + 0.001*"league" + 0.001*"minister" + 0.001*"actor" + 0.001*"emperor" + 0.001*"software" + 0.001*"male" + 0.001*"energy" + 0.001*"japanese"
+    2021-01-23 15:26:40,841 : INFO : topic #1 (0.091): 0.001*"band" + 0.001*"km" + 0.001*"cell" + 0.001*"actor" + 0.001*"economy" + 0.001*"lord" + 0.001*"energy" + 0.001*"car" + 0.001*"county" + 0.001*"software"
+    2021-01-23 15:26:40,841 : INFO : topic diff=1.022883, rho=1.000000
+    2021-01-23 15:27:00,369 : INFO : -9.279 per-word bound, 621.1 perplexity estimate based on a held-out corpus of 1701 documents with 4692704 words
+    2021-01-23 15:27:00,369 : INFO : PROGRESS: pass 1, at document #1701/1701
+    2021-01-23 15:27:05,770 : INFO : topic #2 (0.091): 0.002*"km" + 0.002*"female" + 0.002*"est" + 0.001*"soviet" + 0.001*"election" + 0.001*"male" + 0.001*"minister" + 0.001*"economy" + 0.001*"russian" + 0.001*"russia"
+    2021-01-23 15:27:05,771 : INFO : topic #8 (0.091): 0.001*"league" + 0.001*"album" + 0.001*"color" + 0.001*"energy" + 0.001*"love" + 0.001*"actor" + 0.001*"soviet" + 0.001*"frac" + 0.001*"lake" + 0.001*"blue"
+    2021-01-23 15:27:05,771 : INFO : topic #6 (0.091): 0.002*"actor" + 0.001*"software" + 0.001*"user" + 0.001*"blue" + 0.001*"emperor" + 0.001*"album" + 0.001*"band" + 0.001*"election" + 0.001*"soviet" + 0.001*"minister"
+    2021-01-23 15:27:05,772 : INFO : topic #3 (0.091): 0.001*"soviet" + 0.001*"cell" + 0.001*"novel" + 0.001*"album" + 0.001*"energy" + 0.001*"bc" + 0.001*"philosophy" + 0.001*"knowledge" + 0.001*"band" + 0.001*"japanese"
+    2021-01-23 15:27:05,772 : INFO : topic #10 (0.091): 0.002*"economy" + 0.002*"km" + 0.001*"minister" + 0.001*"est" + 0.001*"election" + 0.001*"import" + 0.001*"russian" + 0.001*"prime" + 0.001*"soviet" + 0.001*"chinese"
+    2021-01-23 15:27:05,773 : INFO : topic diff=0.163523, rho=0.577350
+    2021-01-23 15:27:05,774 : INFO : ensemble contains 9 models and 160 topics now
+    2021-01-23 15:27:05,782 : INFO : ensemble contains 10 models and 169 topics now
+    2021-01-23 15:27:05,789 : INFO : asymmetric distance matrix is outdated due to add_model
+    2021-01-23 15:27:05,789 : INFO : generating a 180 x 180 asymmetric distance matrix...
+    2021-01-23 15:27:07,632 : INFO : fitting the clustering model, using 5 for min_samples
+    2021-01-23 15:27:07,670 : INFO : generating stable topics, using 3 for min_cores
+    2021-01-23 15:27:07,670 : INFO : found 23 clusters
+    2021-01-23 15:27:07,676 : INFO : found 1 stable topics
+    2021-01-23 15:27:07,676 : INFO : generating classic gensim model representation based on results from the ensemble
+    2021-01-23 15:27:07,677 : INFO : using symmetric alpha at 1.0
+    2021-01-23 15:27:07,677 : INFO : using symmetric eta at 1.0
+    2021-01-23 15:27:07,680 : INFO : using serial LDA version on this node
+    2021-01-23 15:27:07,682 : INFO : running online (multi-pass) LDA training, 1 topics, 0 passes over the supplied corpus of 1701 documents, updating model once every 1701 documents, evaluating perplexity every 1701 documents, iterating 50x with a convergence threshold of 0.001000
+    2021-01-23 15:27:07,682 : WARNING : too few updates, training might not converge; consider increasing the number of passes or iterations to improve accuracy
     180
     1
 
@@ -424,9 +424,9 @@ Afterwards the number and quality of stable topics might be different depending 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 12 minutes  22.200 seconds)
+   **Total running time of the script:** ( 11 minutes  53.863 seconds)
 
-**Estimated memory usage:**  1637 MB
+**Estimated memory usage:**  1625 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_ensemblelda.py:
