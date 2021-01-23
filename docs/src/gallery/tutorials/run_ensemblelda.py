@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # This tutorial will explain how to use the EnsembleLDA model class.
 #
 # EnsembleLda is a method of finding and generating stable topics from the results of multiple topic models,
-# it can therefore be used to remove topics from your results that are noise and are not reproducible.
+# it can be used to remove topics from your results that are noise and are not reproducible.
 #
 
 ###############################################################################
@@ -98,19 +98,19 @@ print(len(ensemble.get_topics()))
 #
 # Different from LdaModel, the number of resulting topics varies greatly depending on the clustering parameters.
 #
-# You can provide those in the ``recluster()`` function or the ``EnsembleLda`` constructor. Play around
+# You can provide those in the ``recluster()`` function or the ``EnsembleLda`` constructor.
 #
-# until you get as many topics as you desire, which however may reduce their quality.
+# Play around until you get as many topics as you desire, which however may reduce their quality.
 # If your ensemble doesn't have enough topics to begin with, you should make sure to make it large enough.
 #
 # Having an epsilon that is smaller than the smallest distance doesn't make sense.
-# Make sure to chose one that is within the range of values.
+# Make sure to chose one that is within the range of values in ``asymmetric_distance_matrix``.
 #
 
 import numpy as np
 shape = ensemble.asymmetric_distance_matrix.shape
 without_diagonal = ensemble.asymmetric_distance_matrix[~np.eye(shape[0],dtype=bool)].reshape(shape[0],-1)
-without_diagonal.min(), without_diagonal.mean(), without_diagonal.max()
+print(without_diagonal.min(), without_diagonal.mean(), without_diagonal.max())
 
 ensemble.recluster(eps=0.09, min_samples=2, min_cores=2)
 
