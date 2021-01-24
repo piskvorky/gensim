@@ -409,8 +409,10 @@ class TestWord2VecModel(unittest.TestCase):
         testvocab = get_tmpfile('gensim_word2vec.vocab')
         model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
         binary_model_with_vocab_kv = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
-        self.assertEqual(model.wv.get_vecattr('human', 'count'),
-                         binary_model_with_vocab_kv.get_vecattr('human', 'count'))
+        self.assertEqual(
+            model.wv.get_vecattr('human', 'count'),
+            binary_model_with_vocab_kv.get_vecattr('human', 'count'),
+        )
 
     def testPersistenceKeyedVectorsFormatWithVocab(self):
         """Test storing/loading the entire model and vocabulary in word2vec format."""
@@ -419,8 +421,10 @@ class TestWord2VecModel(unittest.TestCase):
         testvocab = get_tmpfile('gensim_word2vec.vocab')
         model.wv.save_word2vec_format(tmpf, testvocab, binary=True)
         kv_binary_model_with_vocab = keyedvectors.KeyedVectors.load_word2vec_format(tmpf, testvocab, binary=True)
-        self.assertEqual(model.wv.get_vecattr('human', 'count'),
-                         kv_binary_model_with_vocab.get_vecattr('human', 'count'))
+        self.assertEqual(
+            model.wv.get_vecattr('human', 'count'),
+            kv_binary_model_with_vocab.get_vecattr('human', 'count'),
+        )
 
     def testPersistenceWord2VecFormatCombinationWithStandardPersistence(self):
         """Test storing/loading the entire model and vocabulary in word2vec format chained with

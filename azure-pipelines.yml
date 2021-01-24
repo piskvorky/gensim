@@ -25,5 +25,5 @@ steps:
   displayName: 'Install tox'
 
 - script: |
-    tox -vv
+    tox
   displayName: 'Testing'

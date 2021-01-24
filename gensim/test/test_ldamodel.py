@@ -292,7 +292,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(phi_values, list))
 
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
-        # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
+        # we check one case in word_topics, i.e of the first word in the doc, and its likely topics.
 
         # FIXME: Fails on osx and win
         # expected_word = 0

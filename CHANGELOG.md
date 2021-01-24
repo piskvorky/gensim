@@ -1,50 +1,134 @@
 Changes
 =======
 
-## Unreleased
+## 4.0.0beta, 2020-10-31
 
-This release contains a major refactoring.
+**⚠️ Gensim 4.0 contains breaking API changes! See the [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) to update your existing Gensim 3.x code and models.**
+
+Gensim 4.0 is a major release with lots of performance & robustness improvements and a new website.
+
+### Main highlights (see also *👍 Improvements* below)
+
+* Massively optimized popular algorithms the community has grown to love: [fastText](https://radimrehurek.com/gensim/models/fasttext.html), [word2vec](https://radimrehurek.com/gensim/models/word2vec.html), [doc2vec](https://radimrehurek.com/gensim/models/doc2vec.html), [phrases](https://radimrehurek.com/gensim/models/phrases.html):
+
+  a. **Efficiency**
+
+    | model | 3.8.3: wall time / peak RAM / throughput | 4.0.0: wall time / peak RAM / throughput |
+    |----------|------------|--------|
+    | fastText | 2.9h / 4.11 GB / 822k words/s | 2.3h / **1.26 GB** / 914k words/s |
+    | word2vec | 1.7h / 0.36 GB / 1685k words/s | **1.2h** / 0.33 GB / 1762k words/s |
+
+    In other words, fastText now needs 3x less RAM (and is faster); word2vec has 2x faster init (and needs less RAM, and is faster); detecting collocation phrases is 2x faster. ([4.0 benchmarks](https://github.com/RaRe-Technologies/gensim/issues/2887#issuecomment-711097334))
+
+  b. **Robustness**. We fixed a bunch of long-standing bugs by refactoring the internal code structure (see 🔴 Bug fixes below)
+
+  c. **Simplified OOP model** for easier model exports and integration with TensorFlow, PyTorch &co.
+
+  These improvements come to you transparently aka "for free", but see [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) for some changes that break the old Gensim 3.x API. **Update your code accordingly**.
+
+* Dropped a bunch of externally contributed modules: summarization, pivoted TFIDF normalization, FIXME.
+  - Code quality was not up to our standards. Also there was no one to maintain them, answer user questions, support these modules.
+
+    So rather than let them rot, we took the hard decision of removing these contributed modules from Gensim. If anyone's interested in maintaining them please fork into your own repo, they can live happily outside of Gensim.
+
+* Dropped Python 2. Gensim 4.0 is Py3.6+. Read our [Python version support policy](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
+  - If you still need Python 2 for some reason, stay at [Gensim 3.8.3](https://github.com/RaRe-Technologies/gensim/releases/tag/3.8.3).
+
+* A new [Gensim website](https://radimrehurek.com/gensim_4.0.0) – finally! 🙃
+
+So, a major clean-up release overall. We're happy with this **tighter, leaner and faster Gensim**.
+
+This is the direction we'll keep going forward: less kitchen-sink of "latest academic algorithms", more focus on robust engineering, targetting common concrete NLP & document similarity use-cases.
+
+### Why pre-release?
+
+This 4.0.0beta pre-release is for users who want the **cutting edge performance and bug fixes**. Plus users who want to help out, by **testing and providing feedback**: code, documentation, workflows… Please let us know on the [mailing list](https://groups.google.com/forum/#!forum/gensim)!
+
+Install the pre-release with:
+
+```bash
+pip install --pre --upgrade gensim
+```
+
+### What will change between this pre-release and a "full" 4.0 release?
+
+Production stability is important to Gensim, so we're improving the process of **upgrading already-trained saved models**. There'll be an explicit model upgrade script between each `4.n` to `4.(n+1)` Gensim release. Check progress [here](https://github.com/RaRe-Technologies/gensim/milestone/3).
+
 
 ### :+1: Improvements
 
-* Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
-* KeyedVectors  & X2Vec API streamlining, consistency (PR [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698), __[@gojomo](https://github.com/gojomo)__)
-* No more wheels for x32 platforms (if you need x32 binaries, please build them yourself).
-  (__[menshikh-iv](https://github.com/menshikh-iv)__, [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6))
-* Speed up random number generation in word2vec model (PR [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864), __[@zygm0nt](https://github.com/zygm0nt)__)
-* Fix deprecations in SoftCosineSimilarity (PR [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940), __[@Witiko](https://github.com/Witiko)__)
-* Remove Keras dependency (PR [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937), __[@piskvorky](https://github.com/piskvorky)__)
-* Bump minimum Python version to 3.6 (PR [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947), __[@gojomo](https://github.com/gojomo)__)
+* [#2947](https://github.com/RaRe-Technologies/gensim/pull/2947): Bump minimum Python version to 3.6, by [@gojomo](https://github.com/gojomo)
+* [#2939](https://github.com/RaRe-Technologies/gensim/pull/2939) + [#2984](https://github.com/RaRe-Technologies/gensim/pull/2984): Code style & py3 migration clean up, by [@piskvorky](https://github.com/piskvorky)
+* [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300): Use less RAM in LdaMulticore, by [@horpto](https://github.com/horpto)
+* [#2698](https://github.com/RaRe-Technologies/gensim/pull/2698): Streamline KeyedVectors & X2Vec API, by [@gojomo](https://github.com/gojomo)
+* [#2864](https://github.com/RaRe-Technologies/gensim/pull/2864): Speed up random number generation in word2vec, by [@zygm0nt](https://github.com/zygm0nt)
+* [#2976](https://github.com/RaRe-Technologies/gensim/pull/2976): Speed up phrase (collocation) detection, by [@piskvorky](https://github.com/piskvorky)
+* [#2979](https://github.com/RaRe-Technologies/gensim/pull/2979): Allow skipping common English words in multi-word phrases, by [@piskvorky](https://github.com/piskvorky)
+* [#2867](https://github.com/RaRe-Technologies/gensim/pull/2867): Expose `max_final_vocab` parameter in fastText constructor, by [@mpenkov](https://github.com/mpenkov)
+* [#2931](https://github.com/RaRe-Technologies/gensim/pull/2931): Clear up job queue parameters in word2vec, by [@lunastera](https://github.com/lunastera)
+* [#2939](https://github.com/RaRe-Technologies/gensim/pull/2939): X2Vec SaveLoad improvements, by [@piskvorky](https://github.com/piskvorky)
 
-### :books: Tutorial and doc improvements
+### :books: Tutorials and docs
 
- * Clear up LdaModel documentation - remove claim that it accepts CSC matrix as input (PR [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832), [@FyzHsn](https://github.com/FyzHsn))
- * Fix "generator" language in word2vec docs (PR [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935), __[@polm](https://github.com/polm)__)
+* [#2954](https://github.com/RaRe-Technologies/gensim/pull/2954): New theme for the Gensin website, [@dvorakvaclav](https://github.com/dvorakvaclav)
+* [#2960](https://github.com/RaRe-Technologies/gensim/issues/2960): Added [Gensim and Compatibility](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility) Wiki page, by [@piskvorky](https://github.com/piskvorky)
+* [#2960](https://github.com/RaRe-Technologies/gensim/issues/2960): Reworked & simplified the [Developer Wiki page](https://github.com/RaRe-Technologies/gensim/wiki/Developer-page), by [@piskvorky](https://github.com/piskvorky)
+* [#2968](https://github.com/RaRe-Technologies/gensim/pull/2968): Migrate tutorials & how-tos to 4.0.0, by [@piskvorky](https://github.com/piskvorky)
+* [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Clean up of language and formatting of docstrings, by [@piskvorky](https://github.com/piskvorky)
+* [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Added documentation for NMSLIB indexer, by [@piskvorky](https://github.com/piskvorky)
+* [#2832](https://github.com/RaRe-Technologies/gensim/pull/2832): Clear up LdaModel documentation by [@FyzHsn](https://github.com/FyzHsn)
+* [#2871](https://github.com/RaRe-Technologies/gensim/pull/2871): Clarify that license is LGPL-2.1, by [@pombredanne](https://github.com/pombredanne)
+* [#2896](https://github.com/RaRe-Technologies/gensim/pull/2896): Make docs clearer on `alpha` parameter in LDA model, by [@xh2](https://github.com/xh2)
+* [#2897](https://github.com/RaRe-Technologies/gensim/pull/2897): Update Hoffman paper link for Online LDA, by [@xh2](https://github.com/xh2)
+* [#2910](https://github.com/RaRe-Technologies/gensim/pull/2910): Refresh docs for run_annoy tutorial, by [@piskvorky](https://github.com/piskvorky)
+* [#2935](https://github.com/RaRe-Technologies/gensim/pull/2935): Fix "generator" language in word2vec docs, by [@polm](https://github.com/polm)
 
-### :warning: Removed functionality
+### :red_circle: Bug fixes
 
- * Remove gensim.summarization subpackage, docs and test data (PR [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958), __[@mpenkov](https://github.com/mpenkov)__)
+* [#2891](https://github.com/RaRe-Technologies/gensim/pull/2891): Fix fastText word-vectors with ngrams off, by [@gojomo](https://github.com/gojomo)
+* [#2907](https://github.com/RaRe-Technologies/gensim/pull/2907): Fix doc2vec crash for large sets of doc-vectors, by [@gojomo](https://github.com/gojomo)
+* [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Fix similarity bug in NMSLIB indexer, by [@piskvorky](https://github.com/piskvorky)
+* [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Fix deprecation warnings in Annoy integration, by [@piskvorky](https://github.com/piskvorky)
+* [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901): Fix inheritance of WikiCorpus from TextCorpus, by [@jenishah](https://github.com/jenishah)
+* [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940); Fix deprecations in SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
+* [#2944](https://github.com/RaRe-Technologies/gensim/pull/2944): Fix `save_facebook_model` failure after update-vocab & other initialization streamlining, by [@gojomo](https://github.com/gojomo)
+* [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846): Fix for Python 3.9/3.10: remove `xml.etree.cElementTree`, by [@hugovk](https://github.com/hugovk)
+* [#2973](https://github.com/RaRe-Technologies/gensim/issues/2973): phrases.export_phrases() doesn't yield all bigrams
+* [#2942](https://github.com/RaRe-Technologies/gensim/issues/2942): Segfault when training doc2vec
 
-## :warning: 3.8.x will be the last gensim version to support Py2.7. Starting with 4.0.0, gensim will only support Py3.5 and above
+### :warning: Removed functionality & deprecations
+
+* [#6](https://github.com/RaRe-Technologies/gensim-wheels/pull/6): No more binary wheels for x32 platforms, by [menshikh-iv](https://github.com/menshikh-iv)
+* [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Renamed overly broad `similarities.index` to the more appropriate `similarities.annoy`, by [@piskvorky](https://github.com/piskvorky)
+* [#2958](https://github.com/RaRe-Technologies/gensim/pull/2958): Remove gensim.summarization subpackage, docs and test data, by [@mpenkov](https://github.com/mpenkov)
+* [#2926](https://github.com/RaRe-Technologies/gensim/pull/2926): Rename `num_words` to `topn` in dtm_coherence, by [@MeganStodel](https://github.com/MeganStodel)
+* [#2937](https://github.com/RaRe-Technologies/gensim/pull/2937): Remove Keras dependency, by [@piskvorky](https://github.com/piskvorky)
+* Removed all code, methods, attributes and functions marked as deprecated in [Gensim 3.8.3](https://github.com/RaRe-Technologies/gensim/releases/tag/3.8.3).
+* Removed pattern dependency (PR [#3012](https://github.com/RaRe-Technologies/gensim/pull/3012), [@mpenkov](https://github.com/mpenkov)).  If you need to lemmatize, do it prior to passing the corpus to gensim.
+
+---
+
 
 ## 3.8.3, 2020-05-03
+
+**:warning: 3.8.x will be the last Gensim version to support Py2.7. Starting with 4.0.0, Gensim will only support Py3.5 and above.**
 
 This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3.8.
 
 ### :red_circle: Bug fixes
 
-* Bring back Py27 support (PR [#2812](https://github.com/RaRe-Technologies/gensim/pull/2812), __[@mpenkov](https://github.com/mpenkov)__)
+* Bring back Py27 support (PR [#2812](https://github.com/RaRe-Technologies/gensim/pull/2812), [@mpenkov](https://github.com/mpenkov))
 * Fix wrong version reported by setup.py (Issue [#2796](https://github.com/RaRe-Technologies/gensim/issues/2796))
 * Fix missing C extensions (Issues [#2794](https://github.com/RaRe-Technologies/gensim/issues/2794) and [#2802](https://github.com/RaRe-Technologies/gensim/issues/2802))
 
 ### :+1: Improvements
 
-* Wheels for Python 3.8 (__[@menshikh-iv](https://github.com/menshikh-iv)__)
-* Prepare for removal of deprecated `lxml.etree.cElementTree` (PR [#2777](https://github.com/RaRe-Technologies/gensim/pull/2777), __[@tirkarthi](https://github.com/tirkarthi)__)
+* Wheels for Python 3.8 ([@menshikh-iv](https://github.com/menshikh-iv))
+* Prepare for removal of deprecated `lxml.etree.cElementTree` (PR [#2777](https://github.com/RaRe-Technologies/gensim/pull/2777), [@tirkarthi](https://github.com/tirkarthi))
 
 ### :books: Tutorial and doc improvements
 
-* Update test instructions in README (PR [#2814](https://github.com/RaRe-Technologies/gensim/pull/2814), __[@piskvorky](https://github.com/piskvorky)__)
+* Update test instructions in README (PR [#2814](https://github.com/RaRe-Technologies/gensim/pull/2814), [@piskvorky](https://github.com/piskvorky))
 
 ### :warning: Deprecations (will be removed in the next major release)
 
@@ -67,6 +151,8 @@ This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3
     - `gensim.topic_coherence` ➡ `gensim.models._coherence`
     - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
     - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
+
+---
 
 ## 3.8.2, 2020-04-10
 
@@ -96,23 +182,25 @@ This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3
     - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
     - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
 
+---
+
 ## 3.8.1, 2019-09-23
 
 ### :red_circle: Bug fixes
 
-* Fix usage of base_dir instead of BASE_DIR in _load_info in downloader. (__[movb](https://github.com/movb)__, [#2605](https://github.com/RaRe-Technologies/gensim/pull/2605))
-* Update the version of smart_open in the setup.py file (__[AMR-KELEG](https://github.com/AMR-KELEG)__, [#2582](https://github.com/RaRe-Technologies/gensim/pull/2582))
-* Properly handle unicode_errors arg parameter when loading a vocab file (__[wmtzk](https://github.com/wmtzk)__, [#2570](https://github.com/RaRe-Technologies/gensim/pull/2570))
-* Catch loading older TfidfModels without smartirs (__[bnomis](https://github.com/bnomis)__, [#2559](https://github.com/RaRe-Technologies/gensim/pull/2559))
-* Fix bug where a module import set up logging, pin doctools for Py2 (__[piskvorky](https://github.com/piskvorky)__, [#2552](https://github.com/RaRe-Technologies/gensim/pull/2552))
+* Fix usage of base_dir instead of BASE_DIR in _load_info in downloader. ([movb](https://github.com/movb), [#2605](https://github.com/RaRe-Technologies/gensim/pull/2605))
+* Update the version of smart_open in the setup.py file ([AMR-KELEG](https://github.com/AMR-KELEG), [#2582](https://github.com/RaRe-Technologies/gensim/pull/2582))
+* Properly handle unicode_errors arg parameter when loading a vocab file ([wmtzk](https://github.com/wmtzk), [#2570](https://github.com/RaRe-Technologies/gensim/pull/2570))
+* Catch loading older TfidfModels without smartirs ([bnomis](https://github.com/bnomis), [#2559](https://github.com/RaRe-Technologies/gensim/pull/2559))
+* Fix bug where a module import set up logging, pin doctools for Py2 ([piskvorky](https://github.com/piskvorky), [#2552](https://github.com/RaRe-Technologies/gensim/pull/2552))
 
 ### :books: Tutorial and doc improvements
 
-* Fix usage example in phrases.py (__[piskvorky](https://github.com/piskvorky)__, [#2575](https://github.com/RaRe-Technologies/gensim/pull/2575))
+* Fix usage example in phrases.py ([piskvorky](https://github.com/piskvorky), [#2575](https://github.com/RaRe-Technologies/gensim/pull/2575))
 
 ### :+1: Improvements
 
-* Optimize Poincare model training (__[koiizukag](https://github.com/koiizukag)__, [#2589](https://github.com/RaRe-Technologies/gensim/pull/2589))
+* Optimize Poincare model training ([koiizukag](https://github.com/koiizukag), [#2589](https://github.com/RaRe-Technologies/gensim/pull/2589))
 
 ### :warning: Deprecations (will be removed in the next major release)
 
@@ -136,34 +224,36 @@ This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3
     - `gensim.utils` ➡ `gensim.utils.utils` (old imports will continue to work)
     - `gensim.parsing.*` ➡ `gensim.utils.text_utils`
 
+---
+
 ## 3.8.0, 2019-07-08
 
 ### :star2: New Features
 
-* Enable online training of Poincare models (__[koiizukag](https://github.com/koiizukag)__, [#2505](https://github.com/RaRe-Technologies/gensim/pull/2505))
-* Make BM25 more scalable by adding support for generator inputs (__[saraswatmks](https://github.com/saraswatmks)__, [#2479](https://github.com/RaRe-Technologies/gensim/pull/2479))
-* Allow the Gensim dataset / pre-trained model downloader `gensim.downloader` to run offline, by introducing a local file cache (__[mpenkov](https://github.com/mpenkov)__, [#2545](https://github.com/RaRe-Technologies/gensim/pull/2545))
-* Make the `gensim.downloader` target directory configurable (__[mpenkov](https://github.com/mpenkov)__, [#2456](https://github.com/RaRe-Technologies/gensim/pull/2456))
-* Add `nmslib` indexer (__[masa3141](https://github.com/masa3141)__, [#2417](https://github.com/RaRe-Technologies/gensim/pull/2417))
+* Enable online training of Poincare models ([koiizukag](https://github.com/koiizukag), [#2505](https://github.com/RaRe-Technologies/gensim/pull/2505))
+* Make BM25 more scalable by adding support for generator inputs ([saraswatmks](https://github.com/saraswatmks), [#2479](https://github.com/RaRe-Technologies/gensim/pull/2479))
+* Allow the Gensim dataset / pre-trained model downloader `gensim.downloader` to run offline, by introducing a local file cache ([mpenkov](https://github.com/mpenkov), [#2545](https://github.com/RaRe-Technologies/gensim/pull/2545))
+* Make the `gensim.downloader` target directory configurable ([mpenkov](https://github.com/mpenkov), [#2456](https://github.com/RaRe-Technologies/gensim/pull/2456))
+* Add `nmslib` indexer ([masa3141](https://github.com/masa3141), [#2417](https://github.com/RaRe-Technologies/gensim/pull/2417))
 
 ### :red_circle: Bug fixes
 
-* Fix `smart_open` deprecation warning globally (__[itayB](https://github.com/itayB)__, [#2530](https://github.com/RaRe-Technologies/gensim/pull/2530))
-* Fix AppVeyor issues with Windows and Py2 (__[mpenkov](https://github.com/mpenkov)__, [#2546](https://github.com/RaRe-Technologies/gensim/pull/2546))
-* Fix `topn=0` versus `topn=None` bug in `most_similar`, accept `topn` of any integer type (__[Witiko](https://github.com/Witiko)__, [#2497](https://github.com/RaRe-Technologies/gensim/pull/2497))
-* Fix Python version check (__[charsyam](https://github.com/charsyam)__, [#2547](https://github.com/RaRe-Technologies/gensim/pull/2547))
-* Fix typo in FastText documentation (__[Guitaricet](https://github.com/Guitaricet)__, [#2518](https://github.com/RaRe-Technologies/gensim/pull/2518))
-* Fix "Market Matrix" to "Matrix Market" typo. (__[Shooter23](https://github.com/Shooter23)__, [#2513](https://github.com/RaRe-Technologies/gensim/pull/2513))
-* Fix auto-generated hyperlinks in `CHANGELOG.md` (__[mpenkov](https://github.com/mpenkov)__, [#2482](https://github.com/RaRe-Technologies/gensim/pull/2482))
+* Fix `smart_open` deprecation warning globally ([itayB](https://github.com/itayB), [#2530](https://github.com/RaRe-Technologies/gensim/pull/2530))
+* Fix AppVeyor issues with Windows and Py2 ([mpenkov](https://github.com/mpenkov), [#2546](https://github.com/RaRe-Technologies/gensim/pull/2546))
+* Fix `topn=0` versus `topn=None` bug in `most_similar`, accept `topn` of any integer type ([Witiko](https://github.com/Witiko), [#2497](https://github.com/RaRe-Technologies/gensim/pull/2497))
+* Fix Python version check ([charsyam](https://github.com/charsyam), [#2547](https://github.com/RaRe-Technologies/gensim/pull/2547))
+* Fix typo in FastText documentation ([Guitaricet](https://github.com/Guitaricet), [#2518](https://github.com/RaRe-Technologies/gensim/pull/2518))
+* Fix "Market Matrix" to "Matrix Market" typo. ([Shooter23](https://github.com/Shooter23), [#2513](https://github.com/RaRe-Technologies/gensim/pull/2513))
+* Fix auto-generated hyperlinks in `CHANGELOG.md` ([mpenkov](https://github.com/mpenkov), [#2482](https://github.com/RaRe-Technologies/gensim/pull/2482))
 
 ### :books: Tutorial and doc improvements
 
-* Generate documentation for the `gensim.similarities.termsim` module (__[Witiko](https://github.com/Witiko)__, [#2485](https://github.com/RaRe-Technologies/gensim/pull/2485))
-* Simplify the `Support` section in README (__[piskvorky](https://github.com/piskvorky)__, [#2542](https://github.com/RaRe-Technologies/gensim/pull/2542))
+* Generate documentation for the `gensim.similarities.termsim` module ([Witiko](https://github.com/Witiko), [#2485](https://github.com/RaRe-Technologies/gensim/pull/2485))
+* Simplify the `Support` section in README ([piskvorky](https://github.com/piskvorky), [#2542](https://github.com/RaRe-Technologies/gensim/pull/2542))
 
 ### :+1: Improvements
 
-* Pin sklearn version for Py2, because sklearn dropped py2 support (__[mpenkov](https://github.com/mpenkov)__, [#2510](https://github.com/RaRe-Technologies/gensim/pull/2510))
+* Pin sklearn version for Py2, because sklearn dropped py2 support ([mpenkov](https://github.com/mpenkov), [#2510](https://github.com/RaRe-Technologies/gensim/pull/2510))
 
 
 ### :warning: Deprecations (will be removed in the next major release)
@@ -192,24 +282,24 @@ This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3
 
 ### :red_circle: Bug fixes
 
-* Fix fasttext model loading from gzip files (__[mpenkov](https://github.com/mpenkov)__, [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
-* Fix misleading `Doc2Vec.docvecs` comment (__[gojomo](https://github.com/gojomo)__, [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
-* NMF bugfix (__[mpenkov](https://github.com/mpenkov)__, [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
-* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[Witiko](https://github.com/Witiko)__, [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
-* Fix LdaSequence model by updating to num_documents (__[Bharat123rox](https://github.com/Bharat123rox)__, [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
-* Make termsim matrix positive definite even with negative similarities (__[Witiko](https://github.com/Witiko)__, [#2397](https://github.com/RaRe-Technologies/gensim/pull/2397))
-* Fix the off-by-one bug in the TFIDF model. (__[AMR-KELEG](https://github.com/AMR-KELEG)__, [#2392](https://github.com/RaRe-Technologies/gensim/pull/2392))
-* Update legacy model loading (__[mpenkov](https://github.com/mpenkov)__, [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454), [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
-* Make `matutils.unitvec` always return float norm when requested (__[Witiko](https://github.com/Witiko)__, [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
+* Fix fasttext model loading from gzip files ([mpenkov](https://github.com/mpenkov), [#2476](https://github.com/RaRe-Technologies/gensim/pull/2476))
+* Fix misleading `Doc2Vec.docvecs` comment ([gojomo](https://github.com/gojomo), [#2472](https://github.com/RaRe-Technologies/gensim/pull/2472))
+* NMF bugfix ([mpenkov](https://github.com/mpenkov), [#2466](https://github.com/RaRe-Technologies/gensim/pull/2466))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` ([Witiko](https://github.com/Witiko), [#2461](https://github.com/RaRe-Technologies/gensim/pull/2461))
+* Fix LdaSequence model by updating to num_documents ([Bharat123rox](https://github.com/Bharat123rox), [#2410](https://github.com/RaRe-Technologies/gensim/pull/2410))
+* Make termsim matrix positive definite even with negative similarities ([Witiko](https://github.com/Witiko), [#2397](https://github.com/RaRe-Technologies/gensim/pull/2397))
+* Fix the off-by-one bug in the TFIDF model. ([AMR-KELEG](https://github.com/AMR-KELEG), [#2392](https://github.com/RaRe-Technologies/gensim/pull/2392))
+* Update legacy model loading ([mpenkov](https://github.com/mpenkov), [#2454](https://github.com/RaRe-Technologies/gensim/pull/2454), [#2457](https://github.com/RaRe-Technologies/gensim/pull/2457))
+* Make `matutils.unitvec` always return float norm when requested ([Witiko](https://github.com/Witiko), [#2419](https://github.com/RaRe-Technologies/gensim/pull/2419))
 
 ### :books: Tutorial and doc improvements
 
-* Update word2vec.ipynb (__[asyabo](https://github.com/asyabo)__, [#2423](https://github.com/RaRe-Technologies/gensim/pull/2423))
+* Update word2vec.ipynb ([asyabo](https://github.com/asyabo), [#2423](https://github.com/RaRe-Technologies/gensim/pull/2423))
 
 ### :+1: Improvements
 
-* Adding type check for corpus_file argument (__[saraswatmks](https://github.com/saraswatmks)__, [#2469](https://github.com/RaRe-Technologies/gensim/pull/2469))
-* Clean up FastText Cython code, fix division by zero (__[mpenkov](https://github.com/mpenkov)__, [#2382](https://github.com/RaRe-Technologies/gensim/pull/2382))
+* Adding type check for corpus_file argument ([saraswatmks](https://github.com/saraswatmks), [#2469](https://github.com/RaRe-Technologies/gensim/pull/2469))
+* Clean up FastText Cython code, fix division by zero ([mpenkov](https://github.com/mpenkov), [#2382](https://github.com/RaRe-Technologies/gensim/pull/2382))
 
 ### :warning: Deprecations (will be removed in the next major release)
 
@@ -242,43 +332,43 @@ This is primarily a bugfix release to bring back Py2.7 compatibility to gensim 3
 
 ### :red_circle: Bug fixes
 
-* Fix unicode error when loading FastText vocabulary (__[@mpenkov](https://github.com/mpenkov)__, [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
-* Avoid division by zero in fasttext_inner.pyx (__[@mpenkov](https://github.com/mpenkov)__, [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
-* Avoid incorrect filename inference when loading model (__[@mpenkov](https://github.com/mpenkov)__, [#2408](https://github.com/RaRe-Technologies/gensim/pull/2408))
-* Handle invalid unicode when loading native FastText models (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
-* Avoid divide by zero when calculating vectors for terms with no ngrams (__[@mpenkov](https://github.com/mpenkov)__, [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
+* Fix unicode error when loading FastText vocabulary ([@mpenkov](https://github.com/mpenkov), [#2390](https://github.com/RaRe-Technologies/gensim/pull/2390))
+* Avoid division by zero in fasttext_inner.pyx ([@mpenkov](https://github.com/mpenkov), [#2404](https://github.com/RaRe-Technologies/gensim/pull/2404))
+* Avoid incorrect filename inference when loading model ([@mpenkov](https://github.com/mpenkov), [#2408](https://github.com/RaRe-Technologies/gensim/pull/2408))
+* Handle invalid unicode when loading native FastText models ([@mpenkov](https://github.com/mpenkov), [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
+* Avoid divide by zero when calculating vectors for terms with no ngrams ([@mpenkov](https://github.com/mpenkov), [#2411](https://github.com/RaRe-Technologies/gensim/pull/2411))
 
 ### :books: Tutorial and doc improvements
 
-* Add link to bindr (__[rogueleaderr](https://github.com/rogueleaderr)__, [#2387](https://github.com/RaRe-Technologies/gensim/pull/2387))
+* Add link to bindr ([rogueleaderr](https://github.com/rogueleaderr), [#2387](https://github.com/RaRe-Technologies/gensim/pull/2387))
 
 ### :+1: Improvements
 
-* Undo the hash2index optimization (__[mpenkov](https://github.com/mpenkov)__, [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
+* Undo the hash2index optimization ([mpenkov](https://github.com/mpenkov), [#2370](https://github.com/RaRe-Technologies/gensim/pull/2370))
 
 ### :warning: Changes in FastText behavior
 
 #### Out-of-vocab word handling
 
 To achieve consistency with the reference implementation from Facebook,
-a `FastText` model will now always report any word, out-of-vocabulary or 
-not, as being in the model,  and always return some vector for any word 
+a `FastText` model will now always report any word, out-of-vocabulary or
+not, as being in the model,  and always return some vector for any word
 looked-up. Specifically:
 
-1. `'any_word' in ft_model` will always return `True`.  Previously, it 
-returned `True` only if the full word was in the vocabulary. (To test if a 
-full word is in the known vocabulary, you can consult the `wv.vocab` 
-property: `'any_word' in ft_model.wv.vocab` will return `False` if the full 
+1. `'any_word' in ft_model` will always return `True`.  Previously, it
+returned `True` only if the full word was in the vocabulary. (To test if a
+full word is in the known vocabulary, you can consult the `wv.vocab`
+property: `'any_word' in ft_model.wv.vocab` will return `False` if the full
 word wasn't learned during model training.)
-2. `ft_model['any_word']` will always return a vector.  Previously, it 
-raised `KeyError` for OOV words when the model had no vectors 
+2. `ft_model['any_word']` will always return a vector.  Previously, it
+raised `KeyError` for OOV words when the model had no vectors
 for **any** ngrams of the word.
 3. If no ngrams from the term are present in the model,
 or when no ngrams could be extracted from the term, a vector pointing
 to the origin will be returned.  Previously, a vector of NaN (not a number)
 was returned as a consequence of a divide-by-zero problem.
 4. Models may use more more memory, or take longer for word-vector
-lookup, especially after training on smaller corpuses where the previous 
+lookup, especially after training on smaller corpuses where the previous
 non-compliant behavior discarded some ngrams from consideration.
 
 #### Loading models in Facebook .bin format
@@ -291,7 +381,7 @@ Since this function is deprecated, consider using one of its alternatives (see b
 Furthermore, you must now pass the full path to the file to load, **including the file extension.**
 Previously, if you specified a model path that ends with anything other than .bin, the code automatically appended .bin to the path before loading the model.
 This behavior was [confusing](https://github.com/RaRe-Technologies/gensim/issues/2407), so we removed it.
-	
+
 ### :warning: Deprecations (will be removed in the next major release)
 
 Remove:
@@ -302,28 +392,28 @@ Remove:
 
 ### :+1: Improvements
 
-* NMF optimization & documentation (__[@anotherbugmaster](https://github.com/anotherbugmaster)__, [#2361](https://github.com/RaRe-Technologies/gensim/pull/2361))
-* Optimize `FastText.load_fasttext_model` (__[@mpenkov](https://github.com/mpenkov)__, [#2340](https://github.com/RaRe-Technologies/gensim/pull/2340))
-* Add warning when string is used as argument to `Doc2Vec.infer_vector` (__[@tobycheese](https://github.com/tobycheese)__, [#2347](https://github.com/RaRe-Technologies/gensim/pull/2347))
-* Fix light linting issues in `LdaSeqModel` (__[@horpto](https://github.com/horpto)__, [#2360](https://github.com/RaRe-Technologies/gensim/pull/2360))
-* Move out `process_result_queue` from cycle in `LdaMulticore` (__[@horpto](https://github.com/horpto)__, [#2358](https://github.com/RaRe-Technologies/gensim/pull/2358))
+* NMF optimization & documentation ([@anotherbugmaster](https://github.com/anotherbugmaster), [#2361](https://github.com/RaRe-Technologies/gensim/pull/2361))
+* Optimize `FastText.load_fasttext_model` ([@mpenkov](https://github.com/mpenkov), [#2340](https://github.com/RaRe-Technologies/gensim/pull/2340))
+* Add warning when string is used as argument to `Doc2Vec.infer_vector` ([@tobycheese](https://github.com/tobycheese), [#2347](https://github.com/RaRe-Technologies/gensim/pull/2347))
+* Fix light linting issues in `LdaSeqModel` ([@horpto](https://github.com/horpto), [#2360](https://github.com/RaRe-Technologies/gensim/pull/2360))
+* Move out `process_result_queue` from cycle in `LdaMulticore` ([@horpto](https://github.com/horpto), [#2358](https://github.com/RaRe-Technologies/gensim/pull/2358))
 
 
 ### :red_circle: Bug fixes
 
-* Fix infinite diff in `LdaModel.do_mstep` (__[@horpto](https://github.com/horpto)__, [#2344](https://github.com/RaRe-Technologies/gensim/pull/2344))
-* Fix backward compatibility issue: loading `FastTextKeyedVectors` using `KeyedVectors` (missing attribute `compatible_hash`) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2349](https://github.com/RaRe-Technologies/gensim/pull/2349))
-* Fix logging issue (conda-forge related) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2339](https://github.com/RaRe-Technologies/gensim/pull/2339))
-* Fix `WordEmbeddingsKeyedVectors.most_similar` (__[@Witiko](https://github.com/Witiko)__, [#2356](https://github.com/RaRe-Technologies/gensim/pull/2356))
-* Fix issues of `flake8==3.7.1` (__[@horpto](https://github.com/horpto)__, [#2365](https://github.com/RaRe-Technologies/gensim/pull/2365))
+* Fix infinite diff in `LdaModel.do_mstep` ([@horpto](https://github.com/horpto), [#2344](https://github.com/RaRe-Technologies/gensim/pull/2344))
+* Fix backward compatibility issue: loading `FastTextKeyedVectors` using `KeyedVectors` (missing attribute `compatible_hash`) ([@menshikh-iv](https://github.com/menshikh-iv), [#2349](https://github.com/RaRe-Technologies/gensim/pull/2349))
+* Fix logging issue (conda-forge related) ([@menshikh-iv](https://github.com/menshikh-iv), [#2339](https://github.com/RaRe-Technologies/gensim/pull/2339))
+* Fix `WordEmbeddingsKeyedVectors.most_similar` ([@Witiko](https://github.com/Witiko), [#2356](https://github.com/RaRe-Technologies/gensim/pull/2356))
+* Fix issues of `flake8==3.7.1` ([@horpto](https://github.com/horpto), [#2365](https://github.com/RaRe-Technologies/gensim/pull/2365))
 
 
 ### :books: Tutorial and doc improvements
 
-* Improve `FastText` documentation (__[@mpenkov](https://github.com/mpenkov)__, [#2353](https://github.com/RaRe-Technologies/gensim/pull/2353))
-* Minor corrections and improvements in `Any*Vec` docstrings (__[@tobycheese](https://github.com/tobycheese)__, [#2345](https://github.com/RaRe-Technologies/gensim/pull/2345))
-* Fix the example code for SparseTermSimilarityMatrix (__[@Witiko](https://github.com/Witiko)__, [#2359](https://github.com/RaRe-Technologies/gensim/pull/2359))
-* Update `poincare` documentation to indicate the relation format (__[@AMR-KELEG](https://github.com/AMR-KELEG)__, [#2357](https://github.com/RaRe-Technologies/gensim/pull/2357))
+* Improve `FastText` documentation ([@mpenkov](https://github.com/mpenkov), [#2353](https://github.com/RaRe-Technologies/gensim/pull/2353))
+* Minor corrections and improvements in `Any*Vec` docstrings ([@tobycheese](https://github.com/tobycheese), [#2345](https://github.com/RaRe-Technologies/gensim/pull/2345))
+* Fix the example code for SparseTermSimilarityMatrix ([@Witiko](https://github.com/Witiko), [#2359](https://github.com/RaRe-Technologies/gensim/pull/2359))
+* Update `poincare` documentation to indicate the relation format ([@AMR-KELEG](https://github.com/AMR-KELEG), [#2357](https://github.com/RaRe-Technologies/gensim/pull/2357))
 
 
 ### :warning: Deprecations (will be removed in the next major release)
@@ -352,7 +442,7 @@ Remove:
 
 ### :star2: New features
 
-* Fast Online NMF (__[@anotherbugmaster](https://github.com/anotherbugmaster)__, [#2007](https://github.com/RaRe-Technologies/gensim/pull/2007))
+* Fast Online NMF ([@anotherbugmaster](https://github.com/anotherbugmaster), [#2007](https://github.com/RaRe-Technologies/gensim/pull/2007))
     - Benchmark `wiki-english-20171001`
 
       | Model | Perplexity | Coherence | L2 norm | Train time (minutes) |
@@ -398,7 +488,7 @@ Remove:
       - [NMF tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/nmf_tutorial.ipynb)
       - [Full NMF Benchmark](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/nmf_wikipedia.ipynb)
 
-* Massive improvement`FastText` compatibilities (__[@mpenkov](https://github.com/mpenkov)__, [#2313](https://github.com/RaRe-Technologies/gensim/pull/2313))
+* Massive improvement`FastText` compatibilities ([@mpenkov](https://github.com/mpenkov), [#2313](https://github.com/RaRe-Technologies/gensim/pull/2313))
     ```python
     from gensim.models import FastText
 
@@ -444,7 +534,7 @@ Remove:
     model.train(corpus, total_examples=len(corpus), epochs=5)
     ```
 
-* Similarity search improvements (__[@Witiko](https://github.com/Witiko)__, [#2016](https://github.com/RaRe-Technologies/gensim/pull/2016))
+* Similarity search improvements ([@Witiko](https://github.com/Witiko), [#2016](https://github.com/RaRe-Technologies/gensim/pull/2016))
     - Add similarity search using the Levenshtein distance in `gensim.similarities.LevenshteinSimilarityIndex`
     - Performance optimizations to `gensim.similarities.SoftCosineSimilarity` ([full benchmark](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_benchmark.ipynb))
 
@@ -459,83 +549,83 @@ Remove:
 
     - See [updated soft-cosine tutorial](https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb) for more information and usage examples
 
-* Add `python3.7` support (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2211](https://github.com/RaRe-Technologies/gensim/pull/2211))
-    - Wheels for Window, OSX and Linux platforms (__[@menshikh-iv](https://github.com/menshikh-iv)__, [MacPython/gensim-wheels/#12](https://github.com/MacPython/gensim-wheels/pull/12))
+* Add `python3.7` support ([@menshikh-iv](https://github.com/menshikh-iv), [#2211](https://github.com/RaRe-Technologies/gensim/pull/2211))
+    - Wheels for Window, OSX and Linux platforms ([@menshikh-iv](https://github.com/menshikh-iv), [MacPython/gensim-wheels/#12](https://github.com/MacPython/gensim-wheels/pull/12))
     - Faster installation
 
 
 ### :+1: Improvements
 
 ##### Optimizations
-* Reduce `Phraser` memory usage (drop frequencies) (__[@jenishah](https://github.com/jenishah)__, [#2208](https://github.com/RaRe-Technologies/gensim/pull/2208))
-* Reduce memory consumption of summarizer (__[@horpto](https://github.com/horpto)__, [#2298](https://github.com/RaRe-Technologies/gensim/pull/2298))
-* Replace inline slow equivalent of mean_absolute_difference with fast (__[@horpto](https://github.com/horpto)__, [#2284](https://github.com/RaRe-Technologies/gensim/pull/2284))
-* Reuse precalculated updated prior in `ldamodel.update_dir_prior` (__[@horpto](https://github.com/horpto)__, [#2274](https://github.com/RaRe-Technologies/gensim/pull/2274))
-* Improve `KeyedVector.wmdistance` (__[@horpto](https://github.com/horpto)__, [#2326](https://github.com/RaRe-Technologies/gensim/pull/2326))
-* Optimize `remove_unreachable_nodes` in `gensim.summarization` (__[@horpto](https://github.com/horpto)__, [#2263](https://github.com/RaRe-Technologies/gensim/pull/2263))
-* Optimize `mz_entropy` from `gensim.summarization` (__[@horpto](https://github.com/horpto)__, [#2267](https://github.com/RaRe-Technologies/gensim/pull/2267))
-* Improve `filter_extremes` methods in `Dictionary` and `HashDictionary` (__[@horpto](https://github.com/horpto)__, [#2303](https://github.com/RaRe-Technologies/gensim/pull/2303))
+* Reduce `Phraser` memory usage (drop frequencies) ([@jenishah](https://github.com/jenishah), [#2208](https://github.com/RaRe-Technologies/gensim/pull/2208))
+* Reduce memory consumption of summarizer ([@horpto](https://github.com/horpto), [#2298](https://github.com/RaRe-Technologies/gensim/pull/2298))
+* Replace inline slow equivalent of mean_absolute_difference with fast ([@horpto](https://github.com/horpto), [#2284](https://github.com/RaRe-Technologies/gensim/pull/2284))
+* Reuse precalculated updated prior in `ldamodel.update_dir_prior` ([@horpto](https://github.com/horpto), [#2274](https://github.com/RaRe-Technologies/gensim/pull/2274))
+* Improve `KeyedVector.wmdistance` ([@horpto](https://github.com/horpto), [#2326](https://github.com/RaRe-Technologies/gensim/pull/2326))
+* Optimize `remove_unreachable_nodes` in `gensim.summarization` ([@horpto](https://github.com/horpto), [#2263](https://github.com/RaRe-Technologies/gensim/pull/2263))
+* Optimize `mz_entropy` from `gensim.summarization` ([@horpto](https://github.com/horpto), [#2267](https://github.com/RaRe-Technologies/gensim/pull/2267))
+* Improve `filter_extremes` methods in `Dictionary` and `HashDictionary` ([@horpto](https://github.com/horpto), [#2303](https://github.com/RaRe-Technologies/gensim/pull/2303))
 
 ##### Additions
-* Add `KeyedVectors.relative_cosine_similarity` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2307](https://github.com/RaRe-Technologies/gensim/pull/2307))
-* Add `random_seed` to `LdaMallet` (__[@Zohaggie](https://github.com/Zohaggie)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#2153](https://github.com/RaRe-Technologies/gensim/pull/2153))
-* Add `common_terms` parameter to `sklearn_api.PhrasesTransformer` (__[@pmlk](https://github.com/pmlk)__, [#2074](https://github.com/RaRe-Technologies/gensim/pull/2074))
-* Add method for patch `corpora.Dictionary` based on special tokens (__[@Froskekongen](https://github.com/Froskekongen)__, [#2200](https://github.com/RaRe-Technologies/gensim/pull/2200))
+* Add `KeyedVectors.relative_cosine_similarity` ([@rsdel2007](https://github.com/rsdel2007), [#2307](https://github.com/RaRe-Technologies/gensim/pull/2307))
+* Add `random_seed` to `LdaMallet` ([@Zohaggie](https://github.com/Zohaggie) & [@menshikh-iv](https://github.com/menshikh-iv), [#2153](https://github.com/RaRe-Technologies/gensim/pull/2153))
+* Add `common_terms` parameter to `sklearn_api.PhrasesTransformer` ([@pmlk](https://github.com/pmlk), [#2074](https://github.com/RaRe-Technologies/gensim/pull/2074))
+* Add method for patch `corpora.Dictionary` based on special tokens ([@Froskekongen](https://github.com/Froskekongen), [#2200](https://github.com/RaRe-Technologies/gensim/pull/2200))
 
 ##### Cleanup
-* Improve `six` usage (`xrange`, `map`, `zip`) (__[@horpto](https://github.com/horpto)__, [#2264](https://github.com/RaRe-Technologies/gensim/pull/2264))
-* Refactor `line2doc` methods of `LowCorpus` and `MalletCorpus` (__[@horpto](https://github.com/horpto)__, [#2269](https://github.com/RaRe-Technologies/gensim/pull/2269))
-* Get rid most of warnings in testing (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2191](https://github.com/RaRe-Technologies/gensim/pull/2191))
-* Fix non-deterministic test failures (pin `PYTHONHASHSEED`) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2196](https://github.com/RaRe-Technologies/gensim/pull/2196))
-* Fix "aliasing chunkize to chunkize_serial" warning on Windows (__[@aquatiko](https://github.com/aquatiko)__, [#2202](https://github.com/RaRe-Technologies/gensim/pull/2202))
-* Remove `__getitem__` code duplication in `gensim.models.phrases` (__[@jenishah](https://github.com/jenishah)__, [#2206](https://github.com/RaRe-Technologies/gensim/pull/2206))
-* Add `flake8-rst` for docstring code examples (__[@kataev](https://github.com/kataev)__, [#2192](https://github.com/RaRe-Technologies/gensim/pull/2192))
-* Get rid `py26` stuff (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2214](https://github.com/RaRe-Technologies/gensim/pull/2214))
-* Use `itertools.chain` instead of `sum` to concatenate lists (__[@Stigjb](https://github.com/Stigjb)__, [#2212](https://github.com/RaRe-Technologies/gensim/pull/2212))
-* Fix flake8 warnings W605, W504 (__[@horpto](https://github.com/horpto)__, [#2256](https://github.com/RaRe-Technologies/gensim/pull/2256))
-* Remove unnecessary creations of lists at all (__[@horpto](https://github.com/horpto)__, [#2261](https://github.com/RaRe-Technologies/gensim/pull/2261))
-* Fix extra list creation in `utils.get_max_id` (__[@horpto](https://github.com/horpto)__, [#2254](https://github.com/RaRe-Technologies/gensim/pull/2254))
-* Fix deprecation warning `np.sum(generator)` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2296](https://github.com/RaRe-Technologies/gensim/pull/2296))
-* Refactor `BM25` (__[@horpto](https://github.com/horpto)__, [#2275](https://github.com/RaRe-Technologies/gensim/pull/2275))
-* Fix pyemd import (__[@ramprakash-94](https://github.com/ramprakash-94)__, [#2240](https://github.com/RaRe-Technologies/gensim/pull/2240))
-* Set `metadata=True` for `make_wikicorpus` script by default (__[@Xinyi2016](https://github.com/Xinyi2016)__, [#2245](https://github.com/RaRe-Technologies/gensim/pull/2245))
-* Remove unimportant warning from `Phrases` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2331](https://github.com/RaRe-Technologies/gensim/pull/2331))
-* Replace `open()` by `smart_open()` in `gensim.models.fasttext._load_fasttext_format` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2335](https://github.com/RaRe-Technologies/gensim/pull/2335))
+* Improve `six` usage (`xrange`, `map`, `zip`) ([@horpto](https://github.com/horpto), [#2264](https://github.com/RaRe-Technologies/gensim/pull/2264))
+* Refactor `line2doc` methods of `LowCorpus` and `MalletCorpus` ([@horpto](https://github.com/horpto), [#2269](https://github.com/RaRe-Technologies/gensim/pull/2269))
+* Get rid most of warnings in testing ([@menshikh-iv](https://github.com/menshikh-iv), [#2191](https://github.com/RaRe-Technologies/gensim/pull/2191))
+* Fix non-deterministic test failures (pin `PYTHONHASHSEED`) ([@menshikh-iv](https://github.com/menshikh-iv), [#2196](https://github.com/RaRe-Technologies/gensim/pull/2196))
+* Fix "aliasing chunkize to chunkize_serial" warning on Windows ([@aquatiko](https://github.com/aquatiko), [#2202](https://github.com/RaRe-Technologies/gensim/pull/2202))
+* Remove `getitem` code duplication in `gensim.models.phrases` ([@jenishah](https://github.com/jenishah), [#2206](https://github.com/RaRe-Technologies/gensim/pull/2206))
+* Add `flake8-rst` for docstring code examples ([@kataev](https://github.com/kataev), [#2192](https://github.com/RaRe-Technologies/gensim/pull/2192))
+* Get rid `py26` stuff ([@menshikh-iv](https://github.com/menshikh-iv), [#2214](https://github.com/RaRe-Technologies/gensim/pull/2214))
+* Use `itertools.chain` instead of `sum` to concatenate lists ([@Stigjb](https://github.com/Stigjb), [#2212](https://github.com/RaRe-Technologies/gensim/pull/2212))
+* Fix flake8 warnings W605, W504 ([@horpto](https://github.com/horpto), [#2256](https://github.com/RaRe-Technologies/gensim/pull/2256))
+* Remove unnecessary creations of lists at all ([@horpto](https://github.com/horpto), [#2261](https://github.com/RaRe-Technologies/gensim/pull/2261))
+* Fix extra list creation in `utils.get_max_id` ([@horpto](https://github.com/horpto), [#2254](https://github.com/RaRe-Technologies/gensim/pull/2254))
+* Fix deprecation warning `np.sum(generator)` ([@rsdel2007](https://github.com/rsdel2007), [#2296](https://github.com/RaRe-Technologies/gensim/pull/2296))
+* Refactor `BM25` ([@horpto](https://github.com/horpto), [#2275](https://github.com/RaRe-Technologies/gensim/pull/2275))
+* Fix pyemd import ([@ramprakash-94](https://github.com/ramprakash-94), [#2240](https://github.com/RaRe-Technologies/gensim/pull/2240))
+* Set `metadata=True` for `make_wikicorpus` script by default ([@Xinyi2016](https://github.com/Xinyi2016), [#2245](https://github.com/RaRe-Technologies/gensim/pull/2245))
+* Remove unimportant warning from `Phrases` ([@rsdel2007](https://github.com/rsdel2007), [#2331](https://github.com/RaRe-Technologies/gensim/pull/2331))
+* Replace `open()` by `smart_open()` in `gensim.models.fasttext._load_fasttext_format` ([@rsdel2007](https://github.com/rsdel2007), [#2335](https://github.com/RaRe-Technologies/gensim/pull/2335))
 
 
 ### :red_circle: Bug fixes
-* Fix overflow error for `*Vec` corpusfile-based training (__[@bm371613](https://github.com/bm371613)__, [#2239](https://github.com/RaRe-Technologies/gensim/pull/2239))
-* Fix `malletmodel2ldamodel` conversion (__[@horpto](https://github.com/horpto)__, [#2288](https://github.com/RaRe-Technologies/gensim/pull/2288))
-* Replace custom epsilons with numpy equivalent in `LdaModel` (__[@horpto](https://github.com/horpto)__, [#2308](https://github.com/RaRe-Technologies/gensim/pull/2308))
-* Add missing content to tarball (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2194](https://github.com/RaRe-Technologies/gensim/pull/2194))
-* Fixes divided by zero when w_star_count==0 (__[@allenyllee](https://github.com/allenyllee)__, [#2259](https://github.com/RaRe-Technologies/gensim/pull/2259))
-* Fix check for callbacks (__[@allenyllee](https://github.com/allenyllee)__, [#2251](https://github.com/RaRe-Technologies/gensim/pull/2251))
-* Fix `SvmLightCorpus.serialize` if `labels` instance of numpy.ndarray (__[@aquatiko](https://github.com/aquatiko)__, [#2243](https://github.com/RaRe-Technologies/gensim/pull/2243))
-* Fix poincate viz incompatibility with `plotly>=3.0.0` (__[@jenishah](https://github.com/jenishah)__, [#2226](https://github.com/RaRe-Technologies/gensim/pull/2226))
-* Fix `keep_n` behavior for `Dictionary.filter_extremes` (__[@johann-petrak](https://github.com/johann-petrak)__, [#2232](https://github.com/RaRe-Technologies/gensim/pull/2232))
-* Fix for `sphinx==1.8.1` (last r (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#None](https://github.com/RaRe-Technologies/gensim/pull/None))
-* Fix `np.issubdtype` warnings (__[@marioyc](https://github.com/marioyc)__, [#2210](https://github.com/RaRe-Technologies/gensim/pull/2210))
-* Drop wrong key `-c` from `gensim.downloader` description (__[@horpto](https://github.com/horpto)__, [#2262](https://github.com/RaRe-Technologies/gensim/pull/2262))
-* Fix gensim build (docs & pyemd issues) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2318](https://github.com/RaRe-Technologies/gensim/pull/2318))
-* Limit visdom version (avoid py2 issue from the latest visdom release) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2334](https://github.com/RaRe-Technologies/gensim/pull/2334))
-* Fix visdom integration (using `viz.line()` instead of `viz.updatetrace()`) (__[@allenyllee](https://github.com/allenyllee)__, [#2252](https://github.com/RaRe-Technologies/gensim/pull/2252))
+* Fix overflow error for `*Vec` corpusfile-based training ([@bm371613](https://github.com/bm371613), [#2239](https://github.com/RaRe-Technologies/gensim/pull/2239))
+* Fix `malletmodel2ldamodel` conversion ([@horpto](https://github.com/horpto), [#2288](https://github.com/RaRe-Technologies/gensim/pull/2288))
+* Replace custom epsilons with numpy equivalent in `LdaModel` ([@horpto](https://github.com/horpto), [#2308](https://github.com/RaRe-Technologies/gensim/pull/2308))
+* Add missing content to tarball ([@menshikh-iv](https://github.com/menshikh-iv), [#2194](https://github.com/RaRe-Technologies/gensim/pull/2194))
+* Fixes divided by zero when w_star_count==0 ([@allenyllee](https://github.com/allenyllee), [#2259](https://github.com/RaRe-Technologies/gensim/pull/2259))
+* Fix check for callbacks ([@allenyllee](https://github.com/allenyllee), [#2251](https://github.com/RaRe-Technologies/gensim/pull/2251))
+* Fix `SvmLightCorpus.serialize` if `labels` instance of numpy.ndarray ([@aquatiko](https://github.com/aquatiko), [#2243](https://github.com/RaRe-Technologies/gensim/pull/2243))
+* Fix poincate viz incompatibility with `plotly>=3.0.0` ([@jenishah](https://github.com/jenishah), [#2226](https://github.com/RaRe-Technologies/gensim/pull/2226))
+* Fix `keep_n` behavior for `Dictionary.filter_extremes` ([@johann-petrak](https://github.com/johann-petrak), [#2232](https://github.com/RaRe-Technologies/gensim/pull/2232))
+* Fix for `sphinx==1.8.1` (last r ([@menshikh-iv](https://github.com/menshikh-iv), [#None](https://github.com/RaRe-Technologies/gensim/pull/None))
+* Fix `np.issubdtype` warnings ([@marioyc](https://github.com/marioyc), [#2210](https://github.com/RaRe-Technologies/gensim/pull/2210))
+* Drop wrong key `-c` from `gensim.downloader` description ([@horpto](https://github.com/horpto), [#2262](https://github.com/RaRe-Technologies/gensim/pull/2262))
+* Fix gensim build (docs & pyemd issues) ([@menshikh-iv](https://github.com/menshikh-iv), [#2318](https://github.com/RaRe-Technologies/gensim/pull/2318))
+* Limit visdom version (avoid py2 issue from the latest visdom release) ([@menshikh-iv](https://github.com/menshikh-iv), [#2334](https://github.com/RaRe-Technologies/gensim/pull/2334))
+* Fix visdom integration (using `viz.line()` instead of `viz.updatetrace()`) ([@allenyllee](https://github.com/allenyllee), [#2252](https://github.com/RaRe-Technologies/gensim/pull/2252))
 
 
 ### :books: Tutorial and doc improvements
 
-* Add gensim-data repo to `gensim.downloader` & fix rendering of code examples (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2327](https://github.com/RaRe-Technologies/gensim/pull/2327))
-* Fix typos in `gensim.models` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2323](https://github.com/RaRe-Technologies/gensim/pull/2323))
-* Fixed typos in notebooks (__[@rsdel2007](https://github.com/rsdel2007)__, [#2322](https://github.com/RaRe-Technologies/gensim/pull/2322))
-* Update `Doc2Vec` documentation: how tags are assigned in `corpus_file` mode (__[@persiyanov](https://github.com/persiyanov)__, [#2320](https://github.com/RaRe-Technologies/gensim/pull/2320))
-* Fix typos in `gensim/models/keyedvectors.py` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2290](https://github.com/RaRe-Technologies/gensim/pull/2290))
-* Add documentation about ranges to scoring functions for `Phrases` (__[@jenishah](https://github.com/jenishah)__, [#2242](https://github.com/RaRe-Technologies/gensim/pull/2242))
-* Update return sections for `KeyedVectors.evaluate_word_*` (__[@Stigjb](https://github.com/Stigjb)__, [#2205](https://github.com/RaRe-Technologies/gensim/pull/2205))
-* Fix return type in `KeyedVector.evaluate_word_analogies` (__[@Stigjb](https://github.com/Stigjb)__, [#2207](https://github.com/RaRe-Technologies/gensim/pull/2207))
-* Fix `WmdSimilarity` documentation (__[@jagmoreira](https://github.com/jagmoreira)__, [#2217](https://github.com/RaRe-Technologies/gensim/pull/2217))
-* Replace `fify -> fifty` in `gensim.parsing.preprocessing.STOPWORDS` (__[@coderwassananmol](https://github.com/coderwassananmol)__, [#2220](https://github.com/RaRe-Technologies/gensim/pull/2220))
-* Remove `alpha="auto"` from `LdaMulticore` (not supported yet) (__[@johann-petrak](https://github.com/johann-petrak)__, [#2225](https://github.com/RaRe-Technologies/gensim/pull/2225))
-* Update Adopters in README (__[@piskvorky](https://github.com/piskvorky)__, [#2234](https://github.com/RaRe-Technologies/gensim/pull/2234))
-* Fix broken link in `tutorials.md` (__[@rsdel2007](https://github.com/rsdel2007)__, [#2302](https://github.com/RaRe-Technologies/gensim/pull/2302))
+* Add gensim-data repo to `gensim.downloader` & fix rendering of code examples ([@menshikh-iv](https://github.com/menshikh-iv), [#2327](https://github.com/RaRe-Technologies/gensim/pull/2327))
+* Fix typos in `gensim.models` ([@rsdel2007](https://github.com/rsdel2007), [#2323](https://github.com/RaRe-Technologies/gensim/pull/2323))
+* Fixed typos in notebooks ([@rsdel2007](https://github.com/rsdel2007), [#2322](https://github.com/RaRe-Technologies/gensim/pull/2322))
+* Update `Doc2Vec` documentation: how tags are assigned in `corpus_file` mode ([@persiyanov](https://github.com/persiyanov), [#2320](https://github.com/RaRe-Technologies/gensim/pull/2320))
+* Fix typos in `gensim/models/keyedvectors.py` ([@rsdel2007](https://github.com/rsdel2007), [#2290](https://github.com/RaRe-Technologies/gensim/pull/2290))
+* Add documentation about ranges to scoring functions for `Phrases` ([@jenishah](https://github.com/jenishah), [#2242](https://github.com/RaRe-Technologies/gensim/pull/2242))
+* Update return sections for `KeyedVectors.evaluate_word_*` ([@Stigjb](https://github.com/Stigjb), [#2205](https://github.com/RaRe-Technologies/gensim/pull/2205))
+* Fix return type in `KeyedVector.evaluate_word_analogies` ([@Stigjb](https://github.com/Stigjb), [#2207](https://github.com/RaRe-Technologies/gensim/pull/2207))
+* Fix `WmdSimilarity` documentation ([@jagmoreira](https://github.com/jagmoreira), [#2217](https://github.com/RaRe-Technologies/gensim/pull/2217))
+* Replace `fify -> fifty` in `gensim.parsing.preprocessing.STOPWORDS` ([@coderwassananmol](https://github.com/coderwassananmol), [#2220](https://github.com/RaRe-Technologies/gensim/pull/2220))
+* Remove `alpha="auto"` from `LdaMulticore` (not supported yet) ([@johann-petrak](https://github.com/johann-petrak), [#2225](https://github.com/RaRe-Technologies/gensim/pull/2225))
+* Update Adopters in README ([@piskvorky](https://github.com/piskvorky), [#2234](https://github.com/RaRe-Technologies/gensim/pull/2234))
+* Fix broken link in `tutorials.md` ([@rsdel2007](https://github.com/rsdel2007), [#2302](https://github.com/RaRe-Technologies/gensim/pull/2302))
 
 
 ### :warning: Deprecations (will be removed in the next major release)
@@ -563,7 +653,7 @@ Remove:
 ## 3.6.0, 2018-09-20
 
 ### :star2: New features
-* File-based training for `*2Vec` models (__[@persiyanov](https://github.com/persiyanov)__, [#2127](https://github.com/RaRe-Technologies/gensim/pull/2127) & [#2078](https://github.com/RaRe-Technologies/gensim/pull/2078) & [#2048](https://github.com/RaRe-Technologies/gensim/pull/2048))
+* File-based training for `*2Vec` models ([@persiyanov](https://github.com/persiyanov), [#2127](https://github.com/RaRe-Technologies/gensim/pull/2127) & [#2078](https://github.com/RaRe-Technologies/gensim/pull/2078) & [#2048](https://github.com/RaRe-Technologies/gensim/pull/2048))
 
   New training mode for `*2Vec` models (word2vec, doc2vec, fasttext) that allows model training to scale linearly with the number of cores (full GIL elimination). The result of our Google Summer of Code 2018 project by Dmitry Persiyanov.
 
@@ -609,36 +699,36 @@ Remove:
 
 ### :+1: Improvements
 
-* Add scikit-learn wrapper for `FastText` (__[@mcemilg](https://github.com/mcemilg)__, [#2178](https://github.com/RaRe-Technologies/gensim/pull/2178))
-* Add multiprocessing support for `BM25` (__[@Shiki-H](https://github.com/Shiki-H)__, [#2146](https://github.com/RaRe-Technologies/gensim/pull/2146))
-* Add `name_only` option for downloader api (__[@aneesh-joshi](https://github.com/aneesh-joshi)__, [#2143](https://github.com/RaRe-Technologies/gensim/pull/2143))
-* Make `word2vec2tensor` script compatible with `python3` (__[@vsocrates](https://github.com/vsocrates)__, [#2147](https://github.com/RaRe-Technologies/gensim/pull/2147))
-* Add custom filter for `Wikicorpus` (__[@mattilyra](https://github.com/mattilyra)__, [#2089](https://github.com/RaRe-Technologies/gensim/pull/2089))
-* Make `similarity_matrix` support non-contiguous dictionaries (__[@Witiko](https://github.com/Witiko)__, [#2047](https://github.com/RaRe-Technologies/gensim/pull/2047))
+* Add scikit-learn wrapper for `FastText` ([@mcemilg](https://github.com/mcemilg), [#2178](https://github.com/RaRe-Technologies/gensim/pull/2178))
+* Add multiprocessing support for `BM25` ([@Shiki-H](https://github.com/Shiki-H), [#2146](https://github.com/RaRe-Technologies/gensim/pull/2146))
+* Add `name_only` option for downloader api ([@aneesh-joshi](https://github.com/aneesh-joshi), [#2143](https://github.com/RaRe-Technologies/gensim/pull/2143))
+* Make `word2vec2tensor` script compatible with `python3` ([@vsocrates](https://github.com/vsocrates), [#2147](https://github.com/RaRe-Technologies/gensim/pull/2147))
+* Add custom filter for `Wikicorpus` ([@mattilyra](https://github.com/mattilyra), [#2089](https://github.com/RaRe-Technologies/gensim/pull/2089))
+* Make `similarity_matrix` support non-contiguous dictionaries ([@Witiko](https://github.com/Witiko), [#2047](https://github.com/RaRe-Technologies/gensim/pull/2047))
 
 
 ### :red_circle: Bug fixes
 
-* Fix memory consumption in `AuthorTopicModel` (__[@philipphager](https://github.com/philipphager)__, [#2122](https://github.com/RaRe-Technologies/gensim/pull/2122))
-* Correctly process empty documents in `AuthorTopicModel` (__[@probinso](https://github.com/probinso)__, [#2133](https://github.com/RaRe-Technologies/gensim/pull/2133))
-* Fix ZeroDivisionError `keywords` issue with short input (__[@LShostenko](https://github.com/LShostenko)__, [#2154](https://github.com/RaRe-Technologies/gensim/pull/2154))
-* Fix `min_count` handling in phrases detection using `npmi_scorer` (__[@lopusz](https://github.com/lopusz)__, [#2072](https://github.com/RaRe-Technologies/gensim/pull/2072))
-* Remove duplicate count from `Phraser` log message (__[@robguinness](https://github.com/robguinness)__, [#2151](https://github.com/RaRe-Technologies/gensim/pull/2151))
-* Replace `np.integer` -> `np.int` in `AuthorTopicModel` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2145](https://github.com/RaRe-Technologies/gensim/pull/2145))
+* Fix memory consumption in `AuthorTopicModel` ([@philipphager](https://github.com/philipphager), [#2122](https://github.com/RaRe-Technologies/gensim/pull/2122))
+* Correctly process empty documents in `AuthorTopicModel` ([@probinso](https://github.com/probinso), [#2133](https://github.com/RaRe-Technologies/gensim/pull/2133))
+* Fix ZeroDivisionError `keywords` issue with short input ([@LShostenko](https://github.com/LShostenko), [#2154](https://github.com/RaRe-Technologies/gensim/pull/2154))
+* Fix `min_count` handling in phrases detection using `npmi_scorer` ([@lopusz](https://github.com/lopusz), [#2072](https://github.com/RaRe-Technologies/gensim/pull/2072))
+* Remove duplicate count from `Phraser` log message ([@robguinness](https://github.com/robguinness), [#2151](https://github.com/RaRe-Technologies/gensim/pull/2151))
+* Replace `np.integer` -> `np.int` in `AuthorTopicModel` ([@menshikh-iv](https://github.com/menshikh-iv), [#2145](https://github.com/RaRe-Technologies/gensim/pull/2145))
 
 
 ### :books: Tutorial and doc improvements
 
-* Update docstring with new analogy evaluation method (__[@akutuzov](https://github.com/akutuzov)__, [#2130](https://github.com/RaRe-Technologies/gensim/pull/2130))
-* Improve `prune_at` parameter description for `gensim.corpora.Dictionary` (__[@yxonic](https://github.com/yxonic)__, [#2128](https://github.com/RaRe-Technologies/gensim/pull/2128))
-* Fix `default` -> `auto` prior parameter in documentation for lda-related models (__[@Laubeee](https://github.com/Laubeee)__, [#2156](https://github.com/RaRe-Technologies/gensim/pull/2156))
-* Use heading instead of bold style in `gensim.models.translation_matrix` (__[@nzw0301](https://github.com/nzw0301)__, [#2164](https://github.com/RaRe-Technologies/gensim/pull/2164))
-* Fix quote of vocabulary from `gensim.models.Word2Vec` (__[@nzw0301](https://github.com/nzw0301)__, [#2161](https://github.com/RaRe-Technologies/gensim/pull/2161))
-* Replace deprecated parameters with new in docstring of `gensim.models.Doc2Vec` (__[@xuhdev](https://github.com/xuhdev)__, [#2165](https://github.com/RaRe-Technologies/gensim/pull/2165))
-* Fix formula in Mallet documentation (__[@Laubeee](https://github.com/Laubeee)__, [#2186](https://github.com/RaRe-Technologies/gensim/pull/2186))
-* Fix minor semantic issue in docs for `Phrases` (__[@RunHorst](https://github.com/RunHorst)__, [#2148](https://github.com/RaRe-Technologies/gensim/pull/2148))
-* Fix typo in documentation (__[@KenjiOhtsuka](https://github.com/KenjiOhtsuka)__, [#2157](https://github.com/RaRe-Technologies/gensim/pull/2157))
-* Additional documentation fixes (__[@piskvorky](https://github.com/piskvorky)__, [#2121](https://github.com/RaRe-Technologies/gensim/pull/2121))
+* Update docstring with new analogy evaluation method ([@akutuzov](https://github.com/akutuzov), [#2130](https://github.com/RaRe-Technologies/gensim/pull/2130))
+* Improve `prune_at` parameter description for `gensim.corpora.Dictionary` ([@yxonic](https://github.com/yxonic), [#2128](https://github.com/RaRe-Technologies/gensim/pull/2128))
+* Fix `default` -> `auto` prior parameter in documentation for lda-related models ([@Laubeee](https://github.com/Laubeee), [#2156](https://github.com/RaRe-Technologies/gensim/pull/2156))
+* Use heading instead of bold style in `gensim.models.translation_matrix` ([@nzw0301](https://github.com/nzw0301), [#2164](https://github.com/RaRe-Technologies/gensim/pull/2164))
+* Fix quote of vocabulary from `gensim.models.Word2Vec` ([@nzw0301](https://github.com/nzw0301), [#2161](https://github.com/RaRe-Technologies/gensim/pull/2161))
+* Replace deprecated parameters with new in docstring of `gensim.models.Doc2Vec` ([@xuhdev](https://github.com/xuhdev), [#2165](https://github.com/RaRe-Technologies/gensim/pull/2165))
+* Fix formula in Mallet documentation ([@Laubeee](https://github.com/Laubeee), [#2186](https://github.com/RaRe-Technologies/gensim/pull/2186))
+* Fix minor semantic issue in docs for `Phrases` ([@RunHorst](https://github.com/RunHorst), [#2148](https://github.com/RaRe-Technologies/gensim/pull/2148))
+* Fix typo in documentation ([@KenjiOhtsuka](https://github.com/KenjiOhtsuka), [#2157](https://github.com/RaRe-Technologies/gensim/pull/2157))
+* Additional documentation fixes ([@piskvorky](https://github.com/piskvorky), [#2121](https://github.com/RaRe-Technologies/gensim/pull/2121))
 
 ### :warning: Deprecations (will be removed in the next major release)
 
@@ -673,60 +763,60 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
 ### :books: Documentation improvements
 
-* Overhaul documentation for `*2vec` models (__[@steremma](https://github.com/steremma)__ & __[@piskvorky](https://github.com/piskvorky)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1944](https://github.com/RaRe-Technologies/gensim/pull/1944), [#2087](https://github.com/RaRe-Technologies/gensim/pull/2087))
-* Fix documentation for LDA-related models (__[@steremma](https://github.com/steremma)__ & __[@piskvorky](https://github.com/piskvorky)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#2026](https://github.com/RaRe-Technologies/gensim/pull/2026))
-* Fix documentation for utils, corpora, inferfaces (__[@piskvorky](https://github.com/piskvorky)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#2096](https://github.com/RaRe-Technologies/gensim/pull/2096))
-* Update non-API docs (about, intro, license etc) (__[@piskvorky](https://github.com/piskvorky)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#2101](https://github.com/RaRe-Technologies/gensim/pull/2101))
-* Refactor documentation for `gensim.models.phrases` (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1950](https://github.com/RaRe-Technologies/gensim/pull/1950))
-* Fix HashDictionary documentation (__[@piskvorky](https://github.com/piskvorky)__, [#2073](https://github.com/RaRe-Technologies/gensim/pull/2073))
-* Fix docstrings for `gensim.models.AuthorTopicModel` (__[@souravsingh](https://github.com/souravsingh)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1907](https://github.com/RaRe-Technologies/gensim/pull/1907))
-* Fix docstrings for HdpModel, lda_worker & lda_dispatcher (__[@gyanesh-m](https://github.com/gyanesh-m)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1912](https://github.com/RaRe-Technologies/gensim/pull/1912))
-* Fix format & links for `gensim.similarities.docsim` (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#2030](https://github.com/RaRe-Technologies/gensim/pull/2030))
-* Remove duplication of class documentation for `IndexedCorpus` (__[@darindf](https://github.com/darindf)__, [#2033](https://github.com/RaRe-Technologies/gensim/pull/2033))
-* Refactor documentation for `gensim.models.coherencemodel` (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1933](https://github.com/RaRe-Technologies/gensim/pull/1933))
-* Fix docstrings for `gensim.sklearn_api` (__[@steremma](https://github.com/steremma)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1895](https://github.com/RaRe-Technologies/gensim/pull/1895))
-* Disable google-style docstring support (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#2106](https://github.com/RaRe-Technologies/gensim/pull/2106))
-* Fix docstring of `gensim.models.KeyedVectors.similarity_matrix` (__[@Witiko](https://github.com/Witiko)__, [#1971](https://github.com/RaRe-Technologies/gensim/pull/1971))
-* Consistently use `smart_open()` instead of `open()` in notebooks (__[@sharanry](https://github.com/sharanry)__, [#1812](https://github.com/RaRe-Technologies/gensim/pull/1812))
+* Overhaul documentation for `*2vec` models ([@steremma](https://github.com/steremma) & [@piskvorky](https://github.com/piskvorky) & [@menshikh-iv](https://github.com/menshikh-iv), [#1944](https://github.com/RaRe-Technologies/gensim/pull/1944), [#2087](https://github.com/RaRe-Technologies/gensim/pull/2087))
+* Fix documentation for LDA-related models ([@steremma](https://github.com/steremma) & [@piskvorky](https://github.com/piskvorky) & [@menshikh-iv](https://github.com/menshikh-iv), [#2026](https://github.com/RaRe-Technologies/gensim/pull/2026))
+* Fix documentation for utils, corpora, inferfaces ([@piskvorky](https://github.com/piskvorky) & [@menshikh-iv](https://github.com/menshikh-iv), [#2096](https://github.com/RaRe-Technologies/gensim/pull/2096))
+* Update non-API docs (about, intro, license etc) ([@piskvorky](https://github.com/piskvorky) & [@menshikh-iv](https://github.com/menshikh-iv), [#2101](https://github.com/RaRe-Technologies/gensim/pull/2101))
+* Refactor documentation for `gensim.models.phrases` ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#1950](https://github.com/RaRe-Technologies/gensim/pull/1950))
+* Fix HashDictionary documentation ([@piskvorky](https://github.com/piskvorky), [#2073](https://github.com/RaRe-Technologies/gensim/pull/2073))
+* Fix docstrings for `gensim.models.AuthorTopicModel` ([@souravsingh](https://github.com/souravsingh) & [@menshikh-iv](https://github.com/menshikh-iv), [#1907](https://github.com/RaRe-Technologies/gensim/pull/1907))
+* Fix docstrings for HdpModel, lda_worker & lda_dispatcher ([@gyanesh-m](https://github.com/gyanesh-m) & [@menshikh-iv](https://github.com/menshikh-iv), [#1912](https://github.com/RaRe-Technologies/gensim/pull/1912))
+* Fix format & links for `gensim.similarities.docsim` ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#2030](https://github.com/RaRe-Technologies/gensim/pull/2030))
+* Remove duplication of class documentation for `IndexedCorpus` ([@darindf](https://github.com/darindf), [#2033](https://github.com/RaRe-Technologies/gensim/pull/2033))
+* Refactor documentation for `gensim.models.coherencemodel` ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#1933](https://github.com/RaRe-Technologies/gensim/pull/1933))
+* Fix docstrings for `gensim.sklearn_api` ([@steremma](https://github.com/steremma) & [@menshikh-iv](https://github.com/menshikh-iv), [#1895](https://github.com/RaRe-Technologies/gensim/pull/1895))
+* Disable google-style docstring support ([@menshikh-iv](https://github.com/menshikh-iv), [#2106](https://github.com/RaRe-Technologies/gensim/pull/2106))
+* Fix docstring of `gensim.models.KeyedVectors.similarity_matrix` ([@Witiko](https://github.com/Witiko), [#1971](https://github.com/RaRe-Technologies/gensim/pull/1971))
+* Consistently use `smart_open()` instead of `open()` in notebooks ([@sharanry](https://github.com/sharanry), [#1812](https://github.com/RaRe-Technologies/gensim/pull/1812))
 
 
 ### :star2: New features:
 
-* Add `add_entity` method to `KeyedVectors` to allow adding word vectors manually (__[@persiyanov](https://github.com/persiyanov)__, [#1957](https://github.com/RaRe-Technologies/gensim/pull/1957))
-* Add inference for new unseen author to `AuthorTopicModel` (__[@Stamenov](https://github.com/Stamenov)__, [#1766](https://github.com/RaRe-Technologies/gensim/pull/1766))
-* Add `evaluate_word_analogies` (will replace `accuracy`) method to `KeyedVectors` (__[@akutuzov](https://github.com/akutuzov)__, [#1935](https://github.com/RaRe-Technologies/gensim/pull/1935))
-* Add Pivot Normalization to `TfidfModel` (__[@markroxor](https://github.com/markroxor)__, [#1780](https://github.com/RaRe-Technologies/gensim/pull/1780))
+* Add `add_entity` method to `KeyedVectors` to allow adding word vectors manually ([@persiyanov](https://github.com/persiyanov), [#1957](https://github.com/RaRe-Technologies/gensim/pull/1957))
+* Add inference for new unseen author to `AuthorTopicModel` ([@Stamenov](https://github.com/Stamenov), [#1766](https://github.com/RaRe-Technologies/gensim/pull/1766))
+* Add `evaluate_word_analogies` (will replace `accuracy`) method to `KeyedVectors` ([@akutuzov](https://github.com/akutuzov), [#1935](https://github.com/RaRe-Technologies/gensim/pull/1935))
+* Add Pivot Normalization to `TfidfModel` ([@markroxor](https://github.com/markroxor), [#1780](https://github.com/RaRe-Technologies/gensim/pull/1780))
 
 
 
 ### :+1: Improvements
 
-* Allow initialization with `max_final_vocab` in lieu of `min_count` in `Word2Vec`(__[@aneesh-joshi](https://github.com/aneesh-joshi)__, [#1915](https://github.com/RaRe-Technologies/gensim/pull/1915))
-* Add `dtype` argument for `chunkize_serial` in `LdaModel` (__[@darindf](https://github.com/darindf)__, [#2027](https://github.com/RaRe-Technologies/gensim/pull/2027))
-* Increase performance in `Phrases.analyze_sentence` (__[@JonathanHourany](https://github.com/JonathanHourany)__, [#2070](https://github.com/RaRe-Technologies/gensim/pull/2070))
-* Add `ns_exponent` parameter to control the negative sampling distribution for `*2vec` models (__[@fernandocamargoti](https://github.com/fernandocamargoti)__, [#2093](https://github.com/RaRe-Technologies/gensim/pull/2093))
+* Allow initialization with `max_final_vocab` in lieu of `min_count` in `Word2Vec`([@aneesh-joshi](https://github.com/aneesh-joshi), [#1915](https://github.com/RaRe-Technologies/gensim/pull/1915))
+* Add `dtype` argument for `chunkize_serial` in `LdaModel` ([@darindf](https://github.com/darindf), [#2027](https://github.com/RaRe-Technologies/gensim/pull/2027))
+* Increase performance in `Phrases.analyze_sentence` ([@JonathanHourany](https://github.com/JonathanHourany), [#2070](https://github.com/RaRe-Technologies/gensim/pull/2070))
+* Add `ns_exponent` parameter to control the negative sampling distribution for `*2vec` models ([@fernandocamargoti](https://github.com/fernandocamargoti), [#2093](https://github.com/RaRe-Technologies/gensim/pull/2093))
 
 
 ### :red_circle: Bug fixes:
 
 
-* Fix `Doc2Vec.infer_vector` + notebook cleanup (__[@gojomo](https://github.com/gojomo)__, [#2103](https://github.com/RaRe-Technologies/gensim/pull/2103))
-* Fix linear decay for learning rate in `Doc2Vec.infer_vector` (__[@umangv](https://github.com/umangv)__, [#2063](https://github.com/RaRe-Technologies/gensim/pull/2063))
-* Fix negative sampling floating-point error for `gensim.models.Poincare (__[@jayantj](https://github.com/jayantj)__, [#1959](https://github.com/RaRe-Technologies/gensim/pull/1959))
-* Fix loading `word2vec` and `doc2vec` models saved using old Gensim versions (__[@manneshiva](https://github.com/manneshiva)__, [#2012](https://github.com/RaRe-Technologies/gensim/pull/2012))
-* Fix `SoftCosineSimilarity.get_similarities` on corpora ssues/1955) (__[@Witiko](https://github.com/Witiko)__, [#1972](https://github.com/RaRe-Technologies/gensim/pull/1972))
-* Fix return dtype for `matutils.unitvec` according to input dtype (__[@o-P-o](https://github.com/o-P-o)__, [#1992](https://github.com/RaRe-Technologies/gensim/pull/1992))
-* Fix passing empty dictionary to `gensim.corpora.WikiCorpus` (__[@steremma](https://github.com/steremma)__, [#2042](https://github.com/RaRe-Technologies/gensim/pull/2042))
-* Fix bug in `Similarity.query_shards` in multiprocessing case (__[@bohea](https://github.com/bohea)__, [#2044](https://github.com/RaRe-Technologies/gensim/pull/2044))
-* Fix SMART from TfidfModel for case when `df == "n"` (__[@PeteBleackley](https://github.com/PeteBleackley)__, [#2021](https://github.com/RaRe-Technologies/gensim/pull/2021))
-* Fix OverflowError when loading a large term-document matrix in compiled MatrixMarket format (__[@arlenk](https://github.com/arlenk)__, [#2001](https://github.com/RaRe-Technologies/gensim/pull/2001))
-* Update rules for removing table markup from Wikipedia dumps (__[@chaitaliSaini](https://github.com/chaitaliSaini)__, [#1954](https://github.com/RaRe-Technologies/gensim/pull/1954))
-* Fix `_is_single` from `Phrases` for case when corpus is a NumPy array (__[@rmalouf](https://github.com/rmalouf)__, [#1987](https://github.com/RaRe-Technologies/gensim/pull/1987))
-* Fix tests for `EuclideanKeyedVectors.similarity_matrix` (__[@Witiko](https://github.com/Witiko)__, [#1984](https://github.com/RaRe-Technologies/gensim/pull/1984))
-* Fix deprecated parameters in `D2VTransformer` and `W2VTransformer`(__[@MritunjayMohitesh](https://github.com/MritunjayMohitesh)__, [#1945](https://github.com/RaRe-Technologies/gensim/pull/1945))
-* Fix `Doc2Vec.infer_vector` after loading old `Doc2Vec` (`gensim<=3.2`)(__[@manneshiva](https://github.com/manneshiva)__, [#1974](https://github.com/RaRe-Technologies/gensim/pull/1974))
-* Fix inheritance chain for `load_word2vec_format` (__[@DennisChen0307](https://github.com/DennisChen0307)__, [#1968](https://github.com/RaRe-Technologies/gensim/pull/1968))
-* Update Keras version (avoid bug from `keras==2.1.5`) (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1963](https://github.com/RaRe-Technologies/gensim/pull/1963))
+* Fix `Doc2Vec.infer_vector` + notebook cleanup ([@gojomo](https://github.com/gojomo), [#2103](https://github.com/RaRe-Technologies/gensim/pull/2103))
+* Fix linear decay for learning rate in `Doc2Vec.infer_vector` ([@umangv](https://github.com/umangv), [#2063](https://github.com/RaRe-Technologies/gensim/pull/2063))
+* Fix negative sampling floating-point error for `gensim.models.Poincare ([@jayantj](https://github.com/jayantj), [#1959](https://github.com/RaRe-Technologies/gensim/pull/1959))
+* Fix loading `word2vec` and `doc2vec` models saved using old Gensim versions ([@manneshiva](https://github.com/manneshiva), [#2012](https://github.com/RaRe-Technologies/gensim/pull/2012))
+* Fix `SoftCosineSimilarity.get_similarities` on corpora ssues/1955) ([@Witiko](https://github.com/Witiko), [#1972](https://github.com/RaRe-Technologies/gensim/pull/1972))
+* Fix return dtype for `matutils.unitvec` according to input dtype ([@o-P-o](https://github.com/o-P-o), [#1992](https://github.com/RaRe-Technologies/gensim/pull/1992))
+* Fix passing empty dictionary to `gensim.corpora.WikiCorpus` ([@steremma](https://github.com/steremma), [#2042](https://github.com/RaRe-Technologies/gensim/pull/2042))
+* Fix bug in `Similarity.query_shards` in multiprocessing case ([@bohea](https://github.com/bohea), [#2044](https://github.com/RaRe-Technologies/gensim/pull/2044))
+* Fix SMART from TfidfModel for case when `df == "n"` ([@PeteBleackley](https://github.com/PeteBleackley), [#2021](https://github.com/RaRe-Technologies/gensim/pull/2021))
+* Fix OverflowError when loading a large term-document matrix in compiled MatrixMarket format ([@arlenk](https://github.com/arlenk), [#2001](https://github.com/RaRe-Technologies/gensim/pull/2001))
+* Update rules for removing table markup from Wikipedia dumps ([@chaitaliSaini](https://github.com/chaitaliSaini), [#1954](https://github.com/RaRe-Technologies/gensim/pull/1954))
+* Fix `_is_single` from `Phrases` for case when corpus is a NumPy array ([@rmalouf](https://github.com/rmalouf), [#1987](https://github.com/RaRe-Technologies/gensim/pull/1987))
+* Fix tests for `EuclideanKeyedVectors.similarity_matrix` ([@Witiko](https://github.com/Witiko), [#1984](https://github.com/RaRe-Technologies/gensim/pull/1984))
+* Fix deprecated parameters in `D2VTransformer` and `W2VTransformer`([@MritunjayMohitesh](https://github.com/MritunjayMohitesh), [#1945](https://github.com/RaRe-Technologies/gensim/pull/1945))
+* Fix `Doc2Vec.infer_vector` after loading old `Doc2Vec` (`gensim<=3.2`)([@manneshiva](https://github.com/manneshiva), [#1974](https://github.com/RaRe-Technologies/gensim/pull/1974))
+* Fix inheritance chain for `load_word2vec_format` ([@DennisChen0307](https://github.com/DennisChen0307), [#1968](https://github.com/RaRe-Technologies/gensim/pull/1968))
+* Update Keras version (avoid bug from `keras==2.1.5`) ([@menshikh-iv](https://github.com/menshikh-iv), [#1963](https://github.com/RaRe-Technologies/gensim/pull/1963))
 
 
 
@@ -754,7 +844,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 ## 3.4.0, 2018-03-01
 
 ### :star2: New features:
-* Massive optimizations of `gensim.models.LdaModel`: much faster training, using Cython. (__[@arlenk](https://github.com/arlenk)__, [#1767](https://github.com/RaRe-Technologies/gensim/pull/1767))
+* Massive optimizations of `gensim.models.LdaModel`: much faster training, using Cython. ([@arlenk](https://github.com/arlenk), [#1767](https://github.com/RaRe-Technologies/gensim/pull/1767))
     - Training benchmark :boom:
 
       | dataset | old LDA [sec] | optimized LDA [sec] | speed up |
@@ -763,7 +853,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
       | enron   | 774 | **437** |  **1.77x** |
 
     - This change **affects all models that depend on `LdaModel`**, such as `LdaMulticore`, `LdaSeqModel`, `AuthorTopicModel`.
-* Huge speed-ups to corpus I/O with `MmCorpus` (Cython) (__[@arlenk](https://github.com/arlenk)__, [#1825](https://github.com/RaRe-Technologies/gensim/pull/1825))
+* Huge speed-ups to corpus I/O with `MmCorpus` (Cython) ([@arlenk](https://github.com/arlenk), [#1825](https://github.com/RaRe-Technologies/gensim/pull/1825))
     - File reading benchmark
 
       |     dataset   | file compressed? | old MmReader [sec] | optimized MmReader [sec] | speed up      |
@@ -777,7 +867,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
     - Overall, a **2.5x** speedup for compressed `.mm.gz` input and **8.5x** :fire::fire::fire: for uncompressed plaintext `.mm`.
 
-* Performance and memory optimization to `gensim.models.FastText` :rocket: (__[@jbaiter](https://github.com/jbaiter)__, [#1916](https://github.com/RaRe-Technologies/gensim/pull/1916))
+* Performance and memory optimization to `gensim.models.FastText` :rocket: ([@jbaiter](https://github.com/jbaiter), [#1916](https://github.com/RaRe-Technologies/gensim/pull/1916))
     - Benchmark (first 500,000 articles from English Wikipedia)
 
       | Metric                 | old FastText         | optimized FastText  | improvement |
@@ -789,7 +879,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
     - Overall, a **2.5x** speedup & memory usage reduced by **30%**.
 
-* Implemented [Soft Cosine Measure](https://en.wikipedia.org/wiki/Cosine_similarity#Soft_cosine_measure) (__[@Witiko](https://github.com/Witiko)__, [#1827](https://github.com/RaRe-Technologies/gensim/pull/1827))
+* Implemented [Soft Cosine Measure](https://en.wikipedia.org/wiki/Cosine_similarity#Soft_cosine_measure) ([@Witiko](https://github.com/Witiko), [#1827](https://github.com/RaRe-Technologies/gensim/pull/1827))
     - New method for assessing document similarity, a nice faster alternative to [WMD, Word Mover's Distance](http://proceedings.mlr.press/v37/kusnerb15.pdf)
     - Benchmark
 
@@ -808,39 +898,39 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
 
 ### :+1: Improvements:
-* New method to show the Gensim installation parameters: `python -m gensim.scripts.package_info --info`. Use this when reporting problems, for easier debugging. Fix #1902 (__[@sharanry](https://github.com/sharanry)__, [#1903](https://github.com/RaRe-Technologies/gensim/pull/1903))
-* Added a flag to optionally skip network-related tests, to help maintainers avoid network issues with CI services (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1930](https://github.com/RaRe-Technologies/gensim/pull/1930))
-* Added `license` field to `setup.py`, allowing the use of tools like `pip-licenses` (__[@nils-werner](https://github.com/nils-werner)__, [#1909](https://github.com/RaRe-Technologies/gensim/pull/1909))
+* New method to show the Gensim installation parameters: `python -m gensim.scripts.package_info --info`. Use this when reporting problems, for easier debugging. Fix #1902 ([@sharanry](https://github.com/sharanry), [#1903](https://github.com/RaRe-Technologies/gensim/pull/1903))
+* Added a flag to optionally skip network-related tests, to help maintainers avoid network issues with CI services ([@menshikh-iv](https://github.com/menshikh-iv), [#1930](https://github.com/RaRe-Technologies/gensim/pull/1930))
+* Added `license` field to `setup.py`, allowing the use of tools like `pip-licenses` ([@nils-werner](https://github.com/nils-werner), [#1909](https://github.com/RaRe-Technologies/gensim/pull/1909))
 
 ### :red_circle: Bug fixes:
-* Fix Python 3 compatibility for `gensim.corpora.UciCorpus.save_corpus` (__[@darindf](https://github.com/darindf)__, [#1875](https://github.com/RaRe-Technologies/gensim/pull/1875))
-* Add `wv` property to KeyedVectors for backward compatibility. Fix #1882 (__[@manneshiva](https://github.com/manneshiva)__, [#1884](https://github.com/RaRe-Technologies/gensim/pull/1884))
-* Fix deprecation warning from `inspect.getargspec`. Fix #1878 (__[@aneesh-joshi](https://github.com/aneesh-joshi)__, [#1887](https://github.com/RaRe-Technologies/gensim/pull/1887))
-* Add `LabeledSentence` to `gensim.models.doc2vec` for backward compatibility. Fix #1886 (__[@manneshiva](https://github.com/manneshiva)__, [#1891](https://github.com/RaRe-Technologies/gensim/pull/1891))
-* Fix empty output bug in `Phrases` (when using `model[tokens]` twice). Fix #1401 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1853](https://github.com/RaRe-Technologies/gensim/pull/1853))
-* Fix type problems for `D2VTransformer.fit_transform`. Fix #1834 (__[@Utkarsh-Mishra-CIC](https://github.com/Utkarsh-Mishra-CIC)__, [#1845](https://github.com/RaRe-Technologies/gensim/pull/1845))
-* Fix `datatype` parameter for `KeyedVectors.load_word2vec_format`. Fix #1682 (__[@pushpankar](https://github.com/pushpankar)__, [#1819](https://github.com/RaRe-Technologies/gensim/pull/1819))
-* Fix deprecated parameters in `doc2vec-lee` notebook (__[@TheFlash10](https://github.com/TheFlash10)__, [#1918](https://github.com/RaRe-Technologies/gensim/pull/1918))
-* Fix file-like closing bug in `gensim.corpora.MmCorpus`. Fix #1869 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1911](https://github.com/RaRe-Technologies/gensim/pull/1911))
-* Fix precision problem in `test_similarities.py`, no more FP fails. (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1928](https://github.com/RaRe-Technologies/gensim/pull/1928))
-* Fix encoding in Lee corpus reader. (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1931](https://github.com/RaRe-Technologies/gensim/pull/1931))
-* Fix OOV pairs counter in `WordEmbeddingsKeyedVectors.evaluate_word_pairs`. (__[@akutuzov](https://github.com/akutuzov)__, [#1934](https://github.com/RaRe-Technologies/gensim/pull/1934))
+* Fix Python 3 compatibility for `gensim.corpora.UciCorpus.save_corpus` ([@darindf](https://github.com/darindf), [#1875](https://github.com/RaRe-Technologies/gensim/pull/1875))
+* Add `wv` property to KeyedVectors for backward compatibility. Fix #1882 ([@manneshiva](https://github.com/manneshiva), [#1884](https://github.com/RaRe-Technologies/gensim/pull/1884))
+* Fix deprecation warning from `inspect.getargspec`. Fix #1878 ([@aneesh-joshi](https://github.com/aneesh-joshi), [#1887](https://github.com/RaRe-Technologies/gensim/pull/1887))
+* Add `LabeledSentence` to `gensim.models.doc2vec` for backward compatibility. Fix #1886 ([@manneshiva](https://github.com/manneshiva), [#1891](https://github.com/RaRe-Technologies/gensim/pull/1891))
+* Fix empty output bug in `Phrases` (when using `model[tokens]` twice). Fix #1401 ([@sj29-innovate](https://github.com/sj29-innovate), [#1853](https://github.com/RaRe-Technologies/gensim/pull/1853))
+* Fix type problems for `D2VTransformer.fit_transform`. Fix #1834 ([@Utkarsh-Mishra-CIC](https://github.com/Utkarsh-Mishra-CIC), [#1845](https://github.com/RaRe-Technologies/gensim/pull/1845))
+* Fix `datatype` parameter for `KeyedVectors.load_word2vec_format`. Fix #1682 ([@pushpankar](https://github.com/pushpankar), [#1819](https://github.com/RaRe-Technologies/gensim/pull/1819))
+* Fix deprecated parameters in `doc2vec-lee` notebook ([@TheFlash10](https://github.com/TheFlash10), [#1918](https://github.com/RaRe-Technologies/gensim/pull/1918))
+* Fix file-like closing bug in `gensim.corpora.MmCorpus`. Fix #1869 ([@sj29-innovate](https://github.com/sj29-innovate), [#1911](https://github.com/RaRe-Technologies/gensim/pull/1911))
+* Fix precision problem in `test_similarities.py`, no more FP fails. ([@menshikh-iv](https://github.com/menshikh-iv), [#1928](https://github.com/RaRe-Technologies/gensim/pull/1928))
+* Fix encoding in Lee corpus reader. ([@menshikh-iv](https://github.com/menshikh-iv), [#1931](https://github.com/RaRe-Technologies/gensim/pull/1931))
+* Fix OOV pairs counter in `WordEmbeddingsKeyedVectors.evaluate_word_pairs`. ([@akutuzov](https://github.com/akutuzov), [#1934](https://github.com/RaRe-Technologies/gensim/pull/1934))
 
 
 ### :books: Tutorial and doc improvements:
-* Fix example block for `gensim.models.Word2Vec` (__[@nzw0301](https://github.com/nzw0301)__, [#1870](https://github.com/RaRe-Technologies/gensim/pull/1876))
-* Fix `doc2vec-lee` notebook (__[@numericlee](https://github.com/numericlee)__, [#1870](https://github.com/RaRe-Technologies/gensim/pull/1870))
-* Store images from `README.md` directly in repository. Fix #1849 (__[@ibrahimsharaf](https://github.com/ibrahimsharaf)__, [#1861](https://github.com/RaRe-Technologies/gensim/pull/1861))
-* Add windows venv activate command to `CONTRIBUTING.md` (__[@aneesh-joshi](https://github.com/aneesh-joshi)__, [#1880](https://github.com/RaRe-Technologies/gensim/pull/1880))
-* Add anaconda-cloud badge. Partial fix #1901 (__[@sharanry](https://github.com/sharanry)__, [#1905](https://github.com/RaRe-Technologies/gensim/pull/1905))
-* Fix docstrings for lsi-related code (__[@steremma](https://github.com/steremma)__, [#1892](https://github.com/RaRe-Technologies/gensim/pull/1892))
-* Fix parameter description of  `sg` parameter for `gensim.models.word2vec` (__[@mdcclv](https://github.com/mdcclv)__, [#1919](https://github.com/RaRe-Technologies/gensim/pull/1919))
-* Refactor documentation for `gensim.similarities.docsim` and `MmCorpus-related`. (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1910](https://github.com/RaRe-Technologies/gensim/pull/1910))
-* Fix docstrings for `gensim.test.utils` (__[@yurkai](https://github.com/yurkai)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1904](https://github.com/RaRe-Technologies/gensim/pull/1904))
-* Refactor docstrings for `gensim.scripts`. Partial fix #1665 (__[@yurkai](https://github.com/yurkai)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1792](https://github.com/RaRe-Technologies/gensim/pull/1792))
-* Refactor API reference `gensim.corpora`. Partial fix #1671 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1835](https://github.com/RaRe-Technologies/gensim/pull/1835))
-* Fix documentation for `gensim.models.wrappers` (__[@kakshay21](https://github.com/kakshay21)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1859](https://github.com/RaRe-Technologies/gensim/pull/1859))
-* Fix docstrings for `gensim.interfaces` (__[@yurkai](https://github.com/yurkai)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1913](https://github.com/RaRe-Technologies/gensim/pull/1913))
+* Fix example block for `gensim.models.Word2Vec` ([@nzw0301](https://github.com/nzw0301), [#1870](https://github.com/RaRe-Technologies/gensim/pull/1876))
+* Fix `doc2vec-lee` notebook ([@numericlee](https://github.com/numericlee), [#1870](https://github.com/RaRe-Technologies/gensim/pull/1870))
+* Store images from `README.md` directly in repository. Fix #1849 ([@ibrahimsharaf](https://github.com/ibrahimsharaf), [#1861](https://github.com/RaRe-Technologies/gensim/pull/1861))
+* Add windows venv activate command to `CONTRIBUTING.md` ([@aneesh-joshi](https://github.com/aneesh-joshi), [#1880](https://github.com/RaRe-Technologies/gensim/pull/1880))
+* Add anaconda-cloud badge. Partial fix #1901 ([@sharanry](https://github.com/sharanry), [#1905](https://github.com/RaRe-Technologies/gensim/pull/1905))
+* Fix docstrings for lsi-related code ([@steremma](https://github.com/steremma), [#1892](https://github.com/RaRe-Technologies/gensim/pull/1892))
+* Fix parameter description of  `sg` parameter for `gensim.models.word2vec` ([@mdcclv](https://github.com/mdcclv), [#1919](https://github.com/RaRe-Technologies/gensim/pull/1919))
+* Refactor documentation for `gensim.similarities.docsim` and `MmCorpus-related`. ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#1910](https://github.com/RaRe-Technologies/gensim/pull/1910))
+* Fix docstrings for `gensim.test.utils` ([@yurkai](https://github.com/yurkai) & [@menshikh-iv](https://github.com/menshikh-iv), [#1904](https://github.com/RaRe-Technologies/gensim/pull/1904))
+* Refactor docstrings for `gensim.scripts`. Partial fix #1665 ([@yurkai](https://github.com/yurkai) & [@menshikh-iv](https://github.com/menshikh-iv), [#1792](https://github.com/RaRe-Technologies/gensim/pull/1792))
+* Refactor API reference `gensim.corpora`. Partial fix #1671 ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#1835](https://github.com/RaRe-Technologies/gensim/pull/1835))
+* Fix documentation for `gensim.models.wrappers` ([@kakshay21](https://github.com/kakshay21) & [@menshikh-iv](https://github.com/menshikh-iv), [#1859](https://github.com/RaRe-Technologies/gensim/pull/1859))
+* Fix docstrings for `gensim.interfaces` ([@yurkai](https://github.com/yurkai) & [@menshikh-iv](https://github.com/menshikh-iv), [#1913](https://github.com/RaRe-Technologies/gensim/pull/1913))
 
 
 ### :warning: Deprecations (will be removed in the next major release)
@@ -867,13 +957,13 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 ## 3.3.0, 2018-02-02
 
 :star2: New features:
-* Re-designed all "*2vec" implementations (__[@manneshiva](https://github.com/manneshiva)__, [#1777](https://github.com/RaRe-Technologies/gensim/pull/1777))
+* Re-designed all "*2vec" implementations ([@manneshiva](https://github.com/manneshiva), [#1777](https://github.com/RaRe-Technologies/gensim/pull/1777))
     - Modular organization of `Word2Vec`, `Doc2Vec`, `FastText`, etc ..., making it easier to add new models in the future and re-use code
     - Fully backward compatible (even with loading models stored by a previous Gensim version)
     - [Detailed documentation for the *2vec refactoring project](https://github.com/manneshiva/gensim/wiki/Any2Vec-Refactoring-Summary)
 
 * Improve `gensim.scripts.segment_wiki` by retaining interwiki links. Fix #1712
- (__[@steremma](https://github.com/steremma)__, [PR #1839](https://github.com/RaRe-Technologies/gensim/pull/1839))
+ ([@steremma](https://github.com/steremma), [PR #1839](https://github.com/RaRe-Technologies/gensim/pull/1839))
     - Optionally extract interlinks from Wikipedia pages (use the `--include-interlinks` option). This will output one additional JSON dict for each article:
         ```
         {
@@ -914,7 +1004,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
         ```
 
-* Add support for [SMART notation](https://nlp.stanford.edu/IR-book/html/htmledition/document-and-query-weighting-schemes-1.html) for `TfidfModel`. Fix #1785 (__[@markroxor](https://github.com/markroxor)__, [#1791](https://github.com/RaRe-Technologies/gensim/pull/1791))
+* Add support for [SMART notation](https://nlp.stanford.edu/IR-book/html/htmledition/document-and-query-weighting-schemes-1.html) for `TfidfModel`. Fix #1785 ([@markroxor](https://github.com/markroxor), [#1791](https://github.com/RaRe-Technologies/gensim/pull/1791))
     - Natural extension of `TfidfModel` to allow different weighting and normalization schemes
         ```python
         from gensim.corpora import Dictionary
@@ -938,7 +1028,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
         ```
     - [SMART Information Retrieval System (wiki)](https://en.wikipedia.org/wiki/SMART_Information_Retrieval_System)
 
-* Add CircleCI for building Gensim documentation. Fix #1807 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1822](https://github.com/RaRe-Technologies/gensim/pull/1822))
+* Add CircleCI for building Gensim documentation. Fix #1807 ([@menshikh-iv](https://github.com/menshikh-iv), [#1822](https://github.com/RaRe-Technologies/gensim/pull/1822))
     - An easy way to preview the rendered documentation (especially, if don't use Linux)
         - Go to "Details" link of CircleCI in your PR, click on the "Artifacts" tab, choose the HTML file that you want to view; a new tab will open with the rendered HTML page
     - Integration with Github, to see the documentation directly from the pull request page
@@ -948,47 +1038,47 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
 
 :red_circle: Bug fixes:
-* Fix import in `get_my_ip`. Fix #1771 (__[@darindf](https://github.com/darindf)__, [#1772](https://github.com/RaRe-Technologies/gensim/pull/1772))
-* Fix tox.ini/setup.cfg configuration (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1815](https://github.com/RaRe-Technologies/gensim/pull/1815))
-* Fix formula in `gensim.summarization.bm25`. Fix #1828 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1833](https://github.com/RaRe-Technologies/gensim/pull/1833))
-* Fix the train method of `TranslationMatrix` (__[@robotcator](https://github.com/robotcator)__, [#1838](https://github.com/RaRe-Technologies/gensim/pull/1838))
-* Fix positional params used for `gensim.models.CoherenceModel` in `gensim.models.callbacks` (__[@Alexjmsherman](https://github.com/Alexjmsherman)__, [#1823](https://github.com/RaRe-Technologies/gensim/pull/1823))
-* Fix parameter setting for `FastText.train`. Fix #1818 (__[@sj29-innovate](https://github.com/sj29-innovate)__, [#1837](https://github.com/RaRe-Technologies/gensim/pull/1837))
-* Pin python2 explicitly for building documentation (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1840](https://github.com/RaRe-Technologies/gensim/pull/1840))
-* Remove dispatcher deadlock for distributed LDA (__[@darindf](https://github.com/darindf)__, [#1817](https://github.com/RaRe-Technologies/gensim/pull/1817))
-* Fix `score_function` from `LexicalEntailmentEvaluation`. Fix #1858 (__[@hachibaka](https://github.com/hachibaka)__, [#1863](https://github.com/RaRe-Technologies/gensim/pull/1863))
-* Fix symmetrical case for hellinger distance. Fix #1854 (__[@caiyulun](https://github.com/caiyulun)__, [#1860](https://github.com/RaRe-Technologies/gensim/pull/1860))
-* Remove wrong logging at import. Fix #1706 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1871](https://github.com/RaRe-Technologies/gensim/pull/1871))
+* Fix import in `get_my_ip`. Fix #1771 ([@darindf](https://github.com/darindf), [#1772](https://github.com/RaRe-Technologies/gensim/pull/1772))
+* Fix tox.ini/setup.cfg configuration ([@menshikh-iv](https://github.com/menshikh-iv), [#1815](https://github.com/RaRe-Technologies/gensim/pull/1815))
+* Fix formula in `gensim.summarization.bm25`. Fix #1828 ([@sj29-innovate](https://github.com/sj29-innovate), [#1833](https://github.com/RaRe-Technologies/gensim/pull/1833))
+* Fix the train method of `TranslationMatrix` ([@robotcator](https://github.com/robotcator), [#1838](https://github.com/RaRe-Technologies/gensim/pull/1838))
+* Fix positional params used for `gensim.models.CoherenceModel` in `gensim.models.callbacks` ([@Alexjmsherman](https://github.com/Alexjmsherman), [#1823](https://github.com/RaRe-Technologies/gensim/pull/1823))
+* Fix parameter setting for `FastText.train`. Fix #1818 ([@sj29-innovate](https://github.com/sj29-innovate), [#1837](https://github.com/RaRe-Technologies/gensim/pull/1837))
+* Pin python2 explicitly for building documentation ([@menshikh-iv](https://github.com/menshikh-iv), [#1840](https://github.com/RaRe-Technologies/gensim/pull/1840))
+* Remove dispatcher deadlock for distributed LDA ([@darindf](https://github.com/darindf), [#1817](https://github.com/RaRe-Technologies/gensim/pull/1817))
+* Fix `score_function` from `LexicalEntailmentEvaluation`. Fix #1858 ([@hachibaka](https://github.com/hachibaka), [#1863](https://github.com/RaRe-Technologies/gensim/pull/1863))
+* Fix symmetrical case for hellinger distance. Fix #1854 ([@caiyulun](https://github.com/caiyulun), [#1860](https://github.com/RaRe-Technologies/gensim/pull/1860))
+* Remove wrong logging at import. Fix #1706 ([@menshikh-iv](https://github.com/menshikh-iv), [#1871](https://github.com/RaRe-Technologies/gensim/pull/1871))
 
 
 :books: Tutorial and doc improvements:
-* Refactor documentation API Reference for `gensim.summarization` (__[@yurkai](https://github.com/yurkai)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1709](https://github.com/RaRe-Technologies/gensim/pull/1709))
-* Fix docstrings for `gensim.similarities.index`. Partial fix #1666 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1681](https://github.com/RaRe-Technologies/gensim/pull/1681))
-* Fix docstrings for `gensim.models.translation_matrix` (__[@KokuKUSIAKU](https://github.com/KokuKUSIAKU)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1806](https://github.com/RaRe-Technologies/gensim/pull/1806))
-* Fix docstrings for `gensim.models.rpmodel` (__[@jazzmuesli](https://github.com/jazzmuesli)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1802](https://github.com/RaRe-Technologies/gensim/pull/1802))
-* Fix docstrings for `gensim.utils` (__[@kakshay21](https://github.com/kakshay21)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1797](https://github.com/RaRe-Technologies/gensim/pull/1797))
-* Fix docstrings for `gensim.matutils` (__[@Cheukting](https://github.com/Cheukting)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1804](https://github.com/RaRe-Technologies/gensim/pull/1804))
-* Fix docstrings for `gensim.models.logentropy_model` (__[@minggli](https://github.com/minggli)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1803](https://github.com/RaRe-Technologies/gensim/pull/1803))
-* Fix docstrings for `gensim.models.normmodel` (__[@AustenLamacraft](https://github.com/AustenLamacraft)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1805](https://github.com/RaRe-Technologies/gensim/pull/1805))
-* Refactor API reference `gensim.topic_coherence`. Fix #1669 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1714](https://github.com/RaRe-Technologies/gensim/pull/1714))
-* Fix documentation for `gensim.corpora.dictionary` and `gensim.corpora.hashdictionary`. Partial fix #1671 (__[@CLearERR](https://github.com/CLearERR)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1814](https://github.com/RaRe-Technologies/gensim/pull/1814))
-* Fix documentation for `gensim.corpora`. Partial fix #1671 (__[@anotherbugmaster](https://github.com/anotherbugmaster)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1729](https://github.com/RaRe-Technologies/gensim/pull/1729))
-* Update banner in doc pages (__[@piskvorky](https://github.com/piskvorky)__, [#1865](https://github.com/RaRe-Technologies/gensim/pull/1865))
-* Fix errors in the doc2vec-lee notebook (__[@PeterHamilton](https://github.com/PeterHamilton)__, [#1841](https://github.com/RaRe-Technologies/gensim/pull/1841))
-* Add wordnet mammal train file for Poincare notebook (__[@jayantj](https://github.com/jayantj)__, [#1781](https://github.com/RaRe-Technologies/gensim/pull/1781))
-* Update Poincare notebooks (#1774) (__[@jayantj](https://github.com/jayantj)__, [#1774](https://github.com/RaRe-Technologies/gensim/pull/1774))
-* Update contributing guide. Fix #1786 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1793](https://github.com/RaRe-Technologies/gensim/pull/1793))
-* Add `model_to_dict` one-liner to word2vec notebook. Fix #1269 (__[@kakshay21](https://github.com/kakshay21)__, [#1776](https://github.com/RaRe-Technologies/gensim/pull/1776))
-* Add word embedding viz to word2vec notebook. Fix #1419 (__[@markroxor](https://github.com/markroxor)__, [#1800](https://github.com/RaRe-Technologies/gensim/pull/1800))
-* Fix description of `sg` parameter for `gensim.models.FastText` (__[@akutuzov](https://github.com/akutuzov)__, [#1801](https://github.com/RaRe-Technologies/gensim/pull/1801))
-* Fix typo in `doc2vec-IMDB`. Fix #1788 (__[@apoorvaeternity](https://github.com/apoorvaeternity)__, [#1796](https://github.com/RaRe-Technologies/gensim/pull/1796))
-* Remove outdated bz2 examples from tutorials[2] (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1868](https://github.com/RaRe-Technologies/gensim/pull/1868))
-* Remove outdated `bz2` + `MmCorpus` examples from tutorials (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1867](https://github.com/RaRe-Technologies/gensim/pull/1867))
+* Refactor documentation API Reference for `gensim.summarization` ([@yurkai](https://github.com/yurkai) & [@menshikh-iv](https://github.com/menshikh-iv), [#1709](https://github.com/RaRe-Technologies/gensim/pull/1709))
+* Fix docstrings for `gensim.similarities.index`. Partial fix #1666 ([@menshikh-iv](https://github.com/menshikh-iv), [#1681](https://github.com/RaRe-Technologies/gensim/pull/1681))
+* Fix docstrings for `gensim.models.translation_matrix` ([@KokuKUSIAKU](https://github.com/KokuKUSIAKU) & [@menshikh-iv](https://github.com/menshikh-iv), [#1806](https://github.com/RaRe-Technologies/gensim/pull/1806))
+* Fix docstrings for `gensim.models.rpmodel` ([@jazzmuesli](https://github.com/jazzmuesli) & [@menshikh-iv](https://github.com/menshikh-iv), [#1802](https://github.com/RaRe-Technologies/gensim/pull/1802))
+* Fix docstrings for `gensim.utils` ([@kakshay21](https://github.com/kakshay21) & [@menshikh-iv](https://github.com/menshikh-iv), [#1797](https://github.com/RaRe-Technologies/gensim/pull/1797))
+* Fix docstrings for `gensim.matutils` ([@Cheukting](https://github.com/Cheukting) & [@menshikh-iv](https://github.com/menshikh-iv), [#1804](https://github.com/RaRe-Technologies/gensim/pull/1804))
+* Fix docstrings for `gensim.models.logentropy_model` ([@minggli](https://github.com/minggli) & [@menshikh-iv](https://github.com/menshikh-iv), [#1803](https://github.com/RaRe-Technologies/gensim/pull/1803))
+* Fix docstrings for `gensim.models.normmodel` ([@AustenLamacraft](https://github.com/AustenLamacraft) & [@menshikh-iv](https://github.com/menshikh-iv), [#1805](https://github.com/RaRe-Technologies/gensim/pull/1805))
+* Refactor API reference `gensim.topic_coherence`. Fix #1669 ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#1714](https://github.com/RaRe-Technologies/gensim/pull/1714))
+* Fix documentation for `gensim.corpora.dictionary` and `gensim.corpora.hashdictionary`. Partial fix #1671 ([@CLearERR](https://github.com/CLearERR) & [@menshikh-iv](https://github.com/menshikh-iv), [#1814](https://github.com/RaRe-Technologies/gensim/pull/1814))
+* Fix documentation for `gensim.corpora`. Partial fix #1671 ([@anotherbugmaster](https://github.com/anotherbugmaster) & [@menshikh-iv](https://github.com/menshikh-iv), [#1729](https://github.com/RaRe-Technologies/gensim/pull/1729))
+* Update banner in doc pages ([@piskvorky](https://github.com/piskvorky), [#1865](https://github.com/RaRe-Technologies/gensim/pull/1865))
+* Fix errors in the doc2vec-lee notebook ([@PeterHamilton](https://github.com/PeterHamilton), [#1841](https://github.com/RaRe-Technologies/gensim/pull/1841))
+* Add wordnet mammal train file for Poincare notebook ([@jayantj](https://github.com/jayantj), [#1781](https://github.com/RaRe-Technologies/gensim/pull/1781))
+* Update Poincare notebooks (#1774) ([@jayantj](https://github.com/jayantj), [#1774](https://github.com/RaRe-Technologies/gensim/pull/1774))
+* Update contributing guide. Fix #1786 ([@menshikh-iv](https://github.com/menshikh-iv), [#1793](https://github.com/RaRe-Technologies/gensim/pull/1793))
+* Add `model_to_dict` one-liner to word2vec notebook. Fix #1269 ([@kakshay21](https://github.com/kakshay21), [#1776](https://github.com/RaRe-Technologies/gensim/pull/1776))
+* Add word embedding viz to word2vec notebook. Fix #1419 ([@markroxor](https://github.com/markroxor), [#1800](https://github.com/RaRe-Technologies/gensim/pull/1800))
+* Fix description of `sg` parameter for `gensim.models.FastText` ([@akutuzov](https://github.com/akutuzov), [#1801](https://github.com/RaRe-Technologies/gensim/pull/1801))
+* Fix typo in `doc2vec-IMDB`. Fix #1788 ([@apoorvaeternity](https://github.com/apoorvaeternity), [#1796](https://github.com/RaRe-Technologies/gensim/pull/1796))
+* Remove outdated bz2 examples from tutorials[2] ([@menshikh-iv](https://github.com/menshikh-iv), [#1868](https://github.com/RaRe-Technologies/gensim/pull/1868))
+* Remove outdated `bz2` + `MmCorpus` examples from tutorials ([@menshikh-iv](https://github.com/menshikh-iv), [#1867](https://github.com/RaRe-Technologies/gensim/pull/1867))
 
 
 
 :+1: Improvements:
-* Refactor tests for `gensim.corpora.WikiCorpus` (__[@steremma](https://github.com/steremma)__, [#1821](https://github.com/RaRe-Technologies/gensim/pull/1821))
+* Refactor tests for `gensim.corpora.WikiCorpus` ([@steremma](https://github.com/steremma), [#1821](https://github.com/RaRe-Technologies/gensim/pull/1821))
 
 
 :warning: Deprecations (will be removed in the next major release)
@@ -1016,7 +1106,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
 :star2: New features:
 
-* New download API for corpora and pre-trained models (__[@chaitaliSaini](https://github.com/chaitaliSaini)__ & __[@menshikh-iv](https://github.com/menshikh-iv)__, [#1705](https://github.com/RaRe-Technologies/gensim/pull/1705) & [#1632](https://github.com/RaRe-Technologies/gensim/pull/1632) & [#1492](https://github.com/RaRe-Technologies/gensim/pull/1492))
+* New download API for corpora and pre-trained models ([@chaitaliSaini](https://github.com/chaitaliSaini) & [@menshikh-iv](https://github.com/menshikh-iv), [#1705](https://github.com/RaRe-Technologies/gensim/pull/1705) & [#1632](https://github.com/RaRe-Technologies/gensim/pull/1632) & [#1492](https://github.com/RaRe-Technologies/gensim/pull/1492))
     - Download large NLP datasets in one line of Python, then use with memory-efficient data streaming:
         ```python
         import gensim.downloader as api
@@ -1046,7 +1136,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
     - [Blog post](https://rare-technologies.com/new-api-for-pretrained-nlp-models-and-datasets-in-gensim/) introducing the API and design decisions.
   - [Notebook with examples](https://github.com/RaRe-Technologies/gensim/blob/be4500e4f0616ec2864c2ce70cb5d4db4b46512d/docs/notebooks/downloader_api_tutorial.ipynb)
 
-* New model: Poincaré embeddings (__[@jayantj](https://github.com/jayantj)__, [#1696](https://github.com/RaRe-Technologies/gensim/pull/1696) & [#1700](https://github.com/RaRe-Technologies/gensim/pull/1700) & [#1757](https://github.com/RaRe-Technologies/gensim/pull/1757) & [#1734](https://github.com/RaRe-Technologies/gensim/pull/1734))
+* New model: Poincaré embeddings ([@jayantj](https://github.com/jayantj), [#1696](https://github.com/RaRe-Technologies/gensim/pull/1696) & [#1700](https://github.com/RaRe-Technologies/gensim/pull/1700) & [#1757](https://github.com/RaRe-Technologies/gensim/pull/1757) & [#1734](https://github.com/RaRe-Technologies/gensim/pull/1734))
     - Embed a graph (taxonomy) in the same way as word2vec embeds words:
         ```python
         from gensim.models.poincare import PoincareRelations, PoincareModel
@@ -1067,7 +1157,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
     - [Model introduction and the journey of its implementation](https://rare-technologies.com/implementing-poincare-embeddings/)
     - [Original paper](https://arxiv.org/abs/1705.08039) on arXiv
 
-* Optimized FastText (__[@manneshiva](https://github.com/manneshiva)__, [#1742](https://github.com/RaRe-Technologies/gensim/pull/1742))
+* Optimized FastText ([@manneshiva](https://github.com/manneshiva), [#1742](https://github.com/RaRe-Technologies/gensim/pull/1742))
   - New fast multithreaded implementation of FastText, natively in Python/Cython. Deprecates the existing wrapper for Facebook’s C++ implementation.
     ```python
     import gensim.downloader as api
@@ -1090,54 +1180,54 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
     ```
 
-* Binary pre-compiled wheels for Windows, OSX and Linux (__[@menshikh-iv](https://github.com/menshikh-iv)__, [MacPython/gensim-wheels/#7](https://github.com/MacPython/gensim-wheels/pull/7))
+* Binary pre-compiled wheels for Windows, OSX and Linux ([@menshikh-iv](https://github.com/menshikh-iv), [MacPython/gensim-wheels/#7](https://github.com/MacPython/gensim-wheels/pull/7))
     - Users no longer need to have a C compiler for using the fast (Cythonized) version of word2vec, doc2vec, etc.
     - Faster Gensim pip installation
 
 * Added `DeprecationWarnings` to deprecated methods and parameters, with a clear schedule for removal.
 
 :+1: Improvements:
-* Add Montemurro and Zanette's entropy based keyword extraction algorithm. Fix #665 (__[@PeteBleackley](https://github.com/PeteBleackley)__, [#1738](https://github.com/RaRe-Technologies/gensim/pull/1738))
-* Fix flake8 E731, E402, refactor tests & sklearn API code. Partial fix #1644  (__[@horpto](https://github.com/horpto)__, [#1689](https://github.com/RaRe-Technologies/gensim/pull/1689))
-* Reduce distribution size. Fix #1698 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1699](https://github.com/RaRe-Technologies/gensim/pull/1699))
-* Improve `scan_vocab` speed, `build_vocab_from_freq` method (__[@jodevak](https://github.com/jodevak)__, [#1695](https://github.com/RaRe-Technologies/gensim/pull/1695))
-* Improve `segment_wiki` script (__[@piskvorky](https://github.com/piskvorky)__, [#1707](https://github.com/RaRe-Technologies/gensim/pull/1707))
-* Add custom `dtype` support for `LdaModel`. Partially fix #1576 (__[@xelez](https://github.com/xelez)__, [#1656](https://github.com/RaRe-Technologies/gensim/pull/1656))
-* Add `doc2idx` method for `gensim.corpora.Dictionary`. Fix #1634 (__[@roopalgarg](https://github.com/roopalgarg)__, [#1720](https://github.com/RaRe-Technologies/gensim/pull/1720))
-* Add tox and pytest to gensim, integration with Travis and Appveyor. Fix #1613, #1644 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1721](https://github.com/RaRe-Technologies/gensim/pull/1721))
-* Add flag for hiding outdated data for `gensim.downloader.info` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1736](https://github.com/RaRe-Technologies/gensim/pull/1736))
-* Add reproducible order between python versions for `gensim.corpora.Dictionary` (__[@formi23](https://github.com/formi23)__, [#1715](https://github.com/RaRe-Technologies/gensim/pull/1715))
-* Update `tox.ini`, `setup.cfg`, `README.md` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1741](https://github.com/RaRe-Technologies/gensim/pull/1741))
-* Add custom `logsumexp` for `LdaModel` (__[@arlenk](https://github.com/arlenk)__, [#1745](https://github.com/RaRe-Technologies/gensim/pull/1745))
+* Add Montemurro and Zanette's entropy based keyword extraction algorithm. Fix #665 ([@PeteBleackley](https://github.com/PeteBleackley), [#1738](https://github.com/RaRe-Technologies/gensim/pull/1738))
+* Fix flake8 E731, E402, refactor tests & sklearn API code. Partial fix #1644  ([@horpto](https://github.com/horpto), [#1689](https://github.com/RaRe-Technologies/gensim/pull/1689))
+* Reduce distribution size. Fix #1698 ([@menshikh-iv](https://github.com/menshikh-iv), [#1699](https://github.com/RaRe-Technologies/gensim/pull/1699))
+* Improve `scan_vocab` speed, `build_vocab_from_freq` method ([@jodevak](https://github.com/jodevak), [#1695](https://github.com/RaRe-Technologies/gensim/pull/1695))
+* Improve `segment_wiki` script ([@piskvorky](https://github.com/piskvorky), [#1707](https://github.com/RaRe-Technologies/gensim/pull/1707))
+* Add custom `dtype` support for `LdaModel`. Partially fix #1576 ([@xelez](https://github.com/xelez), [#1656](https://github.com/RaRe-Technologies/gensim/pull/1656))
+* Add `doc2idx` method for `gensim.corpora.Dictionary`. Fix #1634 ([@roopalgarg](https://github.com/roopalgarg), [#1720](https://github.com/RaRe-Technologies/gensim/pull/1720))
+* Add tox and pytest to gensim, integration with Travis and Appveyor. Fix #1613, #1644 ([@menshikh-iv](https://github.com/menshikh-iv), [#1721](https://github.com/RaRe-Technologies/gensim/pull/1721))
+* Add flag for hiding outdated data for `gensim.downloader.info` ([@menshikh-iv](https://github.com/menshikh-iv), [#1736](https://github.com/RaRe-Technologies/gensim/pull/1736))
+* Add reproducible order between python versions for `gensim.corpora.Dictionary` ([@formi23](https://github.com/formi23), [#1715](https://github.com/RaRe-Technologies/gensim/pull/1715))
+* Update `tox.ini`, `setup.cfg`, `README.md` ([@menshikh-iv](https://github.com/menshikh-iv), [#1741](https://github.com/RaRe-Technologies/gensim/pull/1741))
+* Add custom `logsumexp` for `LdaModel` ([@arlenk](https://github.com/arlenk), [#1745](https://github.com/RaRe-Technologies/gensim/pull/1745))
 
 :red_circle: Bug fixes:
-* Fix ranking formula in `gensim.summarization.bm25`. Fix #1718 (__[@souravsingh](https://github.com/souravsingh)__, [#1726](https://github.com/RaRe-Technologies/gensim/pull/1726))
-* Fixed incompatibility in persistence for `FastText` wrapper. Fix #1642 (__[@chinmayapancholi13](https://github.com/chinmayapancholi13)__, [#1723](https://github.com/RaRe-Technologies/gensim/pull/1723))
-* Fix `gensim.sklearn_api` bug with `documents_columns` parameter. Fix #1676 (__[@chinmayapancholi13](https://github.com/chinmayapancholi13)__, [#1704](https://github.com/RaRe-Technologies/gensim/pull/1704))
-* Fix slowdown of CI, remove pytest-cov (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1728](https://github.com/RaRe-Technologies/gensim/pull/1728))
-* Replace outdated packages in Dockerfile (__[@rbahumi](https://github.com/rbahumi)__, [#1730](https://github.com/RaRe-Technologies/gensim/pull/1730))
-* Replace `num_words` to `topn` in `LdaMallet.show_topics`. Fix #1747 (__[@apoorvaeternity](https://github.com/apoorvaeternity)__, [#1749](https://github.com/RaRe-Technologies/gensim/pull/1749))
-* Fix `os.rename` from `gensim.downloader` when 'src' and 'dst' on different partitions (__[@anotherbugmaster](https://github.com/anotherbugmaster)__, [#1733](https://github.com/RaRe-Technologies/gensim/pull/1733))
-* Fix `DeprecationWarning` from `logsumexp` (__[@dreamgonfly](https://github.com/dreamgonfly)__, [#1703](https://github.com/RaRe-Technologies/gensim/pull/1703))
-* Fix backward compatibility problem in `Phrases.load`. Fix #1751 (__[@alexgarel](https://github.com/alexgarel)__, [#1758](https://github.com/RaRe-Technologies/gensim/pull/1758))
-* Fix `load_word2vec_format` from `FastText`. Fix #1743 (__[@manneshiva](https://github.com/manneshiva)__, [#1755](https://github.com/RaRe-Technologies/gensim/pull/1755))
-* Fix ipython kernel version in `Dockerfile`. Fix #1762 (__[@rbahumi](https://github.com/rbahumi)__, [#1764](https://github.com/RaRe-Technologies/gensim/pull/1764))
-* Fix writing in `segment_wiki` (__[@horpto](https://github.com/horpto)__, [#1763](https://github.com/RaRe-Technologies/gensim/pull/1763))
-* Fix write method of file requires byte-like object in `segment_wiki` (__[@horpto](https://github.com/horpto)__, [#1750](https://github.com/RaRe-Technologies/gensim/pull/1750))
-* Fix incorrect vectors learned during online training for `FastText`. Fix #1752 (__[@manneshiva](https://github.com/manneshiva)__, [#1756](https://github.com/RaRe-Technologies/gensim/pull/1756))
-* Fix `dtype` of `model.wv.syn0_vocab` on updating `vocab` for `FastText`. Fix  #1759 (__[@manneshiva](https://github.com/manneshiva)__, [#1760](https://github.com/RaRe-Technologies/gensim/pull/1760))
-* Fix hashing-trick from `FastText.build_vocab`. Fix #1765 (__[@manneshiva](https://github.com/manneshiva)__, [#1768](https://github.com/RaRe-Technologies/gensim/pull/1768))
-* Add explicit `DeprecationWarning` for all outdated stuff. Fix #1753 (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1769](https://github.com/RaRe-Technologies/gensim/pull/1769))
-* Fix epsilon according to `dtype` in `LdaModel` (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1770](https://github.com/RaRe-Technologies/gensim/pull/1770))
+* Fix ranking formula in `gensim.summarization.bm25`. Fix #1718 ([@souravsingh](https://github.com/souravsingh), [#1726](https://github.com/RaRe-Technologies/gensim/pull/1726))
+* Fixed incompatibility in persistence for `FastText` wrapper. Fix #1642 ([@chinmayapancholi13](https://github.com/chinmayapancholi13), [#1723](https://github.com/RaRe-Technologies/gensim/pull/1723))
+* Fix `gensim.sklearn_api` bug with `documents_columns` parameter. Fix #1676 ([@chinmayapancholi13](https://github.com/chinmayapancholi13), [#1704](https://github.com/RaRe-Technologies/gensim/pull/1704))
+* Fix slowdown of CI, remove pytest-cov ([@menshikh-iv](https://github.com/menshikh-iv), [#1728](https://github.com/RaRe-Technologies/gensim/pull/1728))
+* Replace outdated packages in Dockerfile ([@rbahumi](https://github.com/rbahumi), [#1730](https://github.com/RaRe-Technologies/gensim/pull/1730))
+* Replace `num_words` to `topn` in `LdaMallet.show_topics`. Fix #1747 ([@apoorvaeternity](https://github.com/apoorvaeternity), [#1749](https://github.com/RaRe-Technologies/gensim/pull/1749))
+* Fix `os.rename` from `gensim.downloader` when 'src' and 'dst' on different partitions ([@anotherbugmaster](https://github.com/anotherbugmaster), [#1733](https://github.com/RaRe-Technologies/gensim/pull/1733))
+* Fix `DeprecationWarning` from `logsumexp` ([@dreamgonfly](https://github.com/dreamgonfly), [#1703](https://github.com/RaRe-Technologies/gensim/pull/1703))
+* Fix backward compatibility problem in `Phrases.load`. Fix #1751 ([@alexgarel](https://github.com/alexgarel), [#1758](https://github.com/RaRe-Technologies/gensim/pull/1758))
+* Fix `load_word2vec_format` from `FastText`. Fix #1743 ([@manneshiva](https://github.com/manneshiva), [#1755](https://github.com/RaRe-Technologies/gensim/pull/1755))
+* Fix ipython kernel version in `Dockerfile`. Fix #1762 ([@rbahumi](https://github.com/rbahumi), [#1764](https://github.com/RaRe-Technologies/gensim/pull/1764))
+* Fix writing in `segment_wiki` ([@horpto](https://github.com/horpto), [#1763](https://github.com/RaRe-Technologies/gensim/pull/1763))
+* Fix write method of file requires byte-like object in `segment_wiki` ([@horpto](https://github.com/horpto), [#1750](https://github.com/RaRe-Technologies/gensim/pull/1750))
+* Fix incorrect vectors learned during online training for `FastText`. Fix #1752 ([@manneshiva](https://github.com/manneshiva), [#1756](https://github.com/RaRe-Technologies/gensim/pull/1756))
+* Fix `dtype` of `model.wv.syn0_vocab` on updating `vocab` for `FastText`. Fix  #1759 ([@manneshiva](https://github.com/manneshiva), [#1760](https://github.com/RaRe-Technologies/gensim/pull/1760))
+* Fix hashing-trick from `FastText.build_vocab`. Fix #1765 ([@manneshiva](https://github.com/manneshiva), [#1768](https://github.com/RaRe-Technologies/gensim/pull/1768))
+* Add explicit `DeprecationWarning` for all outdated stuff. Fix #1753 ([@menshikh-iv](https://github.com/menshikh-iv), [#1769](https://github.com/RaRe-Technologies/gensim/pull/1769))
+* Fix epsilon according to `dtype` in `LdaModel` ([@menshikh-iv](https://github.com/menshikh-iv), [#1770](https://github.com/RaRe-Technologies/gensim/pull/1770))
 
 :books: Tutorial and doc improvements:
-* Update perf numbers of `segment_wiki` (__[@piskvorky](https://github.com/piskvorky)__, [#1708](https://github.com/RaRe-Technologies/gensim/pull/1708))
-* Update docstring for `gensim.summarization.summarize`. Fix #1575 (__[@fbarrios](https://github.com/fbarrios)__, [#1702](https://github.com/RaRe-Technologies/gensim/pull/1702))
-* Refactor API Reference for `gensim.parsing`. Fix #1664 (__[@CLearERR](https://github.com/CLearERR)__, [#1684](https://github.com/RaRe-Technologies/gensim/pull/1684))
-* Fix typos in doc2vec-wikipedia notebook (__[@youqad](https://github.com/youqad)__, [#1727](https://github.com/RaRe-Technologies/gensim/pull/1727))
-* Fix PyPI long description rendering (__[@edigaryev](https://github.com/edigaryev)__, [#1739](https://github.com/RaRe-Technologies/gensim/pull/1739))
-* Fix twitter badge src  (__[@menshikh-iv](https://github.com/menshikh-iv)__)
-* Fix maillist badge color (__[@menshikh-iv](https://github.com/menshikh-iv)__)
+* Update perf numbers of `segment_wiki` ([@piskvorky](https://github.com/piskvorky), [#1708](https://github.com/RaRe-Technologies/gensim/pull/1708))
+* Update docstring for `gensim.summarization.summarize`. Fix #1575 ([@fbarrios](https://github.com/fbarrios), [#1702](https://github.com/RaRe-Technologies/gensim/pull/1702))
+* Refactor API Reference for `gensim.parsing`. Fix #1664 ([@CLearERR](https://github.com/CLearERR), [#1684](https://github.com/RaRe-Technologies/gensim/pull/1684))
+* Fix typos in doc2vec-wikipedia notebook ([@youqad](https://github.com/youqad), [#1727](https://github.com/RaRe-Technologies/gensim/pull/1727))
+* Fix PyPI long description rendering ([@edigaryev](https://github.com/edigaryev), [#1739](https://github.com/RaRe-Technologies/gensim/pull/1739))
+* Fix twitter badge src  ([@menshikh-iv](https://github.com/menshikh-iv))
+* Fix maillist badge color ([@menshikh-iv](https://github.com/menshikh-iv))
 
 :warning: Deprecations (will be removed in the next major release)
 * Remove
@@ -1162,7 +1252,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
 
 
 :star2: New features:
-* Massive optimizations to LSI model training (__[@isamaru](https://github.com/isamaru)__, [#1620](https://github.com/RaRe-Technologies/gensim/pull/1620) & [#1622](https://github.com/RaRe-Technologies/gensim/pull/1622))
+* Massive optimizations to LSI model training ([@isamaru](https://github.com/isamaru), [#1620](https://github.com/RaRe-Technologies/gensim/pull/1620) & [#1622](https://github.com/RaRe-Technologies/gensim/pull/1622))
   - LSI model allows use of single precision (float32), to consume  *40% less memory* while being *40% faster*.
   - LSI model can now also accept CSC matrix as input, for further memory and speed boost.
   - Overall, if your entire corpus fits in RAM: 3x faster LSI training (SVD) in 4x less memory!
@@ -1180,7 +1270,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
     ```python
     model = LsiModel(corpus=streaming_corpus, num_topics=500, dtype=np.float32)
     ```
-* Add common terms to Phrases. Fix #1258 (__[@alexgarel](https://github.com/alexgarel)__, [#1568](https://github.com/RaRe-Technologies/gensim/pull/1568))
+* Add common terms to Phrases. Fix #1258 ([@alexgarel](https://github.com/alexgarel), [#1568](https://github.com/RaRe-Technologies/gensim/pull/1568))
   - Phrases allows to use common terms in bigrams. Before, if you are searching to reveal ngrams like `car_with_driver` and `car_without_driver`, you can either remove stop words before processing, but you will only find `car_driver`, or you won't find any of those forms (because they have three words, but also because high frequency of with will avoid them to be scored correctly), inspired by [ES common grams token filter](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-common-grams-tokenfilter.html).
     ```python
     phr_old = Phrases(corpus)
@@ -1189,7 +1279,7 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
     print(phr_old[["we", "provide", "car", "with", "driver"]])  # ["we", "provide", "car_with", "driver"]
     print(phr_new[["we", "provide", "car", "with", "driver"]])  # ["we", "provide", "car_with_driver"]
     ```
-* New [segment_wiki.py](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/scripts/segment_wiki.py) script (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1483](https://github.com/RaRe-Technologies/gensim/pull/1483) & [#1694](https://github.com/RaRe-Technologies/gensim/pull/1694))
+* New [segment_wiki.py](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/scripts/segment_wiki.py) script ([@menshikh-iv](https://github.com/menshikh-iv), [#1483](https://github.com/RaRe-Technologies/gensim/pull/1483) & [#1694](https://github.com/RaRe-Technologies/gensim/pull/1694))
   - CLI script for processing a raw Wikipedia dump (the xml.bz2 format provided by WikiMedia) to extract its articles in a plain text format. It extracts each article's title, section names and section content and saves them as json-line:
     ```bash
     python -m gensim.scripts.segment_wiki -f enwiki-latest-pages-articles.xml.bz2 | gzip > enwiki-latest-pages-articles.json.gz
@@ -1207,33 +1297,33 @@ Apart from the **massive overhaul of all Gensim documentation** (including docst
         ```
 
 :+1: Improvements:
-* Speedup FastText tests (__[@horpto](https://github.com/horpto)__, [#1686](https://github.com/RaRe-Technologies/gensim/pull/1686))
-* Add optimization for `SlicedCorpus.__len__` (__[@horpto](https://github.com/horpto)__, [#1679](https://github.com/RaRe-Technologies/gensim/pull/1679))
-* Make `word_vec` return immutable vector. Fix #1651 (__[@CLearERR](https://github.com/CLearERR)__, [#1662](https://github.com/RaRe-Technologies/gensim/pull/1662))
-* Drop Win x32 support & add rolling builds (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1652](https://github.com/RaRe-Technologies/gensim/pull/1652))
-* Fix scoring function in Phrases. Fix #1533, #1635 (__[@michaelwsherman](https://github.com/michaelwsherman)__, [#1573](https://github.com/RaRe-Technologies/gensim/pull/1573))
-* Add configuration for flake8 to setup.cfg (__[@mcobzarenco](https://github.com/mcobzarenco)__, [#1636](https://github.com/RaRe-Technologies/gensim/pull/1636))
-* Add `build_vocab_from_freq` to Word2Vec, speedup scan\_vocab (__[@jodevak](https://github.com/jodevak)__, [#1599](https://github.com/RaRe-Technologies/gensim/pull/1599))
-* Add `most_similar_to_given` method for KeyedVectors (__[@TheMathMajor](https://github.com/TheMathMajor)__, [#1582](https://github.com/RaRe-Technologies/gensim/pull/1582))
-* Add `__getitem__` method to Sparse2Corpus to allow direct queries (__[@isamaru](https://github.com/isamaru)__, [#1621](https://github.com/RaRe-Technologies/gensim/pull/1621))
+* Speedup FastText tests ([@horpto](https://github.com/horpto), [#1686](https://github.com/RaRe-Technologies/gensim/pull/1686))
+* Add optimization for `SlicedCorpus.len` ([@horpto](https://github.com/horpto), [#1679](https://github.com/RaRe-Technologies/gensim/pull/1679))
+* Make `word_vec` return immutable vector. Fix #1651 ([@CLearERR](https://github.com/CLearERR), [#1662](https://github.com/RaRe-Technologies/gensim/pull/1662))
+* Drop Win x32 support & add rolling builds ([@menshikh-iv](https://github.com/menshikh-iv), [#1652](https://github.com/RaRe-Technologies/gensim/pull/1652))
+* Fix scoring function in Phrases. Fix #1533, #1635 ([@michaelwsherman](https://github.com/michaelwsherman), [#1573](https://github.com/RaRe-Technologies/gensim/pull/1573))
+* Add configuration for flake8 to setup.cfg ([@mcobzarenco](https://github.com/mcobzarenco), [#1636](https://github.com/RaRe-Technologies/gensim/pull/1636))
+* Add `build_vocab_from_freq` to Word2Vec, speedup scan\_vocab ([@jodevak](https://github.com/jodevak), [#1599](https://github.com/RaRe-Technologies/gensim/pull/1599))
+* Add `most_similar_to_given` method for KeyedVectors ([@TheMathMajor](https://github.com/TheMathMajor), [#1582](https://github.com/RaRe-Technologies/gensim/pull/1582))
+* Add `getitem` method to Sparse2Corpus to allow direct queries ([@isamaru](https://github.com/isamaru), [#1621](https://github.com/RaRe-Technologies/gensim/pull/1621))
 
 :red_circle: Bug fixes:
-* Add single core mode to CoherenceModel. Fix #1683 (__[@horpto](https://github.com/horpto)__, [#1685](https://github.com/RaRe-Technologies/gensim/pull/1685))
-* Fix ResourceWarnings in tests. Partially fix #1519 (__[@horpto](https://github.com/horpto)__, [#1660](https://github.com/RaRe-Technologies/gensim/pull/1660))
-* Fix DeprecationWarnings generated by deprecated assertEquals. Partial fix #1519 (__[@poornagurram](https://github.com/poornagurram)__, [#1658](https://github.com/RaRe-Technologies/gensim/pull/1658))
-* Fix DeprecationWarnings for regex string literals. Fix #1646 (__[@franklsf95](https://github.com/franklsf95)__, [#1649](https://github.com/RaRe-Technologies/gensim/pull/1649))
-* Fix pagerank algorithm. Fix #805 (__[@xelez](https://github.com/xelez)__, [#1653](https://github.com/RaRe-Technologies/gensim/pull/1653))
-* Fix FastText inconsistent dtype. Fix #1637 (__[@mcobzarenco](https://github.com/mcobzarenco)__, [#1638](https://github.com/RaRe-Technologies/gensim/pull/1638))
-* Fix `test_filename_filtering` test (__[@nehaljwani](https://github.com/nehaljwani)__, [#1647](https://github.com/RaRe-Technologies/gensim/pull/1647))
+* Add single core mode to CoherenceModel. Fix #1683 ([@horpto](https://github.com/horpto), [#1685](https://github.com/RaRe-Technologies/gensim/pull/1685))
+* Fix ResourceWarnings in tests. Partially fix #1519 ([@horpto](https://github.com/horpto), [#1660](https://github.com/RaRe-Technologies/gensim/pull/1660))
+* Fix DeprecationWarnings generated by deprecated assertEquals. Partial fix #1519 ([@poornagurram](https://github.com/poornagurram), [#1658](https://github.com/RaRe-Technologies/gensim/pull/1658))
+* Fix DeprecationWarnings for regex string literals. Fix #1646 ([@franklsf95](https://github.com/franklsf95), [#1649](https://github.com/RaRe-Technologies/gensim/pull/1649))
+* Fix pagerank algorithm. Fix #805 ([@xelez](https://github.com/xelez), [#1653](https://github.com/RaRe-Technologies/gensim/pull/1653))
+* Fix FastText inconsistent dtype. Fix #1637 ([@mcobzarenco](https://github.com/mcobzarenco), [#1638](https://github.com/RaRe-Technologies/gensim/pull/1638))
+* Fix `test_filename_filtering` test ([@nehaljwani](https://github.com/nehaljwani), [#1647](https://github.com/RaRe-Technologies/gensim/pull/1647))
 
 :books: Tutorial and doc improvements:
-* Fix code/docstring style (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1650](https://github.com/RaRe-Technologies/gensim/pull/1650))
-* Update error message for supervised FastText. Fix #1498 (__[@ElSaico](https://github.com/ElSaico)__, [#1645](https://github.com/RaRe-Technologies/gensim/pull/1645))
-* Add "DOI badge" to README. Fix #1610 (__[@dphov](https://github.com/dphov)__, [#1639](https://github.com/RaRe-Technologies/gensim/pull/1639))
-* Remove duplicate annoy notebook. Fix #1415 (__[@Karamax](https://github.com/Karamax)__, [#1640](https://github.com/RaRe-Technologies/gensim/pull/1640))
-* Fix duplication and wrong markup in docs (__[@horpto](https://github.com/horpto)__, [#1633](https://github.com/RaRe-Technologies/gensim/pull/1633))
-* Refactor dendrogram & topic network notebooks (__[@parulsethi](https://github.com/parulsethi)__, [#1571](https://github.com/RaRe-Technologies/gensim/pull/1571))
-* Fix release badge (__[@menshikh-iv](https://github.com/menshikh-iv)__, [#1631](https://github.com/RaRe-Technologies/gensim/pull/1631))
+* Fix code/docstring style ([@menshikh-iv](https://github.com/menshikh-iv), [#1650](https://github.com/RaRe-Technologies/gensim/pull/1650))
+* Update error message for supervised FastText. Fix #1498 ([@ElSaico](https://github.com/ElSaico), [#1645](https://github.com/RaRe-Technologies/gensim/pull/1645))
+* Add "DOI badge" to README. Fix #1610 ([@dphov](https://github.com/dphov), [#1639](https://github.com/RaRe-Technologies/gensim/pull/1639))
+* Remove duplicate annoy notebook. Fix #1415 ([@Karamax](https://github.com/Karamax), [#1640](https://github.com/RaRe-Technologies/gensim/pull/1640))
+* Fix duplication and wrong markup in docs ([@horpto](https://github.com/horpto), [#1633](https://github.com/RaRe-Technologies/gensim/pull/1633))
+* Refactor dendrogram & topic network notebooks ([@parulsethi](https://github.com/parulsethi), [#1571](https://github.com/RaRe-Technologies/gensim/pull/1571))
+* Fix release badge ([@menshikh-iv](https://github.com/menshikh-iv), [#1631](https://github.com/RaRe-Technologies/gensim/pull/1631))
 
 :warning: Deprecation part (will come into force in the next major release)
 * Remove
@@ -1676,7 +1766,7 @@ Tutorial and doc improvements:
 * Tutorial: Reproducing Doc2vec paper result on wikipedia. (@isohyt, [#654](https://github.com/RaRe-Technologies/gensim/pull/654))
 * Add Save/Load interface to AnnoyIndexer for index persistence (@fortiema, [#845](https://github.com/RaRe-Technologies/gensim/pull/845))
 * Fixed issue [#938](https://github.com/RaRe-Technologies/gensim/issues/938),Creating a unified base class for all topic models. ([@markroxor](https://github.com/markroxor), [#946](https://github.com/RaRe-Technologies/gensim/pull/946))
-    -  _breaking change in HdpTopicFormatter.show_\__topics_
+    -  breaking change in `HdpTopicFormatter.show_topics`
 * Add Phraser for Phrases optimization. ( @gojomo & @anujkhare , [#837](https://github.com/RaRe-Technologies/gensim/pull/837))
 * Fix issue #743, in word2vec's n_similarity method if at least one empty list is passed ZeroDivisionError is raised (@pranay360, [#883](https://github.com/RaRe-Technologies/gensim/pull/883))
 * Change export_phrases in Phrases model. Fix issue #794 (@AadityaJ, [#879](https://github.com/RaRe-Technologies/gensim/pull/879))

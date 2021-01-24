@@ -21,8 +21,7 @@ Other embeddings
 ================
 
 There are more ways to train word vectors in Gensim than just Word2Vec.
-See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-wrappers for :class:`~gensim.models.wrappers.varembed.VarEmbed` and :class:`~gensim.models.wrappers.wordrank.WordRank`.
+See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText`.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality and
@@ -861,7 +860,7 @@ class Word2Vec(utils.SaveLoad):
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
         "init_sims() is now obsoleted and will be completely removed in future versions. "
-        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
     )
     def init_sims(self, replace=False):
         """
@@ -1856,8 +1855,8 @@ class Word2Vec(utils.SaveLoad):
             and learning rate.
 
         """
-        return "%s(vocab=%s, size=%s, alpha=%s)" % (
-            self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha
+        return "%s(vocab=%s, vector_size=%s, alpha=%s)" % (
+            self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha,
         )
 
     def save(self, *args, **kwargs):
@@ -1965,7 +1964,7 @@ class Word2Vec(utils.SaveLoad):
         return self.running_training_loss
 
 
-class BrownCorpus(object):
+class BrownCorpus:
     def __init__(self, dirname):
         """Iterate over sentences from the `Brown corpus <https://en.wikipedia.org/wiki/Brown_Corpus>`_
         (part of `NLTK data <https://www.nltk.org/data.html>`_).
@@ -1991,7 +1990,7 @@ class BrownCorpus(object):
                     yield words
 
 
-class Text8Corpus(object):
+class Text8Corpus:
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
         """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
         self.fname = fname
@@ -2019,7 +2018,7 @@ class Text8Corpus(object):
                     sentence = sentence[self.max_sentence_length:]
 
 
-class LineSentence(object):
+class LineSentence:
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """Iterate over a file that contains sentences: one line = one sentence.
         Words must be already preprocessed and separated by whitespace.
@@ -2068,7 +2067,7 @@ class LineSentence(object):
                         i += self.max_sentence_length
 
 
-class PathLineSentences(object):
+class PathLineSentences:
     def __init__(self, source, max_sentence_length=MAX_WORDS_IN_BATCH, limit=None):
         """Like :class:`~gensim.models.word2vec.LineSentence`, but process all files in a directory
         in alphabetical order by filename.
@@ -2259,9 +2258,9 @@ if __name__ == "__main__":
     corpus = LineSentence(args.train)
 
     model = Word2Vec(
-        corpus, size=args.size, min_count=args.min_count, workers=args.threads,
+        corpus, vector_size=args.size, min_count=args.min_count, workers=args.threads,
         window=args.window, sample=args.sample, sg=skipgram, hs=args.hs,
-        negative=args.negative, cbow_mean=1, iter=args.iter
+        negative=args.negative, cbow_mean=1, epochs=args.iter,
     )
 
     if args.output:

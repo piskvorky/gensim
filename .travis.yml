@@ -44,7 +44,7 @@ before_script:
   - ulimit -c unlimited -S  # enable core dumps
 
 
-script: tox -vv
+script: tox
 
 
 after_failure:

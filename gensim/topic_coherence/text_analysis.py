@@ -67,7 +67,7 @@ def _ids_to_words(ids, dictionary):
     return top_words
 
 
-class BaseAnalyzer(object):
+class BaseAnalyzer:
     """Base class for corpus and text analyzers.
 
     Attributes
