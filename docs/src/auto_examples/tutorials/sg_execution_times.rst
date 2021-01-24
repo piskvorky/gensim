@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**11:26.674** total execution time for **auto_examples_tutorials** files:
+**06:48.976** total execution time for **auto_examples_tutorials** files:
 
 +-------------------------------------------------------------------------------------+-----------+-----------+
-| :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py` (``run_word2vec.py``)       | 11:26.674 | 7177.5 MB |
+| :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py` (``run_ensemblelda.py``) | 06:48.976 | 1614.4 MB |
 +-------------------------------------------------------------------------------------+-----------+-----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py` (``run_annoy.py``)             | 00:00.000 | 0.0 MB    |
 +-------------------------------------------------------------------------------------+-----------+-----------+
@@ -19,4 +19,6 @@ Computation times
 | :ref:`sphx_glr_auto_examples_tutorials_run_lda.py` (``run_lda.py``)                 | 00:00.000 | 0.0 MB    |
 +-------------------------------------------------------------------------------------+-----------+-----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py` (``run_wmd.py``)                 | 00:00.000 | 0.0 MB    |
++-------------------------------------------------------------------------------------+-----------+-----------+
+| :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py` (``run_word2vec.py``)       | 00:00.000 | 0.0 MB    |
 +-------------------------------------------------------------------------------------+-----------+-----------+
