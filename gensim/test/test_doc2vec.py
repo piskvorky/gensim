@@ -78,7 +78,7 @@ class TestDoc2VecModel(unittest.TestCase):
             model.save(tmpf)
             self.models_equal(model, doc2vec.Doc2Vec.load(tmpf))
 
-    def testPersistenceWord2VecFormat(self):
+    def test_persistence_word2vec_format(self):
         """Test storing the entire model in word2vec format."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         # test saving both document and word embedding
@@ -201,7 +201,7 @@ class TestDoc2VecModel(unittest.TestCase):
         sims_to_infer = loaded_model.dv.most_similar([doc0_inferred], topn=len(loaded_model.dv))
         self.assertTrue(sims_to_infer)
 
-    def testDoc2vecTrainParameters(self):
+    def test_doc2vec_train_parameters(self):
 
         model = doc2vec.Doc2Vec(vector_size=50)
         model.build_vocab(corpus_iterable=list_corpus)
@@ -653,7 +653,7 @@ class TestDoc2VecModel(unittest.TestCase):
             vector *= 0
 
     @log_capture()
-    def testBuildVocabWarning(self, loglines):
+    def test_build_vocab_warning(self, loglines):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
         raw_sentences = ['human', 'machine']
         sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
@@ -663,7 +663,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(warning in str(loglines))
 
     @log_capture()
-    def testTrainWarning(self, loglines):
+    def test_train_warning(self, loglines):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
         raw_sentences = [['human'],
                          ['graph', 'trees']]
@@ -679,7 +679,7 @@ class TestDoc2VecModel(unittest.TestCase):
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(loglines))
 
-    def testLoadOnClassError(self):
+    def test_load_on_class_error(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
 # endclass TestDoc2VecModel

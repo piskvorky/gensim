@@ -94,7 +94,7 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model.wv['minor']  # oov word
         self.assertEqual(len(oov_vec), 12)
 
-    def testFastTextTrainParameters(self):
+    def test_fast_text_train_parameters(self):
 
         model = FT_gensim(vector_size=12, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(corpus_iterable=sentences)
