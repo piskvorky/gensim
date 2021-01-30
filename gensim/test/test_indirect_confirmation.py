@@ -31,7 +31,7 @@ class TestIndirectConfirmation(unittest.TestCase):
         self.dictionary = Dictionary()
         self.dictionary.id2token = {1: 'fake', 2: 'tokens'}
 
-    def testCosineSimilarity(self):
+    def test_cosine_similarity(self):
         """Test cosine_similarity()"""
         accumulator = text_analysis.InvertedIndexAccumulator({1, 2}, self.dictionary)
         accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
@@ -55,7 +55,7 @@ class TestIndirectConfirmation(unittest.TestCase):
         self.assertAlmostEqual(expected, mean, 4)
         self.assertAlmostEqual(0.0, std, 1)
 
-    def testWord2VecSimilarity(self):
+    def test_word2vec_similarity(self):
         """Sanity check word2vec_similarity."""
         accumulator = text_analysis.WordVectorsAccumulator({1, 2}, self.dictionary)
         accumulator.accumulate([
