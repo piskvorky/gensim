@@ -1,0 +1,47 @@
+name: Tests
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'flake8,flake8-docs'}
+          - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'py36-linux'}
+          - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'py37-linux'}
+          - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux'}
+    env:
+      TOX_PARALLEL_NO_SPINNER: 1
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Update pip
+        run: python -m pip install -U pip
+      - name: Install tox, gdb
+        run: |
+          pip install tox
+          sudo apt-get install -y gdb
+      - name: Enable core dumps
+        run: ulimit -c unlimited -S  # enable core dumps
+      - name: Run tox tests
+        run: tox -e ${{ matrix.tox }}
+      - name: Collect corefile
+        if: ${{ failure() }}
+        run: |
+          pwd
+          COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
+          if [[ -f "$COREFILE" ]]; then EXECFILE=$(gdb -c "$COREFILE" -batch | grep "Core was generated" | tr -d "\`" | cut -d' ' -f5); file "$COREFILE"; gdb -c "$COREFILE" "$EXECFILE" -x continuous_integration/debug.gdb -batch; fi
