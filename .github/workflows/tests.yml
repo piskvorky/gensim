@@ -34,6 +34,7 @@ jobs:
       - name: Install tox, gdb
         run: |
           pip install tox
+          sudo apt-get update -y
           sudo apt-get install -y gdb
       - name: Enable core dumps
         run: ulimit -c unlimited -S  # enable core dumps
