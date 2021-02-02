@@ -127,7 +127,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the `Lee Evaluation Corpus &lt;http...">
 
 .. only:: html
 
@@ -148,7 +148,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the `Lee Corpus &lt;https://hekyll.s...">
 
 .. only:: html
 
@@ -190,7 +190,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec. ">
 
 .. only:: html
 
@@ -232,33 +232,12 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the concept of distance between two bags of words or distributions, and demonstrates...">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_distance_metrics_thumb.png
-     :alt: Distance Metrics
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_distance_metrics.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_distance_metrics
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
 
 .. only:: html
 
  .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
-     :alt: Word Movers' Distance
+     :alt: Word Mover's Distance
 
      :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
 
@@ -271,48 +250,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    :hidden:
 
    /auto_examples/tutorials/run_wmd
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates summarizing text by extracting the most important sentences from it.">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_summarization_thumb.png
-     :alt: Text Summarization
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_summarization.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_summarization
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial demonstrates using Pivoted Document Length Normalization to counter the effect of...">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
-     :alt: Pivoted Document Length Normalization
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_pivoted_doc_norm.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_pivoted_doc_norm
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
@@ -330,7 +267,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora and pretrained models. ">
 
 .. only:: html
 
@@ -351,7 +288,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="How to author documentation for Gensim. ">
 
 .. only:: html
 
@@ -377,7 +314,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 .. only:: html
 
  .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
-     :alt: How to Apply Doc2Vec to Reproduce the 'Paragraph Vector' paper
+     :alt: How to reproduce the doc2vec 'Paragraph Vector' paper
 
      :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
 
@@ -393,7 +330,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a topic model with itself or other models.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can visualize and compare trained topic models.">
 
 .. only:: html
 
@@ -440,7 +377,6 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
    - ? `Colouring words by topic in a document, print words in a
      topics <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb>`__
    - ? `Topic Coherence, a metric that correlates that human judgement on topic quality. <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb>`__
-   - ? `Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_distance_metrics.html>`__
    - ? `America's Next Topic Model slides <https://speakerdeck.com/tmylk/americas-next-topic-model-at-pydata-berlin-august-2016?slide=7>`__
       - How to choose your next topic model, presented at Pydata Berlin 10 August 2016 by Lev Konstantinovsky
    - ?  `Dynamic Topic Modeling and Dynamic Influence Model Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb>`__

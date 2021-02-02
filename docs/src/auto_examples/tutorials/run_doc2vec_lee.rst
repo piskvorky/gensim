@@ -1,16 +1,19 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_doc2vec_lee.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_doc2vec_lee.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py:
 
 
 Doc2Vec Model
 =============
 
-Introduces Gensim's Doc2Vec model and demonstrates its use on the Lee Corpus.
+Introduces Gensim's Doc2Vec model and demonstrates its use on the
+`Lee Corpus <https://hekyll.services.adelaide.edu.au/dspace/bitstream/2440/28910/1/hdl_28910.pdf>`__.
 
 
 
@@ -19,6 +22,7 @@ Introduces Gensim's Doc2Vec model and demonstrates its use on the Lee Corpus.
 
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 
 
@@ -100,7 +104,8 @@ Introducing: Paragraph Vector
 
 .. Important:: In Gensim, we refer to the Paragraph Vector model as ``Doc2Vec``.
 
-Le and Mikolov in 2014 introduced the `Doc2Vec algorithm <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`__, which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
+Le and Mikolov in 2014 introduced the `Doc2Vec algorithm <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`__,
+which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
 
 The basic idea is: act as if a document has another floating word-like
 vector, which contributes to all training predictions, and is updated like
@@ -158,6 +163,7 @@ which contains 50 documents.
 
 
 
+
 Define a Function to Read and Preprocess Text
 ---------------------------------------------
 
@@ -200,6 +206,7 @@ Each line of the file is a **document**.
 
 
 
+
 Let's take a look at the training corpus
 
 
@@ -222,6 +229,7 @@ Let's take a look at the training corpus
 
 
 
+
 And the testing corpus looks like this:
 
 
@@ -241,6 +249,7 @@ And the testing corpus looks like this:
  .. code-block:: none
 
     [['the', 'national', 'executive', 'of', 'the', 'strife', 'torn', 'democrats', 'last', 'night', 'appointed', 'little', 'known', 'west', 'australian', 'senator', 'brian', 'greig', 'as', 'interim', 'leader', 'shock', 'move', 'likely', 'to', 'provoke', 'further', 'conflict', 'between', 'the', 'party', 'senators', 'and', 'its', 'organisation', 'in', 'move', 'to', 'reassert', 'control', 'over', 'the', 'party', 'seven', 'senators', 'the', 'national', 'executive', 'last', 'night', 'rejected', 'aden', 'ridgeway', 'bid', 'to', 'become', 'interim', 'leader', 'in', 'favour', 'of', 'senator', 'greig', 'supporter', 'of', 'deposed', 'leader', 'natasha', 'stott', 'despoja', 'and', 'an', 'outspoken', 'gay', 'rights', 'activist'], ['cash', 'strapped', 'financial', 'services', 'group', 'amp', 'has', 'shelved', 'million', 'plan', 'to', 'buy', 'shares', 'back', 'from', 'investors', 'and', 'will', 'raise', 'million', 'in', 'fresh', 'capital', 'after', 'profits', 'crashed', 'in', 'the', 'six', 'months', 'to', 'june', 'chief', 'executive', 'paul', 'batchelor', 'said', 'the', 'result', 'was', 'solid', 'in', 'what', 'he', 'described', 'as', 'the', 'worst', 'conditions', 'for', 'stock', 'markets', 'in', 'years', 'amp', 'half', 'year', 'profit', 'sank', 'per', 'cent', 'to', 'million', 'or', 'share', 'as', 'australia', 'largest', 'investor', 'and', 'fund', 'manager', 'failed', 'to', 'hit', 'projected', 'per', 'cent', 'earnings', 'growth', 'targets', 'and', 'was', 'battered', 'by', 'falling', 'returns', 'on', 'share', 'markets']]
+
 
 
 
@@ -276,6 +285,7 @@ with such small datasets.
 
 
 
+
 Build a vocabulary
 
 
@@ -287,18 +297,57 @@ Build a vocabulary
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 21:08:55,026 : INFO : collecting all words and their counts
+    2020-09-30 21:08:55,027 : INFO : PROGRESS: at example #0, processed 0 words (0/s), 0 word types, 0 tags
+    2020-09-30 21:08:55,043 : INFO : collected 6981 word types and 300 unique tags from a corpus of 300 examples and 58152 words
+    2020-09-30 21:08:55,043 : INFO : Loading a fresh vocabulary
+    2020-09-30 21:08:55,064 : INFO : effective_min_count=2 retains 3955 unique words (56% of original 6981, drops 3026)
+    2020-09-30 21:08:55,064 : INFO : effective_min_count=2 leaves 55126 word corpus (94% of original 58152, drops 3026)
+    2020-09-30 21:08:55,098 : INFO : deleting the raw counts dictionary of 6981 items
+    2020-09-30 21:08:55,100 : INFO : sample=0.001 downsamples 46 most-common words
+    2020-09-30 21:08:55,100 : INFO : downsampling leaves estimated 42390 word corpus (76.9% of prior 55126)
+    2020-09-30 21:08:55,149 : INFO : estimated required memory for 3955 words and 50 dimensions: 3679500 bytes
+    2020-09-30 21:08:55,149 : INFO : resetting layer weights
 
 
-Essentially, the vocabulary is a dictionary (accessible via
-``model.wv.vocab``\ ) of all of the unique words extracted from the training
-corpus along with the count (e.g., ``model.wv.vocab['penalty'].count`` for
-counts for the word ``penalty``\ ).
+
+
+Essentially, the vocabulary is a list (accessible via
+``model.wv.index_to_key``) of all of the unique words extracted from the training corpus.
+Additional attributes for each word are available using the ``model.wv.get_vecattr()`` method,
+For example, to see how many times ``penalty`` appeared in the training corpus:
+
+
+
+.. code-block:: default
+
+    print(f"Word 'penalty' appeared {model.wv.get_vecattr('penalty', 'count')} times in the training corpus.")
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    Word 'penalty' appeared 4 times in the training corpus.
+
+
 
 
 Next, train the model on the corpus.
-If the BLAS library is being used, this should take no more than 3 seconds.
+If optimized Gensim (with BLAS library) is being used, this should take no more than 3 seconds.
 If the BLAS library is not being used, this should take no more than 2
-minutes, so use BLAS if you value your time.
+minutes, so use optimized Gensim with BLAS if you value your time.
 
 
 
@@ -308,6 +357,176 @@ minutes, so use BLAS if you value your time.
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-09-30 21:08:55,553 : INFO : training model with 3 workers on 3955 vocabulary and 50 features, using sg=0 hs=0 sample=0.001 negative=5 window=5
+    2020-09-30 21:08:55,613 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,614 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,614 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,614 : INFO : EPOCH - 1 : training on 58152 raw words (42784 effective words) took 0.1s, 751479 effective words/s
+    2020-09-30 21:08:55,664 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,666 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,666 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,666 : INFO : EPOCH - 2 : training on 58152 raw words (42745 effective words) took 0.1s, 845101 effective words/s
+    2020-09-30 21:08:55,718 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,719 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,720 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,720 : INFO : EPOCH - 3 : training on 58152 raw words (42605 effective words) took 0.1s, 810845 effective words/s
+    2020-09-30 21:08:55,781 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,783 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,784 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,784 : INFO : EPOCH - 4 : training on 58152 raw words (42723 effective words) took 0.1s, 677810 effective words/s
+    2020-09-30 21:08:55,846 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,847 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,848 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,848 : INFO : EPOCH - 5 : training on 58152 raw words (42641 effective words) took 0.1s, 682513 effective words/s
+    2020-09-30 21:08:55,903 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,905 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,905 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,905 : INFO : EPOCH - 6 : training on 58152 raw words (42654 effective words) took 0.1s, 760381 effective words/s
+    2020-09-30 21:08:55,960 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:55,962 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:55,964 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:55,964 : INFO : EPOCH - 7 : training on 58152 raw words (42751 effective words) took 0.1s, 741994 effective words/s
+    2020-09-30 21:08:56,018 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,020 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,020 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,020 : INFO : EPOCH - 8 : training on 58152 raw words (42692 effective words) took 0.1s, 773631 effective words/s
+    2020-09-30 21:08:56,076 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,078 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,081 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,081 : INFO : EPOCH - 9 : training on 58152 raw words (42745 effective words) took 0.1s, 719453 effective words/s
+    2020-09-30 21:08:56,137 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,137 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,137 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,138 : INFO : EPOCH - 10 : training on 58152 raw words (42733 effective words) took 0.1s, 770082 effective words/s
+    2020-09-30 21:08:56,195 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,196 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,197 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,197 : INFO : EPOCH - 11 : training on 58152 raw words (42791 effective words) took 0.1s, 734171 effective words/s
+    2020-09-30 21:08:56,253 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,255 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,255 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,255 : INFO : EPOCH - 12 : training on 58152 raw words (42773 effective words) took 0.1s, 745248 effective words/s
+    2020-09-30 21:08:56,316 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,318 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,318 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,318 : INFO : EPOCH - 13 : training on 58152 raw words (42793 effective words) took 0.1s, 702300 effective words/s
+    2020-09-30 21:08:56,369 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,371 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,373 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,373 : INFO : EPOCH - 14 : training on 58152 raw words (42637 effective words) took 0.1s, 802259 effective words/s
+    2020-09-30 21:08:56,421 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,425 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,426 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,426 : INFO : EPOCH - 15 : training on 58152 raw words (42686 effective words) took 0.1s, 820787 effective words/s
+    2020-09-30 21:08:56,475 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,478 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,479 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,479 : INFO : EPOCH - 16 : training on 58152 raw words (42799 effective words) took 0.1s, 829690 effective words/s
+    2020-09-30 21:08:56,530 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,530 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,533 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,534 : INFO : EPOCH - 17 : training on 58152 raw words (42733 effective words) took 0.1s, 794744 effective words/s
+    2020-09-30 21:08:56,583 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,585 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,587 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,587 : INFO : EPOCH - 18 : training on 58152 raw words (42703 effective words) took 0.1s, 813146 effective words/s
+    2020-09-30 21:08:56,638 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,640 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,640 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,641 : INFO : EPOCH - 19 : training on 58152 raw words (42763 effective words) took 0.1s, 822300 effective words/s
+    2020-09-30 21:08:56,696 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,700 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,700 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,700 : INFO : EPOCH - 20 : training on 58152 raw words (42649 effective words) took 0.1s, 733047 effective words/s
+    2020-09-30 21:08:56,752 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,753 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,754 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,754 : INFO : EPOCH - 21 : training on 58152 raw words (42701 effective words) took 0.1s, 822006 effective words/s
+    2020-09-30 21:08:56,803 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,805 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,805 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,805 : INFO : EPOCH - 22 : training on 58152 raw words (42714 effective words) took 0.1s, 848390 effective words/s
+    2020-09-30 21:08:56,857 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,857 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,859 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,860 : INFO : EPOCH - 23 : training on 58152 raw words (42740 effective words) took 0.1s, 811758 effective words/s
+    2020-09-30 21:08:56,907 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,909 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,910 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,910 : INFO : EPOCH - 24 : training on 58152 raw words (42754 effective words) took 0.0s, 873741 effective words/s
+    2020-09-30 21:08:56,959 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:56,960 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:56,960 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:56,960 : INFO : EPOCH - 25 : training on 58152 raw words (42704 effective words) took 0.0s, 862291 effective words/s
+    2020-09-30 21:08:57,009 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,010 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,011 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,011 : INFO : EPOCH - 26 : training on 58152 raw words (42741 effective words) took 0.0s, 868076 effective words/s
+    2020-09-30 21:08:57,059 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,062 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,063 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,063 : INFO : EPOCH - 27 : training on 58152 raw words (42610 effective words) took 0.1s, 830699 effective words/s
+    2020-09-30 21:08:57,112 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,114 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,115 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,116 : INFO : EPOCH - 28 : training on 58152 raw words (42747 effective words) took 0.1s, 835959 effective words/s
+    2020-09-30 21:08:57,164 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,169 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,170 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,170 : INFO : EPOCH - 29 : training on 58152 raw words (42755 effective words) took 0.1s, 804348 effective words/s
+    2020-09-30 21:08:57,219 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,222 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,224 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,224 : INFO : EPOCH - 30 : training on 58152 raw words (42760 effective words) took 0.1s, 808636 effective words/s
+    2020-09-30 21:08:57,271 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,273 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,273 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,273 : INFO : EPOCH - 31 : training on 58152 raw words (42727 effective words) took 0.0s, 889118 effective words/s
+    2020-09-30 21:08:57,323 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,326 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,327 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,327 : INFO : EPOCH - 32 : training on 58152 raw words (42786 effective words) took 0.1s, 819149 effective words/s
+    2020-09-30 21:08:57,377 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,378 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,379 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,379 : INFO : EPOCH - 33 : training on 58152 raw words (42614 effective words) took 0.1s, 828217 effective words/s
+    2020-09-30 21:08:57,427 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,430 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,431 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,431 : INFO : EPOCH - 34 : training on 58152 raw words (42757 effective words) took 0.1s, 848700 effective words/s
+    2020-09-30 21:08:57,476 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,479 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,481 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,481 : INFO : EPOCH - 35 : training on 58152 raw words (42713 effective words) took 0.0s, 881912 effective words/s
+    2020-09-30 21:08:57,530 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,530 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,532 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,532 : INFO : EPOCH - 36 : training on 58152 raw words (42632 effective words) took 0.1s, 843930 effective words/s
+    2020-09-30 21:08:57,580 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,583 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,584 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,584 : INFO : EPOCH - 37 : training on 58152 raw words (42691 effective words) took 0.1s, 851268 effective words/s
+    2020-09-30 21:08:57,632 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,634 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,635 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,635 : INFO : EPOCH - 38 : training on 58152 raw words (42667 effective words) took 0.1s, 850589 effective words/s
+    2020-09-30 21:08:57,685 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,686 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,687 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,687 : INFO : EPOCH - 39 : training on 58152 raw words (42641 effective words) took 0.1s, 843857 effective words/s
+    2020-09-30 21:08:57,736 : INFO : worker thread finished; awaiting finish of 2 more threads
+    2020-09-30 21:08:57,737 : INFO : worker thread finished; awaiting finish of 1 more threads
+    2020-09-30 21:08:57,741 : INFO : worker thread finished; awaiting finish of 0 more threads
+    2020-09-30 21:08:57,741 : INFO : EPOCH - 40 : training on 58152 raw words (42721 effective words) took 0.1s, 807691 effective words/s
+    2020-09-30 21:08:57,741 : INFO : training on a 2326080 raw words (1708575 effective words) took 2.2s, 781245 effective words/s
 
 
 
@@ -333,15 +552,16 @@ vector can then be compared with other vectors via cosine similarity.
 
  .. code-block:: none
 
-    [-0.0014455  -0.03838259  0.03199863  0.01624313  0.04130909  0.20024535
-     -0.09749083  0.00597675 -0.0498415  -0.04540551  0.01723257 -0.20151177
-      0.08523481 -0.08950453  0.00380471  0.10519169 -0.11385646 -0.12259311
-      0.05124485  0.13983724  0.12103602 -0.2321382  -0.07852937 -0.24980102
-      0.08878644 -0.1038101   0.22263823 -0.21950239 -0.31584352  0.11648487
-      0.18644053 -0.08014616 -0.11723718 -0.22560167 -0.04025911  0.05705469
-      0.20113727  0.12674493  0.07401953 -0.01472244  0.13031979 -0.19944443
-      0.16314563 -0.05472009  0.01138415  0.09830751 -0.11751664  0.00259685
-      0.11373404  0.03917272]
+    [-0.08478509  0.05011684  0.0675064  -0.19926868 -0.1235586   0.01768214
+     -0.12645927  0.01062329  0.06113973  0.35424358  0.01320948  0.07561274
+     -0.01645093  0.0692549   0.08346193 -0.01599065  0.08287009 -0.0139379
+     -0.17772709 -0.26271465  0.0442089  -0.04659882 -0.12873884  0.28799203
+     -0.13040264  0.12478471 -0.14091878 -0.09698066 -0.07903259 -0.10124907
+     -0.28239366  0.13270256  0.04445919 -0.24210942 -0.1907376  -0.07264525
+     -0.14167067 -0.22816683 -0.00663796  0.23165748 -0.10436232 -0.01028251
+     -0.04064698  0.08813146  0.01072008 -0.149789    0.05923386  0.16301566
+      0.05815683  0.1258063 ]
+
 
 
 
@@ -375,11 +595,12 @@ similar documents.
     second_ranks = []
     for doc_id in range(len(train_corpus)):
         inferred_vector = model.infer_vector(train_corpus[doc_id].words)
-        sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
+        sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
         rank = [docid for docid, sim in sims].index(doc_id)
         ranks.append(rank)
 
         second_ranks.append(sims[1])
+
 
 
 
@@ -410,6 +631,7 @@ NB. Results vary between runs due to random seeding and very small corpus
  .. code-block:: none
 
     Counter({0: 292, 1: 8})
+
 
 
 
@@ -444,13 +666,14 @@ This is great and not entirely surprising. We can take a look at an example:
 
     SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/m,d50,n5,w5,mc2,s0.001,t3):
 
-    MOST (299, 0.9392883777618408): «australia will take on france in the doubles rubber of the davis cup tennis final today with the tie levelled at wayne arthurs and todd woodbridge are scheduled to lead australia in the doubles against cedric pioline and fabrice santoro however changes can be made to the line up up to an hour before the match and australian team captain john fitzgerald suggested he might do just that we ll make team appraisal of the whole situation go over the pros and cons and make decision french team captain guy forget says he will not make changes but does not know what to expect from australia todd is the best doubles player in the world right now so expect him to play he said would probably use wayne arthurs but don know what to expect really pat rafter salvaged australia davis cup campaign yesterday with win in the second singles match rafter overcame an arm injury to defeat french number one sebastien grosjean in three sets the australian says he is happy with his form it not very pretty tennis there isn too many consistent bounces you are playing like said bit of classic old grass court rafter said rafter levelled the score after lleyton hewitt shock five set loss to nicholas escude in the first singles rubber but rafter says he felt no added pressure after hewitt defeat knew had good team to back me up even if we were down he said knew could win on the last day know the boys can win doubles so even if we were down still feel we are good enough team to win and vice versa they are good enough team to beat us as well»
+    MOST (299, 0.9482713341712952): «australia will take on france in the doubles rubber of the davis cup tennis final today with the tie levelled at wayne arthurs and todd woodbridge are scheduled to lead australia in the doubles against cedric pioline and fabrice santoro however changes can be made to the line up up to an hour before the match and australian team captain john fitzgerald suggested he might do just that we ll make team appraisal of the whole situation go over the pros and cons and make decision french team captain guy forget says he will not make changes but does not know what to expect from australia todd is the best doubles player in the world right now so expect him to play he said would probably use wayne arthurs but don know what to expect really pat rafter salvaged australia davis cup campaign yesterday with win in the second singles match rafter overcame an arm injury to defeat french number one sebastien grosjean in three sets the australian says he is happy with his form it not very pretty tennis there isn too many consistent bounces you are playing like said bit of classic old grass court rafter said rafter levelled the score after lleyton hewitt shock five set loss to nicholas escude in the first singles rubber but rafter says he felt no added pressure after hewitt defeat knew had good team to back me up even if we were down he said knew could win on the last day know the boys can win doubles so even if we were down still feel we are good enough team to win and vice versa they are good enough team to beat us as well»
 
-    SECOND-MOST (104, 0.8041712045669556): «australian cricket captain steve waugh has supported fast bowler brett lee after criticism of his intimidatory bowling to the south african tailenders in the first test in adelaide earlier this month lee was fined for giving new zealand tailender shane bond an unsportsmanlike send off during the third test in perth waugh says tailenders should not be protected from short pitched bowling these days you re earning big money you ve got responsibility to learn how to bat he said mean there no times like years ago when it was not professional and sort of bowlers code these days you re professional our batsmen work very hard at their batting and expect other tailenders to do likewise meanwhile waugh says his side will need to guard against complacency after convincingly winning the first test by runs waugh says despite the dominance of his side in the first test south africa can never be taken lightly it only one test match out of three or six whichever way you want to look at it so there lot of work to go he said but it nice to win the first battle definitely it gives us lot of confidence going into melbourne you know the big crowd there we love playing in front of the boxing day crowd so that will be to our advantage as well south africa begins four day match against new south wales in sydney on thursday in the lead up to the boxing day test veteran fast bowler allan donald will play in the warm up match and is likely to take his place in the team for the second test south african captain shaun pollock expects much better performance from his side in the melbourne test we still believe that we didn play to our full potential so if we can improve on our aspects the output we put out on the field will be lot better and we still believe we have side that is good enough to beat australia on our day he said»
+    SECOND-MOST (104, 0.8029672503471375): «australian cricket captain steve waugh has supported fast bowler brett lee after criticism of his intimidatory bowling to the south african tailenders in the first test in adelaide earlier this month lee was fined for giving new zealand tailender shane bond an unsportsmanlike send off during the third test in perth waugh says tailenders should not be protected from short pitched bowling these days you re earning big money you ve got responsibility to learn how to bat he said mean there no times like years ago when it was not professional and sort of bowlers code these days you re professional our batsmen work very hard at their batting and expect other tailenders to do likewise meanwhile waugh says his side will need to guard against complacency after convincingly winning the first test by runs waugh says despite the dominance of his side in the first test south africa can never be taken lightly it only one test match out of three or six whichever way you want to look at it so there lot of work to go he said but it nice to win the first battle definitely it gives us lot of confidence going into melbourne you know the big crowd there we love playing in front of the boxing day crowd so that will be to our advantage as well south africa begins four day match against new south wales in sydney on thursday in the lead up to the boxing day test veteran fast bowler allan donald will play in the warm up match and is likely to take his place in the team for the second test south african captain shaun pollock expects much better performance from his side in the melbourne test we still believe that we didn play to our full potential so if we can improve on our aspects the output we put out on the field will be lot better and we still believe we have side that is good enough to beat australia on our day he said»
 
-    MEDIAN (171, 0.268340528011322): «drug education campaigns appear to be paying dividends with new figures showing per cent drop in drug related deaths last year according to the australian bureau of statistics people died from drug related causes in the year that figure is substantial drop from when australians died of drug related causes across the states and territories new south wales recorded the biggest decrease the bureau david payne attributes the decline of drug deaths to the heroin drought in some parts of the country better equipped ambulances and emergency wards and above all effective federal and state drug education campaigns they have put lot of money into the program there has been fall and while you can discern trend from that the figures are going in the right way right direction mr payne said»
+    MEDIAN (238, 0.2635717988014221): «centrelink is urging people affected by job cuts at regional pay tv operator austar and travel company traveland to seek information about their income support options traveland has announced it is shedding more than jobs around australia and austar is letting employees go centrelink finance information officer peter murray says those facing uncertain futures should head to centrelink in the next few days centrelink is the shopfront now for commonwealth services for income support and the employment network so that it is important if people haven been to us before they might get pleasant surprise at the range of services that we do offer to try and help them through situations where things might have changed for them mr murray said»
 
-    LEAST (223, -0.05577106401324272): «indonesian troop re enforcements have started arriving in central sulawesi as the government attempts to end days of deadly clashes between christians and muslims violence in the last week has claimed at least eight lives and left thousands of people homeless more than police and soldiers are being sent in to disarm rival groups and restore calm there have been no new reports of violence but residents in the christian town of ten tena say they fear further attacks by muslim militiamen taking up positions in the hills around the town in region where fighting between muslims and christians has claimed hundreds of lives in the last two years many blame the latest upsurge in violence on the arrival of members of the laskar jihad muslim militia from training camps in java and from the neighbouring maluka islands»
+    LEAST (243, -0.13247375190258026): «four afghan factions have reached agreement on an interim cabinet during talks in germany the united nations says the administration which will take over from december will be headed by the royalist anti taliban commander hamed karzai it concludes more than week of negotiations outside bonn and is aimed at restoring peace and stability to the war ravaged country the year old former deputy foreign minister who is currently battling the taliban around the southern city of kandahar is an ally of the exiled afghan king mohammed zahir shah he will serve as chairman of an interim authority that will govern afghanistan for six month period before loya jirga or grand traditional assembly of elders in turn appoints an month transitional government meanwhile united states marines are now reported to have been deployed in eastern afghanistan where opposition forces are closing in on al qaeda soldiers reports from the area say there has been gun battle between the opposition and al qaeda close to the tora bora cave complex where osama bin laden is thought to be hiding in the south of the country american marines are taking part in patrols around the air base they have secured near kandahar but are unlikely to take part in any assault on the city however the chairman of the joint chiefs of staff general richard myers says they are prepared for anything they are prepared for engagements they re robust fighting force and they re absolutely ready to engage if that required he said»
+
 
 
 
@@ -488,9 +711,10 @@ comparisons.
 
  .. code-block:: none
 
-    Train Document (272): «the storm clean up in sydney will resume in earnest this morning as fresh crews are brought in to replace state emergency service ses personnel who worked through the night the storm hit sydney early yesterday afternoon and two schoolgirls died when tree fell on them at reserve at hornsby heights in the city north number of other people were injured as the storm brought down trees and power poles and lifted roofs new south wales emergency services minister bob debus says welfare and emergency funding arrangements have been put in place with the declaration of natural disaster areas in campbeltown hornsby warringah and kurringai welfare services become available if they are needed local government is refunded any money it spends on the clean up or that it spends on repairing its own infrastructure low interest loans if they are needed are available to small business to help them get back on their feet again mr debus said energy australia says power has been restored to customers and work will continue today to reconnect those still without electricity energy australia peter leete says work will concentrate around the worst hit areas the worst of the problems we have still got are in sydney northern suburbs which seem to be the worst hit of all and that around hornsby st ives turramurra and frenches forest mr leete said four hundred ses volunteers are responding to more than calls for assistance the volunteers have worked throughout the night to remove trees from homes and roads the ses laura goodin says it will take several days before the damage is cleared up while the ses has received fewer calls for help than in the storm two weeks ago many of the jobs in this storm are actually quite complicated involving large trees or extensively damaged homes and businesses we re estimating that most of the tasks will be completed by friday if no new storms develop ms goodin said outside sydney the storms caused damage in north east of the state and the lower hunter scores of homes and farm buildings have been damaged and literally hundreds of trees have been brought down the storms accompanied by gale force winds and hail left large areas around tamworth gunnedah and quirindi without electricity and telephone services»
+    Train Document (292): «rival afghan factions are deadlocked over the shape of future government the northern alliance has demanded day adjournment of power sharing talks in germany after its president burhanuddin rabbani objected to the appointment system for an interim administration president rabbani has objected to the plans for an interim government to be drawn up by appointment as discussed in bonn saying the interim leaders should be voted in by afghans themselves he also says there is no real need for sizeable international security force president rabbani says he would prefer local afghan factions drew up their own internal security forces of around personnel but if the world insisted there should be an international security presence there should be no more than or personnel in their security forces he says president rabbani objections are likely to cast doubt on his delegation ability to commit the northern alliance to any course of action decided upon in bonn he now threatens to undermine the very process he claims to support in the quest for stable government in afghanistan»
 
-    Similar Document (40, 0.8816476464271545): «firefighters across new south wales are gearing up for wind change that may bring further property losses today more than fires now ring two thirds of the greater sydney area the blazes stretch south of the royal national park and north of wollongong all the way to the blue mountains and up towards the edge of the baulkham hills shire fires are also burning around huskisson on the far south coast and as far inland as mudgee narromine and kempsey and the richmond valley in the north however the major areas of concern today are the southern sydney suburbs of heathcote and engadine thousands of residents in those suburbs were evacuated overnight senior forecaster with the sydney weather bureau ian robertson says the greatest risk will come when winds change direction this afternoon we re looking at another dry day ahead throughout the state particularly along the coast more average sort of temperatures but the trick will be the winds mr robertson said we re looking at south west winds this morning an east to south east sea breeze along the coast which is going to make things quite challenging for firefighting between and firefighters are currently battling the blazes crews have already been brought in from victoria but the rural fire service says it expects to call on other states for help service spokesman john winter says property losses have been high we are estimating that around homes have been lost obviously there are areas we re yet to confirm property losses mr winter said»
+    Similar Document (13, 0.7867921590805054): «talks between afghan and british officials in kabul have ended without final agreement on the deployment of international security force the lack of suitable translation of the document meant further delay authorities in kabul have been giving conflicting signals for weeks now over the number of peacekeepers they would allow and the role the international force would play the foreign minister dr abdullah appeared to be ending the confusion saying an agreement was about to be signed there is already the agreement so it was finalised he said but spokesman for the interior minister yunis kanooni emerged soon after to say there was no agreement and nothing to sign scores of british peacekeepers are already patrolling the streets of kabul in tandem with afghan police but proposals to enlarge the force to as many as international peacekeepers have been criticised by some commanders as tantamount to foreign occupation»
+
 
 
 
@@ -509,7 +733,7 @@ test document, and compare the document to our model by eye.
     # Pick a random document from the test corpus and infer a vector from the model
     doc_id = random.randint(0, len(test_corpus) - 1)
     inferred_vector = model.infer_vector(test_corpus[doc_id])
-    sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
+    sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
 
     # Compare and print the most/median/least similar documents from the train corpus
     print('Test Document ({}): «{}»\n'.format(doc_id, ' '.join(test_corpus[doc_id])))
@@ -527,15 +751,16 @@ test document, and compare the document to our model by eye.
 
  .. code-block:: none
 
-    Test Document (45): «batasuna political party that campaigns for an independent basque state faces double blow today the spanish parliament is expected to vote overwhelmingly in favour of banning the radical group while senior investigative judge is poised to suspend batasuna activities on the grounds that they benefit eta the outlawed basque separatist group»
+    Test Document (49): «labor needed to distinguish itself from the government on the issue of asylum seekers greens leader bob brown has said his senate colleague kerry nettle intends to move motion today on the first anniversary of the tampa crisis condemning the government over its refugee policy and calling for an end to mandatory detention we greens want to bring the government to book over its serial breach of international obligations as far as asylum seekers in this country are concerned senator brown said today»
 
     SIMILAR/DISSIMILAR DOCS PER MODEL Doc2Vec(dm/m,d50,n5,w5,mc2,s0.001,t3):
 
-    MOST (76, 0.7851859331130981): «the death toll in argentina food riots has risen to local media reports say four more people died this morning in clashes between police and protesters near the presidential palace in the capital buenos aires president fernando de la rua has called on the opposition to take part in government of national unity and apparently will resign if it does not looting and rioting has generally given way to more peaceful demonstrations against the faltering government blamed for month recession heavily armed police using powers under day state of siege decree are attempting to prevent large public gatherings but union leaders say workers and the unemployed will not stop until the government is removed and living standards restored with argentina discredited economy minister now gone the government hopes to approve new budget acceptable to the international monetary fund imf to avoid default on the billion foreign debt the presidents of neighbouring brazil and chile say they fear the social unrest could infect their own nations unless argentina and its leaders can resolve the crisis quickly»
+    MOST (218, 0.8016394376754761): «refugee support groups are strongly critical of federal government claims that the pacific solution program is working well the immigration minister philip ruddock says he is pleased with the program which uses pacific island nations to process asylum seekers wanting to come to australia president of the hazara ethnic society of australia hassan ghulam says the australian government is bullying smaller nations into accepting asylum seekers if the pacific countries wanted refugees they can clearly raise their voice in the united nations and say yes we are accepting refugees and why australia who gives this authority to the australian government to force the pacific countries to accept refugees in this form or in the other form he asked»
 
-    MEDIAN (142, 0.42160844802856445): «the defence minister robert hill says the australian government is still trying to interview suspected taliban fighter david hicks senator hill says the government does not know much more than what is on the public record about the year old background he says he was not aware he had applied to join the australian defence force or that australian authorities have known about him for some time senator hill has told channel seven the government does not know what motivated the man to fight alongside taliban forces in rare circumstances this does happen as we know there one american who has been captured after fighting for the taliban occasionally people decide to exercise violent option in pursuing particular political or religious belief and think you ought to probably address the questions to the psychologists or the psychiatrists senator hill said»
+    MEDIAN (204, 0.3319269120693207): «an iraqi doctor being held at sydney villawood detention centre claims he was prevented from receiving human rights award dr aamer sultan had been awarded special commendation at yesterday human rights and equal opportunity commission awards in sydney but was not able to receive the honour in person dr sultan says he had been hoping to attend the ceremony but says the management at villawood stopped him from going submitted formal request to the centre manager who promised me that he will present the matter to migration management here who are the main authority here they also came back that unfortunately we can not fulfill this request for you but they didn give any explanation dr sultan says he was disappointed by the decision the immigration minister philip ruddock has written letter of complaint to the medical journal of australia about an article penned by dr sultan on the psychological state of detainees at villawood the journal has published research dr sultan conducted with former visiting psychologist to the centre kevin sullivan their survey of detainees over nine months found all but one displayed symptoms of psychological distress at some time the article says per cent acknowledged chronic depressive symptoms and close to half of the group had reached severe stages of depression»
 
-    LEAST (6, -0.0833040177822113): «the united states team of monica seles and jan michael gambill scored decisive victory over unseeded france in their first hopman cup match at burswood dome in perth the pair runners up in the million dollar mixed teams event last year both won their singles encounters to give the us an unbeatable lead the year old seles currently ranked eighth recovered from shaky start to overpower virginie razzano who is ranked nd seles had to fight hard to get home in straight sets winning in minutes then the year old gambill ranked st wore down determined arnaud clement th to win in minutes the americans are aiming to go one better than last year when they were beaten by swiss pair martina hingis and roger federer in the final of the eight nation contest gambill said the win was great way to start the tennis year got little tentative at the end but it was great start to my year he said arnaud is great scrapper and am delighted to beat him even though am frankly bit out of shape that is one of the reasons am here will be in shape by the end of the tournament just aim to keep improving in the new year and if do think have chance to beat anyone when am playing well gambill was pressed hard by clement before taking the first set in minutes but the american gained the ascendancy in the second set breaking in the third and fifth games seles said she had expected her clash with razzano to be tough she was top junior player in the world so it was no surprise that she fought so well she said seles said she still had the hunger to strive to regain her position at the top of her sport this is why you play she said but want to try not to peak too early this season seles slow into her stride slipped to in her opening set against razzano but recovered quickly claiming the set after snatching four games in row in the second set seles broke her opponent in the opening game and completed victory with relative ease despite razzano tenacious efforts»
+    LEAST (157, -0.10524928569793701): «british man has been found guilty by unanimous verdict of the kidnap and murder of an eight year old schoolgirl whose death in july shocked britain and set off rampage of anti paedophile vigilantes roy whiting was sentenced to life imprisonment for the abduction and murder of eight year old sarah payne with recommendation by trial judge justice richard curtis that he never be released you are indeed an evil man you are in no way mentally unwell have seen you for month and in my view you are glib and cunning liar justice curtis said there were cheers of delight as the verdicts were read out by the foreman at lewes crown court the jury of nine men and three women had been deliberating for nine hours as soon as the verdicts were declared the court heard details of whiting previous conviction for the kidnap and indecent assault of nine year old girl in prosecutor timothy langdale told the jury how the defendant threw the child into the back of his dirty red ford sierra and locked the doors he had driven her somewhere she didn know where when she asked where they were going he said shut up because he had knife mr langdale said the defendant told the girl to take off her clothes when she refused he produced rope from his pocket and threatened to tie her up what he actually threatened was that he would tie her mouth up she took her clothes off as he had ordered her to do mr langdale then gave graphic details of the abuse to which whiting subjected the terrified child whiting was given four year jail sentence in june after admitting carrying out the attack in march that year but he was released in november despite warnings from probation officers who were convinced there was danger he would attack another child they set out their warnings in pre sentence report prepared after the first assault and in the parole report before he was released from prison he was kept under supervision for four months after his release but was not being monitored by july last year when eight year old sarah was abducted and killed whiting has been arrested three times in connection with the case but the first and second times was released without being charged sarah disappeared on july last year prompting massive police search her partially buried naked body was found days later in field and police believe she was strangled or suffocated»
+
 
 
 
@@ -569,9 +794,9 @@ If you'd like to know more about the subject matter of this tutorial, check out 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  9.354 seconds)
+   **Total running time of the script:** ( 0 minutes  7.863 seconds)
 
-**Estimated memory usage:**  8 MB
+**Estimated memory usage:**  37 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_doc2vec_lee.py:
@@ -584,13 +809,13 @@ If you'd like to know more about the subject matter of this tutorial, check out 
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_doc2vec_lee.py <run_doc2vec_lee.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_doc2vec_lee.ipynb <run_doc2vec_lee.ipynb>`
 

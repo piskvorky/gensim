@@ -1,10 +1,12 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_core_run_corpora_and_vector_spaces.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_core_run_corpora_and_vector_spaces.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py:
 
 
 Corpora and Vector Spaces
@@ -14,11 +16,13 @@ Demonstrates transforming text into a vector space representation.
 
 Also introduces corpus streaming and persistence to disk in various formats.
 
+
 .. code-block:: default
 
 
     import logging
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 
 
@@ -50,6 +54,7 @@ This time, let's start from documents represented as strings:
         "Graph minors IV Widths of trees and well quasi ordering",
         "Graph minors A survey",
     ]
+
 
 
 
@@ -110,6 +115,8 @@ as well as words that only appear once in the corpus:
      ['graph', 'minors', 'survey']]
 
 
+
+
 Your way of processing the documents will likely vary; here, I only split on whitespace
 to tokenize, followed by lowercasing each word. In fact, I use this particular
 (simplistic and inefficient) setup to mimic the experiment done in Deerwester et al.'s
@@ -152,7 +159,13 @@ between the questions and ids is called a dictionary:
 
  .. code-block:: none
 
+    2020-10-28 00:52:02,550 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2020-10-28 00:52:02,550 : INFO : built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)
+    2020-10-28 00:52:02,550 : INFO : saving Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) under /tmp/deerwester.dict, separately None
+    2020-10-28 00:52:02,552 : INFO : saved /tmp/deerwester.dict
     Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
+
+
 
 
 Here we assigned a unique integer id to all words appearing in the corpus with the
@@ -180,6 +193,8 @@ To see the mapping between words and their ids:
     {'computer': 0, 'human': 1, 'interface': 2, 'response': 3, 'survey': 4, 'system': 5, 'time': 6, 'user': 7, 'eps': 8, 'trees': 9, 'graph': 10, 'minors': 11}
 
 
+
+
 To actually convert tokenized documents to vectors:
 
 
@@ -201,6 +216,8 @@ To actually convert tokenized documents to vectors:
  .. code-block:: none
 
     [(0, 1), (1, 1)]
+
+
 
 
 The function :func:`doc2bow` simply counts the number of occurrences of
@@ -227,7 +244,14 @@ therefore reads: in the document `"Human computer interaction"`, the words `comp
 
  .. code-block:: none
 
+    2020-10-28 00:52:02,830 : INFO : storing corpus in Matrix Market format to /tmp/deerwester.mm
+    2020-10-28 00:52:02,832 : INFO : saving sparse matrix to /tmp/deerwester.mm
+    2020-10-28 00:52:02,832 : INFO : PROGRESS: saving document #0
+    2020-10-28 00:52:02,834 : INFO : saved 9x12 matrix, density=25.926% (28/108)
+    2020-10-28 00:52:02,834 : INFO : saving MmCorpus index to /tmp/deerwester.mm.index
     [[(0, 1), (1, 1), (2, 1)], [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)], [(2, 1), (5, 1), (7, 1), (8, 1)], [(1, 1), (5, 2), (8, 1)], [(3, 1), (6, 1), (7, 1)], [(9, 1)], [(9, 1), (10, 1)], [(9, 1), (10, 1), (11, 1)], [(4, 1), (10, 1), (11, 1)]]
+
+
 
 
 By now it should be clear that the vector feature with ``id=10`` stands for the question "How many
@@ -252,11 +276,12 @@ only requires that a corpus must be able to return one document vector at a time
     from smart_open import open  # for transparently opening remote files
 
 
-    class MyCorpus(object):
+    class MyCorpus:
         def __iter__(self):
             for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
                 # assume there's one document per line, tokens separated by whitespace
                 yield dictionary.doc2bow(line.lower().split())
+
 
 
 
@@ -277,6 +302,7 @@ documents*.
     # documents directly from disk, network, database, dataframes... The models
     # in Gensim are implemented such that they don't require all vectors to reside
     # in RAM at once. You can even create the documents on the fly!
+
 
 
 
@@ -308,7 +334,9 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x7f2f3d6fcc50>
+    <__main__.MyCorpus object at 0x11e77bb38>
+
+
 
 
 Corpus is now an object. We didn't define any way to print it, so `print` just outputs address
@@ -343,6 +371,8 @@ iterate over the corpus and print each document vector (one at a time):
     [(4, 1), (10, 1), (11, 1)]
 
 
+
+
 Although the output is the same as for the plain Python list, the corpus is now much
 more memory friendly, because at most one vector resides in RAM at a time. Your
 corpus can now be as large as you want.
@@ -353,7 +383,6 @@ Similarly, to construct the dictionary without loading all texts into memory:
 .. code-block:: default
 
 
-    from six import iteritems
     # collect statistics about all tokens
     dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/gensim/mycorpus.txt'))
     # remove stop words and words that appear only once
@@ -362,7 +391,7 @@ Similarly, to construct the dictionary without loading all texts into memory:
         for stopword in stoplist
         if stopword in dictionary.token2id
     ]
-    once_ids = [tokenid for tokenid, docfreq in iteritems(dictionary.dfs) if docfreq == 1]
+    once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.items() if docfreq == 1]
     dictionary.filter_tokens(stop_ids + once_ids)  # remove stop words and words that appear only once
     dictionary.compactify()  # remove gaps in id sequence after words that were removed
     print(dictionary)
@@ -377,7 +406,11 @@ Similarly, to construct the dictionary without loading all texts into memory:
 
  .. code-block:: none
 
+    2020-10-28 00:52:04,241 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
+    2020-10-28 00:52:04,243 : INFO : built Dictionary(42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...) from 9 documents (total 69 corpus positions)
     Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
+
+
 
 
 And that is all there is to it! At least as far as bag-of-words representation is concerned.
@@ -415,6 +448,19 @@ create a toy corpus of 2 documents, as a plain Python list
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-10-28 00:52:04,368 : INFO : storing corpus in Matrix Market format to /tmp/corpus.mm
+    2020-10-28 00:52:04,370 : INFO : saving sparse matrix to /tmp/corpus.mm
+    2020-10-28 00:52:04,370 : INFO : PROGRESS: saving document #0
+    2020-10-28 00:52:04,370 : INFO : saved 2x2 matrix, density=25.000% (1/4)
+    2020-10-28 00:52:04,370 : INFO : saving MmCorpus index to /tmp/corpus.mm.index
+
+
 
 
 Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>`_,
@@ -434,6 +480,24 @@ Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-10-28 00:52:04,425 : INFO : converting corpus to SVMlight format: /tmp/corpus.svmlight
+    2020-10-28 00:52:04,426 : INFO : saving SvmLightCorpus index to /tmp/corpus.svmlight.index
+    2020-10-28 00:52:04,427 : INFO : no word id mapping provided; initializing from corpus
+    2020-10-28 00:52:04,427 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
+    2020-10-28 00:52:04,427 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
+    2020-10-28 00:52:04,427 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
+    2020-10-28 00:52:04,481 : INFO : no word id mapping provided; initializing from corpus
+    2020-10-28 00:52:04,481 : INFO : storing corpus in List-Of-Words format into /tmp/corpus.low
+    2020-10-28 00:52:04,482 : WARNING : List-of-words format can only save vectors with integer elements; 1 float entries were truncated to integer value
+    2020-10-28 00:52:04,482 : INFO : saving LowCorpus index to /tmp/corpus.low.index
+
+
 
 
 Conversely, to load a corpus iterator from a Matrix Market file:
@@ -446,6 +510,17 @@ Conversely, to load a corpus iterator from a Matrix Market file:
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-10-28 00:52:04,538 : INFO : loaded corpus index from /tmp/corpus.mm.index
+    2020-10-28 00:52:04,540 : INFO : initializing cython corpus reader from /tmp/corpus.mm
+    2020-10-28 00:52:04,540 : INFO : accepted corpus with 2 documents, 2 features, 1 non-zero entries
 
 
 
@@ -471,6 +546,8 @@ Corpus objects are streams, so typically you won't be able to print them directl
     MmCorpus(2 documents, 2 features, 1 non-zero entries)
 
 
+
+
 Instead, to view the contents of a corpus:
 
 
@@ -491,6 +568,8 @@ Instead, to view the contents of a corpus:
  .. code-block:: none
 
     [[(1, 0.5)], []]
+
+
 
 
 or
@@ -517,6 +596,8 @@ or
     []
 
 
+
+
 The second way is obviously more memory-friendly, but for testing and development
 purposes, nothing beats the simplicity of calling ``list(corpus)``.
 
@@ -530,6 +611,18 @@ To save the same Matrix Market document stream in Blei's LDA-C format,
 
 
 
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    2020-10-28 00:52:04,921 : INFO : no word id mapping provided; initializing from corpus
+    2020-10-28 00:52:04,922 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
+    2020-10-28 00:52:04,923 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
+    2020-10-28 00:52:04,923 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
 
 
 
@@ -561,6 +654,7 @@ to help converting from/to numpy matrices
 
 
 
+
 and from/to `scipy.sparse` matrices
 
 
@@ -571,6 +665,7 @@ and from/to `scipy.sparse` matrices
     scipy_sparse_matrix = scipy.sparse.random(5, 2)  # random sparse matrix as example
     corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
     scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
+
 
 
 
@@ -592,23 +687,22 @@ Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apir
 .. [1] This is the same corpus as used in
        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
 
-Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
-
-
 
 .. code-block:: default
+
 
     import matplotlib.pyplot as plt
     import matplotlib.image as mpimg
     img = mpimg.imread('run_corpora_and_vector_spaces.png')
     imgplot = plt.imshow(img)
-    plt.axis('off')
-    plt.show()
+    _ = plt.axis('off')
 
 
 
 .. image:: /auto_examples/core/images/sphx_glr_run_corpora_and_vector_spaces_001.png
+    :alt: run corpora and vector spaces
     :class: sphx-glr-single-img
+
 
 
 
@@ -616,9 +710,9 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.104 seconds)
+   **Total running time of the script:** ( 0 minutes  4.010 seconds)
 
-**Estimated memory usage:**  45 MB
+**Estimated memory usage:**  40 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_corpora_and_vector_spaces.py:
@@ -631,13 +725,13 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_corpora_and_vector_spaces.py <run_corpora_and_vector_spaces.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_corpora_and_vector_spaces.ipynb <run_corpora_and_vector_spaces.ipynb>`
 
@@ -646,4 +740,4 @@ Here we show a pretty fastText logo so that our gallery picks it up as a thumbna
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

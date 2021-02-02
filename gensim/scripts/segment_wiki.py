@@ -268,7 +268,7 @@ class _WikiSectionsCorpus(WikiCorpus):
     """
 
     def __init__(self, fileobj, min_article_character=200, processes=None,
-                 lemmatize=utils.has_pattern(), filter_namespaces=('0',), include_interlinks=False):
+                 lemmatize=None, filter_namespaces=('0',), include_interlinks=False):
         """
         Parameters
         ----------
@@ -278,22 +278,25 @@ class _WikiSectionsCorpus(WikiCorpus):
             Minimal number of character for article (except titles and leading gaps).
         processes : int, optional
             Number of processes, max(1, multiprocessing.cpu_count() - 1) if None.
-        lemmatize : bool, optional
-            If `pattern` package is installed, use fancier shallow parsing to get token lemmas.
-            Otherwise, use simple regexp tokenization.
         filter_namespaces : tuple of int, optional
             Enumeration of namespaces that will be ignored.
         include_interlinks: bool
             Whether or not interlinks should be included in the output
 
         """
+        if lemmatize is not None:
+            raise NotImplementedError(
+                'The lemmatize parameter is no longer supported since Gensim 4.0.0. '
+                'If you need to lemmatize, use e.g. https://github.com/clips/pattern '
+                'to preprocess your corpus before submitting it to Gensim.'
+            )
+
         self.fileobj = fileobj
         self.filter_namespaces = filter_namespaces
         self.metadata = False
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
-        self.lemmatize = lemmatize
         self.min_article_character = min_article_character
         self.include_interlinks = include_interlinks
 

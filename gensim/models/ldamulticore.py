@@ -84,15 +84,14 @@ Query, or update the model using new, unseen documents
 """
 
 import logging
+import queue
+from multiprocessing import Pool, Queue, cpu_count
 
 import numpy as np
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
-import six
-from six.moves import queue, range
-from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
 
@@ -161,6 +160,7 @@ class LdaMulticore(LdaModel):
             Topics with a probability lower than this threshold will be filtered out.
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
+            Note that results can still vary due to non-determinism in OS scheduling of the worker processes.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
         per_word_topics : bool
@@ -173,7 +173,7 @@ class LdaMulticore(LdaModel):
         self.workers = max(1, cpu_count() - 1) if workers is None else workers
         self.batch = batch
 
-        if isinstance(alpha, six.string_types) and alpha == 'auto':
+        if isinstance(alpha, str) and alpha == 'auto':
             raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
 
         super(LdaMulticore, self).__init__(
@@ -277,7 +277,7 @@ class LdaMulticore(LdaModel):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
         logger.info("training LDA model using %i processes", self.workers)
-        pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
+        pool = Pool(self.workers, worker_e_step, (job_queue, result_queue, self))
         for pass_ in range(self.passes):
             queue_size, reallen = [0], 0
             other = LdaState(self.eta, self.state.sstats.shape)
@@ -289,7 +289,7 @@ class LdaMulticore(LdaModel):
                 # put the chunk into the workers' input job queue
                 while True:
                     try:
-                        job_queue.put((chunk_no, chunk, self), block=False)
+                        job_queue.put((chunk_no, chunk, self.state), block=False)
                         queue_size[0] += 1
                         logger.info(
                             "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, "
@@ -316,7 +316,7 @@ class LdaMulticore(LdaModel):
         pool.terminate()
 
 
-def worker_e_step(input_queue, result_queue):
+def worker_e_step(input_queue, result_queue, worker_lda):
     """Perform E-step for each job.
 
     Parameters
@@ -326,17 +326,20 @@ def worker_e_step(input_queue, result_queue):
         responsible for processing it.
     result_queue : queue of :class:`~gensim.models.ldamodel.LdaState`
         After the worker finished the job, the state of the resulting (trained) worker model is appended to this queue.
-
+    worker_lda : :class:`~gensim.models.ldamulticore.LdaMulticore`
+        LDA instance which performed e step
     """
     logger.debug("worker process entering E-step loop")
     while True:
         logger.debug("getting a new job")
-        chunk_no, chunk, worker_lda = input_queue.get()
+        chunk_no, chunk, w_state = input_queue.get()
         logger.debug("processing chunk #%i of %i documents", chunk_no, len(chunk))
+        worker_lda.state = w_state
+        worker_lda.sync_state()
         worker_lda.state.reset()
         worker_lda.do_estep(chunk)  # TODO: auto-tune alpha?
         del chunk
         logger.debug("processed chunk, queuing the result")
         result_queue.put(worker_lda.state)
-        del worker_lda  # free up some memory
+        worker_lda.state = None
         logger.debug("result put")

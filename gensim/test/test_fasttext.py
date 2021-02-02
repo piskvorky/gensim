@@ -18,7 +18,9 @@ from gensim import utils
 from gensim.models.word2vec import LineSentence
 from gensim.models.fasttext import FastText as FT_gensim, FastTextKeyedVectors, _unpack
 from gensim.models.keyedvectors import KeyedVectors
-from gensim.test.utils import datapath, get_tmpfile, temporary_file, common_texts as sentences
+from gensim.test.utils import (
+    datapath, get_tmpfile, temporary_file, common_texts as sentences, lee_corpus_list as list_corpus,
+)
 from gensim.test.test_word2vec import TestWord2VecModel
 import gensim.models._fasttext_bin
 from gensim.models.fasttext_inner import compute_ngrams, compute_ngrams_bytes, ft_hash_bytes
@@ -43,15 +45,6 @@ BUCKET = 10000
 FT_HOME = os.environ.get("FT_HOME")
 FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
 
-
-class LeeCorpus(object):
-    def __iter__(self):
-        with open(datapath('lee_background.cor')) as f:
-            for line in f:
-                yield utils.simple_preprocess(line)
-
-
-list_corpus = list(LeeCorpus())
 
 new_sentences = [
     ['computer', 'artificial', 'intelligence'],
@@ -101,16 +94,17 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model.wv['minor']  # oov word
         self.assertEqual(len(oov_vec), 12)
 
-    def testFastTextTrainParameters(self):
+    def test_fast_text_train_parameters(self):
 
         model = FT_gensim(vector_size=12, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(corpus_iterable=sentences)
 
-        self.assertRaises(TypeError, model.train, corpus_file=11111)
-        self.assertRaises(TypeError, model.train, corpus_iterable=11111)
-        self.assertRaises(TypeError, model.train, corpus_iterable=sentences, corpus_file='test')
-        self.assertRaises(TypeError, model.train, corpus_iterable=None, corpus_file=None)
-        self.assertRaises(TypeError, model.train, corpus_file=sentences)
+        self.assertRaises(TypeError, model.train, corpus_file=11111, total_examples=1, epochs=1)
+        self.assertRaises(TypeError, model.train, corpus_iterable=11111, total_examples=1, epochs=1)
+        self.assertRaises(
+            TypeError, model.train, corpus_iterable=sentences, corpus_file='test', total_examples=1, epochs=1)
+        self.assertRaises(TypeError, model.train, corpus_iterable=None, corpus_file=None, total_examples=1, epochs=1)
+        self.assertRaises(TypeError, model.train, corpus_file=sentences, total_examples=1, epochs=1)
 
     def test_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
@@ -709,6 +703,22 @@ class TestFastTextModel(unittest.TestCase):
         model_neg.train(new_sentences, total_examples=model_neg.corpus_count, epochs=model_neg.epochs)
         self.assertEqual(len(model_neg.wv), 14)
 
+    def test_online_learning_through_ft_format_saves(self):
+        tmpf = get_tmpfile('gensim_ft_format.tst')
+        model = FT_gensim(sentences, vector_size=12, min_count=0, seed=42, hs=0, negative=5, bucket=BUCKET)
+        gensim.models.fasttext.save_facebook_model(model, tmpf)
+        model_reload = gensim.models.fasttext.load_facebook_model(tmpf)
+        self.assertTrue(len(model_reload.wv), 12)
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors))
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors_vocab))
+        model_reload.build_vocab(new_sentences, update=True)  # update vocab
+        model_reload.train(new_sentences, total_examples=model_reload.corpus_count, epochs=model_reload.epochs)
+        self.assertEqual(len(model_reload.wv), 14)
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors))
+        self.assertEqual(len(model_reload.wv), len(model_reload.wv.vectors_vocab))
+        tmpf2 = get_tmpfile('gensim_ft_format2.tst')
+        gensim.models.fasttext.save_facebook_model(model_reload, tmpf2)
+
     def test_online_learning_after_save_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
@@ -804,7 +814,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(report['syn0_vocab'], 192)
         self.assertEqual(report['syn1'], 192)
         self.assertEqual(report['syn1neg'], 192)
-        # FIXME: these fixed numbers for particular implementation generations encumber changes without real QA
+        # TODO: these fixed numbers for particular implementation generations encumber changes without real QA
         # perhaps instead verify reports' total is within some close factor of a deep-audit of actual memory used?
         self.assertEqual(report['syn0_ngrams'], model.vector_size * np.dtype(np.float32).itemsize * BUCKET)
         self.assertEqual(report['buckets_word'], 688)
@@ -987,10 +997,10 @@ class NativeTrainingContinuationTest(unittest.TestCase):
         self.model_structural_sanity(native)
 
         #
-        # Pick a word that's is in both corpuses.
+        # Pick a word that is in both corpuses.
         # Its vectors should be different between training runs.
         #
-        word = 'human'  # FIXME: this isn't actually in model, except via OOV ngrams
+        word = 'society'
         old_vector = native.wv.get_vector(word).tolist()
 
         native.train(list_corpus, total_examples=len(list_corpus), epochs=native.epochs)

@@ -15,7 +15,6 @@ import os
 import unittest
 import copy
 
-import six
 import numpy as np
 from numpy.testing import assert_allclose
 
@@ -31,7 +30,7 @@ dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]
 
 
-def testRandomState():
+def test_random_state():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
         assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
@@ -43,7 +42,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.class_ = ldamodel.LdaModel
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
 
-    def testSyncState(self):
+    def test_sync_state(self):
         model2 = self.class_(corpus=self.corpus, id2word=dictionary, num_topics=2, passes=1)
         model2.state = copy.deepcopy(self.model.state)
         model2.sync_state()
@@ -62,7 +61,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         assert_allclose(self.model.get_term_topics(2), model2.get_term_topics(2), rtol=1e-5)
         assert_allclose(self.model.get_topics(), model2.get_topics(), rtol=1e-5)
 
-    def testTransform(self):
+    def test_transform(self):
         passed = False
         # sometimes, LDA training gets stuck at a local minimum
         # in that case try re-training the model from scratch, hoping for a
@@ -87,14 +86,14 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             )
         self.assertTrue(passed)
 
-    def testAlphaAuto(self):
+    def test_alpha_auto(self):
         model1 = self.class_(corpus, id2word=dictionary, alpha='symmetric', passes=10)
         modelauto = self.class_(corpus, id2word=dictionary, alpha='auto', passes=10)
 
         # did we learn something?
         self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
 
-    def testAlpha(self):
+    def test_alpha(self):
         kwargs = dict(
             id2word=dictionary,
             num_topics=2,
@@ -148,14 +147,14 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         kwargs['alpha'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-    def testEtaAuto(self):
+    def test_eta_auto(self):
         model1 = self.class_(corpus, id2word=dictionary, eta='symmetric', passes=10)
         modelauto = self.class_(corpus, id2word=dictionary, eta='auto', passes=10)
 
         # did we learn something?
         self.assertFalse(np.allclose(model1.eta, modelauto.eta))
 
-    def testEta(self):
+    def test_eta(self):
         kwargs = dict(
             id2word=dictionary,
             num_topics=2,
@@ -215,7 +214,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         kwargs['eta'] = "asymmetric"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-    def testTopTopics(self):
+    def test_top_topics(self):
         top_topics = self.model.top_topics(self.corpus)
 
         for topic, score in top_topics:
@@ -223,10 +222,10 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, six.string_types))
+                self.assertTrue(isinstance(k, str))
                 self.assertTrue(np.issubdtype(v, np.floating))
 
-    def testGetTopicTerms(self):
+    def test_get_topic_terms(self):
         topic_terms = self.model.get_topic_terms(1)
 
         for k, v in topic_terms:
@@ -234,7 +233,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(np.issubdtype(v, np.floating))
 
     @unittest.skipIf(AZURE, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
-    def testGetDocumentTopics(self):
+    def test_get_document_topics(self):
 
         model = self.class_(
             self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
@@ -313,14 +312,14 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(phi_values, list))
 
         # word_topics looks like this: ({word_id => [topic_id_most_probable, topic_id_second_most_probable, ...]).
-        # we check one case in word_topics, i.e of the first word in the doc, and it's likely topics.
+        # we check one case in word_topics, i.e of the first word in the doc, and its likely topics.
 
         # FIXME: Fails on osx and win
         # expected_word = 0
         # self.assertEqual(word_topics[0][0], expected_word)
         # self.assertTrue(0 in word_topics[0][1])
 
-    def testTermTopics(self):
+    def test_term_topics(self):
 
         model = self.class_(
             self.corpus, id2word=dictionary, num_topics=2, passes=100, random_state=np.random.seed(0)
@@ -346,7 +345,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # FIXME: Fails on osx and win
         # self.assertTrue(1 in result[0])
 
-    def testPasses(self):
+    def test_passes(self):
         # long message includes the original error message with a custom one
         self.longMessage = True
         # construct what we expect when passes aren't involved
@@ -374,7 +373,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
             self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
 
-    # def testTopicSeeding(self):
+    # def test_topic_seeding(self):
     #     for topic in range(2):
     #         passed = False
     #         for i in range(5):  # restart at most this many times, to mitigate LDA randomness
@@ -407,7 +406,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
     #             logging.warning("LDA failed to converge on attempt %i (got %s)", i, topics)
     #         self.assertTrue(passed)
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models_lda.tst')
         model = self.model
         model.save(fname)
@@ -417,7 +416,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testModelCompatibilityWithPythonVersions(self):
+    def test_model_compatibility_with_python_versions(self):
         fname_model_2_7 = datapath('ldamodel_python_2_7')
         model_2_7 = self.class_.load(fname_model_2_7)
         fname_model_3_5 = datapath('ldamodel_python_3_5')
@@ -430,7 +429,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         id2word_3_5 = dict(model_3_5.id2word.iteritems())
         self.assertEqual(set(id2word_2_7.keys()), set(id2word_3_5.keys()))
 
-    def testPersistenceIgnore(self):
+    def test_persistence_ignore(self):
         fname = get_tmpfile('gensim_models_lda_testPersistenceIgnore.tst')
         model = ldamodel.LdaModel(self.corpus, num_topics=2)
         model.save(fname, ignore='id2word')
@@ -441,7 +440,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model2 = ldamodel.LdaModel.load(fname)
         self.assertTrue(model2.id2word is None)
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models_lda.tst.gz')
         model = self.model
         model.save(fname)
@@ -451,7 +450,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testLargeMmap(self):
+    def test_large_mmap(self):
         fname = get_tmpfile('gensim_models_lda.tst')
         model = self.model
 
@@ -466,7 +465,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testLargeMmapCompressed(self):
+    def test_large_mmap_compressed(self):
         fname = get_tmpfile('gensim_models_lda.tst.gz')
         model = self.model
 
@@ -476,7 +475,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
 
-    def testRandomStateBackwardCompatibility(self):
+    def test_random_state_backward_compatibility(self):
         # load a model saved using a pre-0.13.2 version of Gensim
         pre_0_13_2_fname = datapath('pre_0_13_2_model')
         model_pre_0_13_2 = self.class_.load(pre_0_13_2_fname)
@@ -486,7 +485,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         for i in model_topics:
             self.assertTrue(isinstance(i[0], int))
-            self.assertTrue(isinstance(i[1], six.string_types))
+            self.assertTrue(isinstance(i[1], str))
 
         # save back the loaded model using a post-0.13.2 version of Gensim
         post_0_13_2_fname = get_tmpfile('gensim_models_lda_post_0_13_2_model.tst')
@@ -498,9 +497,9 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         for i in model_topics_new:
             self.assertTrue(isinstance(i[0], int))
-            self.assertTrue(isinstance(i[1], six.string_types))
+            self.assertTrue(isinstance(i[1], str))
 
-    def testDtypeBackwardCompatibility(self):
+    def test_dtype_backward_compatibility(self):
         lda_3_0_1_fname = datapath('lda_3_0_1_model')
         test_doc = [(0, 1), (1, 1), (2, 1)]
         expected_topics = [(0, 0.87005886977475178), (1, 0.12994113022524822)]
@@ -525,7 +524,7 @@ class TestLdaMulticore(TestLdaModel):
         self.model = self.class_(corpus, id2word=dictionary, num_topics=2, passes=100)
 
     # override LdaModel because multicore does not allow alpha=auto
-    def testAlphaAuto(self):
+    def test_alpha_auto(self):
         self.assertRaises(RuntimeError, self.class_, alpha='auto')
 
 

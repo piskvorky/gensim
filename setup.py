@@ -267,7 +267,7 @@ visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
 # packages included for build-testing everywhere
 core_testenv = [
     'pytest',
-    'pytest-rerunfailures',
+#    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
     'nmslib',
@@ -275,7 +275,6 @@ core_testenv = [
     'testfixtures',
     'Morfessor==2.0.2a4',
     'python-Levenshtein >= 0.10.2',
-    'scikit-learn',
 ]
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
@@ -304,16 +303,9 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinxcontrib-napoleon',
     'matplotlib',  # expected by sphinx-gallery
     'plotly',
-    #
-    # Pattern is a PITA to install, it requires mysqlclient, which in turn
-    # requires MySQL dev tools be installed. We don't need it for building
-    # documentation.
-    #
-    # 'Pattern==3.6',  # Need 3.6 or later for Py3 support
     'memory_profiler',
     'annoy',
     'Pyro4',
-    'scikit-learn',
     'nltk',
     'testfixtures',
     'statsmodels',
@@ -327,12 +319,11 @@ NUMPY_STR = 'numpy >= 1.11.3'
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.14'
+CYTHON_STR = 'Cython==0.29.21'
 
 install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
-    'six >= 1.5.0',
     'smart_open >= 1.8.1',
     "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
@@ -345,7 +336,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.0.0.dev0',
+    version='4.0.0beta',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

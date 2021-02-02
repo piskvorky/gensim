@@ -7,7 +7,6 @@
 
 """Corpus in `UCI format <http://archive.ics.uci.edu/ml/datasets/Bag+of+Words>`_."""
 
-from __future__ import with_statement
 
 import logging
 from collections import defaultdict
@@ -17,7 +16,6 @@ from gensim.corpora import Dictionary
 from gensim.corpora import IndexedCorpus
 from gensim.matutils import MmReader
 from gensim.matutils import MmWriter
-from six.moves import range
 
 
 logger = logging.getLogger(__name__)

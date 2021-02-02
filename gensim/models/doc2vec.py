@@ -77,7 +77,7 @@ import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, FAST_VERSION  # noqa: F401
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
@@ -286,6 +286,9 @@ class Doc2Vec(Word2Vec):
 
         self.vector_size = vector_size
         self.dv = dv or KeyedVectors(self.vector_size, mapfile_path=dv_mapfile)
+        # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+        # advanced users should directly resize/adjust as desired after any vocab growth
+        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
         super(Doc2Vec, self).__init__(
             sentences=corpus_iterable,
@@ -296,7 +299,8 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
-            **kwargs)
+            **kwargs,
+        )
 
     @property
     def dm(self):
@@ -329,11 +333,10 @@ class Doc2Vec(Word2Vec):
         self.wv.norms = None
         self.dv.norms = None
 
-    def reset_weights(self):
-        super(Doc2Vec, self).reset_weights()
-        self.dv.resize_vectors()
-        self.dv.randomly_initialize_vectors()
-        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
+    def init_weights(self):
+        super(Doc2Vec, self).init_weights()
+        # to not use an identical rnd stream as words, deterministically change seed (w/ 1000th prime)
+        self.dv.resize_vectors(seed=self.seed + 7919)
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
@@ -358,7 +361,7 @@ class Doc2Vec(Word2Vec):
         self.dv.key_to_index = other_model.dv.key_to_index
         self.dv.index_to_key = other_model.dv.index_to_key
         self.dv.expandos = other_model.dv.expandos
-        self.reset_weights()
+        self.init_weights()
 
     def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
                         total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
@@ -748,7 +751,7 @@ class Doc2Vec(Word2Vec):
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
         "init_sims() is now obsoleted and will be completely removed in future versions. "
-        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
     )
     def init_sims(self, replace=False):
         """
@@ -1082,7 +1085,7 @@ class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
 
 
-class TaggedBrownCorpus(object):
+class TaggedBrownCorpus:
     def __init__(self, dirname):
         """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_.
 
@@ -1120,7 +1123,7 @@ class TaggedBrownCorpus(object):
                     yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
-class TaggedLineDocument(object):
+class TaggedLineDocument:
     def __init__(self, source):
         """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 

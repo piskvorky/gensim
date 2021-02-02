@@ -1,28 +1,18 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_doc.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_howtos_run_doc.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_doc.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_howtos_run_doc.py:
 
 
 How to Author Gensim Documentation
 ==================================
 
-Some tips of how to author documentation for ``gensim``.
-
-
-.. code-block:: default
-
-
-    import sys
-
-
-
-
-
-
+How to author documentation for Gensim.
 
 Background
 ----------
@@ -89,6 +79,15 @@ At the very top, you need a docstring describing what your script does.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+    '\nTitle\n=====\n\nBrief description.\n'
 
 
 
@@ -208,7 +207,7 @@ At that stage, give yourself a pat on the back: you're done!
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.149 seconds)
+   **Total running time of the script:** ( 0 minutes  0.112 seconds)
 
 **Estimated memory usage:**  6 MB
 
@@ -223,13 +222,13 @@ At that stage, give yourself a pat on the back: you're done!
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_doc.py <run_doc.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_doc.ipynb <run_doc.ipynb>`
 

@@ -2,7 +2,7 @@ r"""
 Fast Similarity Queries with Annoy and Word2Vec
 ===============================================
 
-Introduces the annoy library for similarity queries using a Word2Vec model.
+Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec.
 """
 
 LOGS = False  # Set to True if you want to see progress in logs.
@@ -14,7 +14,7 @@ if LOGS:
 # The `Annoy "Approximate Nearest Neighbors Oh Yeah"
 # <https://github.com/spotify/annoy>`_ library enables similarity queries with
 # a Word2Vec model.  The current implementation for finding k nearest neighbors
-# in a vector space in gensim has linear complexity via brute force in the
+# in a vector space in Gensim has linear complexity via brute force in the
 # number of indexed documents, although with extremely low constant factors.
 # The retrieved results are exact, which is an overkill in many applications:
 # approximate results retrieved in sub-linear time may be enough. Annoy can
@@ -58,16 +58,18 @@ params = {
     'sample': 1e-4,
     'sg': 1,
     'hs': 0,
-    'negative': 5
+    'negative': 5,
 }
 model = Word2Vec(Text8Corpus(text8_path), **params)
-print("Using model", model)
+wv = model.wv
+print("Using trained model", wv)
 
 ###############################################################################
 # 3. Construct AnnoyIndex with model & make a similarity query
 # ------------------------------------------------------------
 #
-# An instance of ``AnnoyIndexer`` needs to be created in order to use Annoy in gensim. The ``AnnoyIndexer`` class is located in ``gensim.similarities.annoy``.
+# An instance of ``AnnoyIndexer`` needs to be created in order to use Annoy in Gensim.
+# The ``AnnoyIndexer`` class is located in ``gensim.similarities.annoy``.
 #
 # ``AnnoyIndexer()`` takes two parameters:
 #
@@ -92,15 +94,15 @@ from gensim.similarities.annoy import AnnoyIndexer
 # 100 trees are being used in this example
 annoy_index = AnnoyIndexer(model, 100)
 # Derive the vector for the word "science" in our model
-vector = model.wv["science"]
+vector = wv["science"]
 # The instance of AnnoyIndexer we just created is passed
-approximate_neighbors = model.wv.most_similar([vector], topn=11, indexer=annoy_index)
+approximate_neighbors = wv.most_similar([vector], topn=11, indexer=annoy_index)
 # Neatly print the approximate_neighbors and their corresponding cosine similarity values
 print("Approximate Neighbors")
 for neighbor in approximate_neighbors:
     print(neighbor)
 
-normal_neighbors = model.wv.most_similar([vector], topn=11)
+normal_neighbors = wv.most_similar([vector], topn=11)
 print("\nExact Neighbors")
 for neighbor in normal_neighbors:
     print(neighbor)
@@ -119,10 +121,10 @@ for neighbor in normal_neighbors:
 annoy_index = AnnoyIndexer(model, 100)
 
 # Dry run to make sure both indexes are fully in RAM
-normed_vectors = model.wv.get_normed_vectors()
+normed_vectors = wv.get_normed_vectors()
 vector = normed_vectors[0]
-model.wv.most_similar([vector], topn=5, indexer=annoy_index)
-model.wv.most_similar([vector], topn=5)
+wv.most_similar([vector], topn=5, indexer=annoy_index)
+wv.most_similar([vector], topn=5)
 
 import time
 import numpy as np
@@ -131,9 +133,9 @@ def avg_query_time(annoy_index=None, queries=1000):
     """Average query time of a most_similar method over 1000 random queries."""
     total_time = 0
     for _ in range(queries):
-        rand_vec = normed_vectors[np.random.randint(0, len(model.wv))]
+        rand_vec = normed_vectors[np.random.randint(0, len(wv))]
         start_time = time.process_time()
-        model.wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
+        wv.most_similar([rand_vec], topn=5, indexer=annoy_index)
         total_time += time.process_time() - start_time
     return total_time / queries
 
@@ -194,8 +196,8 @@ if os.path.exists(fname):
     annoy_index2.model = model
 
 # Results should be identical to above
-vector = model.wv["science"]
-approximate_neighbors2 = model.wv.most_similar([vector], topn=11, indexer=annoy_index2)
+vector = wv["science"]
+approximate_neighbors2 = wv.most_similar([vector], topn=11, indexer=annoy_index2)
 for neighbor in approximate_neighbors2:
     print(neighbor)
 
@@ -238,11 +240,11 @@ def f(process_id):
     process = psutil.Process(os.getpid())
     new_model = Word2Vec.load('/tmp/mymodel.pkl')
     vector = new_model.wv["science"]
-    annoy_index = AnnoyIndexer(new_model,100)
+    annoy_index = AnnoyIndexer(new_model, 100)
     approximate_neighbors = new_model.wv.most_similar([vector], topn=5, indexer=annoy_index)
     print('\nMemory used by process {}: {}\n---'.format(os.getpid(), process.memory_info()))
 
-# Creating and running two parallel process to share the same index file.
+# Create and run two parallel processes to share the same index file.
 p1 = Process(target=f, args=('1',))
 p1.start()
 p1.join()
@@ -283,10 +285,10 @@ p2.join()
 import matplotlib.pyplot as plt
 
 ###############################################################################
-# Build dataset of Initialization times and accuracy measures:
+# Build dataset of initialization times and accuracy measures:
 #
 
-exact_results = [element[0] for element in model.wv.most_similar([normed_vectors[0]], topn=100)]
+exact_results = [element[0] for element in wv.most_similar([normed_vectors[0]], topn=100)]
 
 x_values = []
 y_values_init = []
@@ -297,7 +299,7 @@ for x in range(1, 300, 10):
     start_time = time.time()
     annoy_index = AnnoyIndexer(model, x)
     y_values_init.append(time.time() - start_time)
-    approximate_results = model.wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
+    approximate_results = wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
     top_words = [result[0] for result in approximate_results]
     y_values_accuracy.append(len(set(top_words).intersection(exact_results)))
 
@@ -313,7 +315,7 @@ plt.xlabel("num_trees")
 plt.subplot(122)
 plt.plot(x_values, y_values_accuracy)
 plt.title("num_trees vs accuracy")
-plt.ylabel("% accuracy")
+plt.ylabel("%% accuracy")
 plt.xlabel("num_trees")
 plt.tight_layout()
 plt.show()
@@ -321,7 +323,7 @@ plt.show()
 ###############################################################################
 # From the above, we can see that the initialization time of the annoy indexer
 # increases in a linear fashion with num_trees. Initialization time will vary
-# from corpus to corpus, in the graph above the lee corpus was used
+# from corpus to corpus. In the graph above we used the (tiny) Lee corpus.
 #
 # Furthermore, in this dataset, the accuracy seems logarithmically related to
 # the number of trees. We see an improvement in accuracy with more trees, but
@@ -329,31 +331,30 @@ plt.show()
 #
 
 ###############################################################################
-# 7. Work with Google word2vec files
-# ----------------------------------
+# 7. Work with Google's word2vec files
+# ------------------------------------
 #
 # Our model can be exported to a word2vec C format. There is a binary and a
 # plain text word2vec format. Both can be read with a variety of other
-# software, or imported back into gensim as a ``KeyedVectors`` object.
+# software, or imported back into Gensim as a ``KeyedVectors`` object.
 #
 
 # To export our model as text
-model.wv.save_word2vec_format('/tmp/vectors.txt', binary=False)
+wv.save_word2vec_format('/tmp/vectors.txt', binary=False)
 
 from smart_open import open
 # View the first 3 lines of the exported file
-
 # The first line has the total number of entries and the vector dimension count.
 # The next lines have a key (a string) followed by its vector.
-with open('/tmp/vectors.txt') as myfile:
+with open('/tmp/vectors.txt', encoding='utf8') as myfile:
     for i in range(3):
         print(myfile.readline().strip())
 
 # To import a word2vec text model
 wv = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)
 
-# To export our model as binary
-model.wv.save_word2vec_format('/tmp/vectors.bin', binary=True)
+# To export a model as binary
+wv.save_word2vec_format('/tmp/vectors.bin', binary=True)
 
 # To import a word2vec binary model
 wv = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)
@@ -362,7 +363,7 @@ wv = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)
 annoy_index = AnnoyIndexer(wv, 100)
 annoy_index.save('/tmp/mymodel.index')
 
-# Load and test the saved word vectors and saved annoy index
+# Load and test the saved word vectors and saved Annoy index
 wv = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)
 annoy_index = AnnoyIndexer()
 annoy_index.load('/tmp/mymodel.index')

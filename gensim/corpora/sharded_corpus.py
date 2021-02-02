@@ -26,7 +26,6 @@ import time
 
 import numpy
 import scipy.sparse as sparse
-from six.moves import range
 
 import gensim
 from gensim.corpora import IndexedCorpus
@@ -290,7 +289,7 @@ class ShardedCorpus(IndexedCorpus):
 
             for i, doc in enumerate(doc_chunk):
                 doc = dict(doc)
-                current_shard[i][list(doc)] = list(gensim.matutils.itervalues(doc))
+                current_shard[i][list(doc)] = list(doc.values())
 
             # Handles the updating as well.
             if self.sparse_serialization:

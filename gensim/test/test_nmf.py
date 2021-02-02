@@ -14,7 +14,6 @@ import copy
 import logging
 import numbers
 import numpy as np
-import six
 
 from gensim import matutils
 from gensim.models import nmf
@@ -33,7 +32,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             random_state=42,
         )
 
-    def testGenerator(self):
+    def test_generator(self):
         model_1 = nmf.Nmf(
             iter(common_corpus * 100),
             id2word=common_dictionary,
@@ -54,13 +53,13 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         self.assertTrue(np.allclose(model_1.get_topics(), model_2.get_topics()))
 
-    def testUpdate(self):
+    def test_update(self):
         model = copy.deepcopy(self.model)
         model.update(common_corpus)
 
         self.assertFalse(np.allclose(self.model.get_topics(), model.get_topics()))
 
-    def testRandomState(self):
+    def test_random_state(self):
         model_1 = nmf.Nmf(
             common_corpus,
             id2word=common_dictionary,
@@ -81,7 +80,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(self.model.get_topics(), model_1.get_topics()))
         self.assertFalse(np.allclose(self.model.get_topics(), model_2.get_topics()))
 
-    def testTransform(self):
+    def test_transform(self):
         # transform one document
         doc = list(common_corpus)[0]
         transformed = self.model[doc]
@@ -100,7 +99,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # must contain the same values, up to re-ordering
         self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
 
-    def testTopTopics(self):
+    def test_top_topics(self):
         top_topics = self.model.top_topics(common_corpus)
 
         for topic, score in top_topics:
@@ -108,17 +107,17 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(score, float))
 
             for v, k in topic:
-                self.assertTrue(isinstance(k, six.string_types))
+                self.assertTrue(isinstance(k, str))
                 self.assertTrue(np.issubdtype(v, float))
 
-    def testGetTopicTerms(self):
+    def test_get_topic_terms(self):
         topic_terms = self.model.get_topic_terms(1)
 
         for k, v in topic_terms:
             self.assertTrue(isinstance(k, numbers.Integral))
             self.assertTrue(np.issubdtype(v, float))
 
-    def testGetDocumentTopics(self):
+    def test_get_document_topics(self):
         doc_topics = self.model.get_document_topics(common_corpus)
 
         for topic in doc_topics:
@@ -138,7 +137,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, numbers.Integral))
                 self.assertTrue(np.issubdtype(v, float))
 
-    def testTermTopics(self):
+    def test_term_topics(self):
         # check with word_type
         result = self.model.get_term_topics(2)
         for topic_no, probability in result:
@@ -151,7 +150,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(np.issubdtype(probability, float))
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models_nmf.tst')
 
         self.model.save(fname)
@@ -159,7 +158,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(self.model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testLargeMmap(self):
+    def test_large_mmap(self):
         fname = get_tmpfile('gensim_models_nmf.tst')
 
         # simulate storing large arrays separately
@@ -171,7 +170,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(self.model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testLargeMmapCompressed(self):
+    def test_large_mmap_compressed(self):
         fname = get_tmpfile('gensim_models_nmf.tst.gz')
 
         # simulate storing large arrays separately
@@ -180,7 +179,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, nmf.Nmf.load, fname, mmap='r')
 
-    def testDtypeBackwardCompatibility(self):
+    def test_dtype_backward_compatibility(self):
         nmf_fname = datapath('nmf_model')
         test_doc = [(0, 1), (1, 1), (2, 1)]
         expected_topics = [(1, 1.0)]
