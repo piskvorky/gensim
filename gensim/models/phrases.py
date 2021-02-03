@@ -654,7 +654,7 @@ class Phrases(_PhrasesTransformation):
             logger.info("merging %i counts into %s", len(vocab), self)
             self.min_reduce = max(self.min_reduce, min_reduce)
             for word, count in vocab.items():
-                self.vocab[word] = vocab.get(word, 0) + count
+                self.vocab[word] = self.vocab.get(word, 0) + count
             if len(self.vocab) > self.max_vocab_size:
                 utils.prune_vocab(self.vocab, self.min_reduce)
                 self.min_reduce += 1
@@ -715,7 +715,7 @@ class Phrases(_PhrasesTransformation):
 
         """
         result, source_vocab = {}, self.vocab
-        for token in source_vocab.copy():
+        for token in source_vocab:
             unigrams = token.split(self.delimiter)
             if len(unigrams) < 2:
                 continue  # no phrases here
