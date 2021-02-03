@@ -118,9 +118,6 @@ def strip_punctuation(s):
     return RE_PUNCT.sub(" ", s)
 
 
-strip_punctuation2 = strip_punctuation
-
-
 def strip_tags(s):
     """Remove tags from `s` using :const:`~gensim.parsing.preprocessing.RE_TAGS`.
 
