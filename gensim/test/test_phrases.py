@@ -214,8 +214,8 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def testExportPhrases(self):
         """Test Phrases bigram export phrases."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
-        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
+        bigram = Phrases(self.sentences, min_count = 1, threshold = 1, delimiter = ' ')
+        trigram = Phrases(bigram[self.sentences], min_count = 1, threshold = 1, delimiter = ' ')
         seen_bigrams = set(bigram.export_phrases().keys())
         seen_trigrams = set(trigram.export_phrases().keys())
         assert seen_bigrams == set([
@@ -224,7 +224,6 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
             'graph minors',
             'minors survey',
         ])
-
         assert seen_trigrams == set([
             'human interface',
             'graph minors survey',
@@ -232,7 +231,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def testFindPhrases(self):
         """Test Phrases bigram find phrases."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        bigram = Phrases(self.sentences, min_count = 1, threshold = 1, delimiter = ' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
         assert seen_bigrams == set([
@@ -262,7 +261,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def test__getitem__(self):
         """Test Phrases[sentences] with a single sentence."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1)
+        bigram = Phrases(self.sentences, min_count = 1, threshold = 1)
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
         phrased_sentence = next(bigram[test_sentences].__iter__())
 
@@ -450,7 +449,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
     def testExportPhrases(self):
         """Test Phrases bigram export phrases."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        bigram = Phrases(self.sentences, min_count = 1, threshold = 1, delimiter = ' ')
         seen_bigrams = set(bigram.export_phrases().keys())
         assert seen_bigrams == set([
             'and graph',
@@ -476,7 +475,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
     def testFindPhrases(self):
         """Test Phrases bigram find phrases."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
+        bigram = Phrases(self.sentences, min_coun = 1, threshold = 1, connector_words = self.connector_words, delimiter = ' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
         assert seen_bigrams == set([
