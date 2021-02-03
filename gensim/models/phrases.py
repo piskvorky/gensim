@@ -589,11 +589,11 @@ class Phrases(_PhrasesTransformation):
             start_token, in_between = None, []
             for word in sentence:
                 if word not in connector_words:
-                    vocab[word] = vocab.get(word, 0)+1
+                    vocab[word] = vocab.get(word, 0) + 1
                     if start_token is not None:
                         phrase_tokens = itertools.chain([start_token], in_between, [word])
                         joined_phrase_token = delimiter.join(phrase_tokens)
-                        vocab[joined_phrase_token] = vocab.get(joined_phrase_token, 0)+1
+                        vocab[joined_phrase_token] = vocab.get(joined_phrase_token, 0) + 1
                     start_token, in_between = word, []  # treat word as both end of a phrase AND beginning of another
                 elif start_token is not None:
                     in_between.append(word)
