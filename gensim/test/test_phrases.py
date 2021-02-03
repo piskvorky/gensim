@@ -218,27 +218,28 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.export_phrases().keys())
         seen_trigrams = set(trigram.export_phrases().keys())
-        assert seen_bigrams == {
+        assert seen_bigrams == set([
             'human interface',
             'response time',
             'graph minors',
-            'minors survey'}
+            'minors survey',
+        ])
 
-        assert seen_trigrams == {
+        assert seen_trigrams == set([
             'human interface',
-            'graph minors survey'
-        }
+            'graph minors survey',
+        ])
 
     def testFindPhrases(self):
         """Test Phrases bigram find phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
-        assert seen_bigrams == {
+        assert seen_bigrams == set([
             'response time',
             'graph minors',
             'human interface',
-        }
+        ])
 
     def testMultipleBigramsSingleEntry(self):
         """Test a single entry produces multiple bigrams."""
@@ -451,7 +452,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         """Test Phrases bigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.export_phrases().keys())
-        assert seen_bigrams == {
+        assert seen_bigrams == set([
             'and graph',
             'data and',
             'graph of',
@@ -459,7 +460,8 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'human interface',
             'lack of',
             'of interest',
-            'of trees'}
+            'of trees',
+        ])
 
     def testMultipleBigramsSingleEntry(self):
         """Test a single entry produces multiple bigrams."""
