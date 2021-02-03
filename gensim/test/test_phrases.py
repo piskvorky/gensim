@@ -215,6 +215,23 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
     def testExportPhrases(self):
         """Test Phrases bigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.export_phrases().keys())
+        seen_trigrams = set(trigram.export_phrases().keys())
+        assert seen_bigrams == {
+            'human interface',
+            'response time',
+            'graph minors',
+            'minors survey'}
+
+        assert seen_trigrams == {
+            'human interface',
+            'graph minors survey'
+        }
+
+    def testFindPhrases(self):
+        """Test Phrases bigram find phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
         assert seen_bigrams == {
@@ -430,6 +447,20 @@ class CommonTermsPhrasesData:
 class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
     """Test Phrases models with connector words."""
 
+    def testExportPhrases(self):
+        """Test Phrases bigram export phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.export_phrases().keys())
+        assert seen_bigrams == {
+            'and graph',
+            'data and',
+            'graph of',
+            'graph survey',
+            'human interface',
+            'lack of',
+            'of interest',
+            'of trees'}
+
     def testMultipleBigramsSingleEntry(self):
         """Test a single entry produces multiple bigrams."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
@@ -441,8 +472,8 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'human interface',
         ])
 
-    def testExportPhrases(self):
-        """Test Phrases bigram export phrases."""
+    def testFindPhrases(self):
+        """Test Phrases bigram find phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
