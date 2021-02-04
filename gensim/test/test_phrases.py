@@ -548,7 +548,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
 class TestFrozenPhrasesModelCompatibilty(unittest.TestCase):
 
-    def test_compatibilty(self):
+    def test_compatibility(self):
         phrases = Phrases.load(datapath("phrases-3.6.0.model"))
         phraser = FrozenPhrases.load(datapath("phraser-3.6.0.model"))
         test_sentences = ['trees', 'graph', 'minors']
