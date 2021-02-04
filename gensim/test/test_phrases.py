@@ -18,7 +18,6 @@ from gensim.test.utils import common_texts, temporary_file, datapath
 
 
 class TestPhraseAnalysis(unittest.TestCase):
-
     class AnalysisTester(_PhrasesTransformation):
 
         def __init__(self, scores, threshold):
@@ -91,7 +90,6 @@ class TestPhraseAnalysis(unittest.TestCase):
 
 
 class PhrasesData:
-
     sentences = common_texts + [
         ['graph', 'minors', 'survey', 'human', 'interface'],
     ]
@@ -112,7 +110,7 @@ class PhrasesCommon(PhrasesData):
         self.bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words)
         self.bigram_default = Phrases(self.sentences, connector_words=self.connector_words)
 
-    def testEmptyPhrasifiedSentencesIterator(self):
+    def test_empty_phrasified_sentences_iterator(self):
         bigram_phrases = Phrases(self.sentences)
         bigram_phraser = FrozenPhrases(bigram_phrases)
         trigram_phrases = Phrases(bigram_phraser[self.sentences])
@@ -122,7 +120,7 @@ class PhrasesCommon(PhrasesData):
         self.assertEqual(fst, snd)
         self.assertNotEqual(snd, [])
 
-    def testEmptyInputsOnBigramConstruction(self):
+    def test_empty_inputs_on_bigram_construction(self):
         """Test that empty inputs don't throw errors and return the expected result."""
         # Empty list -> empty list
         self.assertEqual(list(self.bigram_default[[]]), [])
@@ -135,7 +133,7 @@ class PhrasesCommon(PhrasesData):
         # Iterator of empty iterator -> list of empty list
         self.assertEqual(list(self.bigram_default[(iter(()) for i in range(2))]), [[], []])
 
-    def testSentenceGeneration(self):
+    def test_sentence_generation(self):
         """Test basic bigram using a dummy corpus."""
         # test that we generate the same amount of sentences as the input
         self.assertEqual(
@@ -143,14 +141,14 @@ class PhrasesCommon(PhrasesData):
             len(list(self.bigram_default[self.sentences])),
         )
 
-    def testSentenceGenerationWithGenerator(self):
+    def test_sentence_generation_with_generator(self):
         """Test basic bigram production when corpus is a generator."""
         self.assertEqual(
             len(list(self.gen_sentences())),
             len(list(self.bigram_default[self.gen_sentences()])),
         )
 
-    def testBigramConstruction(self):
+    def test_bigram_construction(self):
         """Test Phrases bigram construction."""
         # with this setting we should get response_time and graph_minors
         bigram1_seen = False
@@ -173,7 +171,7 @@ class PhrasesCommon(PhrasesData):
         self.assertTrue(self.bigram2 in self.bigram[self.sentences[-1]])
         self.assertTrue(self.bigram3 in self.bigram[self.sentences[-1]])
 
-    def testBigramConstructionFromGenerator(self):
+    def test_bigram_construction_from_generator(self):
         """Test Phrases bigram construction building when corpus is a generator."""
         bigram1_seen = False
         bigram2_seen = False
@@ -187,7 +185,7 @@ class PhrasesCommon(PhrasesData):
                 break
         self.assertTrue(bigram1_seen and bigram2_seen)
 
-    def testBigramConstructionFromArray(self):
+    def test_bigram_construction_from_array(self):
         """Test Phrases bigram construction building when corpus is a numpy array."""
         bigram1_seen = False
         bigram2_seen = False
@@ -212,26 +210,28 @@ def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 
 class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
-    def testExportPhrases(self):
-        """Test Phrases bigram export phrases."""
-        bigram = Phrases(self.sentences, min_count = 1, threshold = 1, delimiter = ' ')
-        trigram = Phrases(bigram[self.sentences], min_count = 1, threshold = 1, delimiter = ' ')
+    def test_export_phrases(self):
+        """Test Phrases bigram and trigram export phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.export_phrases().keys())
         seen_trigrams = set(trigram.export_phrases().keys())
+
         assert seen_bigrams == set([
             'human interface',
             'response time',
             'graph minors',
             'minors survey',
         ])
+
         assert seen_trigrams == set([
             'human interface',
             'graph minors survey',
         ])
 
-    def testFindPhrases(self):
+    def test_find_phrases(self):
         """Test Phrases bigram find phrases."""
-        bigram = Phrases(self.sentences, min_count = 1, threshold = 1, delimiter = ' ')
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
         assert seen_bigrams == set([
@@ -240,7 +240,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
             'human interface',
         ])
 
-    def testMultipleBigramsSingleEntry(self):
+    def test_multiple_bigrams_single_entry(self):
         """Test a single entry produces multiple bigrams."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
@@ -248,7 +248,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
         assert seen_bigrams == {'graph minors', 'human interface'}
 
-    def testScoringDefault(self):
+    def test_scoring_default(self):
         """Test the default scoring, from the mikolov word2vec paper."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
@@ -261,13 +261,13 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def test__getitem__(self):
         """Test Phrases[sentences] with a single sentence."""
-        bigram = Phrases(self.sentences, min_count = 1, threshold = 1)
+        bigram = Phrases(self.sentences, min_count=1, threshold=1)
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
         phrased_sentence = next(bigram[test_sentences].__iter__())
 
         assert phrased_sentence == ['graph_minors', 'survey', 'human_interface']
 
-    def testScoringNpmi(self):
+    def test_scoring_npmi(self):
         """Test normalized pointwise mutual information scoring."""
         bigram = Phrases(self.sentences, min_count=1, threshold=.5, scoring='npmi')
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface']]
@@ -278,7 +278,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
             .714  # score for human interface
         }
 
-    def testCustomScorer(self):
+    def test_custom_scorer(self):
         """Test using a custom scoring function."""
         bigram = Phrases(self.sentences, min_count=1, threshold=.001, scoring=dumb_scorer)
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
@@ -287,7 +287,7 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         assert all(score == 1 for score in seen_scores)
         assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
 
-    def testBadParameters(self):
+    def test_bad_parameters(self):
         """Test the phrases module with bad parameters."""
         # should fail with something less or equal than 0
         self.assertRaises(ValueError, Phrases, self.sentences, min_count=0)
@@ -295,16 +295,18 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
         # threshold should be positive
         self.assertRaises(ValueError, Phrases, self.sentences, threshold=-1)
 
-    def testPruning(self):
+    def test_pruning(self):
         """Test that max_vocab_size parameter is respected."""
         bigram = Phrases(self.sentences, max_vocab_size=5)
         self.assertTrue(len(bigram.vocab) <= 5)
+
+
 # endclass TestPhrasesModel
 
 
 class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
 
-    def testSaveLoadCustomScorer(self):
+    def test_save_load_custom_scorer(self):
         """Test saving and loading a Phrases object with a custom scorer."""
         with temporary_file("test.pkl") as fpath:
             bigram = Phrases(self.sentences, min_count=1, threshold=.001, scoring=dumb_scorer)
@@ -316,7 +318,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
             assert all(score == 1 for score in seen_scores)
             assert len(seen_scores) == 3  # 'graph minors' and 'survey human' and 'interface system'
 
-    def testSaveLoad(self):
+    def test_save_load(self):
         """Test saving and loading a Phrases object."""
         with temporary_file("test.pkl") as fpath:
             bigram = Phrases(self.sentences, min_count=1, threshold=1)
@@ -330,7 +332,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
                 3.444  # score for human interface
             ])
 
-    def testSaveLoadStringScoring(self):
+    def test_save_load_string_scoring(self):
         """Test backwards compatibility with a previous version of Phrases with custom scoring."""
         bigram_loaded = Phrases.load(datapath("phrases-scoring-str.pkl"))
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
@@ -341,7 +343,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
             3.444  # score for human interface
         ])
 
-    def testSaveLoadNoScoring(self):
+    def test_save_load_no_scoring(self):
         """Test backwards compatibility with old versions of Phrases with no scoring parameter."""
         bigram_loaded = Phrases.load(datapath("phrases-no-scoring.pkl"))
         test_sentences = [['graph', 'minors', 'survey', 'human', 'interface', 'system']]
@@ -352,7 +354,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
             3.444  # score for human interface
         ])
 
-    def testSaveLoadNoCommonTerms(self):
+    def test_save_load_no_common_terms(self):
         """Ensure backwards compatibility with old versions of Phrases, before connector_words."""
         bigram_loaded = Phrases.load(datapath("phrases-no-common-terms.pkl"))
         self.assertEqual(bigram_loaded.connector_words, frozenset())
@@ -363,7 +365,7 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
 
 class TestFrozenPhrasesPersistence(PhrasesData, unittest.TestCase):
 
-    def testSaveLoadCustomScorer(self):
+    def test_save_load_custom_scorer(self):
         """Test saving and loading a FrozenPhrases object with a custom scorer."""
 
         with temporary_file("test.pkl") as fpath:
@@ -373,7 +375,7 @@ class TestFrozenPhrasesPersistence(PhrasesData, unittest.TestCase):
             bigram_loaded = FrozenPhrases.load(fpath)
             self.assertEqual(bigram_loaded.scoring, dumb_scorer)
 
-    def testSaveLoad(self):
+    def test_save_load(self):
         """Test saving and loading a FrozenPhrases object."""
         with temporary_file("test.pkl") as fpath:
             bigram = FrozenPhrases(Phrases(self.sentences, min_count=1, threshold=1))
@@ -383,21 +385,21 @@ class TestFrozenPhrasesPersistence(PhrasesData, unittest.TestCase):
                 bigram_loaded[['graph', 'minors', 'survey', 'human', 'interface', 'system']],
                 ['graph_minors', 'survey', 'human_interface', 'system'])
 
-    def testSaveLoadStringScoring(self):
+    def test_save_load_string_scoring(self):
         """Test saving and loading a FrozenPhrases object with a string scoring parameter.
         This should ensure backwards compatibility with the previous version of FrozenPhrases"""
         bigram_loaded = FrozenPhrases.load(datapath("phraser-scoring-str.pkl"))
         # we do not much with scoring, just verify its the one expected
         self.assertEqual(bigram_loaded.scoring, original_scorer)
 
-    def testSaveLoadNoScoring(self):
+    def test_save_load_no_scoring(self):
         """Test saving and loading a FrozenPhrases object with no scoring parameter.
         This should ensure backwards compatibility with old versions of FrozenPhrases"""
         bigram_loaded = FrozenPhrases.load(datapath("phraser-no-scoring.pkl"))
         # we do not much with scoring, just verify its the one expected
         self.assertEqual(bigram_loaded.scoring, original_scorer)
 
-    def testSaveLoadNoCommonTerms(self):
+    def test_save_load_no_common_terms(self):
         """Ensure backwards compatibility with old versions of FrozenPhrases, before connector_words."""
         bigram_loaded = FrozenPhrases.load(datapath("phraser-no-common-terms.pkl"))
         self.assertEqual(bigram_loaded.connector_words, frozenset())
@@ -447,10 +449,12 @@ class CommonTermsPhrasesData:
 class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
     """Test Phrases models with connector words."""
 
-    def testExportPhrases(self):
+    def test_export_phrases(self):
         """Test Phrases bigram export phrases."""
-        bigram = Phrases(self.sentences, min_count = 1, threshold = 1, delimiter = ' ')
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.export_phrases().keys())
+
         assert seen_bigrams == set([
             'and graph',
             'data and',
@@ -462,7 +466,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'of trees',
         ])
 
-    def testMultipleBigramsSingleEntry(self):
+    def test_multiple_bigrams_single_entry(self):
         """Test a single entry produces multiple bigrams."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
@@ -473,9 +477,9 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'human interface',
         ])
 
-    def testFindPhrases(self):
-        """Test Phrases bigram find phrases."""
-        bigram = Phrases(self.sentences, min_coun = 1, threshold = 1, connector_words = self.connector_words, delimiter = ' ')
+    def test_find_phrases(self):
+        """Test Phrases bigram export phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
         assert seen_bigrams == set([
@@ -485,7 +489,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'lack of interest',
         ])
 
-    def testScoringDefault(self):
+    def test_scoring_default(self):
         """ test the default scoring, from the mikolov word2vec paper """
         bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words)
         test_sentences = [['data', 'and', 'graph', 'survey', 'for', 'human', 'interface']]
@@ -507,7 +511,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             round((human_interface - min_count) / human / interface * len_vocab, 3),
         ])
 
-    def testScoringNpmi(self):
+    def test_scoring_npmi(self):
         """Test normalized pointwise mutual information scoring."""
         bigram = Phrases(
             self.sentences, min_count=1, threshold=.5,
@@ -521,7 +525,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             .894  # score for human interface
         ])
 
-    def testCustomScorer(self):
+    def test_custom_scorer(self):
         """Test using a custom scoring function."""
         bigram = Phrases(
             self.sentences, min_count=1, threshold=.001,
@@ -544,7 +548,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
 class TestFrozenPhrasesModelCompatibilty(unittest.TestCase):
 
-    def testCompatibilty(self):
+    def test_compatibilty(self):
         phrases = Phrases.load(datapath("phrases-3.6.0.model"))
         phraser = FrozenPhrases.load(datapath("phraser-3.6.0.model"))
         test_sentences = ['trees', 'graph', 'minors']
