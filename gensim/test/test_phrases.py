@@ -510,9 +510,9 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         assert phrased_sentence == ['data_and_graph', 'survey', 'for', 'human_interface']
 
 
-class TestFrozenPhrasesModelCompatibilty(unittest.TestCase):
+class TestFrozenPhrasesModelCompatibility(unittest.TestCase):
 
-    def test_compatibilty(self):
+    def test_compatibility(self):
         phrases = Phrases.load(datapath("phrases-3.6.0.model"))
         phraser = FrozenPhrases.load(datapath("phraser-3.6.0.model"))
         test_sentences = ['trees', 'graph', 'minors']
