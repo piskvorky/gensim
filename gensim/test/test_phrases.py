@@ -475,9 +475,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
     def test_export_phrases(self):
         """Test Phrases bigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
-        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.export_phrases().keys())
-
         assert seen_bigrams == set([
             'and graph',
             'data and',
