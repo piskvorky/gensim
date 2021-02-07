@@ -231,6 +231,17 @@ class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
             'graph minors survey',
         ])
 
+    def test_find_phrases(self):
+        """Test Phrases bigram find phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
+
+        assert seen_bigrams == set([
+            'response time',
+            'graph minors',
+            'human interface',
+        ])
+
     def test_multiple_bigrams_single_entry(self):
         """Test a single entry produces multiple bigrams."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
@@ -447,6 +458,18 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         assert seen_bigrams == set([
             'data and graph',
             'human interface',
+        ])
+
+    def test_find_phrases(self):
+        """Test Phrases bigram export phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
+        seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
+
+        assert seen_bigrams == set([
+            'human interface',
+            'graph of trees',
+            'data and graph',
+            'lack of interest',
         ])
 
     def test_export_phrases(self):
