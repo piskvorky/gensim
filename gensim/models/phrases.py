@@ -411,7 +411,7 @@ s        """
             if not isinstance(word, str):
                 logger.info("old version of %s loaded, upgrading %i words in memory", cls.__name__, len(model.vocab))
                 logger.info("re-save the loaded model to avoid this upgrade in the future")
-                vocab = dict()
+                vocab = {}
                 for key, value in model.vocab.items():  # needs lots of extra RAM temporarily!
                     vocab[str(key, encoding='utf8')] = value
                 model.vocab = vocab
@@ -553,7 +553,7 @@ class Phrases(_PhrasesTransformation):
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
-        self.vocab = dict()  # mapping between token => its count
+        self.vocab = {}  # mapping between token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
         self.progress_per = progress_per
@@ -578,7 +578,7 @@ class Phrases(_PhrasesTransformation):
     def _learn_vocab(sentences, max_vocab_size, delimiter, connector_words, progress_per):
         """Collect unigram and bigram counts from the `sentences` iterable."""
         sentence_no, total_words, min_reduce = -1, 0, 1
-        vocab = dict()
+        vocab = {}
         logger.info("collecting all words and their counts")
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
