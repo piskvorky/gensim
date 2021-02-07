@@ -213,15 +213,23 @@ def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def test_export_phrases(self):
-        """Test Phrases bigram export phrases."""
+        """Test Phrases bigram and trigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
-        seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
+        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.export_phrases().keys())
+        seen_trigrams = set(trigram.export_phrases().keys())
 
-        assert seen_bigrams == {
+        assert seen_bigrams == set([
+            'human interface',
             'response time',
             'graph minors',
+            'minors survey',
+        ])
+
+        assert seen_trigrams == set([
             'human interface',
-        }
+            'graph minors survey',
+        ])
 
     def test_multiple_bigrams_single_entry(self):
         """Test a single entry produces multiple bigrams."""
@@ -443,14 +451,19 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
 
     def test_export_phrases(self):
         """Test Phrases bigram export phrases."""
-        bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
-        seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.export_phrases().keys())
 
         assert seen_bigrams == set([
+            'and graph',
+            'data and',
+            'graph of',
+            'graph survey',
             'human interface',
-            'graph of trees',
-            'data and graph',
-            'lack of interest',
+            'lack of',
+            'of interest',
+            'of trees',
         ])
 
     def test_scoring_default(self):
