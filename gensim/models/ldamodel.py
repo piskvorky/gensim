@@ -542,6 +542,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
             or by the eta (1 parameter per unique term in the vocabulary).
+
         """
         if prior is None:
             prior = 'symmetric'
@@ -609,8 +610,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         current_Elogbeta: numpy.ndarray
             Posterior probabilities for each topic, optional.
             If omitted, it will get Elogbeta from state.
-        """
 
+        """
         if current_Elogbeta is None:
             current_Elogbeta = self.state.get_Elogbeta()
         self.expElogbeta = np.exp(current_Elogbeta)
@@ -1200,7 +1201,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         """Get the term-topic matrix learned during inference.
-
 
         Returns
         -------
