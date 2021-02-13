@@ -3,7 +3,7 @@ Changes
 
 ## Unreleased
 
-- fix RuntimeError in export_phrases (change defaultdict to dict) (PR [#3041](https://github.com/RaRe-Technologies/gensim/pull/3041), [@thalishsajeed](https://github.com/thalishsajeed)
+- fix RuntimeError in export_phrases (change defaultdict to dict) (PR [#3041](https://github.com/RaRe-Technologies/gensim/pull/3041), [@thalishsajeed](https://github.com/thalishsajeed))
 
 ## 4.0.0beta, 2020-10-31
 
