@@ -213,15 +213,34 @@ def dumb_scorer(worda_count, wordb_count, bigram_count, len_vocab, min_count, co
 class TestPhrasesModel(PhrasesCommon, unittest.TestCase):
 
     def test_export_phrases(self):
-        """Test Phrases bigram export phrases."""
+        """Test Phrases bigram and trigram export phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        trigram = Phrases(bigram[self.sentences], min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.export_phrases().keys())
+        seen_trigrams = set(trigram.export_phrases().keys())
+
+        assert seen_bigrams == set([
+            'human interface',
+            'response time',
+            'graph minors',
+            'minors survey',
+        ])
+
+        assert seen_trigrams == set([
+            'human interface',
+            'graph minors survey',
+        ])
+
+    def test_find_phrases(self):
+        """Test Phrases bigram find phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
 
-        assert seen_bigrams == {
+        assert seen_bigrams == set([
             'response time',
             'graph minors',
             'human interface',
-        }
+        ])
 
     def test_multiple_bigrams_single_entry(self):
         """Test a single entry produces multiple bigrams."""
@@ -441,7 +460,7 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'human interface',
         ])
 
-    def test_export_phrases(self):
+    def test_find_phrases(self):
         """Test Phrases bigram export phrases."""
         bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=self.connector_words, delimiter=' ')
         seen_bigrams = set(bigram.find_phrases(self.sentences).keys())
@@ -451,6 +470,21 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
             'graph of trees',
             'data and graph',
             'lack of interest',
+        ])
+
+    def test_export_phrases(self):
+        """Test Phrases bigram export phrases."""
+        bigram = Phrases(self.sentences, min_count=1, threshold=1, delimiter=' ')
+        seen_bigrams = set(bigram.export_phrases().keys())
+        assert seen_bigrams == set([
+            'and graph',
+            'data and',
+            'graph of',
+            'graph survey',
+            'human interface',
+            'lack of',
+            'of interest',
+            'of trees',
         ])
 
     def test_scoring_default(self):
@@ -510,9 +544,9 @@ class TestPhrasesModelCommonTerms(CommonTermsPhrasesData, TestPhrasesModel):
         assert phrased_sentence == ['data_and_graph', 'survey', 'for', 'human_interface']
 
 
-class TestFrozenPhrasesModelCompatibilty(unittest.TestCase):
+class TestFrozenPhrasesModelCompatibility(unittest.TestCase):
 
-    def test_compatibilty(self):
+    def test_compatibility(self):
         phrases = Phrases.load(datapath("phrases-3.6.0.model"))
         phraser = FrozenPhrases.load(datapath("phraser-3.6.0.model"))
         test_sentences = ['trees', 'graph', 'minors']
