@@ -49,8 +49,6 @@ Modules:
     models/fasttext
     models/_fasttext_bin
     models/phrases
-    models/poincare
-    viz/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
