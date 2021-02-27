@@ -115,35 +115,6 @@ distance = model.wmdistance(sentence_obama, sentence_orange)
 print('distance = %.4f' % distance)
 
 ###############################################################################
-# Normalizing word2vec vectors
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#
-# When using the ``wmdistance`` method, it is beneficial to normalize the
-# word2vec vectors first, so they all have equal length. To do this, simply
-# call ``model.init_sims(replace=True)`` and Gensim will take care of that for
-# you.
-#
-# Usually, one measures the distance between two Word2Vec vectors using the
-# cosine distance (see `cosine similarity
-# <https://en.wikipedia.org/wiki/Cosine_similarity>`_), which measures the
-# angle between vectors. WMD, on the other hand, uses the Euclidean distance.
-# The Euclidean distance between two vectors might be large because their
-# lengths differ, but the cosine distance is small because the angle between
-# them is small; we can mitigate some of this by normalizing the vectors.
-#
-# .. Important::
-#   Note that normalizing the vectors can take some time, especially if you have
-#   a large vocabulary and/or large vectors.
-#
-model.init_sims(replace=True)  # Normalizes the vectors in the word2vec class.
-
-distance = model.wmdistance(sentence_obama, sentence_president)  # Compute WMD as normal.
-print('distance: %r' % distance)
-
-distance = model.wmdistance(sentence_obama, sentence_orange)
-print('distance = %.4f' % distance)
-
-###############################################################################
 # References
 # ----------
 #
