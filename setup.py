@@ -302,7 +302,6 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinxcontrib.programoutput',
     'sphinxcontrib-napoleon',
     'matplotlib',  # expected by sphinx-gallery
-    'plotly',
     'memory_profiler',
     'annoy',
     'Pyro4',
