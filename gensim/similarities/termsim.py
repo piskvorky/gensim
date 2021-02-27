@@ -35,7 +35,7 @@ class TermSimilarityIndex(SaveLoad):
     See Also
     --------
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
-        Build a term similarity matrix and compute the Soft Cosine Measure.
+        A sparse term similarity matrix built using a term similarity index.
 
     """
     def most_similar(self, term, topn=10):
@@ -79,7 +79,7 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
     See Also
     --------
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
-        Build a term similarity matrix and compute the Soft Cosine Measure.
+        A sparse term similarity matrix built using a term similarity index.
 
     Notes
     -----
@@ -120,7 +120,7 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     See Also
     --------
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
-        Build a term similarity matrix and compute the Soft Cosine Measure.
+        A sparse term similarity matrix built using a term similarity index.
 
     """
     def __init__(self, keyedvectors, threshold=0.0, exponent=2.0, kwargs=None):
@@ -467,6 +467,15 @@ class SparseTermSimilarityMatrix(SaveLoad):
     ------
     ValueError
         If `dictionary` is empty.
+
+    See Also
+    --------
+    :class:`~gensim.similarities.docsim.SoftCosineSimilarity`
+        A document similarity index using the soft cosine similarity over the term similarity matrix.
+    :class:`~gensim.similarities.termsim.LevenshteinSimilarityIndex`
+        A term similarity index that computes Levenshtein similarities between terms.
+    :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
+        A term similarity index that computes cosine similarities between word embeddings.
 
     """
     def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,

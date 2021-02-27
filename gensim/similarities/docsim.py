@@ -921,11 +921,11 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         See Also
         --------
-        :class:`gensim.similarities.SparseTermSimilarityMatrix`
-            A sparse term similarity matrix build using a term similarity index.
-        :class:`gensim.similarities.LevenshteinSimilarityIndex`
+        :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
+            A sparse term similarity matrix built using a term similarity index.
+        :class:`~gensim.similarities.termsim.LevenshteinSimilarityIndex`
             A term similarity index that computes Levenshtein similarities between terms.
-        :class:`gensim.models.WordEmbeddingSimilarityIndex`
+        :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
             A term similarity index that computes cosine similarities between word embeddings.
 
         """
