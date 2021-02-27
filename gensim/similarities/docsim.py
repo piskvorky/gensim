@@ -905,7 +905,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
     for more examples.
 
     """
-    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
+    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256, normalized=(True, True)):
         """
 
         Parameters
@@ -918,6 +918,12 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
         chunksize: int, optional
             Size of one corpus chunk.
+        normalized : tuple of {True, False, 'maintain'}, optional
+            First/second value specifies whether the query/document vectors in the inner product
+            will be L2-normalized (True; corresponds to the soft cosine similarity measure; default),
+            maintain their L2-norm during change of basis ('maintain'; corresponds to query
+            expansion with partial membership), or kept as-is (False;
+            corresponds to query expansion).
 
         See Also
         --------
@@ -934,6 +940,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         self.corpus = corpus
         self.num_best = num_best
         self.chunksize = chunksize
+        self.normalized = normalized
 
         # Normalization of features is undesirable, since soft cosine similarity requires special
         # normalization using the similarity matrix. Therefore, we would just be normalizing twice,
@@ -970,7 +977,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         is_corpus, query = utils.is_corpus(query)
         if not is_corpus and isinstance(query, numpy.ndarray):
             query = [self.corpus[i] for i in query]  # convert document indexes to actual documents
-        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=(True, True))
+        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=self.normalized)
 
         if scipy.sparse.issparse(result):
             return numpy.asarray(result.todense())
