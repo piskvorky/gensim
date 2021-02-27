@@ -428,7 +428,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreaterEqual(
             overlap_count, 2,
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
-    
+
     @flaky
     def test_cbow_hs_training_fromfile(self):
         with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
