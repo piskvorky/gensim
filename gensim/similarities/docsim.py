@@ -901,8 +901,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         >>> query = 'graph trees computer'.split()  # make a query
         >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
 
-    Check out `Tutorial Notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_scm.html>`_
     for more examples.
 
     """
@@ -993,9 +992,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 class WmdSimilarity(interfaces.SimilarityABC):
     """Compute negative WMD similarity against a corpus of documents.
 
-    See :class:`~gensim.models.keyedvectors.KeyedVectors` for more information.
-    Also, tutorial `notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_wmd.html>`_
+    for more examples.
 
     When using this code, please consider citing the following papers:
 

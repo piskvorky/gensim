@@ -423,8 +423,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>>
     >>> word_embeddings = cholesky(similarity_matrix.matrix).L()  # obtain word embeddings from similarity matrix
 
-    Check out `Tutorial Notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_scm.html>`_
     for more examples.
 
     Parameters
