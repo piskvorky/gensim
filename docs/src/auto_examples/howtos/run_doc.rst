@@ -1,12 +1,10 @@
-.. only:: html
+.. note::
+    :class: sphx-glr-download-link-note
 
-    .. note::
-        :class: sphx-glr-download-link-note
+    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_doc.py>` to download the full example code
+.. rst-class:: sphx-glr-example-title
 
-        Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_doc.py>`     to download the full example code
-    .. rst-class:: sphx-glr-example-title
-
-    .. _sphx_glr_auto_examples_howtos_run_doc.py:
+.. _sphx_glr_auto_examples_howtos_run_doc.py:
 
 
 How to Author Gensim Documentation
@@ -80,15 +78,6 @@ At the very top, you need a docstring describing what your script does.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-
-    '\nTitle\n=====\n\nBrief description.\n'
-
 
 
 The title is what will show up in the gallery.
@@ -135,7 +124,7 @@ If the above is not your cup of tea, you can also author your documentation as a
 This is a more flexible approach that enables you to tweak parts of the documentation and re-run them as necessary.
 
 Once you're happy with the notebook, convert it to a script.py.
-There's a helpful `script <https://github.com/mpenkov/gensim/blob/numfocus/docs/src/tools/to_python.py>`__ that will do it for you.
+There's a helpful `script <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tools/to_python.py>`__ that will do it for you.
 To use it::
 
     python to_python.py < notebook.ipynb > script.py
@@ -207,9 +196,9 @@ At that stage, give yourself a pat on the back: you're done!
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.112 seconds)
+   **Total running time of the script:** ( 0 minutes  1.226 seconds)
 
-**Estimated memory usage:**  6 MB
+**Estimated memory usage:**  9 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_doc.py:
@@ -222,13 +211,13 @@ At that stage, give yourself a pat on the back: you're done!
 
 
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+  .. container:: sphx-glr-download
 
      :download:`Download Python source code: run_doc.py <run_doc.py>`
 
 
 
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
+  .. container:: sphx-glr-download
 
      :download:`Download Jupyter notebook: run_doc.ipynb <run_doc.ipynb>`
 
