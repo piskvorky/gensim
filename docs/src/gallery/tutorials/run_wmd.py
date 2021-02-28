@@ -121,5 +121,5 @@ print('distance = %.4f' % distance)
 # 1. Ofir Pele and Michael Werman, *A linear time histogram metric for improved SIFT matching*, 2008.
 # 2. Ofir Pele and Michael Werman, *Fast and robust earth mover's distances*, 2009.
 # 3. Matt Kusner et al. *From Embeddings To Document Distances*, 2015.
-# 4. Thomas Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
+# 4. Tomáš Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
 #
