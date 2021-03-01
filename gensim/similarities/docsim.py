@@ -887,8 +887,9 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         >>> from gensim.test.utils import common_texts
         >>> from gensim.corpora import Dictionary
-        >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
+        >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
+        >>> from gensim.similarities import WordEmbeddingSimilarityIndex
         >>>
         >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv)
@@ -900,12 +901,11 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         >>> query = 'graph trees computer'.split()  # make a query
         >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
 
-    Check out `Tutorial Notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_scm.html>`__
     for more examples.
 
     """
-    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
+    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256, normalized=(True, True)):
         """
 
         Parameters
@@ -918,14 +918,20 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
         chunksize: int, optional
             Size of one corpus chunk.
+        normalized : tuple of {True, False, 'maintain'}, optional
+            First/second value specifies whether the query/document vectors in the inner product
+            will be L2-normalized (True; corresponds to the soft cosine similarity measure; default),
+            maintain their L2-norm during change of basis ('maintain'; corresponds to query
+            expansion with partial membership), or kept as-is (False;
+            corresponds to query expansion).
 
         See Also
         --------
-        :class:`gensim.similarities.SparseTermSimilarityMatrix`
-            A sparse term similarity matrix build using a term similarity index.
-        :class:`gensim.similarities.LevenshteinSimilarityIndex`
+        :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
+            A sparse term similarity matrix built using a term similarity index.
+        :class:`~gensim.similarities.termsim.LevenshteinSimilarityIndex`
             A term similarity index that computes Levenshtein similarities between terms.
-        :class:`gensim.models.WordEmbeddingSimilarityIndex`
+        :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
             A term similarity index that computes cosine similarities between word embeddings.
 
         """
@@ -934,6 +940,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         self.corpus = corpus
         self.num_best = num_best
         self.chunksize = chunksize
+        self.normalized = normalized
 
         # Normalization of features is undesirable, since soft cosine similarity requires special
         # normalization using the similarity matrix. Therefore, we would just be normalizing twice,
@@ -970,7 +977,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         is_corpus, query = utils.is_corpus(query)
         if not is_corpus and isinstance(query, numpy.ndarray):
             query = [self.corpus[i] for i in query]  # convert document indexes to actual documents
-        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=(True, True))
+        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=self.normalized)
 
         if scipy.sparse.issparse(result):
             return numpy.asarray(result.todense())
@@ -985,9 +992,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 class WmdSimilarity(interfaces.SimilarityABC):
     """Compute negative WMD similarity against a corpus of documents.
 
-    See :class:`~gensim.models.keyedvectors.KeyedVectors` for more information.
-    Also, tutorial `notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_wmd.html>`__
+    for more examples.
 
     When using this code, please consider citing the following papers:
 
