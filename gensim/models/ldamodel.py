@@ -687,7 +687,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             expElogthetad = expElogtheta[d, :]
             expElogbetad = self.expElogbeta[:, ids]
 
-            # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
+            # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_kw.
             # phinorm is the normalizer.
             # TODO treat zeros explicitly, instead of adding epsilon?
             phinorm = np.dot(expElogthetad, expElogbetad) + epsilon
