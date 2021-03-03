@@ -65,6 +65,7 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
 .. sourcecode:: pycon
 
     >>> vector = model.wv['computer']  # get numpy vector of a word
+    >>> sims = model.wv.most_similar('computer', topn=10)  # get other similar words
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
 need the full model state any more (don't need to continue training), its state can discarded,

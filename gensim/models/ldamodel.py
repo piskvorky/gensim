@@ -375,7 +375,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Set to 0 for batch learning, > 1 for online iterative learning.
         alpha : {numpy.ndarray, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
-            our a-priori belief for the each topics' probability.
+            our a-priori belief for each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
                 * 'symmetric': Default; uses a fixed symmetric prior per topic,
