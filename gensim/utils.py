@@ -392,27 +392,30 @@ class SaveLoad:
     """
     def add_lifecycle_event(self, event_name, log_level=logging.INFO, **event):
         """
-        Append an event into the `lifecycle_events` attribute of this object.
+        Append an event into the `lifecycle_events` attribute of this object, and also
+        optionally log the event at `log_level`.
+
         Events are important moments during the object's life, such as "model created",
         "model saved", "model loaded", etc.
 
-        The `lifecycle_events` attribute is persisted across object's save() / load() operations.
-        It has no impact on the use of the model, but is useful during debugging and support.
+        The `lifecycle_events` attribute is persisted across object's :meth:`~gensim.utils.SaveLoad.save`
+        and :meth:`~gensim.utils.SaveLoad.load` operations. It has no impact on the use of the model,
+        but is useful during debugging and support.
 
-        Set `self.lifecycle_events = None` to disable this behaviour. Calls to `add_lifecycle_event` will
-        do nothing then.
+        Set `self.lifecycle_events = None` to disable this behaviour. Calls to `add_lifecycle_event()`
+        will not record events into `self.lifecycle_events` then.
 
         Parameters
         ----------
         event_name : str
             Name of the event. Can be any label, e.g. "created", "stored" etc.
         event : dict
-            Key-value mapping to append to `self.event_log`. Should be JSON-serializable, so keep it simple.
+            Key-value mapping to append to `self.lifecycle_events`. Should be JSON-serializable, so keep it simple.
             Can be empty.
 
             This method will automatically add the following key-values to `event`, so you don't have to specify them:
 
-            - `datetime`: the current time
+            - `datetime`: the current date & time
             - `gensim`: the current Gensim version
             - `python`: the current Python version
             - `platform`: the current platform
@@ -422,6 +425,7 @@ class SaveLoad:
 
         """
         # See also https://github.com/RaRe-Technologies/gensim/issues/2863
+
         event_dict = deepcopy(event)
         event_dict['datetime'] = datetime.now().isoformat()
         event_dict['gensim'] = gensim_version
@@ -430,7 +434,8 @@ class SaveLoad:
         event_dict['event'] = event_name
 
         if not hasattr(self, 'lifecycle_events'):
-            logger.info("starting a new internal lifecycle event log for %s", self.__class__.__name__)
+            # Avoid calling str(self), the object may not be fully initialized yet at this point.
+            logger.debug("starting a new internal lifecycle event log for %s", self.__class__.__name__)
             self.lifecycle_events = []
 
         if log_level:

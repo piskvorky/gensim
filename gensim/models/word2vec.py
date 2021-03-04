@@ -473,7 +473,7 @@ class Word2Vec(utils.SaveLoad):
                 * `min_count` (int) - the minimum count threshold.
 
         **kwargs : object
-            Keyword arguments propagated to `self.prepare_vocab`
+            Keyword arguments propagated to `self.prepare_vocab`.
 
         """
         self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=1)
@@ -698,7 +698,7 @@ class Word2Vec(utils.SaveLoad):
             self.add_lifecycle_event(
                 "prepare_vocab",
                 msg=(
-                    f"New added {len(new_words)} unique words ({new_unique_pct}%% of original "
+                    f"added {len(new_words)} new unique words ({new_unique_pct}%% of original "
                     f"{original_unique_total}) and increased the count of {len(pre_exist_words)} "
                     f"pre-existing words ({pre_exist_unique_pct}%% of original {original_unique_total})"
                 ),
