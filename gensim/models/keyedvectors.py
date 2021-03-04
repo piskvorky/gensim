@@ -1204,7 +1204,6 @@ class KeyedVectors(utils.SaveLoad):
         logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * score, correct, correct + incorrect)
         return score
 
-
     def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
         """Compute performance of the model on an analogy test set.
 
@@ -1923,7 +1922,7 @@ def _load_word2vec_format(
 
     kv.add_lifecycle_event(
         "load_word2vec_format",
-        msg=f"loaded {kv.vectors.shape} matrix of type {kv.dtype} from {fname}",
+        msg=f"loaded {kv.vectors.shape} matrix of type {kv.vectors.dtype} from {fname}",
         binary=binary, encoding=encoding,
     )
     return kv
@@ -1951,7 +1950,6 @@ def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
     """Return a numpy array of the given shape. Reuse prior_vectors object or values
     to extent possible. Initialize new values randomly if requested.
 
-    FIXME: NAME/DOCS CHANGES PRE-4.0.0 FOR #2955/#2975 MMAP & OTHER INITIALIZATION CLEANUP WORK.
     """
     if prior_vectors is None:
         prior_vectors = np.zeros((0, 0))

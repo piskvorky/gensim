@@ -192,6 +192,7 @@ import threading
 import itertools
 import copy
 from queue import Queue, Empty
+import time
 
 from numpy import float32 as REAL
 import numpy as np
@@ -1053,6 +1054,7 @@ class Word2Vec(utils.SaveLoad):
         raw_word_count = 0
         start = default_timer() - 0.00001
         job_tally = 0
+        start = time.time()
 
         for cur_epoch in range(self.epochs):
             for callback in callbacks:
@@ -1084,6 +1086,7 @@ class Word2Vec(utils.SaveLoad):
 
         for callback in callbacks:
             callback.on_train_end(self)
+
         return trained_word_count, raw_word_count
 
     def _worker_loop_corpusfile(
@@ -1662,10 +1665,10 @@ class Word2Vec(utils.SaveLoad):
             Total number of jobs processed during training.
 
         """
-        logger.info(
-            "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
-        )
+        self.add_lifecycle_event("train", msg=(
+            f"training on {raw_word_count} raw words ({trained_word_count} effective words) "
+            f"took {total_elapsed:.1f}s, {trained_word_count / total_elapsed:.0f} effective words/s"
+        ))
 
     def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
         """Score the log probability for a sequence of sentences.

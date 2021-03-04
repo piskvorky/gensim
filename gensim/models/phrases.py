@@ -66,6 +66,7 @@ import itertools
 from math import log
 import pickle
 from inspect import getfullargspec as getargspec
+import time
 
 from gensim import utils, interfaces
 
@@ -566,7 +567,9 @@ class Phrases(_PhrasesTransformation):
             raise pickle.PickleError(f'Custom scoring function in {self.__class__.__name__} must be pickle-able')
 
         if sentences is not None:
+            start = time.time()
             self.add_vocab(sentences)
+            self.add_lifecycle_event("created", msg=f"built {self} in {time.time() - start:.2f}s")
 
     def __str__(self):
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
@@ -772,8 +775,9 @@ class FrozenPhrases(_PhrasesTransformation):
         self.scoring = phrases_model.scoring
         self.connector_words = phrases_model.connector_words
         logger.info('exporting phrases from %s', phrases_model)
+        start = time.time()
         self.phrasegrams = phrases_model.export_phrases()
-        logger.info('exported %s', self)
+        self.add_lifecycle_event("created", msg=f"exported {self} from {phrases_model} in {time.time() - start:.2f}s")
 
     def __str__(self):
         return "%s<%i phrases, min_count=%s, threshold=%s>" % (

@@ -77,6 +77,10 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if documents is not None:
             self.add_documents(documents, prune_at=prune_at)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"built {self} from {self.num_docs} documents (total {self.num_pos} corpus positions)",
+            )
 
     def __getitem__(self, tokenid):
         """Get the string token that corresponds to `tokenid`.

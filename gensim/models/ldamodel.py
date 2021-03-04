@@ -88,16 +88,17 @@ A lot of parameters can be tuned to optimize training for your specific case
 import logging
 import numbers
 import os
+import time
+from collections import defaultdict
 
 import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import (
     kullback_leibler, hellinger, jaccard_distance, jensen_shannon,
-    dirichlet_expectation, logsumexp, mean_absolute_difference
+    dirichlet_expectation, logsumexp, mean_absolute_difference,
 )
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
@@ -518,7 +519,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             use_numpy = self.dispatcher is not None
+            start = time.time()
             self.update(corpus, chunks_as_numpy=use_numpy)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"trained {self} in {time.time() - start:.2f}s",
+            )
 
     def init_dir_prior(self, prior, name):
         """Initialize priors for the Dirichlet distribution.
