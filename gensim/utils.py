@@ -422,21 +422,22 @@ class SaveLoad:
 
         """
         # See also https://github.com/RaRe-Technologies/gensim/issues/2863
-        if not hasattr(self, 'lifecycle_events'):
-            logger.info("starting a new internal lifecycle event log for %s", self.__class__.__name__)
-            self.lifecycle_events = []
-        elif self.lifecycle_events is None:  # None = keep no lifecycle log
-            return
-
         event_dict = deepcopy(event)
         event_dict['datetime'] = datetime.now().isoformat()
         event_dict['gensim'] = gensim_version
         event_dict['python'] = sys.version
         event_dict['platform'] = platform.platform()
         event_dict['event'] = event_name
+
+        if not hasattr(self, 'lifecycle_events'):
+            logger.info("starting a new internal lifecycle event log for %s", self.__class__.__name__)
+            self.lifecycle_events = []
+
         if log_level:
             logger.log(log_level, "recording lifecycle event %s", event_dict)
-        self.lifecycle_events.append(event_dict)
+
+        if self.lifecycle_events is not None:
+            self.lifecycle_events.append(event_dict)
 
     @classmethod
     def load(cls, fname, mmap=None):
