@@ -479,8 +479,7 @@ class SaveLoad:
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
-        logger.info("loaded %s", fname)
-        obj.add_lifecycle_event("loaded")
+        obj.add_lifecycle_event("loaded", fname=fname)
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):
@@ -594,8 +593,6 @@ class SaveLoad:
         in separate files. The automatic check is not performed in this case.
 
         """
-        logger.info("saving %s under %s, separately %s", self, fname, separately)
-
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
         restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
@@ -743,7 +740,13 @@ class SaveLoad:
             Load object from file.
 
         """
-        self.add_lifecycle_event("saved")
+        self.add_lifecycle_event(
+            "saving",
+            fname_or_handle=str(fname_or_handle),
+            separately=str(separately),
+            sep_limit=sep_limit,
+            ignore=ignore,
+        )
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
