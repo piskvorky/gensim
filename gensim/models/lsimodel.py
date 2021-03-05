@@ -322,7 +322,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     <https://en.wikipedia.org/wiki/Latent_semantic_analysis#Latent_semantic_indexing>`_.
 
     The decomposition algorithm is described in `"Fast and Faster: A Comparison of Two Streamed
-    Matrix Decomposition Algorithms" <https://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_.
+    Matrix Decomposition Algorithms" <https://arxiv.org/pdf/1102.5597.pdf>`_.
 
     Notes
     -----
@@ -333,7 +333,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     See Also
     --------
     `FAQ about LSI matrices
-    <https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi>`_.
+    <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi>`_.
 
     Examples
     --------
