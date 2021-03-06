@@ -17,9 +17,9 @@ import os
 import platform
 import shutil
 import sys
-from setuptools import setup, find_packages, Extension
-from setuptools.command.build_ext import build_ext
 
+from setuptools import Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
@@ -270,20 +270,19 @@ core_testenv = [
 #    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
-    'nmslib',
-    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
-    'python-Levenshtein >= 0.10.2',
 ]
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
-linux_testenv = core_testenv[:] + visdom_req + ['pyemd', ]
+linux_testenv = core_testenv[:] + visdom_req + ['pyemd', 'nmslib', 'python-Levenshtein >= 0.10.2',]
 
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
 # See https://github.com/RaRe-Technologies/gensim/pull/2814
-win_testenv = core_testenv[:]
+win_testenv = core_testenv[:] + ['pyemd', 'nmslib', 'python-Levenshtein >= 0.10.2',]
+if sys.version_info > (3,8):
+	win_testenv = core_testenv[:]
 
 #
 # This list partially duplicates requirements_docs.txt.
@@ -308,7 +307,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'nltk',
     'testfixtures',
     'statsmodels',
-    'pyemd',
+    #'pyemd',
     'pandas',
 ]
 
