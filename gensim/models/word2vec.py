@@ -1054,7 +1054,6 @@ class Word2Vec(utils.SaveLoad):
         raw_word_count = 0
         start = default_timer() - 0.00001
         job_tally = 0
-        start = time.time()
 
         for cur_epoch in range(self.epochs):
             for callback in callbacks:
@@ -1631,7 +1630,7 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info(
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
+            cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed,
         )
 
         # don't warn if training in file-based mode, because it's expected behavior

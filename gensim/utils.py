@@ -439,7 +439,7 @@ class SaveLoad:
             self.lifecycle_events = []
 
         if log_level:
-            logger.log(log_level, "recording lifecycle event %s", event_dict)
+            logger.log(log_level, "%s lifecycle event %s", self.__class__.__name__, event_dict)
 
         if self.lifecycle_events is not None:
             self.lifecycle_events.append(event_dict)
