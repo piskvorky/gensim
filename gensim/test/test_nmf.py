@@ -86,10 +86,12 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         transformed = self.model[doc]
 
         vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
+        # The results sometimes differ on Windows, for unknown reasons.
+        # See https://github.com/RaRe-Technologies/gensim/pull/2481#issuecomment-549456750
         expected = [0.03028875, 0.96971124]
 
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-3))
 
         # transform one word
         word = 5
@@ -99,7 +101,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected = [[0.3076869, 0.69231313]]
 
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-3))
 
     def test_top_topics(self):
         top_topics = self.model.top_topics(common_corpus)
