@@ -567,7 +567,7 @@ class SaveLoad:
         compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
         return compress, lambda *args: '.'.join(args + (suffix,))
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=4):
         """Save the object to a file. Used internally by :meth:`gensim.utils.SaveLoad.save()`.
 
         Parameters
@@ -595,8 +595,9 @@ class SaveLoad:
         """
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
-                                       compress, subname)
+        restores = self._save_specials(
+            fname, separately, sep_limit, ignore, pickle_protocol, compress, subname,
+        )
         try:
             pickle(self, fname, protocol=pickle_protocol)
         finally:
