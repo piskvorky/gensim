@@ -287,7 +287,7 @@ linux_testenv = core_testenv[:] + visdom_req + not_py39_win_testenv
 # We still test them in Linux via Travis, see linux_testenv above.
 # See https://github.com/RaRe-Technologies/gensim/pull/2814
 win_testenv = core_testenv[:] + not_py39_win_testenv
-if sys.version_info > (3,8):
+if sys.version_info > (3,8,999): # py 3.8.1 is greater than 3.8 so set micro to 999
     win_testenv = core_testenv[:]
 
 #
