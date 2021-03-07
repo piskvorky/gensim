@@ -52,28 +52,32 @@ Access the document embeddings generated from the DTM
 
 """
 
-from gensim import utils, matutils
-from gensim.models import ldamodel
+import logging
+
 import numpy as np
 from scipy.special import digamma, gammaln
 from scipy import optimize
-import logging
-from six.moves import range, zip
+
+from gensim import utils, matutils
+from gensim.models import ldamodel
+
 
 logger = logging.getLogger(__name__)
 
 
 class LdaSeqModel(utils.SaveLoad):
     """Estimate Dynamic Topic Model parameters based on a training corpus."""
-    def __init__(self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
-                 initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
-                 random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100):
+    def __init__(
+            self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
+            initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
+            random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100,
+        ):
         """
 
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaSeqModel.update` manually).
         time_slice : list of int, optional
@@ -225,7 +229,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         lda_inference_max_iter : int
             Maximum number of iterations for the inference step of LDA.
         em_min_iter : int
@@ -314,7 +318,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         topic_suffstats : numpy.ndarray
             Sufficient statistics for time slice 0, used for initializing the model if `initialize == 'own'`,
             expected shape (`self.vocab_len`, `num_topics`).
@@ -368,7 +372,7 @@ class LdaSeqModel(utils.SaveLoad):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
         topic_suffstats : numpy.ndarray
             Sufficient statistics of the current model, expected shape (`self.vocab_len`, `num_topics`).
         gammas : numpy.ndarray

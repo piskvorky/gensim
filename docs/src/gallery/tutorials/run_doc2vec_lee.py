@@ -2,7 +2,8 @@ r"""
 Doc2Vec Model
 =============
 
-Introduces Gensim's Doc2Vec model and demonstrates its use on the Lee Corpus.
+Introduces Gensim's Doc2Vec model and demonstrates its use on the
+`Lee Corpus <https://hekyll.services.adelaide.edu.au/dspace/bitstream/2440/28910/1/hdl_28910.pdf>`__.
 
 """
 
@@ -84,7 +85,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #
 # .. Important:: In Gensim, we refer to the Paragraph Vector model as ``Doc2Vec``.
 #
-# Le and Mikolov in 2014 introduced the `Doc2Vec algorithm <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`__, which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
+# Le and Mikolov in 2014 introduced the `Doc2Vec algorithm <https://cs.stanford.edu/~quocle/paragraph_vector.pdf>`__,
+# which usually outperforms such simple-averaging of ``Word2Vec`` vectors.
 #
 # The basic idea is: act as if a document has another floating word-like
 # vector, which contributes to all training predictions, and is updated like
@@ -204,17 +206,18 @@ model = gensim.models.doc2vec.Doc2Vec(vector_size=50, min_count=2, epochs=40)
 model.build_vocab(train_corpus)
 
 ###############################################################################
-# Essentially, the vocabulary is a dictionary (accessible via
-# ``model.wv.vocab``\ ) of all of the unique words extracted from the training
-# corpus along with the count (e.g., ``model.wv.vocab['penalty'].count`` for
-# counts for the word ``penalty``\ ).
+# Essentially, the vocabulary is a list (accessible via
+# ``model.wv.index_to_key``) of all of the unique words extracted from the training corpus.
+# Additional attributes for each word are available using the ``model.wv.get_vecattr()`` method,
+# For example, to see how many times ``penalty`` appeared in the training corpus:
 #
+print(f"Word 'penalty' appeared {model.wv.get_vecattr('penalty', 'count')} times in the training corpus.")
 
 ###############################################################################
 # Next, train the model on the corpus.
-# If the BLAS library is being used, this should take no more than 3 seconds.
+# If optimized Gensim (with BLAS library) is being used, this should take no more than 3 seconds.
 # If the BLAS library is not being used, this should take no more than 2
-# minutes, so use BLAS if you value your time.
+# minutes, so use optimized Gensim with BLAS if you value your time.
 #
 model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs)
 
@@ -254,7 +257,7 @@ ranks = []
 second_ranks = []
 for doc_id in range(len(train_corpus)):
     inferred_vector = model.infer_vector(train_corpus[doc_id].words)
-    sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
+    sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
     rank = [docid for docid, sim in sims].index(doc_id)
     ranks.append(rank)
 
@@ -314,7 +317,7 @@ print('Similar Document {}: «{}»\n'.format(sim_id, ' '.join(train_corpus[sim_i
 # Pick a random document from the test corpus and infer a vector from the model
 doc_id = random.randint(0, len(test_corpus) - 1)
 inferred_vector = model.infer_vector(test_corpus[doc_id])
-sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
+sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
 
 # Compare and print the most/median/least similar documents from the train corpus
 print('Test Document ({}): «{}»\n'.format(doc_id, ' '.join(test_corpus[doc_id])))

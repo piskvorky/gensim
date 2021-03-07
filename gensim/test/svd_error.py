@@ -72,7 +72,7 @@ def print_error(name, aat, u, s, ideal_nf, ideal_n2):
     sys.stdout.flush()
 
 
-class ClippedCorpus(object):
+class ClippedCorpus:
     def __init__(self, corpus, max_docs, max_terms):
         self.corpus = corpus
         self.max_docs, self.max_terms = max_docs, max_terms

@@ -25,7 +25,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     Notable instance attributes:
 
     Attributes
-    ------------------
+    ----------
     num_docs : int
         Number of documents in the market matrix file.
     num_terms : int

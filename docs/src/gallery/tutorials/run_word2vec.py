@@ -2,17 +2,16 @@ r"""
 Word2Vec Model
 ==============
 
-Introduces Gensim's Word2Vec model and demonstrates its use on the Lee Corpus.
-
+Introduces Gensim's Word2Vec model and demonstrates its use on the `Lee Evaluation Corpus
+<https://hekyll.services.adelaide.edu.au/dspace/bitstream/2440/28910/1/hdl_28910.pdf>`_.
 """
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 ###############################################################################
-# In case you missed the buzz, word2vec is a widely featured as a member of the
-# “new wave” of machine learning algorithms based on neural networks, commonly
-# referred to as "deep learning" (though word2vec itself is rather shallow).
+# In case you missed the buzz, Word2Vec is a widely used algorithm based on neural
+# networks, commonly referred to as "deep learning" (though word2vec itself is rather shallow).
 # Using large amounts of unannotated plain text, word2vec learns relationships
 # between words automatically. The output are vectors, one vector per word,
 # with remarkable linear relationships that allow us to do things like:
@@ -135,11 +134,11 @@ import gensim.downloader as api
 wv = api.load('word2vec-google-news-300')
 
 ###############################################################################
-# A common operation is to retrieve the vocabulary of a model.  That is trivial:
-for i, word in enumerate(wv.vocab):
-    if i == 10:
+# A common operation is to retrieve the vocabulary of a model. That is trivial:
+for index, word in enumerate(wv.index_to_key):
+    if index == 10:
         break
-    print(word)
+    print(f"word #{index}/{len(wv.index_to_key)} is {word}")
 
 ###############################################################################
 # We can easily obtain vectors for terms the model is familiar with:
@@ -183,10 +182,12 @@ print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
 # Training Your Own Model
 # -----------------------
 #
-# To start, you'll need some data for training the model.  For the following
-# examples, we'll use the `Lee Corpus
+# To start, you'll need some data for training the model. For the following
+# examples, we'll use the `Lee Evaluation Corpus
+# <https://hekyll.services.adelaide.edu.au/dspace/bitstream/2440/28910/1/hdl_28910.pdf>`_
+# (which you `already have
 # <https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/test/test_data/lee_background.cor>`_
-# (which you already have if you've installed gensim).
+# if you've installed Gensim).
 #
 # This corpus is small enough to fit entirely in memory, but we'll implement a
 # memory-friendly iterator that reads it line-by-line to demonstrate how you
@@ -196,8 +197,8 @@ print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
 from gensim.test.utils import datapath
 from gensim import utils
 
-class MyCorpus(object):
-    """An interator that yields sentences (lists of str)."""
+class MyCorpus:
+    """An iterator that yields sentences (lists of str)."""
 
     def __iter__(self):
         corpus_path = datapath('lee_background.cor')
@@ -229,10 +230,10 @@ vec_king = model.wv['king']
 
 ###############################################################################
 # Retrieving the vocabulary works the same way:
-for i, word in enumerate(model.wv.vocab):
-    if i == 10:
+for index, word in enumerate(wv.index_to_key):
+    if index == 10:
         break
-    print(word)
+    print(f"word #{index}/{len(wv.index_to_key)} is {word}")
 
 ###############################################################################
 # Storing and loading models
@@ -290,18 +291,18 @@ model = gensim.models.Word2Vec(sentences, min_count=10)
 
 ###############################################################################
 #
-# size
-# ----
+# vector_size
+# -----------
 #
-# ``size`` is the number of dimensions (N) of the N-dimensional space that
+# ``vector_size`` is the number of dimensions (N) of the N-dimensional space that
 # gensim Word2Vec maps the words onto.
 #
 # Bigger size values require more training data, but can lead to better (more
 # accurate) models. Reasonable values are in the tens to hundreds.
 #
 
-# default value of size=100
-model = gensim.models.Word2Vec(sentences, size=200)
+# The default value of vector_size is 100.
+model = gensim.models.Word2Vec(sentences, vector_size=200)
 
 ###############################################################################
 # workers
@@ -329,15 +330,17 @@ model = gensim.models.Word2Vec(sentences, workers=4)
 # ------
 #
 # At its core, ``word2vec`` model parameters are stored as matrices (NumPy
-# arrays). Each array is **#vocabulary** (controlled by min_count parameter)
-# times **#size** (size parameter) of floats (single precision aka 4 bytes).
+# arrays). Each array is **#vocabulary** (controlled by the ``min_count`` parameter)
+# times **vector size** (the ``vector_size`` parameter) of floats (single precision aka 4 bytes).
 #
 # Three such matrices are held in RAM (work is underway to reduce that number
 # to two, or even one). So if your input contains 100,000 unique words, and you
-# asked for layer ``size=200``\ , the model will require approx.
+# asked for layer ``vector_size=200``\ , the model will require approx.
 # ``100,000*200*4*3 bytes = ~229MB``.
 #
-# There’s a little extra memory needed for storing the vocabulary tree (100,000 words would take a few megabytes), but unless your words are extremely loooong strings, memory footprint will be dominated by the three matrices above.
+# There’s a little extra memory needed for storing the vocabulary tree (100,000 words would
+# take a few megabytes), but unless your words are extremely loooong strings, memory
+# footprint will be dominated by the three matrices above.
 #
 
 
@@ -352,24 +355,24 @@ model = gensim.models.Word2Vec(sentences, workers=4)
 # test examples, following the “A is to B as C is to D” task. It is provided in
 # the 'datasets' folder.
 #
-# For example a syntactic analogy of comparative type is bad:worse;good:?.
+# For example a syntactic analogy of comparative type is ``bad:worse;good:?``.
 # There are total of 9 types of syntactic comparisons in the dataset like
 # plural nouns and nouns of opposite meaning.
 #
 # The semantic questions contain five types of semantic analogies, such as
-# capital cities (Paris:France;Tokyo:?) or family members
-# (brother:sister;dad:?).
+# capital cities (``Paris:France;Tokyo:?``) or family members
+# (``brother:sister;dad:?``).
 #
 
 ###############################################################################
 # Gensim supports the same evaluation set, in exactly the same format:
 #
-model.accuracy('./datasets/questions-words.txt')
+model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 
 ###############################################################################
 #
-# This ``accuracy`` takes an `optional parameter
-# <http://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec.accuracy>`_
+# This ``evaluate_word_analogies`` method takes an `optional parameter
+# <http://radimrehurek.com/gensim/models/keyedvectors.html#gensim.models.keyedvectors.KeyedVectors.evaluate_word_analogies>`_
 # ``restrict_vocab`` which limits which test examples are to be considered.
 #
 
@@ -384,7 +387,7 @@ model.accuracy('./datasets/questions-words.txt')
 # as they appear in the same context. At the same time 'clothes' and 'closet'
 # are less similar because they are related but not interchangeable.
 #
-model.evaluate_word_pairs(datapath('wordsim353.tsv'))
+model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 
 ###############################################################################
 # .. Important::
@@ -405,10 +408,10 @@ model.evaluate_word_pairs(datapath('wordsim353.tsv'))
 model = gensim.models.Word2Vec.load(temporary_filepath)
 more_sentences = [
     ['Advanced', 'users', 'can', 'load', 'a', 'model',
-     'and', 'continue', 'training', 'it', 'with', 'more', 'sentences']
+     'and', 'continue', 'training', 'it', 'with', 'more', 'sentences'],
 ]
 model.build_vocab(more_sentences, update=True)
-model.train(more_sentences, total_examples=model.corpus_count, epochs=model.iter)
+model.train(more_sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
 # cleaning up temporary file
 import os
@@ -441,7 +444,7 @@ model_with_loss = gensim.models.Word2Vec(
     compute_loss=True,
     hs=0,
     sg=1,
-    seed=42
+    seed=42,
 )
 
 # getting the training loss value
@@ -557,75 +560,11 @@ train_times_table = train_times_table.sort_values(
 )
 print(train_times_table)
 
-###############################################################################
-# Adding Word2Vec "model to dict" method to production pipeline
-# -------------------------------------------------------------
-#
-# Suppose, we still want more performance improvement in production.
-#
-# One good way is to cache all the similar words in a dictionary.
-#
-# So that next time when we get the similar query word, we'll search it first in the dict.
-#
-# And if it's a hit then we will show the result directly from the dictionary.
-#
-# otherwise we will query the word and then cache it so that it doesn't miss next time.
-#
-
-
-# re-enable logging
-logging.root.level = logging.INFO
-
-most_similars_precalc = {word : model.wv.most_similar(word) for word in model.wv.index2word}
-for i, (key, value) in enumerate(most_similars_precalc.items()):
-    if i == 3:
-        break
-    print(key, value)
-
-###############################################################################
-# Comparison with and without caching
-# -----------------------------------
-#
-# for time being lets take 4 words randomly
-#
-import time
-words = ['voted', 'few', 'their', 'around']
-
-###############################################################################
-# Without caching
-#
-start = time.time()
-for word in words:
-    result = model.wv.most_similar(word)
-    print(result)
-end = time.time()
-print(end - start)
-
-###############################################################################
-# Now with caching
-#
-start = time.time()
-for word in words:
-    if 'voted' in most_similars_precalc:
-        result = most_similars_precalc[word]
-        print(result)
-    else:
-        result = model.wv.most_similar(word)
-        most_similars_precalc[word] = result
-        print(result)
-
-end = time.time()
-print(end - start)
-
-###############################################################################
-# Clearly you can see the improvement but this difference will be even larger
-# when we take more words in the consideration.
-#
 
 ###############################################################################
 #
-# Visualising the Word Embeddings
-# -------------------------------
+# Visualising Word Embeddings
+# ---------------------------
 #
 # The word embeddings made by the model can be visualised by reducing
 # dimensionality of the words to 2 dimensions using tSNE.
@@ -652,18 +591,11 @@ import numpy as np                                  # array handling
 def reduce_dimensions(model):
     num_dimensions = 2  # final num dimensions (2D, 3D, etc)
 
-    vectors = [] # positions in vector space
-    labels = [] # keep track of words to label our data again later
-    for word in model.wv.vocab:
-        vectors.append(model.wv[word])
-        labels.append(word)
-
-    # convert both lists into numpy vectors for reduction
-    vectors = np.asarray(vectors)
-    labels = np.asarray(labels)
+    # extract the words & their vectors, as numpy arrays
+    vectors = np.asarray(model.wv.vectors)
+    labels = np.asarray(model.wv.index_to_key)  # fixed-width numpy strings
 
     # reduce using t-SNE
-    vectors = np.asarray(vectors)
     tsne = TSNE(n_components=num_dimensions, random_state=0)
     vectors = tsne.fit_transform(vectors)
 

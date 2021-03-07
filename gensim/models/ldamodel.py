@@ -14,7 +14,8 @@ for online training.
 
 The core estimation code is based on the `onlineldavb.py script
 <https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+Online Learning for Latent Dirichlet Allocation, NIPS 2010
+<https://scholar.google.com/citations?hl=en&user=IeHKeGYAAAAJ&view_op=list_works>`_.
 
 The algorithm:
 
@@ -87,18 +88,17 @@ A lot of parameters can be tuned to optimize training for your specific case
 import logging
 import numbers
 import os
+import time
+from collections import defaultdict
 
 import numpy as np
-import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import range
-from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import (
     kullback_leibler, hellinger, jaccard_distance, jensen_shannon,
-    dirichlet_expectation, logsumexp, mean_absolute_difference
+    dirichlet_expectation, logsumexp, mean_absolute_difference,
 )
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
@@ -354,8 +354,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
+            If you have a CSC in-memory matrix, you can convert it to a
+            streamed corpus with the help of gensim.matutils.Sparse2Corpus.
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -374,10 +376,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Set to 0 for batch learning, > 1 for online iterative learning.
         alpha : {numpy.ndarray, str}, optional
             Can be set to an 1D array of length equal to the number of expected topics that expresses
-            our a-priori belief for the each topics' probability.
+            our a-priori belief for each topics' probability.
             Alternatively default prior selecting strategies can be employed by supplying a string:
 
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Default; uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
         eta : {float, np.array, str}, optional
             A-priori belief on word probability, this can be:
@@ -460,7 +463,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, six.string_types):
+        if isinstance(eta, str):
             if eta == 'asymmetric':
                 raise ValueError("The 'asymmetric' option cannot be used for eta")
 
@@ -516,7 +519,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             use_numpy = self.dispatcher is not None
+            start = time.time()
             self.update(corpus, chunks_as_numpy=use_numpy)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"trained {self} in {time.time() - start:.2f}s",
+            )
 
     def init_dir_prior(self, prior, name):
         """Initialize priors for the Dirichlet distribution.
@@ -534,11 +542,13 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             If `name` == 'alpha', then the prior can be:
 
                 * an 1D array of length equal to the number of expected topics,
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': Uses a fixed symmetric prior per topic,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
             or by the eta (1 parameter per unique term in the vocabulary).
+
         """
         if prior is None:
             prior = 'symmetric'
@@ -552,14 +562,18 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         is_auto = False
 
-        if isinstance(prior, six.string_types):
+        if isinstance(prior, str):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
             elif prior == 'asymmetric':
-                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
@@ -602,8 +616,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         current_Elogbeta: numpy.ndarray
             Posterior probabilities for each topic, optional.
             If omitted, it will get Elogbeta from state.
-        """
 
+        """
         if current_Elogbeta is None:
             current_Elogbeta = self.state.get_Elogbeta()
         self.expElogbeta = np.exp(current_Elogbeta)
@@ -626,7 +640,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         collect_sstats : bool, optional
             If set to True, also collect (and return) sufficient statistics needed to update the model's topic-word
@@ -665,7 +679,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
-        integer_types = six.integer_types + (np.integer,)
+        integer_types = (int, np.integer,)
         epsilon = np.finfo(self.dtype).eps
         for d, doc in enumerate(chunk):
             if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
@@ -725,7 +739,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         state : :class:`~gensim.models.ldamodel.LdaState`, optional
             The state to be updated with the newly accumulated sufficient statistics. If none, the models
@@ -803,7 +817,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         total_docs : int, optional
             Number of docs used for evaluation of the perplexity.
@@ -845,8 +859,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
@@ -1060,8 +1074,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to estimate the
             variational bounds.
         gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
@@ -1193,7 +1207,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         """Get the term-topic matrix learned during inference.
-
 
         Returns
         -------
@@ -1576,7 +1589,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
-            if isinstance(ignore, six.string_types):
+            if isinstance(ignore, str):
                 ignore = [ignore]
             ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list({'state', 'dispatcher', 'id2word'} | set(ignore))
@@ -1588,15 +1601,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or \
+        if (isinstance(self.alpha, str) and self.alpha == 'auto') or \
                 (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or \
+        if (isinstance(self.eta, str) and self.eta == 'auto') or \
                 (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
-            if isinstance(separately, six.string_types):
+            if isinstance(separately, str):
                 separately = [separately]
             separately = [e for e in separately if e]  # make sure None and '' are not in the list
             separately = list(set(separately_explicit) | set(separately))

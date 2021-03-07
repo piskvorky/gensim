@@ -69,7 +69,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus.">
 
 .. only:: html
 
@@ -89,7 +89,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents.">
 
 .. only:: html
 
@@ -123,7 +123,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the `Lee Evaluation Corpus &lt;http...">
 
 .. only:: html
 
@@ -143,7 +143,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the Lee Corpus.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Doc2Vec model and demonstrates its use on the `Lee Corpus &lt;https://hekyll.s...">
 
 .. only:: html
 
@@ -163,7 +163,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
 
@@ -183,7 +183,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the annoy library for similarity queries using a Word2Vec model. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec.">
 
 .. only:: html
 
@@ -223,26 +223,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the concept of distance between two bags of words or distributions, and demonstrates...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_distance_metrics_thumb.png
-
-        :ref:`sphx_glr_auto_examples_tutorials_run_distance_metrics.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_distance_metrics
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
 
 .. only:: html
@@ -263,13 +243,13 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates summarizing text by extracting the most important sentences from it.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
 
 .. only:: html
 
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_summarization_thumb.png
+    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_scm_thumb.png
 
-        :ref:`sphx_glr_auto_examples_tutorials_run_summarization.py`
+        :ref:`sphx_glr_auto_examples_tutorials_run_scm.py`
 
 .. raw:: html
 
@@ -279,27 +259,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. toctree::
    :hidden:
 
-   /auto_examples/tutorials/run_summarization
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="This tutorial demonstrates using Pivoted Document Length Normalization to counter the effect of...">
-
-.. only:: html
-
-    .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_pivoted_doc_norm_thumb.png
-
-        :ref:`sphx_glr_auto_examples_tutorials_run_pivoted_doc_norm.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_pivoted_doc_norm
+   /auto_examples/tutorials/run_scm
 .. raw:: html
 
     <div style='clear:both'></div>
@@ -317,7 +277,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora, models, and other data. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora and pretrained models.">
 
 .. only:: html
 
@@ -337,7 +297,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Some tips of how to author documentation for gensim. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="How to author documentation for Gensim.">
 
 .. only:: html
 
@@ -377,7 +337,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can compare a topic model with itself or other models.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates how you can visualize and compare trained topic models.">
 
 .. only:: html
 
@@ -423,7 +383,6 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
    - ? `Colouring words by topic in a document, print words in a
      topics <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb>`__
    - ? `Topic Coherence, a metric that correlates that human judgement on topic quality. <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb>`__
-   - ? `Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_distance_metrics.html>`__
    - ? `America's Next Topic Model slides <https://speakerdeck.com/tmylk/americas-next-topic-model-at-pydata-berlin-august-2016?slide=7>`__
       - How to choose your next topic model, presented at Pydata Berlin 10 August 2016 by Lev Konstantinovsky
    - ?  `Dynamic Topic Modeling and Dynamic Influence Model Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb>`__
@@ -452,13 +411,13 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip <//home/witiko/documents/programming/Python/docs/src/auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/misha/git/gensim/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//home/witiko/documents/programming/Python/docs/src/auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html

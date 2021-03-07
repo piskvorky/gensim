@@ -1,0 +1,153 @@
+{%- block doctype -%}
+  <!DOCTYPE html>
+{%- endblock %}
+
+{% set script_files = ["_static/js/jquery-2.1.4.min.js", "_static/js/mfn.menu.js", "_static/js/jquery.plugins.js", "_static/js/jquery.jplayer.min.js", "_static/js/animations.js", "_static/js/translate3d.js", "_static/js/scripts.js?v=2.0", "_static/plugins/rs-plugin-6/js/revolution.tools.min.js", "_static/plugins/rs-plugin-6/js/rs6.min.js"] %}
+{% set css_files = ["_static/css/global.css", "_static/css/structure.css", "_static/css/erp2.css?v=2.0", "_static/plugins/rs-plugin-6/css/rs6.css"] %}
+{%- set url_root = pathto('', 1) %}
+
+{%- macro script() %}
+  <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+          URL_ROOT: '{{ url_root }}',
+          VERSION: '{{ release|e }}',
+          COLLAPSE_INDEX: false,
+          FILE_SUFFIX: '{{ '' if no_search_suffix else file_suffix }}',
+          HAS_SOURCE: {{ has_source|lower }}
+      };
+  </script>
+
+  {%- for scriptfile in script_files %}
+    <script type="text/javascript" src="{{ pathto(scriptfile, 1) }}"></script>
+  {%- endfor %}
+{%- endmacro %}
+
+{%- macro css() %}
+  <!-- FONTS -->
+  <link rel='stylesheet'
+        href='http://fonts.googleapis.com/css?family=DM+Sans:100,200,300,400,400italic,500,700,700italic,900'>
+  {%- for cssfile in css_files %}
+    <link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css"/>
+  {%- endfor %}
+  <link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css"/>
+{%- endmacro %}
+
+<!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]><html class="no-js lt-ie10 lt-ie9"> <![endif]-->
+<!--[if IE 9]><html class="no-js lt-ie10"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+
+<head>
+  <!-- Google Tag Manager - JD-20170831 -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-MP366CC');</script>
+  <!-- End Google Tag Manager -->
+  <meta name="google-site-verification" content="GoHdiFZKKO3yml02FOFU-F5sKRLM90NC3MaijFO_dfI" />
+  <meta http-equiv="Content-Type" content="text/html; charset={{ encoding }}"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta property="description" content="Efficient topic modelling of text semantics in Python."/>
+  <meta property="og:title" content="Gensim: topic modelling for humans"/>
+  <meta property="og:description" content="Efficient topic modelling in Python"/>
+  <meta property="og:image" content="{{ pathto('_static/images/Gensim-OG-Image.jpg', 1) }}" />
+
+  {{ metatags }}
+  {%- block htmltitle %}
+    <title>Gensim: {{ title|striptags|e }}</title>
+  {%- endblock %}
+
+  {{ css() }}
+
+  <link rel="shortcut icon" href="{{ pathto('_static/favicon.ico', 1) }}"/>
+</head>
+
+<body class="home page-template-default page template-slider color-custom style-default button-round layout-full-width if-zoom no-content-padding header-transparent header-fw minimalist-header-no sticky-header sticky-tb-color ab-hide subheader-title-left menu-link-color menuo-no-borders mobile-tb-center mobile-side-slide mobile-mini-mr-lc tablet-sticky mobile-header-mini mobile-sticky">
+<div id="Wrapper">
+  <div id="Header_wrapper" class>
+    {% include "notification.html" %}
+    <header id="Header">
+      {% include "topbar.html" %}
+    </header>
+    {% block slider %}{% endblock %}
+  </div>
+  {% block content %}
+    {% block document %}
+      {% block body %} {% endblock %}
+    {% endblock %}
+  {% endblock %}
+  <footer id="Footer" class="clearfix">
+    <div class="widgets_wrapper" style="background-color:#f7f9fa;">
+      <div class="container">
+        <aside class="widget_text widget widget_custom_html">
+          <div class="textwidget custom-html-widget" style="text-align: center">
+            <h3>
+              Stay informed via the <a href="https://groups.google.com/group/gensim" class="googlegroups">Gensim mailing list</a>
+            </h3>
+            <hr class="no_line" style="margin:0 auto 30px">
+            <form action="https://groups.google.com/group/gensim/boxsubscribe">
+              <input type="text" name="email" placeholder="your@email.com" size="28" style="display: inline-block;">
+              <input type="submit" name="sub" value="Subscribe" class="subscribe_btn">
+            </form>
+            <div class="social_icons">
+              <a href="https://groups.google.com/group/gensim" target="_blank"><img src="{{ pathto('_static/images/icons/groups.png', 1) }}" alt="Google groups" width="64"></a>
+              <a href="https://twitter.com/gensim_py#" target="_blank"><img src="{{ pathto('_static/images/icons/twitter.png', 1) }}" alt="Twitter" width="64"></a>
+              <a href="https://github.com/RaRe-Technologies/gensim" target="_blank"><img src="{{ pathto('_static/images/icons/github.png', 1) }}" alt="Github" width="64"></a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+    <div class="footer_copy">
+      <div class="container">
+        <div class="column one">
+          <a id="back_to_top" class="button button_js" href><i class="icon-up-open-big"></i></a>
+          <div class="copyright">
+            {%- if show_copyright %}
+              {%- if hasdoc('copyright') %}
+                {% set path = pathto('copyright') %}
+                {% set copyright = copyright|e %}
+                &copy; <a href="{{ path }}">{% trans %}Copyright{% endtrans %}</a> {{ copyright }}, <a href="https://radimrehurek.com">Radim Řehůřek</a>.
+              {%- else %}
+                {% set copyright = copyright|e %}
+                &copy; {% trans %}Copyright{% endtrans %} {{ copyright }}, <a href="https://radimrehurek.com">Radim Řehůřek</a>.
+              {%- endif %}
+            {%- endif %}
+
+            {%- if build_id and build_url %}
+              <span class="build">
+                {# Translators: Build is a noun, not a verb #}
+                {% trans %}Build{% endtrans %}
+                <a href="{{ build_url }}">{{ build_id }}</a>.
+              </span>
+            {%- elif commit %}
+              <span class="commit">
+                {# Translators: the phrase "revision" comes from Git, referring to a commit #}
+                {% trans %}Revision{% endtrans %} <code>{{ commit }}</code>.
+              </span>
+            {%- elif last_updated %}
+              <span class="lastupdated">
+                {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}
+              </span>
+            {%- endif %}
+          </div>
+          <nav id="social-menu" class="menu-footer-container">
+          </nav>
+        </div>
+      </div>
+    </div>
+  </footer>
+</div>
+{% include "sideslide.html" %}
+
+{{ script() }}
+
+{% block footer %}{% endblock %}
+
+</body>
+
+</html>

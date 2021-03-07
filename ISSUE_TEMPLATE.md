@@ -15,6 +15,12 @@ What are you trying to achieve? What is the expected result? What are you seeing
 
 Include full tracebacks, logs and datasets if necessary. Please keep the examples minimal ("minimal reproducible example").
 
+If your problem is with a specific Gensim model (word2vec, lsimodel, doc2vec, fasttext, ldamodel etc), include the following:
+
+```python
+print(my_model.lifecycle_events)
+```
+
 #### Versions
 
 Please provide the output of:
@@ -22,6 +28,7 @@ Please provide the output of:
 ```python
 import platform; print(platform.platform())
 import sys; print("Python", sys.version)
+import struct; print("Bits", 8 * struct.calcsize("P"))
 import numpy; print("NumPy", numpy.__version__)
 import scipy; print("SciPy", scipy.__version__)
 import gensim; print("gensim", gensim.__version__)
