@@ -1625,7 +1625,10 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
 
     def test_most_similar(self):
         """Test most_similar returns expected results."""
-
+        try:
+            import Levenshtein  # noqa:F401
+        except ImportError as e:
+            raise unittest.SkipTest("Levenshtein library is not available: %s" % e)
         index = LevenshteinSimilarityIndex(self.dictionary)
         results = list(index.most_similar(u"holiday", topn=1))
         self.assertLess(0, len(results))
