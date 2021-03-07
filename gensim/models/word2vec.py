@@ -192,7 +192,6 @@ import threading
 import itertools
 import copy
 from queue import Queue, Empty
-import time
 
 from numpy import float32 as REAL
 import numpy as np
