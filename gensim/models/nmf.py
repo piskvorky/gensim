@@ -92,12 +92,12 @@ A lot of parameters can be tuned to optimize training for your specific case
 The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
-import collections
 
+import collections
 import logging
+
 import numpy as np
 import scipy.sparse
-from gensim.models.nmf_pgd import solve_h
 from scipy.stats import halfnorm
 
 from gensim import interfaces
@@ -105,10 +105,16 @@ from gensim import matutils
 from gensim import utils
 from gensim.interfaces import TransformedCorpus
 from gensim.models import basemodel, CoherenceModel
+from gensim.models.nmf_pgd import solve_h
 
 logger = logging.getLogger(__name__)
 
-OLD_SCIPY = int(scipy.__version__.split('.')[1]) <= 18
+
+def version_tuple(version, prefix=2):
+    return tuple(map(int, version.split(".")[:prefix]))
+
+
+OLD_SCIPY = version_tuple(scipy.__version__) <= (0, 18)
 
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
@@ -590,8 +596,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         if np.isinf(lencorpus):
             logger.info(
-                "running NMF training, %s topics, %i passes over the supplied corpus, evaluating l2 norm "
-                "every %i documents",
+                "running NMF training, %s topics, %i passes over the supplied corpus of unknown size, evaluating l2 "
+                "norm every %i documents",
                 self.num_topics, passes, evalafter,
             )
         else:
@@ -733,7 +739,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return scipy.sparse.csc_matrix.dot(dense, csc)
 
     def _solveproj(self, v, W, h=None, v_max=None):
-        """Update residuals and representation(h) matrices.
+        """Update residuals and representation (h) matrices.
 
         Parameters
         ----------
@@ -765,7 +771,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         h_error = None
 
         for iter_number in range(self._h_max_iter):
-            logger.debug("h_error: {}".format(h_error))
+            logger.debug("h_error: %s", h_error)
 
             Wtv = self._dense_dot_csc(Wt, v)
 
