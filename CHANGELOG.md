@@ -4,6 +4,7 @@ Changes
 ## Unreleased
 
 - fix RuntimeError in export_phrases (change defaultdict to dict) (PR [#3041](https://github.com/RaRe-Technologies/gensim/pull/3041), [@thalishsajeed](https://github.com/thalishsajeed))
+- Record lifecycle events in Gensim models (PR [#3060](https://github.com/RaRe-Technologies/gensim/pull/3060), [@piskvorky](https://github.com/piskvorky))
 
 ## 4.0.0beta, 2020-10-31
 

@@ -61,6 +61,7 @@ Examples
 
 import logging
 import sys
+import time
 
 import numpy as np
 import scipy.linalg
@@ -351,17 +352,17 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     """
 
-    def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-                 decay=1.0, distributed=False, onepass=True,
-                 power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64):
-        """Construct an `LsiModel` object.
-
-        Either `corpus` or `id2word` must be supplied in order to train the model.
+    def __init__(
+            self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
+            decay=1.0, distributed=False, onepass=True,
+            power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64
+        ):
+        """Build an LSI model.
 
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
+            Stream of document vectors or a sparse matrix of shape (`num_documents`, `num_terms`).
         num_topics : int, optional
             Number of requested factors (latent dimensions)
         id2word : dict of {int: str}, optional
@@ -440,7 +441,12 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
 
         if corpus is not None:
+            start = time.time()
             self.add_documents(corpus)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"trained {self} in {time.time() - start:.2f}s",
+            )
 
     def add_documents(self, corpus, chunksize=None, decay=None):
         """Update model with new `corpus`.

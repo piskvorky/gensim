@@ -27,11 +27,15 @@ import sys
 import subprocess
 import inspect
 import heapq
+from copy import deepcopy
+from datetime import datetime
+import platform
 
 import numpy as np
 import scipy.sparse
 from smart_open import open
 
+from gensim import __version__ as gensim_version
 
 logger = logging.getLogger(__name__)
 
@@ -378,7 +382,7 @@ def call_on_class_only(*args, **kwargs):
 
 
 class SaveLoad:
-    """Serialize/deserialize object from disk, by equipping objects with the save()/load() methods.
+    """Serialize/deserialize objects from disk, by equipping them with the `save()` / `load()` methods.
 
     Warnings
     --------
@@ -386,6 +390,60 @@ class SaveLoad:
     such as lambda functions etc.
 
     """
+    def add_lifecycle_event(self, event_name, log_level=logging.INFO, **event):
+        """
+        Append an event into the `lifecycle_events` attribute of this object, and also
+        optionally log the event at `log_level`.
+
+        Events are important moments during the object's life, such as "model created",
+        "model saved", "model loaded", etc.
+
+        The `lifecycle_events` attribute is persisted across object's :meth:`~gensim.utils.SaveLoad.save`
+        and :meth:`~gensim.utils.SaveLoad.load` operations. It has no impact on the use of the model,
+        but is useful during debugging and support.
+
+        Set `self.lifecycle_events = None` to disable this behaviour. Calls to `add_lifecycle_event()`
+        will not record events into `self.lifecycle_events` then.
+
+        Parameters
+        ----------
+        event_name : str
+            Name of the event. Can be any label, e.g. "created", "stored" etc.
+        event : dict
+            Key-value mapping to append to `self.lifecycle_events`. Should be JSON-serializable, so keep it simple.
+            Can be empty.
+
+            This method will automatically add the following key-values to `event`, so you don't have to specify them:
+
+            - `datetime`: the current date & time
+            - `gensim`: the current Gensim version
+            - `python`: the current Python version
+            - `platform`: the current platform
+            - `event`: the name of this event
+        log_level : int
+            Also log the complete event dict, at the specified log level. Set to False to not log at all.
+
+        """
+        # See also https://github.com/RaRe-Technologies/gensim/issues/2863
+
+        event_dict = deepcopy(event)
+        event_dict['datetime'] = datetime.now().isoformat()
+        event_dict['gensim'] = gensim_version
+        event_dict['python'] = sys.version
+        event_dict['platform'] = platform.platform()
+        event_dict['event'] = event_name
+
+        if not hasattr(self, 'lifecycle_events'):
+            # Avoid calling str(self), the object may not be fully initialized yet at this point.
+            logger.debug("starting a new internal lifecycle event log for %s", self.__class__.__name__)
+            self.lifecycle_events = []
+
+        if log_level:
+            logger.log(log_level, "%s lifecycle event %s", self.__class__.__name__, event_dict)
+
+        if self.lifecycle_events is not None:
+            self.lifecycle_events.append(event_dict)
+
     @classmethod
     def load(cls, fname, mmap=None):
         """Load an object previously saved using :meth:`~gensim.utils.SaveLoad.save` from a file.
@@ -421,7 +479,7 @@ class SaveLoad:
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
-        logger.info("loaded %s", fname)
+        obj.add_lifecycle_event("loaded", fname=fname)
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):
@@ -535,8 +593,6 @@ class SaveLoad:
         in separate files. The automatic check is not performed in this case.
 
         """
-        logger.info("saving %s under %s, separately %s", self, fname, separately)
-
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
         restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
@@ -684,6 +740,13 @@ class SaveLoad:
             Load object from file.
 
         """
+        self.add_lifecycle_event(
+            "saving",
+            fname_or_handle=str(fname_or_handle),
+            separately=str(separately),
+            sep_limit=sep_limit,
+            ignore=ignore,
+        )
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
