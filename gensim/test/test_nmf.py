@@ -89,11 +89,7 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected = [0.03028875, 0.96971124]
 
         # must contain the same values, up to re-ordering
-        # Results differ on Windows, see https://github.com/RaRe-Technologies/gensim/pull/2481#issuecomment-549456750
-        # if os.name == 'nt':
-        #     self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-1))
-        # else:
-        #     self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-2))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
 
         # transform one word
         word = 5
@@ -103,11 +99,6 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         expected = [[0.3076869, 0.69231313]]
 
         # must contain the same values, up to re-ordering
-        # Results differ on Windows, see https://github.com/RaRe-Technologies/gensim/pull/2481#issuecomment-549456750
-        # if os.name == 'nt':
-        #     self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-1))
-        # else:
-        #     self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-2))
         self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
 
     def test_top_topics(self):
