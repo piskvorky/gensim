@@ -85,6 +85,7 @@ try:
 except ImportError:
     raise ImportError("NMSLIB not installed. To use the NMSLIB indexer, please run `pip install nmslib`.")
 
+from gensim import utils
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
@@ -141,7 +142,7 @@ class NmslibIndexer():
             else:
                 raise ValueError("model must be a Word2Vec, Doc2Vec, FastText or KeyedVectors instance")
 
-    def save(self, fname, protocol=2):
+    def save(self, fname, protocol=utils.PICKLE_PROTOCOL):
         """Save this NmslibIndexer instance to a file.
 
         Parameters

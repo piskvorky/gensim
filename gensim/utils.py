@@ -39,6 +39,12 @@ from gensim import __version__ as gensim_version
 
 logger = logging.getLogger(__name__)
 
+# When pickling objects for persistence, use this protocol by default.
+# Note that users won't be able to load models saved with high protocols on older environments that do
+# not support that protocol (e.g. Python 2).
+# In the rare cases where this matters, users can explicitly pass `model.save(pickle_protocol=2)`.
+# See also https://github.com/RaRe-Technologies/gensim/pull/3065
+PICKLE_PROTOCOL = 4
 
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
@@ -567,7 +573,7 @@ class SaveLoad:
         compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
         return compress, lambda *args: '.'.join(args + (suffix,))
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=4):
+    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL):
         """Save the object to a file. Used internally by :meth:`gensim.utils.SaveLoad.save()`.
 
         Parameters
@@ -712,7 +718,7 @@ class SaveLoad:
             raise
         return restores + [(self, asides)]
 
-    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
+    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL):
         """Save the object to a file.
 
         Parameters
@@ -1411,7 +1417,7 @@ def smart_extension(fname, ext):
     return fname
 
 
-def pickle(obj, fname, protocol=2):
+def pickle(obj, fname, protocol=PICKLE_PROTOCOL):
     """Pickle object `obj` to file `fname`, using smart_open so that `fname` can be on S3, HDFS, compressed etc.
 
     Parameters
@@ -1421,7 +1427,7 @@ def pickle(obj, fname, protocol=2):
     fname : str
         Path to pickle file.
     protocol : int, optional
-        Pickle protocol number. Default is 2 in order to support compatibility across python 2.x and 3.x.
+        Pickle protocol number.
 
     """
     with open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
