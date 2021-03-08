@@ -573,7 +573,10 @@ class SaveLoad:
         compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
         return compress, lambda *args: '.'.join(args + (suffix,))
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL):
+    def _smart_save(
+            self, fname,
+            separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL,
+        ):
         """Save the object to a file. Used internally by :meth:`gensim.utils.SaveLoad.save()`.
 
         Parameters
@@ -718,7 +721,10 @@ class SaveLoad:
             raise
         return restores + [(self, asides)]
 
-    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL):
+    def save(
+            self, fname_or_handle,
+            separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL,
+        ):
         """Save the object to a file.
 
         Parameters
