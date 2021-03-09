@@ -1545,11 +1545,8 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
 
 
 class TestLevenshteinDistance(unittest.TestCase):
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_max_distance(self):
-        try:
-            import Levenshtein  # noqa:F401
-        except ImportError as e:
-            raise unittest.SkipTest("Levenshtein library is not available: %s" % e)
         t1 = "holiday"
         t2 = "day"
         max_distance = max(len(t1), len(t2))
@@ -1561,21 +1558,15 @@ class TestLevenshteinDistance(unittest.TestCase):
 
 
 class TestLevenshteinSimilarity(unittest.TestCase):
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_empty_strings(self):
-        try:
-            import Levenshtein  # noqa:F401
-        except ImportError as e:
-            raise unittest.SkipTest("Levenshtein library is not available: %s" % e)
         t1 = ""
         t2 = ""
 
         self.assertEqual(1.0, levsim(t1, t2))
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_negative_hyperparameters(self):
-        try:
-            import Levenshtein  # noqa:F401
-        except ImportError as e:
-            raise unittest.SkipTest("Levenshtein library is not available: %s" % e)
         t1 = "holiday"
         t2 = "day"
         alpha = 2.0
@@ -1590,11 +1581,8 @@ class TestLevenshteinSimilarity(unittest.TestCase):
         with self.assertRaises(AssertionError):
             levsim(t1, t2, -alpha, -beta)
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_min_similarity(self):
-        try:
-            import Levenshtein  # noqa:F401
-        except ImportError as e:
-            raise unittest.SkipTest("Levenshtein library is not available: %s" % e)
         t1 = "holiday"
         t2 = "day"
         alpha = 2.0
@@ -1623,12 +1611,9 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         self.dictionary = Dictionary(self.documents)
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar(self):
         """Test most_similar returns expected results."""
-        try:
-            import Levenshtein  # noqa:F401
-        except ImportError as e:
-            raise unittest.SkipTest("Levenshtein library is not available: %s" % e)
         index = LevenshteinSimilarityIndex(self.dictionary)
         results = list(index.most_similar(u"holiday", topn=1))
         self.assertLess(0, len(results))

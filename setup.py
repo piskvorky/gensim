@@ -274,21 +274,20 @@ core_testenv = [
     'Morfessor==2.0.2a4',
 ]
 
-not_py39_win_testenv = [
-    'pyemd', 
-    'nmslib', 
-    'python-Levenshtein >= 0.10.2',
-]
+if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
+    core_testenv.extend([
+        'pyemd',
+        'nmslib',
+        'python-Levenshtein >= 0.10.2',
+    ])
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
-linux_testenv = core_testenv[:] + visdom_req + not_py39_win_testenv
+linux_testenv = core_testenv[:] + visdom_req
 
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
 # See https://github.com/RaRe-Technologies/gensim/pull/2814
-win_testenv = core_testenv[:] + not_py39_win_testenv
-if sys.version_info > (3,8,999): # py 3.8.1 is greater than 3.8 so set micro to 999
-    win_testenv = core_testenv[:]
+win_testenv = core_testenv[:]
 
 #
 # This list partially duplicates requirements_docs.txt.
@@ -301,7 +300,7 @@ if sys.version_info > (3,8,999): # py 3.8.1 is greater than 3.8 so set micro to 
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
 
-docs_testenv = core_testenv + not_py39_win_testenv + distributed_env + visdom_req + [
+docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
