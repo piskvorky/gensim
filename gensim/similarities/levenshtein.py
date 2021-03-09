@@ -43,10 +43,8 @@ def levdist(t1, t2, max_distance=float("inf")):
         The Levenshtein distance between `t1` and `t2`.
 
     """
-    try:
-        import Levenshtein
-    except ImportError:
-        raise ImportError("Levenshtein not installed. Please run `pip install Levenshtein`.")
+    import Levenshtein
+
     distance = Levenshtein.distance(t1, t2)
     if distance > max_distance:
         return max(len(t1), len(t2))
