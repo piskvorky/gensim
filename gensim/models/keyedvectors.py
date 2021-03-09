@@ -9,7 +9,7 @@
  and various similarity look-ups.
 
 Since trained word vectors are independent from the way they were trained (:class:`~gensim.models.word2vec.Word2Vec`,
-:class:`~gensim.models.fasttext.FastText`, :class:`~gensim.models.wrappers.wordrank.WordRank`,
+:class:`~gensim.models.fasttext.FastText`,
 :class:`~gensim.models.wrappers.varembed.VarEmbed` etc), they can be represented by a standalone structure,
 as implemented in this module.
 
