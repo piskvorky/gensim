@@ -658,7 +658,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 h = self._h
 
                 if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % eval_every == 0):
-                    logger.info("L2 norm: {}".format(self.l2_norm(v)))
+                    logger.info("L2 norm: %s", self.l2_norm(v))
                     self.print_topics(5)
 
                 self.A *= chunk_overall_idx - 1
@@ -673,7 +673,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                 chunk_overall_idx += 1
 
-                logger.info("W error: {}".format(self._w_error))
+                logger.info("W error: %s", self._w_error)
 
     def _solve_w(self):
         """Update W."""
@@ -685,7 +685,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eta = self._kappa / np.linalg.norm(self.A)
 
         for iter_number in range(self._w_max_iter):
-            logger.debug("w_error: {}".format(self._w_error))
+            logger.debug("w_error: %s", self._w_error)
 
             WA = self._W.dot(self.A)
 
