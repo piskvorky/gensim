@@ -463,11 +463,14 @@ class TfidfModel(interfaces.TransformationABC):
         self.dfs = dfs
         self.term_lengths = None
         # and finally compute the idf weights
-        logger.info(
-            "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
-            self.num_docs, max(dfs.keys()) + 1 if dfs else 0, self.num_nnz
-        )
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
+        self.add_lifecycle_event(
+            "initialize",
+            msg=(
+                f"calculated IDF weights for {self.num_docs} documents and {max(dfs.keys()) + 1 if dfs else 0}"
+                f" features ({self.num_nnz} matrix non-zeros)"
+            ),
+        )
 
     def __getitem__(self, bow, eps=1e-12):
         """Get the tf-idf representation of an input vector and/or corpus.
