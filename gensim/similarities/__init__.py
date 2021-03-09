@@ -5,7 +5,7 @@ This package contains implementations of pairwise similarity queries.
 # bring classes directly into package namespace, to save some typing
 import warnings
 try:
-    import Levenshtein
+    import Levenshtein  # noqa:F401
 except ImportError:
     warnings.warn(
         "The gensim.similarities.levenshtein submodule is disabled, because the optional "
@@ -14,7 +14,7 @@ except ImportError:
     )
     LevenshteinSimilarityIndex = None
 else:
-    from .levenshtein import LevenshteinSimilarityIndex
+    from .levenshtein import LevenshteinSimilarityIndex  # noqa:F401
 from .docsim import (  # noqa:F401
     Similarity,
     MatrixSimilarity,
