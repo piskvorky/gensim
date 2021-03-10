@@ -39,6 +39,7 @@ We built Gensim from scratch for:
   reside fully in RAM at any one time. Can process large, web-scale corpora using data streaming.
 * **Performance** – highly optimized implementations of popular vector space algorithms using C, BLAS and memory-mapping.
 
+Who are "we"? Check the :ref:`people`.
 
 Installation
 ------------

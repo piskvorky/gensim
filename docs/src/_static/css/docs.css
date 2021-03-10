@@ -3510,7 +3510,7 @@ a, a:visited, a:focus {
 
 .advertisement-banner {
     padding: 15px;
-    border: 2px solid #333ad7;
+    border: 2px solid red;
     margin-bottom: 25px;
     border-radius: 6px;
 }
