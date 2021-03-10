@@ -12,3 +12,5 @@ testfixtures==6.10.0
 statsmodels==0.10.1
 pyemd==0.5.1
 pandas==0.25.2
+mock==4.0.3
+Levenshtein==0.12.0
