@@ -114,42 +114,6 @@ class TestBM25(unittest.TestCase):
         second_score = second_weights[index]
         self.assertLess(first_score, second_score)
 
-    def test_epsilon(self):
-        """ Changing the b parameter should give consistent results """
-        corpus = [['cat', 'dog', 'mouse'], ['cat', 'lion'], ['cat', 'lion']]
-        first_epsilon = 1.0
-        second_epsilon = 2.0
-        bm25 = BM25(corpus)
-        words_with_negative_idfs = set([
-            word
-            for word, idf in bm25.idf.items()
-            if idf < 0
-        ])
-        index, doc = [
-            (index, document)
-            for index, document
-            in enumerate(corpus)
-            if words_with_negative_idfs & set(document)
-        ][0]
-
-        first_bm25 = BM25(corpus, epsilon=first_epsilon)
-        second_bm25 = BM25(corpus, epsilon=second_epsilon)
-        first_score = first_bm25.get_score(doc, index)
-        second_score = second_bm25.get_score(doc, index)
-        self.assertGreater(first_score, second_score)
-
-        first_iter = iter_bm25_bow(corpus, epsilon=first_epsilon)
-        second_iter = iter_bm25_bow(corpus, epsilon=second_epsilon)
-        first_score = dict(next(iter(first_iter)))[index]
-        second_score = dict(next(iter(second_iter)))[index]
-        self.assertGreater(first_score, second_score)
-
-        first_weights = get_bm25_weights(corpus, epsilon=first_epsilon)
-        second_weights = get_bm25_weights(corpus, epsilon=second_epsilon)
-        first_score = first_weights[index]
-        second_score = second_weights[index]
-        self.assertGreater(first_score, second_score)
-
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
