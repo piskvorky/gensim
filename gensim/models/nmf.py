@@ -565,7 +565,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
 
         """
-
         # use parameters given in constructor, unless user explicitly overrode them
         if passes is None:
             passes = self.passes
@@ -594,18 +593,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if isinstance(corpus, collections.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
-        if np.isinf(lencorpus):
-            logger.info(
-                "running NMF training, %s topics, %i passes over the supplied corpus of unknown size, evaluating l2 "
-                "norm every %i documents",
-                self.num_topics, passes, evalafter,
-            )
-        else:
-            logger.info(
-                "running NMF training, %s topics, %i passes over the supplied corpus of %i documents, evaluating l2 "
-                "norm every %i documents",
-                self.num_topics, passes, lencorpus, evalafter,
-            )
+        logger.info(
+            "running NMF training, %s topics, %i passes over the supplied corpus of %s documents, evaluating L2 "
+            "norm every %i documents",
+            self.num_topics, passes, "unknown number of" if lencorpus is None else lencorpus, evalafter,
+        )
 
         chunk_overall_idx = 1
 
