@@ -9,10 +9,10 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 import unittest
-
 import copy
 import logging
 import numbers
+
 import numpy as np
 
 from gensim import matutils
@@ -86,18 +86,22 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         transformed = self.model[doc]
 
         vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
-        expected = [0., 1.]
+        # The results sometimes differ on Windows, for unknown reasons.
+        # See https://github.com/RaRe-Technologies/gensim/pull/2481#issuecomment-549456750
+        expected = [0.03028875, 0.96971124]
+
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected)))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-3))
 
         # transform one word
         word = 5
         transformed = self.model.get_term_topics(word)
 
         vec = matutils.sparse2full(transformed, 2)
-        expected = [0.35023746, 0.64976251]
+        expected = [[0.3076869, 0.69231313]]
+
         # must contain the same values, up to re-ordering
-        self.assertTrue(np.allclose(sorted(vec), sorted(expected), rtol=1e-3))
+        self.assertTrue(np.allclose(sorted(vec), sorted(expected), atol=1e-3))
 
     def test_top_topics(self):
         top_topics = self.model.top_topics(common_corpus)
