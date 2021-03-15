@@ -1545,6 +1545,7 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
 
 
 class TestLevenshteinDistance(unittest.TestCase):
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_max_distance(self):
         t1 = "holiday"
         t2 = "day"
@@ -1557,12 +1558,14 @@ class TestLevenshteinDistance(unittest.TestCase):
 
 
 class TestLevenshteinSimilarity(unittest.TestCase):
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_empty_strings(self):
         t1 = ""
         t2 = ""
 
         self.assertEqual(1.0, levsim(t1, t2))
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_negative_hyperparameters(self):
         t1 = "holiday"
         t2 = "day"
@@ -1578,6 +1581,7 @@ class TestLevenshteinSimilarity(unittest.TestCase):
         with self.assertRaises(AssertionError):
             levsim(t1, t2, -alpha, -beta)
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_min_similarity(self):
         t1 = "holiday"
         t2 = "day"
@@ -1607,9 +1611,9 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         self.dictionary = Dictionary(self.documents)
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar(self):
         """Test most_similar returns expected results."""
-
         index = LevenshteinSimilarityIndex(self.dictionary)
         results = list(index.most_similar(u"holiday", topn=1))
         self.assertLess(0, len(results))

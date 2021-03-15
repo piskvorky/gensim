@@ -29,6 +29,9 @@ matrix:
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.8
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.9
 before_install:
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh
