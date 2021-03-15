@@ -6,6 +6,7 @@ Changes
 - fix RuntimeError in export_phrases (change defaultdict to dict) (PR [#3041](https://github.com/RaRe-Technologies/gensim/pull/3041), [@thalishsajeed](https://github.com/thalishsajeed))
 - Record lifecycle events in Gensim models (PR [#3060](https://github.com/RaRe-Technologies/gensim/pull/3060), [@piskvorky](https://github.com/piskvorky))
 - Default to pickle protocol 4 when saving models (PR [#3065](https://github.com/RaRe-Technologies/gensim/pull/3065), [@piskvorky](https://github.com/piskvorky))
+- Add py39 wheels to travis/azure (PR [#3058](https://github.com/RaRe-Technologies/gensim/pull/3058), [@FredHappyface](https://github.com/FredHappyface))
 
 ## 4.0.0beta, 2020-10-31
 
