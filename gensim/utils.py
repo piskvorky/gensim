@@ -1317,7 +1317,7 @@ if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
         maxsize : int, optional
             Ignored. For interface compatibility only.
         as_numpy : bool, optional
-            Yield chunks as `np.ndarray`s instead of lists?
+            Yield chunks as `np.ndarray` s instead of lists?
 
         Yields
         ------
