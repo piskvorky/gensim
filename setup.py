@@ -301,7 +301,7 @@ win_testenv = core_testenv[:]
 #
 
 docs_testenv = core_testenv + distributed_env + visdom_req + [
-    'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
+    'sphinx',
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
     'sphinxcontrib-napoleon',
