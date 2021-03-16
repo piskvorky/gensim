@@ -579,7 +579,7 @@ class CallbackAny2Vec:
     See examples at the module level docstring for how to define your own callbacks by inheriting  from this class.
 
     Note on pre-4.0 compatiblity
-    ---------
+    ----------------------------
 
     As of gensim 4.0.0, the following callbacks are no longer supported, and overriding them will have no effect:
 
