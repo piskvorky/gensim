@@ -8,7 +8,7 @@
 
 from __future__ import with_statement
 from contextlib import contextmanager
-import collections
+import collections.abc as collections
 import logging
 import warnings
 import numbers

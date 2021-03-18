@@ -501,7 +501,7 @@ class KeyedVectors(utils.SaveLoad):
         # initially allocate extras, check type compatibility
         self.allocate_vecattrs(extras.keys(), [extras[k].dtype for k in extras.keys()])
 
-        in_vocab_mask = np.zeros(len(keys), dtype=np.bool)
+        in_vocab_mask = np.zeros(len(keys), dtype=bool)
         for idx, key in enumerate(keys):
             if key in self:
                 in_vocab_mask[idx] = True

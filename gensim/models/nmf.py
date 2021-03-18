@@ -93,7 +93,8 @@ The NMF should be used whenever one needs extremely fast and memory optimized to
 
 """
 
-import collections
+
+import collections.abc as collections
 import logging
 
 import numpy as np
