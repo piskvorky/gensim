@@ -1403,7 +1403,6 @@ class Word2Vec(utils.SaveLoad):
         """
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
-        progress_queue.callbacks = callbacks  # messy way to pass along for just this session
 
         workers = [
             threading.Thread(
