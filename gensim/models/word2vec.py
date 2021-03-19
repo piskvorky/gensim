@@ -1145,7 +1145,6 @@ class Word2Vec(utils.SaveLoad):
         """
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
-        callbacks = progress_queue.callbacks
         while True:
             job = job_queue.get()
             if job is None:
@@ -1153,13 +1152,7 @@ class Word2Vec(utils.SaveLoad):
                 break  # no more jobs => quit this worker
             data_iterable, alpha = job
 
-            for callback in callbacks:
-                callback.on_batch_begin(self)
-
             tally, raw_tally = self._do_train_job(data_iterable, alpha, thread_private_mem)
-
-            for callback in callbacks:
-                callback.on_batch_end(self)
 
             progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
             jobs_processed += 1
@@ -1410,7 +1403,6 @@ class Word2Vec(utils.SaveLoad):
         """
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
-        progress_queue.callbacks = callbacks  # messy way to pass along for just this session
 
         workers = [
             threading.Thread(
