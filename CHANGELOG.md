@@ -1,12 +1,86 @@
 Changes
 =======
 
-## Unreleased
+## 4.0.0.rc1, 2021-03-19
 
-- fix RuntimeError in export_phrases (change defaultdict to dict) (PR [#3041](https://github.com/RaRe-Technologies/gensim/pull/3041), [@thalishsajeed](https://github.com/thalishsajeed))
-- Record lifecycle events in Gensim models (PR [#3060](https://github.com/RaRe-Technologies/gensim/pull/3060), [@piskvorky](https://github.com/piskvorky))
-- Default to pickle protocol 4 when saving models (PR [#3065](https://github.com/RaRe-Technologies/gensim/pull/3065), [@piskvorky](https://github.com/piskvorky))
-- Add py39 wheels to travis/azure (PR [#3058](https://github.com/RaRe-Technologies/gensim/pull/3058), [@FredHappyface](https://github.com/FredHappyface))
+**⚠️ Gensim 4.0 contains breaking API changes! See the [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) to update your existing Gensim 3.x code and models.**
+
+Gensim 4.0 is a major release with lots of performance & robustness improvements and a new website.
+
+### Main highlights (see also *👍 Improvements* below)
+
+* Massively optimized popular algorithms the community has grown to love: [fastText](https://radimrehurek.com/gensim/models/fasttext.html), [word2vec](https://radimrehurek.com/gensim/models/word2vec.html), [doc2vec](https://radimrehurek.com/gensim/models/doc2vec.html), [phrases](https://radimrehurek.com/gensim/models/phrases.html):
+
+  a. **Efficiency**
+
+    | model | 3.8.3: wall time / peak RAM / throughput | 4.0.0: wall time / peak RAM / throughput |
+    |----------|------------|--------|
+    | fastText | 2.9h / 4.11 GB / 822k words/s | 2.3h / **1.26 GB** / 914k words/s |
+    | word2vec | 1.7h / 0.36 GB / 1685k words/s | **1.2h** / 0.33 GB / 1762k words/s |
+
+    In other words, fastText now needs 3x less RAM (and is faster); word2vec has 2x faster init (and needs less RAM, and is faster); detecting collocation phrases is 2x faster. ([4.0 benchmarks](https://github.com/RaRe-Technologies/gensim/issues/2887#issuecomment-711097334))
+
+  b. **Robustness**. We fixed a bunch of long-standing bugs by refactoring the internal code structure (see 🔴 Bug fixes below)
+
+  c. **Simplified OOP model** for easier model exports and integration with TensorFlow, PyTorch &co.
+
+  These improvements come to you transparently aka "for free", but see [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) for some changes that break the old Gensim 3.x API. **Update your code accordingly**.
+
+* Dropped a bunch of externally contributed modules: summarization, pivoted TFIDF normalization, FIXME.
+  - Code quality was not up to our standards. Also there was no one to maintain them, answer user questions, support these modules.
+
+    So rather than let them rot, we took the hard decision of removing these contributed modules from Gensim. If anyone's interested in maintaining them please fork into your own repo, they can live happily outside of Gensim.
+
+* Dropped Python 2. Gensim 4.0 is Py3.6+. Read our [Python version support policy](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
+  - If you still need Python 2 for some reason, stay at [Gensim 3.8.3](https://github.com/RaRe-Technologies/gensim/releases/tag/3.8.3).
+
+* A new [Gensim website](https://radimrehurek.com/gensim_4.0.0) – finally! 🙃
+
+So, a major clean-up release overall. We're happy with this **tighter, leaner and faster Gensim**.
+
+This is the direction we'll keep going forward: less kitchen-sink of "latest academic algorithms", more focus on robust engineering, targetting common concrete NLP & document similarity use-cases.
+
+### :star2: New Features
+
+* Default to pickle protocol 4 when saving models (__[piskvorky](https://github.com/piskvorky)__, [#3065](https://github.com/RaRe-Technologies/gensim/pull/3065))
+* Record lifecycle events in Gensim models (__[piskvorky](https://github.com/piskvorky)__, [#3060](https://github.com/RaRe-Technologies/gensim/pull/3060))
+* Make WMD normalization optional (__[piskvorky](https://github.com/piskvorky)__, [#3073](https://github.com/RaRe-Technologies/gensim/pull/3073))
+
+### :red_circle: Bug fixes
+
+* fix RuntimeError in export_phrases (change defaultdict to dict) (__[thalishsajeed](https://github.com/thalishsajeed)__, [#3041](https://github.com/RaRe-Technologies/gensim/pull/3041))
+
+### :books: Tutorial and doc improvements
+
+* fix various documentation warnings (__[mpenkov](https://github.com/mpenkov)__, [#3077](https://github.com/RaRe-Technologies/gensim/pull/3077))
+* Fix broken link in run_doc how-to (__[sezanzeb](https://github.com/sezanzeb)__, [#2991](https://github.com/RaRe-Technologies/gensim/pull/2991))
+* Point WordEmbeddingSimilarityIndex documentation to gensim.similarities (__[Witiko](https://github.com/Witiko)__, [#3003](https://github.com/RaRe-Technologies/gensim/pull/3003))
+* Make the link to the Gensim 3.8.3 documentation dynamic (__[Witiko](https://github.com/Witiko)__, [#2996](https://github.com/RaRe-Technologies/gensim/pull/2996))
+
+### :+1: Improvements
+
+### :warning: Removed functionality
+
+* remove on_batch_begin and on_batch_end callbacks (__[mpenkov](https://github.com/mpenkov)__, [#3078](https://github.com/RaRe-Technologies/gensim/pull/3078))
+* remove pattern dependency (__[mpenkov](https://github.com/mpenkov)__, [#3012](https://github.com/RaRe-Technologies/gensim/pull/3012))
+* rm gensim.viz submodule (__[mpenkov](https://github.com/mpenkov)__, [#3055](https://github.com/RaRe-Technologies/gensim/pull/3055))
+
+### :warning: Deprecations (will be removed in the next major release)
+
+### ??? Misc
+
+**FIXME** This is a list of PRs that I couldn't find an appropriate section for.
+We could make some other section for them or remove them from the changelog entirely.
+This is probably OK as-is for the release candidate, but we should clean this up for the proper, final release.
+
+* [MRG] Add Github sponsor + donation nags (__[piskvorky](https://github.com/piskvorky)__, [#3069](https://github.com/RaRe-Technologies/gensim/pull/3069))
+* Update URLs (__[jonaschn](https://github.com/jonaschn)__, [#3063](https://github.com/RaRe-Technologies/gensim/pull/3063))
+* Fix race condition in FastText tests (__[sleepy-owl](https://github.com/sleepy-owl)__, [#3059](https://github.com/RaRe-Technologies/gensim/pull/3059))
+* Add py39 wheels to travis/azure (__[FredHappyface](https://github.com/FredHappyface)__, [#3058](https://github.com/RaRe-Technologies/gensim/pull/3058))
+* Update repos before trying to install gdb (__[janaknat](https://github.com/janaknat)__, [#3035](https://github.com/RaRe-Technologies/gensim/pull/3035))
+* transformed camelCase to snake_case test names (__[sezanzeb](https://github.com/sezanzeb)__, [#3033](https://github.com/RaRe-Technologies/gensim/pull/3033))
+* move x86 tests from Travis to GHA, add aarch64 wheel build to Travis (__[janaknat](https://github.com/janaknat)__, [#3026](https://github.com/RaRe-Technologies/gensim/pull/3026))
+* Add Github Actions x86 and mac jobs to build python wheels (__[janaknat](https://github.com/janaknat)__, [#3024](https://github.com/RaRe-Technologies/gensim/pull/3024))
 
 ## 4.0.0beta, 2020-10-31
 
