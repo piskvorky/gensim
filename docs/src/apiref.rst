@@ -11,7 +11,6 @@ Modules:
     interfaces
     utils
     matutils
-    _matutils
     downloader
     corpora/bleicorpus
     corpora/csvcorpus
@@ -21,7 +20,6 @@ Modules:
     corpora/lowcorpus
     corpora/malletcorpus
     corpora/mmcorpus
-    corpora/_mmreader
     corpora/sharded_corpus
     corpora/svmlightcorpus
     corpora/textcorpus
@@ -50,33 +48,16 @@ Modules:
     models/_fasttext_bin
     models/phrases
     models/poincare
-    viz/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks
     models/word2vec_inner
     models/doc2vec_inner
     models/fasttext_inner
-    models/wrappers/ldamallet
-    models/wrappers/dtmmodel
-    models/wrappers/ldavowpalwabbit.rst
-    models/wrappers/wordrank
-    models/wrappers/varembed
     similarities/docsim
     similarities/termsim
     similarities/annoy
     similarities/nmslib
-    sklearn_api/atmodel
-    sklearn_api/d2vmodel
-    sklearn_api/hdp
-    sklearn_api/ldamodel
-    sklearn_api/ldaseqmodel
-    sklearn_api/lsimodel
-    sklearn_api/phrases
-    sklearn_api/rpmodel
-    sklearn_api/text2bow
-    sklearn_api/tfidf
-    sklearn_api/w2vmodel
     test/utils
     topic_coherence/aggregation
     topic_coherence/direct_confirmation_measure
@@ -89,7 +70,6 @@ Modules:
     scripts/make_wikicorpus
     scripts/word2vec_standalone
     scripts/make_wiki_online
-    scripts/make_wiki_online_lemma
     scripts/make_wiki_online_nodebug
     scripts/word2vec2tensor
     scripts/segment_wiki

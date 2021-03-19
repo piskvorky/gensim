@@ -1,19 +1,16 @@
-.. only:: html
+.. note::
+    :class: sphx-glr-download-link-note
 
-    .. note::
-        :class: sphx-glr-download-link-note
+    Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_wmd.py>` to download the full example code
+.. rst-class:: sphx-glr-example-title
 
-        Click :ref:`here <sphx_glr_download_auto_examples_tutorials_run_wmd.py>`     to download the full example code
-    .. rst-class:: sphx-glr-example-title
-
-    .. _sphx_glr_auto_examples_tutorials_run_wmd.py:
+.. _sphx_glr_auto_examples_tutorials_run_wmd.py:
 
 
 Word Mover's Distance
 =====================
 
 Demonstrates using Gensim's implemenation of the WMD.
-
 
 Word Mover's Distance (WMD) is a promising new tool in machine learning that
 allows us to submit a query and return the most relevant documents. This
@@ -57,18 +54,7 @@ distribution of document 1 to the distribution of document 2.
 
 
 .. image:: /auto_examples/tutorials/images/sphx_glr_run_wmd_001.png
-    :alt: run wmd
     :class: sphx-glr-single-img
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    /Volumes/work/workspace/vew/gensim3.6/lib/python3.6/site-packages/matplotlib/figure.py:445: UserWarning: Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
-      % get_backend())
 
 
 
@@ -114,7 +100,6 @@ Let's take some sentences to compute the distance between.
 
 
 
-
 These sentences have very similar content, and as such the WMD should be low.
 Before we compute the WMD, we want to remove stopwords ("the", "to", etc.),
 as these do not contribute a lot to the information in the sentences.
@@ -146,10 +131,38 @@ as these do not contribute a lot to the information in the sentences.
 
  .. code-block:: none
 
-    [nltk_data] Downloading package stopwords to
-    [nltk_data]     /Users/kofola3/nltk_data...
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/feature_extraction/image.py:167: DeprecationWarning: `np.int` is a deprecated alias for the builtin `int`. To silence this warning, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      dtype=np.int):
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:30: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      method='lar', copy_X=True, eps=np.finfo(np.float).eps,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:167: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      method='lar', copy_X=True, eps=np.finfo(np.float).eps,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:284: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      eps=np.finfo(np.float).eps, copy_Gram=True, verbose=0,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:862: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      eps=np.finfo(np.float).eps, copy_X=True, fit_path=True,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1101: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      eps=np.finfo(np.float).eps, copy_X=True, fit_path=True,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1127: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      eps=np.finfo(np.float).eps, positive=False):
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1362: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      max_n_alphas=1000, n_jobs=None, eps=np.finfo(np.float).eps,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1602: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      max_n_alphas=1000, n_jobs=None, eps=np.finfo(np.float).eps,
+    /home/witiko/.virtualenvs/gensim4/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1738: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
+    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
+      eps=np.finfo(np.float).eps, copy_X=True, positive=False):
+    [nltk_data] Downloading package stopwords to /home/witiko/nltk_data...
     [nltk_data]   Package stopwords is already up-to-date!
-
 
 
 
@@ -168,16 +181,6 @@ embeddings. We load these into a Gensim Word2Vec model class.
 
 
 
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 19:33:05,053 : INFO : loading projection weights from /Users/kofola3/gensim-data/word2vec-google-news-300/word2vec-google-news-300.gz
-    2020-09-30 19:34:10,211 : INFO : loaded (3000000, 300) matrix from /Users/kofola3/gensim-data/word2vec-google-news-300/word2vec-google-news-300.gz
 
 
 
@@ -201,10 +204,7 @@ So let's compute WMD using the ``wmdistance`` method.
 
  .. code-block:: none
 
-    2020-09-30 19:34:11,705 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 19:34:11,707 : INFO : built Dictionary(8 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'chicago']...) from 2 documents (total 8 corpus positions)
     distance = 1.0175
-
 
 
 
@@ -228,63 +228,7 @@ Let's try the same thing with two completely unrelated sentences. Notice that th
 
  .. code-block:: none
 
-    2020-09-30 19:34:23,254 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 19:34:23,256 : INFO : built Dictionary(7 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'favorite']...) from 2 documents (total 7 corpus positions)
     distance = 1.3663
-
-
-
-
-Normalizing word2vec vectors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-When using the ``wmdistance`` method, it is beneficial to normalize the
-word2vec vectors first, so they all have equal length. To do this, simply
-call ``model.init_sims(replace=True)`` and Gensim will take care of that for
-you.
-
-Usually, one measures the distance between two Word2Vec vectors using the
-cosine distance (see `cosine similarity
-<https://en.wikipedia.org/wiki/Cosine_similarity>`_), which measures the
-angle between vectors. WMD, on the other hand, uses the Euclidean distance.
-The Euclidean distance between two vectors might be large because their
-lengths differ, but the cosine distance is small because the angle between
-them is small; we can mitigate some of this by normalizing the vectors.
-
-.. Important::
-  Note that normalizing the vectors can take some time, especially if you have
-  a large vocabulary and/or large vectors.
-
-
-
-.. code-block:: default
-
-    model.init_sims(replace=True)  # Normalizes the vectors in the word2vec class.
-
-    distance = model.wmdistance(sentence_obama, sentence_president)  # Compute WMD as normal.
-    print('distance: %r' % distance)
-
-    distance = model.wmdistance(sentence_obama, sentence_orange)
-    print('distance = %.4f' % distance)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    2020-09-30 19:34:23,443 : WARNING : destructive init_sims(replace=True) deprecated & no longer required for space-efficiency
-    2020-09-30 19:34:27,347 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 19:34:27,348 : INFO : built Dictionary(8 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'chicago']...) from 2 documents (total 8 corpus positions)
-    distance: 1.0174646259300113
-    2020-09-30 19:34:27,353 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2020-09-30 19:34:27,353 : INFO : built Dictionary(7 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'favorite']...) from 2 documents (total 7 corpus positions)
-    distance = 1.3663
-
 
 
 
@@ -294,15 +238,15 @@ References
 1. Ofir Pele and Michael Werman, *A linear time histogram metric for improved SIFT matching*, 2008.
 2. Ofir Pele and Michael Werman, *Fast and robust earth mover's distances*, 2009.
 3. Matt Kusner et al. *From Embeddings To Document Distances*, 2015.
-4. Thomas Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
+4. Tomáš Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  25.936 seconds)
+   **Total running time of the script:** ( 0 minutes  55.983 seconds)
 
-**Estimated memory usage:**  7158 MB
+**Estimated memory usage:**  7537 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_wmd.py:
@@ -315,13 +259,13 @@ References
 
 
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+  .. container:: sphx-glr-download
 
      :download:`Download Python source code: run_wmd.py <run_wmd.py>`
 
 
 
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
+  .. container:: sphx-glr-download
 
      :download:`Download Jupyter notebook: run_wmd.ipynb <run_wmd.ipynb>`
 

@@ -67,6 +67,7 @@ class RpModel(interfaces.TransformationABC):
         self.num_topics = num_topics
         if corpus is not None:
             self.initialize(corpus)
+            self.add_lifecycle_event("created", msg=f"created {self}")
 
     def __str__(self):
         return "RpModel(num_terms=%s, num_topics=%s)" % (self.num_terms, self.num_topics)

@@ -27,7 +27,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.corpus = MmCorpus(datapath('testcorpus.mm'))
         self.model = lsimodel.LsiModel(self.corpus, num_topics=2)
 
-    def testTransform(self):
+    def test_transform(self):
         """Test lsi[vector] transformation."""
         # create the transformation model
         model = self.model
@@ -44,7 +44,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # expected = np.array([-0.1973928, 0.05591352])  # non-scaled LSI version
         self.assertTrue(np.allclose(abs(vec), abs(expected)))  # transformed entries must be equal up to sign
 
-    def testTransformFloat32(self):
+    def test_transform_float32(self):
         """Test lsi[vector] transformation."""
         # create the transformation model
         model = lsimodel.LsiModel(self.corpus, num_topics=2, dtype=np.float32)
@@ -63,7 +63,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # transformed entries must be equal up to sign
         self.assertTrue(np.allclose(abs(vec), abs(expected), atol=1.e-5))
 
-    def testCorpusTransform(self):
+    def test_corpus_transform(self):
         """Test lsi[corpus] transformation."""
         model = self.model
         got = np.vstack([matutils.sparse2full(doc, 2) for doc in model[self.corpus]])
@@ -80,7 +80,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         ])
         self.assertTrue(np.allclose(abs(got), abs(expected)))  # must equal up to sign
 
-    def testOnlineTransform(self):
+    def test_online_transform(self):
         corpus = list(self.corpus)
         doc = corpus[0]  # use the corpus' first document for testing
 
@@ -116,7 +116,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # the two LSI representations must equal up to sign
         self.assertTrue(np.allclose(abs(vec1), abs(vec2), atol=1e-5))
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models_lsi.tst')
         model = self.model
         model.save(fname)
@@ -127,7 +127,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models_lsi.tst.gz')
         model = self.model
         model.save(fname)
@@ -138,7 +138,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testLargeMmap(self):
+    def test_large_mmap(self):
         fname = get_tmpfile('gensim_models_lsi.tst')
         model = self.model
 
@@ -155,7 +155,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testLargeMmapCompressed(self):
+    def test_large_mmap_compressed(self):
         fname = get_tmpfile('gensim_models_lsi.tst.gz')
         model = self.model
 
@@ -169,7 +169,7 @@ class TestLsiModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # to be mmaped!
         self.assertRaises(IOError, lsimodel.LsiModel.load, fname, mmap='r')
 
-    def testDocsProcessed(self):
+    def test_docs_processed(self):
         self.assertEqual(self.model.docs_processed, 9)
         self.assertEqual(self.model.docs_processed, self.corpus.num_docs)
 

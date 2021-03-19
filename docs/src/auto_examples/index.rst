@@ -232,6 +232,27 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_scm_thumb.png
+     :alt: Soft Cosine Measure
+
+     :ref:`sphx_glr_auto_examples_tutorials_run_scm.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_scm
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
 
 .. only:: html

@@ -36,7 +36,7 @@ class TestTranslationMatrix(unittest.TestCase):
         model.train(self.word_pairs)
         self.assertEqual(model.translation_matrix.shape, (300, 300))
 
-    def testPersistence(self):
+    def test_persistence(self):
         """Test storing/loading the entire model."""
         tmpf = get_tmpfile('transmat-en-it.pkl')
 

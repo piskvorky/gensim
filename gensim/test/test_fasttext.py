@@ -94,7 +94,7 @@ class TestFastTextModel(unittest.TestCase):
         oov_vec = model.wv['minor']  # oov word
         self.assertEqual(len(oov_vec), 12)
 
-    def testFastTextTrainParameters(self):
+    def test_fast_text_train_parameters(self):
 
         model = FT_gensim(vector_size=12, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
         model.build_vocab(corpus_iterable=sentences)
@@ -107,7 +107,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertRaises(TypeError, model.train, corpus_file=sentences, total_examples=1, epochs=1)
 
     def test_training_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+        with temporary_file('gensim_fasttext.tst') as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
             model = FT_gensim(vector_size=12, min_count=1, hs=1, negative=0, seed=42, workers=1, bucket=BUCKET)
@@ -162,7 +162,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(len(wv), len(loaded_wv))
 
     def test_persistence_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file:
+        with temporary_file('gensim_fasttext1.tst') as corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
 
             tmpf = get_tmpfile('gensim_fasttext.tst')
@@ -430,7 +430,7 @@ class TestFastTextModel(unittest.TestCase):
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_cbow_hs_training_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+        with temporary_file('gensim_fasttext.tst') as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
                 min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
@@ -498,7 +498,7 @@ class TestFastTextModel(unittest.TestCase):
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_sg_hs_training_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+        with temporary_file('gensim_fasttext.tst') as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
                 min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
@@ -566,7 +566,7 @@ class TestFastTextModel(unittest.TestCase):
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_cbow_neg_training_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+        with temporary_file('gensim_fasttext.tst') as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
                 min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
@@ -634,7 +634,7 @@ class TestFastTextModel(unittest.TestCase):
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
     def test_sg_neg_training_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext.tst')) as corpus_file:
+        with temporary_file('gensim_fasttext.tst') as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=0, negative=5,
                 min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
@@ -679,8 +679,8 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model_hs.wv.get_vecattr('artificial', 'count'), 4)
 
     def test_online_learning_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
-                temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
+        with temporary_file('gensim_fasttext1.tst') as corpus_file, \
+                temporary_file('gensim_fasttext2.tst') as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 
@@ -720,8 +720,8 @@ class TestFastTextModel(unittest.TestCase):
         gensim.models.fasttext.save_facebook_model(model_reload, tmpf2)
 
     def test_online_learning_after_save_fromfile(self):
-        with temporary_file(get_tmpfile('gensim_fasttext1.tst')) as corpus_file, \
-                temporary_file(get_tmpfile('gensim_fasttext2.tst')) as new_corpus_file:
+        with temporary_file('gensim_fasttext1.tst') as corpus_file, \
+                temporary_file('gensim_fasttext2.tst') as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
 

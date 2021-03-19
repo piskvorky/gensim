@@ -54,7 +54,7 @@ class _TestSimilarityABC(unittest.TestCase):
         """Creates a SimilarityABC instance."""
         return self.cls(CORPUS, num_features=len(DICTIONARY))
 
-    def testFull(self, num_best=None, shardsize=100):
+    def test_full(self, num_best=None, shardsize=100):
         if self.cls == similarities.Similarity:
             index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=shardsize)
         else:
@@ -87,7 +87,7 @@ class _TestSimilarityABC(unittest.TestCase):
         if self.cls == similarities.Similarity:
             index.destroy()
 
-    def testNumBest(self):
+    def test_num_best(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -117,7 +117,7 @@ class _TestSimilarityABC(unittest.TestCase):
         self.assertTrue(scipy.sparse.issparse(matrix_scipy_clipped))
         self.assertTrue([matutils.scipy2sparse(x) for x in matrix_scipy_clipped], [expected] * 3)
 
-    def testEmptyQuery(self):
+    def test_empty_query(self):
         index = self.factoryMethod()
         if isinstance(index, similarities.WmdSimilarity) and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
@@ -129,7 +129,7 @@ class _TestSimilarityABC(unittest.TestCase):
         except IndexError:
             self.assertTrue(False)
 
-    def testChunking(self):
+    def test_chunking(self):
         if self.cls == similarities.Similarity:
             index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
         else:
@@ -155,7 +155,7 @@ class _TestSimilarityABC(unittest.TestCase):
         if self.cls == similarities.Similarity:
             index.destroy()
 
-    def testIter(self):
+    def test_iter(self):
         if self.cls == similarities.Similarity:
             index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
         else:
@@ -176,7 +176,7 @@ class _TestSimilarityABC(unittest.TestCase):
         if self.cls == similarities.Similarity:
             index.destroy()
 
-    def testPersistency(self):
+    def test_persistency(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -196,7 +196,7 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
-    def testPersistencyCompressed(self):
+    def test_persistency_compressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -216,7 +216,7 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
-    def testLarge(self):
+    def test_large(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -238,7 +238,7 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
-    def testLargeCompressed(self):
+    def test_large_compressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -260,7 +260,7 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
-    def testMmap(self):
+    def test_mmap(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -283,7 +283,7 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertTrue(numpy.allclose(index.index, index2.index))
             self.assertEqual(index.num_best, index2.num_best)
 
-    def testMmapCompressed(self):
+    def test_mmap_compressed(self):
         if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
             self.skipTest("pyemd not installed")
 
@@ -311,7 +311,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
         return self.cls(TEXTS, self.w2v_model)
 
     @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
-    def testFull(self, num_best=None):
+    def test_full(self, num_best=None):
         # Override testFull.
 
         index = self.cls(TEXTS, self.w2v_model)
@@ -330,7 +330,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
 
     @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
-    def testNonIncreasing(self):
+    def test_non_increasing(self):
         ''' Check that similarities are non-increasing when `num_best` is not
         `None`.'''
         # NOTE: this could be implemented for other similarities as well (i.e.
@@ -346,7 +346,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
         self.assertTrue(cond)
 
     @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
-    def testChunking(self):
+    def test_chunking(self):
         # Override testChunking.
 
         index = self.cls(TEXTS, self.w2v_model)
@@ -365,7 +365,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
                 self.assertTrue(numpy.alltrue(sim <= 1.0))
 
     @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
-    def testIter(self):
+    def test_iter(self):
         # Override testIter.
 
         index = self.cls(TEXTS, self.w2v_model)
@@ -386,7 +386,7 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
     def factoryMethod(self):
         return self.cls(CORPUS, self.similarity_matrix)
 
-    def testFull(self, num_best=None):
+    def test_full(self, num_best=None):
         # Single query
         index = self.cls(CORPUS, self.similarity_matrix, num_best=num_best)
         query = DICTIONARY.doc2bow(TEXTS[0])
@@ -421,7 +421,7 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
                     self.assertTrue(numpy.alltrue(result[i + 1:] >= 0.0))
                     self.assertTrue(numpy.alltrue(result[i + 1:] < 1.0))
 
-    def testNonIncreasing(self):
+    def test_non_increasing(self):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
         # NOTE: this could be implemented for other similarities as well (i.e. in _TestSimilarityABC).
 
@@ -434,7 +434,7 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
         cond = sum(numpy.diff(sims2) <= 0) == len(sims2) - 1
         self.assertTrue(cond)
 
-    def testChunking(self):
+    def test_chunking(self):
         index = self.cls(CORPUS, self.similarity_matrix)
         query = [DICTIONARY.doc2bow(document) for document in TEXTS[:3]]
         sims = index[query]
@@ -451,7 +451,7 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
             expected = 1.0
             self.assertAlmostEqual(expected, chunk[0][1], places=2)
 
-    def testIter(self):
+    def test_iter(self):
         index = self.cls(CORPUS, self.similarity_matrix)
         for sims in index:
             self.assertTrue(numpy.alltrue(sims >= 0.0))
@@ -462,7 +462,7 @@ class TestSparseMatrixSimilarity(_TestSimilarityABC):
     def setUp(self):
         self.cls = similarities.SparseMatrixSimilarity
 
-    def testMaintainSparsity(self):
+    def test_maintain_sparsity(self):
         """Sparsity is correctly maintained when maintain_sparsity=True"""
         num_features = len(DICTIONARY)
 
@@ -476,7 +476,7 @@ class TestSparseMatrixSimilarity(_TestSimilarityABC):
         self.assertTrue(scipy.sparse.issparse(sparse_sims))
         numpy.testing.assert_array_equal(dense_sims, sparse_sims.todense())
 
-    def testMaintainSparsityWithNumBest(self):
+    def test_maintain_sparsity_with_num_best(self):
         """Tests that sparsity is correctly maintained when maintain_sparsity=True and num_best is not None"""
         num_features = len(DICTIONARY)
 
@@ -499,12 +499,12 @@ class TestSimilarity(_TestSimilarityABC):
         # Override factoryMethod.
         return self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
 
-    def testSharding(self):
+    def test_sharding(self):
         for num_best in [None, 0, 1, 9, 1000]:
             for shardsize in [1, 2, 9, 1000]:
                 self.testFull(num_best=num_best, shardsize=shardsize)
 
-    def testReopen(self):
+    def test_reopen(self):
         """test re-opening partially full shards"""
         index = similarities.Similarity(None, CORPUS[:5], num_features=len(DICTIONARY), shardsize=9)
         _ = index[CORPUS[0]]  # noqa:F841 forces shard close
@@ -516,12 +516,12 @@ class TestSimilarity(_TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
-    def testMmapCompressed(self):
+    def test_mmap_compressed(self):
         pass
         # turns out this test doesn't exercise this because there are no arrays
         # to be mmaped!
 
-    def testChunksize(self):
+    def test_chunksize(self):
         index = self.cls(None, CORPUS, num_features=len(DICTIONARY), shardsize=5)
         expected = [sim for sim in index]
         index.chunksize = len(index) - 1
@@ -529,7 +529,7 @@ class TestSimilarity(_TestSimilarityABC):
         self.assertTrue(numpy.allclose(expected, sims))
         index.destroy()
 
-    def testNlargest(self):
+    def test_nlargest(self):
         sims = ([(0, 0.8), (1, 0.2), (2, 0.0), (3, 0.0), (4, -0.1), (5, -0.15)],)
         expected = [(0, 0.8), (1, 0.2), (5, -0.15)]
         self.assertTrue(_nlargest(3, sims), expected)
@@ -546,7 +546,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         from gensim.similarities.annoy import AnnoyIndexer
         self.indexer = AnnoyIndexer
 
-    def testWord2Vec(self):
+    def test_word2vec(self):
         model = word2vec.Word2Vec(TEXTS, min_count=1)
         index = self.indexer(model, 10)
 
@@ -555,7 +555,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
-    def testFastText(self):
+    def test_fast_text(self):
         class LeeReader:
             def __init__(self, fn):
                 self.fn = fn
@@ -573,7 +573,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
-    def testAnnoyIndexingOfKeyedVectors(self):
+    def test_annoy_indexing_of_keyed_vectors(self):
         from gensim.similarities.annoy import AnnoyIndexer
         keyVectors_file = datapath('lee_fasttext.vec')
         model = KeyedVectors.load_word2vec_format(keyVectors_file)
@@ -583,7 +583,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         self.assertVectorIsSimilarToItself(model, index)
         self.assertApproxNeighborsMatchExact(model, model, index)
 
-    def testLoadMissingRaisesError(self):
+    def test_load_missing_raises_error(self):
         from gensim.similarities.annoy import AnnoyIndexer
         test_index = AnnoyIndexer()
 
@@ -651,14 +651,14 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.index = AnnoyIndexer(self.model, 300)
         self.vector = self.model.dv.get_normed_vectors()[0]
 
-    def testDocumentIsSimilarToItself(self):
+    def test_document_is_similar_to_itself(self):
         approx_neighbors = self.index.most_similar(self.vector, 1)
         doc, similarity = approx_neighbors[0]
 
         self.assertEqual(doc, 0)
         self.assertAlmostEqual(similarity, 1.0, places=2)
 
-    def testApproxNeighborsMatchExact(self):
+    def test_approx_neighbors_match_exact(self):
         approx_neighbors = self.model.dv.most_similar([self.vector], topn=5, indexer=self.index)
         exact_neighbors = self.model.dv.most_similar([self.vector], topn=5)
 
@@ -667,19 +667,19 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
 
         self.assertEqual(approx_words, exact_words)
 
-    def testSave(self):
+    def test_save(self):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
         self.assertTrue(os.path.exists(fname + '.d'))
 
-    def testLoadNotExist(self):
+    def test_load_not_exist(self):
         from gensim.similarities.annoy import AnnoyIndexer
         self.test_index = AnnoyIndexer()
 
         self.assertRaises(IOError, self.test_index.load, fname='test-index')
 
-    def testSaveLoad(self):
+    def test_save_load(self):
         from gensim.similarities.annoy import AnnoyIndexer
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
@@ -1545,6 +1545,7 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
 
 
 class TestLevenshteinDistance(unittest.TestCase):
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_max_distance(self):
         t1 = "holiday"
         t2 = "day"
@@ -1557,12 +1558,14 @@ class TestLevenshteinDistance(unittest.TestCase):
 
 
 class TestLevenshteinSimilarity(unittest.TestCase):
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_empty_strings(self):
         t1 = ""
         t2 = ""
 
         self.assertEqual(1.0, levsim(t1, t2))
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_negative_hyperparameters(self):
         t1 = "holiday"
         t2 = "day"
@@ -1578,6 +1581,7 @@ class TestLevenshteinSimilarity(unittest.TestCase):
         with self.assertRaises(AssertionError):
             levsim(t1, t2, -alpha, -beta)
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_min_similarity(self):
         t1 = "holiday"
         t2 = "day"
@@ -1607,9 +1611,9 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         self.dictionary = Dictionary(self.documents)
 
+    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar(self):
         """Test most_similar returns expected results."""
-
         index = LevenshteinSimilarityIndex(self.dictionary)
         results = list(index.most_similar(u"holiday", topn=1))
         self.assertLess(0, len(results))

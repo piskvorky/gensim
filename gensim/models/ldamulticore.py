@@ -160,6 +160,7 @@ class LdaMulticore(LdaModel):
             Topics with a probability lower than this threshold will be filtered out.
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
+            Note that results can still vary due to non-determinism in OS scheduling of the worker processes.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
         per_word_topics : bool
@@ -180,7 +181,7 @@ class LdaMulticore(LdaModel):
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype,
         )
 
     def update(self, corpus, chunks_as_numpy=False):

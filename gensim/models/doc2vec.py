@@ -51,12 +51,6 @@ Persist a model to disk:
     >>> model.save(fname)
     >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do:
-
-.. sourcecode:: pycon
-
-    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-
 Infer vector for a new document:
 
 .. sourcecode:: pycon

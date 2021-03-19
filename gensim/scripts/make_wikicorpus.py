@@ -29,10 +29,6 @@ disk space; gensim's corpus iterators can work with compressed input, too.
 removing tokens that appear in more than 10%% of all documents). Defaults to
 100,000.
 
-If you have the `pattern` package installed, this script will use a fancy
-lemmatization to get a lemma of each token (instead of plain alphabetic
-tokenizer). The package is available at https://github.com/clips/pattern .
-
 Example:
   python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
 """
@@ -74,13 +70,12 @@ if __name__ == '__main__':
     else:
         keep_words = DEFAULT_DICT_SIZE
     online = 'online' in program
-    lemmatize = 'lemma' in program
     debug = 'nodebug' not in program
 
     if online:
         dictionary = HashDictionary(id_range=keep_words, debug=debug)
         dictionary.allow_update = True  # start collecting document frequencies
-        wiki = WikiCorpus(inp, lemmatize=lemmatize, dictionary=dictionary)
+        wiki = WikiCorpus(inp, dictionary=dictionary)
         # ~4h on my macbook pro without lemmatization, 3.1m articles (august 2012)
         MmCorpus.serialize(outp + '_bow.mm', wiki, progress_cnt=10000, metadata=True)
         # with HashDictionary, the token->id mapping is only fully instantiated now, after `serialize`
@@ -89,7 +84,7 @@ if __name__ == '__main__':
         wiki.save(outp + '_corpus.pkl.bz2')
         dictionary.allow_update = False
     else:
-        wiki = WikiCorpus(inp, lemmatize=lemmatize)  # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
+        wiki = WikiCorpus(inp)  # takes about 9h on a macbook pro, for 3.5m articles (june 2011)
         # only keep the most frequent words (out of total ~8.2m unique tokens)
         wiki.dictionary.filter_extremes(no_below=20, no_above=0.1, keep_n=DEFAULT_DICT_SIZE)
         # save dictionary and bag-of-words (term-document frequency matrix)

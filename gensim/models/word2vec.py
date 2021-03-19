@@ -21,8 +21,7 @@ Other embeddings
 ================
 
 There are more ways to train word vectors in Gensim than just Word2Vec.
-See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText` and
-wrappers for :class:`~gensim.models.wrappers.varembed.VarEmbed` and :class:`~gensim.models.wrappers.wordrank.WordRank`.
+See also :class:`~gensim.models.doc2vec.Doc2Vec`, :class:`~gensim.models.fasttext.FastText`.
 
 The training algorithms were originally ported from the C package https://code.google.com/p/word2vec/
 and extended with additional functionality and
@@ -66,6 +65,7 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
 .. sourcecode:: pycon
 
     >>> vector = model.wv['computer']  # get numpy vector of a word
+    >>> sims = model.wv.most_similar('computer', topn=10)  # get other similar words
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
 need the full model state any more (don't need to continue training), its state can discarded,
@@ -433,6 +433,8 @@ class Word2Vec(utils.SaveLoad):
                     "The callbacks provided in this initialization without triggering train will "
                     "be ignored.")
 
+        self.add_lifecycle_event("created", params=str(self))
+
     def build_vocab(
             self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
             keep_raw_vocab=False, trim_rule=None, **kwargs,
@@ -471,7 +473,7 @@ class Word2Vec(utils.SaveLoad):
                 * `min_count` (int) - the minimum count threshold.
 
         **kwargs : object
-            Key word arguments propagated to `self.prepare_vocab`
+            Keyword arguments propagated to `self.prepare_vocab`.
 
         """
         self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=1)
@@ -482,6 +484,7 @@ class Word2Vec(utils.SaveLoad):
         report_values = self.prepare_vocab(update=update, keep_raw_vocab=keep_raw_vocab, trim_rule=trim_rule, **kwargs)
         report_values['memory'] = self.estimate_memory(vocab_size=report_values['num_retained_words'])
         self.prepare_weights(update=update)
+        self.add_lifecycle_event("build_vocab", update=update, trim_rule=str(trim_rule))
 
     def build_vocab_from_freq(
             self, word_freq, keep_raw_vocab=False, corpus_count=None, trim_rule=None, update=False,
@@ -611,13 +614,16 @@ class Word2Vec(utils.SaveLoad):
                 calc_min_count = self.raw_vocab[sorted_vocab[self.max_final_vocab]] + 1
 
             self.effective_min_count = max(calc_min_count, min_count)
-            logger.info(
-                "max_final_vocab=%d and min_count=%d resulted in calc_min_count=%d, effective_min_count=%d",
-                self.max_final_vocab, min_count, calc_min_count, self.effective_min_count
+            self.add_lifecycle_event(
+                "prepare_vocab",
+                msg=(
+                    f"max_final_vocab={self.max_final_vocab} and min_count={min_count} resulted "
+                    f"in calc_min_count={calc_min_count}, effective_min_count={self.effective_min_count}"
+                )
             )
 
         if not update:
-            logger.info("Loading a fresh vocabulary")
+            logger.info("Creating a fresh vocabulary")
             retain_total, retain_words = 0, []
             # Discard words less-frequent than min_count
             if not dry_run:
@@ -643,15 +649,22 @@ class Word2Vec(utils.SaveLoad):
                     self.wv.set_vecattr(word, 'count', self.raw_vocab[word])
             original_unique_total = len(retain_words) + drop_unique
             retain_unique_pct = len(retain_words) * 100 / max(original_unique_total, 1)
-            logger.info(
-                "effective_min_count=%d retains %i unique words (%i%% of original %i, drops %i)",
-                self.effective_min_count, len(retain_words), retain_unique_pct, original_unique_total, drop_unique
+            self.add_lifecycle_event(
+                "prepare_vocab",
+                msg=(
+                    f"effective_min_count={self.effective_min_count} retains {len(retain_words)} unique "
+                    f"words ({retain_unique_pct}%% of original {original_unique_total}, drops {drop_unique})"
+                ),
             )
+
             original_total = retain_total + drop_total
             retain_pct = retain_total * 100 / max(original_total, 1)
-            logger.info(
-                "effective_min_count=%d leaves %i word corpus (%i%% of original %i, drops %i)",
-                self.effective_min_count, retain_total, retain_pct, original_total, drop_total
+            self.add_lifecycle_event(
+                "prepare_vocab",
+                msg=(
+                    f"effective_min_count={self.effective_min_count} leaves {retain_total} word corpus "
+                    f"({retain_pct}%% of original {original_total}, drops {drop_total})"
+                ),
             )
         else:
             logger.info("Updating model with new vocabulary")
@@ -682,11 +695,13 @@ class Word2Vec(utils.SaveLoad):
             original_unique_total = len(pre_exist_words) + len(new_words) + drop_unique
             pre_exist_unique_pct = len(pre_exist_words) * 100 / max(original_unique_total, 1)
             new_unique_pct = len(new_words) * 100 / max(original_unique_total, 1)
-            logger.info(
-                "New added %i unique words (%i%% of original %i) "
-                "and increased the count of %i pre-existing words (%i%% of original %i)",
-                len(new_words), new_unique_pct, original_unique_total, len(pre_exist_words),
-                pre_exist_unique_pct, original_unique_total
+            self.add_lifecycle_event(
+                "prepare_vocab",
+                msg=(
+                    f"added {len(new_words)} new unique words ({new_unique_pct}%% of original "
+                    f"{original_unique_total}) and increased the count of {len(pre_exist_words)} "
+                    f"pre-existing words ({pre_exist_unique_pct}%% of original {original_unique_total})"
+                ),
             )
             retain_words = new_words + pre_exist_words
             retain_total = new_total + pre_exist_total
@@ -720,9 +735,12 @@ class Word2Vec(utils.SaveLoad):
             self.raw_vocab = defaultdict(int)
 
         logger.info("sample=%g downsamples %i most-common words", sample, downsample_unique)
-        logger.info(
-            "downsampling leaves estimated %i word corpus (%.1f%% of prior %i)",
-            downsample_total, downsample_total * 100.0 / max(retain_total, 1), retain_total
+        self.add_lifecycle_event(
+            "prepare_vocab",
+            msg=(
+                f"downsampling leaves estimated {downsample_total} word corpus "
+                f"({downsample_total * 100.0 / max(retain_total, 1):.1f}%% of prior {retain_total})"
+            ),
         )
 
         # return from each step: words-affected, resulting-corpus-size, extra memory estimates
@@ -775,7 +793,7 @@ class Word2Vec(utils.SaveLoad):
         report['total'] = sum(report.values())
         logger.info(
             "estimated required memory for %i words and %i dimensions: %i bytes",
-            vocab_size, self.vector_size, report['total']
+            vocab_size, self.vector_size, report['total'],
         )
         return report
 
@@ -890,11 +908,15 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1, self.compute_loss)
+            examples, tally, raw_tally = train_epoch_sg(
+                self, corpus_file, offset, cython_vocab, cur_epoch,
+                total_examples, total_words, work, neu1, self.compute_loss,
+            )
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1, self.compute_loss)
+            examples, tally, raw_tally = train_epoch_cbow(
+                self, corpus_file, offset, cython_vocab, cur_epoch,
+                total_examples, total_words, work, neu1, self.compute_loss,
+            )
 
         return examples, tally, raw_tally
 
@@ -1012,11 +1034,13 @@ class Word2Vec(utils.SaveLoad):
         self._check_training_sanity(epochs=epochs, total_examples=total_examples, total_words=total_words)
         self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=epochs)
 
-        logger.info(
-            "training model with %i workers on %i vocabulary and %i features, "
-            "using sg=%s hs=%s sample=%s negative=%s window=%s",
-            self.workers, len(self.wv), self.layer1_size, self.sg,
-            self.hs, self.sample, self.negative, self.window
+        self.add_lifecycle_event(
+            "train",
+            msg=(
+                f"training model with {self.workers} workers on {len(self.wv)} vocabulary and "
+                f"{self.layer1_size} features, using sg={self.sg} hs={self.hs} sample={self.sample} "
+                f"negative={self.negative} window={self.window}"
+            ),
         )
 
         self.compute_loss = compute_loss
@@ -1060,6 +1084,7 @@ class Word2Vec(utils.SaveLoad):
 
         for callback in callbacks:
             callback.on_train_end(self)
+
         return trained_word_count, raw_word_count
 
     def _worker_loop_corpusfile(
@@ -1120,7 +1145,6 @@ class Word2Vec(utils.SaveLoad):
         """
         thread_private_mem = self._get_thread_working_mem()
         jobs_processed = 0
-        callbacks = progress_queue.callbacks
         while True:
             job = job_queue.get()
             if job is None:
@@ -1128,13 +1152,7 @@ class Word2Vec(utils.SaveLoad):
                 break  # no more jobs => quit this worker
             data_iterable, alpha = job
 
-            for callback in callbacks:
-                callback.on_batch_begin(self)
-
             tally, raw_tally = self._do_train_job(data_iterable, alpha, thread_private_mem)
-
-            for callback in callbacks:
-                callback.on_batch_end(self)
 
             progress_queue.put((len(data_iterable), tally, raw_tally))  # report back progress
             jobs_processed += 1
@@ -1385,7 +1403,6 @@ class Word2Vec(utils.SaveLoad):
         """
         job_queue = Queue(maxsize=queue_factor * self.workers)
         progress_queue = Queue(maxsize=(queue_factor + 1) * self.workers)
-        progress_queue.callbacks = callbacks  # messy way to pass along for just this session
 
         workers = [
             threading.Thread(
@@ -1404,8 +1421,9 @@ class Word2Vec(utils.SaveLoad):
             thread.start()
 
         trained_word_count, raw_word_count, job_tally = self._log_epoch_progress(
-            progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples, total_words=total_words,
-            report_delay=report_delay, is_corpus_file_mode=False)
+            progress_queue, job_queue, cur_epoch=cur_epoch, total_examples=total_examples,
+            total_words=total_words, report_delay=report_delay, is_corpus_file_mode=False,
+        )
 
         return trained_word_count, raw_word_count, job_tally
 
@@ -1603,7 +1621,7 @@ class Word2Vec(utils.SaveLoad):
         """
         logger.info(
             "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed
+            cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed,
         )
 
         # don't warn if training in file-based mode, because it's expected behavior
@@ -1637,10 +1655,10 @@ class Word2Vec(utils.SaveLoad):
             Total number of jobs processed during training.
 
         """
-        logger.info(
-            "training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            raw_word_count, trained_word_count, total_elapsed, trained_word_count / total_elapsed
-        )
+        self.add_lifecycle_event("train", msg=(
+            f"training on {raw_word_count} raw words ({trained_word_count} effective words) "
+            f"took {total_elapsed:.1f}s, {trained_word_count / total_elapsed:.0f} effective words/s"
+        ))
 
     def score(self, sentences, total_sentences=int(1e6), chunksize=100, queue_factor=2, report_delay=1):
         """Score the log probability for a sequence of sentences.

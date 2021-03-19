@@ -578,6 +578,11 @@ class CallbackAny2Vec:
 
     See examples at the module level docstring for how to define your own callbacks by inheriting  from this class.
 
+    As of gensim 4.0.0, the following callbacks are no longer supported, and overriding them will have no effect:
+
+    - on_batch_begin
+    - on_batch_end
+
     """
     def on_epoch_begin(self, model):
         """Method called at the start of each epoch.
@@ -592,28 +597,6 @@ class CallbackAny2Vec:
 
     def on_epoch_end(self, model):
         """Method called at the end of each epoch.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
-            Current model.
-
-        """
-        pass
-
-    def on_batch_begin(self, model):
-        """Method called at the start of each batch.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
-            Current model.
-
-        """
-        pass
-
-    def on_batch_end(self, model):
-        """Method called at the end of each batch.
 
         Parameters
         ----------
