@@ -8,7 +8,7 @@
 
 from __future__ import with_statement
 from contextlib import contextmanager
-import collections.abc as collections
+import collections.abc
 import logging
 import warnings
 import numbers
@@ -1598,7 +1598,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
 
     Notes
     -----
-    Use this function to train or index large collections -- avoid sending the
+    Use this function to train or index large collections.abc -- avoid sending the
     entire corpus over the wire as a single Pyro in-memory object. The documents
     will be sent in smaller chunks, of `chunksize` documents each.
 
@@ -2014,7 +2014,7 @@ def flatten(nested_list):
     Returns
     -------
     list
-        Flattened version of `nested_list` where any elements that are an iterable (`collections.Iterable`)
+        Flattened version of `nested_list` where any elements that are an iterable (`collections.abc.Iterable`)
         have been unpacked into the top-level list, in a recursive fashion.
 
     """
@@ -2036,7 +2036,7 @@ def lazy_flatten(nested_list):
 
     """
     for el in nested_list:
-        if isinstance(el, collections.Iterable) and not isinstance(el, str):
+        if isinstance(el, collections.abc.Iterable) and not isinstance(el, str):
             for sub in flatten(el):
                 yield sub
         else:
