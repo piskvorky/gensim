@@ -202,10 +202,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             # update Dictionary with the document
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
 
-        logger.info(
-            "built %s from %i documents (total %i corpus positions)",
-            self, self.num_docs, self.num_pos
-        )
+        logger.info("built %s from %i documents (total %i corpus positions)", self, self.num_docs, self.num_pos)
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """Convert `document` into the bag-of-words (BoW) format = list of `(token_id, token_count)` tuples.
