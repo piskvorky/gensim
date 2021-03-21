@@ -301,7 +301,7 @@ win_testenv = core_testenv[:]
 #
 
 docs_testenv = core_testenv + distributed_env + visdom_req + [
-    'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
+    'sphinx',
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
     'sphinxcontrib-napoleon',
@@ -338,7 +338,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.0.0rc1',
+    version='4.0.0.rc1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
