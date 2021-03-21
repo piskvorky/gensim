@@ -1115,11 +1115,10 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec
             for nh in ngram_hashes:
                 word_vec += ngram_weights[nh]
-            word_vec /= len(ngram_hashes)
             if norm:
                 return word_vec / np.linalg.norm(word_vec)
             else:
-                return word_vec
+                return word_vec / len(ngram_hashes)
 
     def resize_vectors(self, seed=0):
         """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""
