@@ -93,7 +93,8 @@ The NMF should be used whenever one needs extremely fast and memory optimized to
 
 """
 
-import collections
+
+import collections.abc
 import logging
 
 import numpy as np
@@ -590,7 +591,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logger.warning("Nmf.update() called with an empty corpus")
             return
 
-        if isinstance(corpus, collections.Iterator) and self.passes > 1:
+        if isinstance(corpus, collections.abc.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
         logger.info(

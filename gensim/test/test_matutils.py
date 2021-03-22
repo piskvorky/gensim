@@ -144,7 +144,7 @@ class TestLdaModelInner(unittest.TestCase):
 
 def manual_unitvec(vec):
     # manual unit vector calculation for UnitvecTestCase
-    vec = vec.astype(np.float)
+    vec = vec.astype(float)
     if sparse.issparse(vec):
         vec_sum_of_squares = vec.multiply(vec)
         unit = 1. / np.sqrt(vec_sum_of_squares.sum())
