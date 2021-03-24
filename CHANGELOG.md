@@ -1,6 +1,10 @@
 Changes
 =======
 
+## Unreleased
+
+- Read NIPS data on the fly (PR [#3082](https://github.com/RaRe-Technologies/gensim/pull/3082), [@jonaschn](https://github.com/jonaschn))
+
 ## 4.0.0.rc1, 2021-03-19
 
 **⚠️ Gensim 4.0 contains breaking API changes! See the [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) to update your existing Gensim 3.x code and models.**
