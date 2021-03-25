@@ -23,9 +23,11 @@ We're on `Twitter @gensim_py <https://twitter.com/gensim_py>`_. You can also try
 Commercial support
 ------------------
 
-I run a consulting R&D company focused on data mining and unstructured text processing, https://rare-technologies.com.
+If you need commercial support for Gensim, consider `becoming a sponsor <https://github.com/sponsors/piskvorky>`_. You chip in, we have an incentive to prioritize your tickets.
 
-If you need commercial support for Gensim or a corporate training in machine learning, `get in touch <http://rare-technologies.com/contact>`_ for a quote.
+Corporate sponsorship means sustainability. It allows us to dedicate our time keeping Gensim stable and performant for you.
+
+The Gold Sponsor 👑 tier also allows for a commercial non-LGPL license of Gensim.
 
 We're not interested in any sort of equity arrangements.
 
