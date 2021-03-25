@@ -7,11 +7,12 @@ import warnings
 try:
     import Levenshtein  # noqa:F401
 except ImportError:
-    warnings.warn(
+    msg = (
         "The gensim.similarities.levenshtein submodule is disabled, because the optional "
         "Levenshtein package <https://pypi.org/project/python-Levenshtein/> is unavailable. "
         "Install Levenhstein (e.g. `pip install python-Levenshtein`) to suppress this warning."
     )
+    warnings.warn(msg)
     LevenshteinSimilarityIndex = None
 else:
     from .levenshtein import LevenshteinSimilarityIndex  # noqa:F401

@@ -66,29 +66,12 @@ import tarfile
 import smart_open
 
 def extract_documents(url='https://cs.nyu.edu/~roweis/data/nips12raw_str602.tgz'):
-    fname = url.split('/')[-1]
-
-    # Download the file to local storage first.
-    # We can't read it on the fly because of
-    # https://github.com/RaRe-Technologies/smart_open/issues/331
-    if not os.path.isfile(fname):
-        with smart_open.open(url, "rb") as fin:
-            with smart_open.open(fname, 'wb') as fout:
-                while True:
-                    buf = fin.read(io.DEFAULT_BUFFER_SIZE)
-                    if not buf:
-                        break
-                    fout.write(buf)
-
-    with tarfile.open(fname, mode='r:gz') as tar:
-        # Ignore directory entries, as well as files like README, etc.
-        files = [
-            m for m in tar.getmembers()
-            if m.isfile() and re.search(r'nipstxt/nips\d+/\d+\.txt', m.name)
-        ]
-        for member in sorted(files, key=lambda x: x.name):
-            member_bytes = tar.extractfile(member).read()
-            yield member_bytes.decode('utf-8', errors='replace')
+    with smart_open.open(url, "rb") as file:
+        with tarfile.open(fileobj=file) as tar:
+            for member in tar.getmembers():
+                if member.isfile() and re.search(r'nipstxt/nips\d+/\d+\.txt', member.name):
+                    member_bytes = tar.extractfile(member).read()
+                    yield member_bytes.decode('utf-8', errors='replace')
 
 docs = list(extract_documents())
 

@@ -724,7 +724,7 @@ def unitvec(vec, norm='l2', return_norm=False):
             veclen = vec.nnz
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
-                vec = vec.astype(np.float)
+                vec = vec.astype(float)
             vec /= veclen
             if return_norm:
                 return vec, veclen
@@ -748,7 +748,7 @@ def unitvec(vec, norm='l2', return_norm=False):
             veclen = np.count_nonzero(vec)
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
-                vec = vec.astype(np.float)
+                vec = vec.astype(float)
             if return_norm:
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype), veclen
             else:
