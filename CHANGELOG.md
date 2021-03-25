@@ -76,6 +76,7 @@ This is the direction we'll keep going forward: less kitchen-sink of "latest aca
 * [#3003](https://github.com/RaRe-Technologies/gensim/pull/3003): Point WordEmbeddingSimilarityIndex documentation to gensim.similarities, by [@Witiko](https://github.com/Witiko)
 * [#2996](https://github.com/RaRe-Technologies/gensim/pull/2996): Make the website link to the old Gensim 3.8.3 documentation dynamic, by [@Witiko](https://github.com/Witiko)
 * [#3063](https://github.com/RaRe-Technologies/gensim/pull/3063): Update link to papers in LSI model, by [@jonaschn](https://github.com/jonaschn)
+* [#3080](https://github.com/RaRe-Technologies/gensim/pull/3080): Fix some of the warnings/deprecated functions, by [@FredHappyface](https://github.com/FredHappyface))
 
 ### :red_circle: Bug fixes
 
@@ -84,7 +85,7 @@ This is the direction we'll keep going forward: less kitchen-sink of "latest aca
 * [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Fix similarity bug in NMSLIB indexer, by [@piskvorky](https://github.com/piskvorky)
 * [#2899](https://github.com/RaRe-Technologies/gensim/pull/2899): Fix deprecation warnings in Annoy integration, by [@piskvorky](https://github.com/piskvorky)
 * [#2901](https://github.com/RaRe-Technologies/gensim/pull/2901): Fix inheritance of WikiCorpus from TextCorpus, by [@jenishah](https://github.com/jenishah)
-* [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940); Fix deprecations in SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
+* [#2940](https://github.com/RaRe-Technologies/gensim/pull/2940): Fix deprecations in SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
 * [#2944](https://github.com/RaRe-Technologies/gensim/pull/2944): Fix `save_facebook_model` failure after update-vocab & other initialization streamlining, by [@gojomo](https://github.com/gojomo)
 * [#2846](https://github.com/RaRe-Technologies/gensim/pull/2846): Fix for Python 3.9/3.10: remove `xml.etree.cElementTree`, by [@hugovk](https://github.com/hugovk)
 * [#2973](https://github.com/RaRe-Technologies/gensim/issues/2973): phrases.export_phrases() doesn't yield all bigrams, by [@piskvorky](https://github.com/piskvorky)
