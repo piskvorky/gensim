@@ -1,6 +1,7 @@
 branches:
   only:
     - master
+    - develop
 language: python
 arch: arm64-graviton2
 dist: focal
