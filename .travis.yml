@@ -1,6 +1,6 @@
 branches:
   only:
-    - /v\d+\.\d+\.\d+/
+    - master
 language: python
 arch: arm64-graviton2
 dist: focal
