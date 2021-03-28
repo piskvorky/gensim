@@ -1,8 +1,7 @@
 branches:
   only:
     - /release-.+/
-    - develop
-    - master
+    - travis
 language: python
 arch: arm64-graviton2
 dist: focal
