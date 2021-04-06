@@ -155,13 +155,13 @@ LONG_DESCRIPTION = u"""
 gensim -- Topic Modelling in Python
 ==============================================
 
-|Travis|_
+|GA|_
 |Wheel|_
 
-.. |Travis| image:: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
+.. |GA| image:: https://github.com/RaRe-Technologies/gensim/actions/workflows/tests.yml/badge.svg?branch=develop
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
-.. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
+.. _GA: https://github.com/RaRe-Technologies/gensim/actions
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
 .. _Wheel: https://pypi.python.org/pypi/gensim
@@ -194,7 +194,7 @@ Installation
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OS X, NumPy picks up the BLAS that comes with it automatically, so you don't need to do anything special.
+It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
 
 Install the latest version of gensim::
 
@@ -205,9 +205,9 @@ Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.
     python setup.py install
 
 
-For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
+For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/#install>`_.
 
-Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.6, 3.7 and 3.8.
+Gensim is being `continuously tested <http://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 
