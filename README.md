@@ -19,12 +19,8 @@ and *similarity retrieval* with large corpora. Target audience is the
 *natural language processing* (NLP) and *information retrieval* (IR)
 community.
 
-<!--
-## :pizza: Hacktoberfest 2019 :beer:
+## ⚠️  Please [sponsor Gensim](https://github.com/sponsors/piskvorky) to help sustain this open source project ❤️
 
-We are accepting PRs for Hacktoberfest!
-See [here](HACKTOBERFEST.md) for details.
--->
 
 Features
 --------
@@ -111,9 +107,12 @@ Documentation
 Support
 -------
 
-Ask open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+For commercial support, please see [Gensim sponsorship](https://github.com/sponsors/piskvorky).
 
-Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to follow the issue template will be closed without inspection.
+Ask open-ended questions on the public [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+
+Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but please **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to provide the requested details will be closed without inspection.
+
 
 ---------
 
