@@ -835,6 +835,9 @@ class FakeDict:
             return str(val)
         raise ValueError("internal id out of bounds (%s, expected <0..%s))" % (val, self.num_terms))
 
+    def __contains__(self, val):
+        return 0 <= val < self.num_terms
+
     def iteritems(self):
         """Iterate over all keys and values.
 
