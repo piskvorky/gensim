@@ -44,6 +44,11 @@ class TestCoherenceModel(unittest.TestCase):
             ['user', 'graph', 'minors', 'system'],
             ['time', 'graph', 'survey', 'minors']
         ]
+        self.topics3 = [
+            ['human', 'computer', 'system', 'interface'],
+            ['graph', 'minors', 'trees', 'eps']
+        ]
+
         self.ldamodel = LdaModel(
             corpus=self.corpus, id2word=self.dictionary, num_topics=2,
             passes=0, iterations=0
@@ -79,6 +84,8 @@ class TestCoherenceModel(unittest.TestCase):
 
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm2 = CoherenceModel(topics=self.topics2, **kwargs)
+        cm3 = CoherenceModel(topics=self.topics3, **kwargs)
+        self.assertIsInstance(cm3.get_coherence(), np.double)
         self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
 
     def testUMass(self):
