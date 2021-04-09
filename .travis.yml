@@ -1,6 +1,7 @@
 branches:
   only:
-    - /v\d+\.\d+\.\d+/
+    - /release-.+/
+    - travis
 language: python
 arch: arm64-graviton2
 dist: focal
