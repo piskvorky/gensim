@@ -201,6 +201,8 @@ from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
 
+EARLY_STOP = "EARLY_STOP_TOKEN"
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -1073,7 +1075,8 @@ class Word2Vec(utils.SaveLoad):
             job_tally += job_tally_epoch
 
             for callback in callbacks:
-                callback.on_epoch_end(self)
+                if callback.on_epoch_end(self) == EARLY_STOP:
+                    break
 
         # Log overall time
         total_elapsed = default_timer() - start
