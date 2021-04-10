@@ -203,7 +203,9 @@ def filter_wiki(raw, promote_remaining=True, simplify_links=True):
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text, promote_remaining, simplify_links)
+    # the cleaning process
+    cleaned_text = remove_markup(text, promote_remaining, simplify_links)
+    return cleaned_text
 
 
 def remove_markup(text, promote_remaining=True, simplify_links=True):
@@ -484,9 +486,12 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
 
     """
     text, title, pageid = args
+    # cleaned text
     text = filter_wiki(text)
+    # find the interlinks
+    interlinks_pair = find_interlinks(text) # [(linked article, the actual text found),...]
     result = tokenizer_func(text, token_min_len, token_max_len, lower)
-    return result, title, pageid
+    return result, title, pageid, interlinks_pair
 
 
 def init_to_ignore_interrupt():
@@ -569,7 +574,7 @@ class WikiCorpus(TextCorpus):
     """
     def __init__(self, fname, processes=None, lemmatize=None, dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None, metadata = False):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -618,7 +623,7 @@ class WikiCorpus(TextCorpus):
         self.fname = fname
         self.filter_namespaces = filter_namespaces
         self.filter_articles = filter_articles
-        self.metadata = False
+        self.metadata = metadata
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
@@ -683,7 +688,7 @@ class WikiCorpus(TextCorpus):
             # process the corpus in smaller chunks of docs, because multiprocessing.Pool
             # is dumb and would load the entire input into RAM at once...
             for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-                for tokens, title, pageid in pool.imap(_process_article, group):
+                for tokens, title, pageid, interlink_pair in pool.imap(_process_article, group):
                     articles_all += 1
                     positions_all += len(tokens)
                     # article redirects and short stubs are pruned here
@@ -693,7 +698,7 @@ class WikiCorpus(TextCorpus):
                     articles += 1
                     positions += len(tokens)
                     if self.metadata:
-                        yield (tokens, (pageid, title))
+                        yield (tokens, (pageid, title), interlinked_pair)
                     else:
                         yield tokens
 
