@@ -670,7 +670,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         c = np.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = np.sqrt(np.sum(np.dot(c, c)))
         most = matutils.argsort(np.abs(c), topn, reverse=True)
-        return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
+
+        # Output only (word, score) pairs for `val`s that are within `self.id2word`.  See #3090 for details.
+        return [(self.id2word[val], 1.0 * c[val] / norm) for val in most if val in self.id2word]
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
         """Get the most significant topics.

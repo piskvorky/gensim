@@ -1,6 +1,10 @@
 Changes
 =======
 
+## Unreleased
+
+- LsiModel: Only log top words that actually exist in the dictionary (PR [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091), [@kmurphy4](https://github.com/kmurphy4))
+
 ## 4.0.1, 2021-04-01
 
 Bugfix release to address issues with Wheels on Windows:
