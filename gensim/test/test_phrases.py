@@ -332,6 +332,15 @@ class TestPhrasesPersistence(PhrasesData, unittest.TestCase):
                 3.444  # score for human interface
             ])
 
+    def test_save_load_with_connector_words(self):
+        """Test saving and loading a Phrases object."""
+        connector_words = frozenset({'of'})
+        with temporary_file("test.pkl") as fpath:
+            bigram = Phrases(self.sentences, min_count=1, threshold=1, connector_words=connector_words)
+            bigram.save(fpath)
+            bigram_loaded = Phrases.load(fpath)
+            self.assertEqual(bigram_loaded.connector_words, connector_words)
+
     def test_save_load_string_scoring(self):
         """Test backwards compatibility with a previous version of Phrases with custom scoring."""
         bigram_loaded = Phrases.load(datapath("phrases-scoring-str.pkl"))
@@ -384,6 +393,15 @@ class TestFrozenPhrasesPersistence(PhrasesData, unittest.TestCase):
             self.assertEqual(
                 bigram_loaded[['graph', 'minors', 'survey', 'human', 'interface', 'system']],
                 ['graph_minors', 'survey', 'human_interface', 'system'])
+
+    def test_save_load_with_connector_words(self):
+        """Test saving and loading a FrozenPhrases object."""
+        connector_words = frozenset({'of'})
+        with temporary_file("test.pkl") as fpath:
+            bigram = FrozenPhrases(Phrases(self.sentences, min_count=1, threshold=1, connector_words=connector_words))
+            bigram.save(fpath)
+            bigram_loaded = FrozenPhrases.load(fpath)
+            self.assertEqual(bigram_loaded.connector_words, connector_words)
 
     def test_save_load_string_scoring(self):
         """Test saving and loading a FrozenPhrases object with a string scoring parameter.
