@@ -48,4 +48,7 @@ Silver Sponsors
 Bronze Sponsors
 ---------------
 
-`You? <https://github.com/sponsors/piskvorky>`_
+.. figure:: _static/images/eaccidents-logo.png
+   :target: https://eaccidents.com/
+   :width: 50%
+   :alt: EAccidents
