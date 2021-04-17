@@ -258,7 +258,7 @@ class KeyedVectors(utils.SaveLoad):
         # fixup rename of vocab into map
         if 'key_to_index' not in self.__dict__:
             self._upconvert_old_vocab()
-        # ensure older instances have next_index 
+        # ensure older instances have next_index
         if not hasattr(self, 'next_index'):
             self.next_index = len(self)
 
