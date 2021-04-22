@@ -5,8 +5,8 @@
 # Based on Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 
 """Lda Sequence model, inspired by `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
-<https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_ .
-The original C/C++ implementation can be found on `blei-lab/dtm <https://github.com/blei-lab/dtm>`.
+<https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
+The original C/C++ implementation can be found on `blei-lab/dtm <https://github.com/blei-lab/dtm>`_.
 
 
 TODO: The next steps to take this forward would be:
