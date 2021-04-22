@@ -188,12 +188,24 @@ class AuthorTopicModel(LdaModel):
             Controls how old documents are forgotten.
         offset : float, optional
             Controls down-weighting of iterations.
-        alpha : float, optional
-            Hyperparameters for author-topic model.Supports special values of 'asymmetric'
-            and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
-            the latter learns an asymmetric prior directly from your data.
-        eta : float, optional
-            Hyperparameters for author-topic model.
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         update_every : int, optional
             Make updates in topic probability for latest mini-batch.
         eval_every : int, optional
