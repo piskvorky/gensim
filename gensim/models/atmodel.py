@@ -291,22 +291,16 @@ class AuthorTopicModel(LdaModel):
         self.init_empty_corpus()
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
-
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, str):
-            if eta == 'asymmetric':
-                raise ValueError("The 'asymmetric' option cannot be used for eta")
-
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-
-        self.random_state = utils.get_random_state(random_state)
-
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
             (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms)
         )
+
+        self.random_state = utils.get_random_state(random_state)
 
         # VB constants
         self.iterations = iterations
