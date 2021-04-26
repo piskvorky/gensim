@@ -282,7 +282,7 @@ if __name__ == '__main__':
         nargs='?',
         type=int,
         help='Maximum number of jobs to be kept pre-fetched in the queue.',
-        default=MAX_JOBS_QUEUE
+        default=MAX_JOBS_QUEUE,
     )
     args = parser.parse_args()
 
