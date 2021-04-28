@@ -488,8 +488,10 @@ class AuthorTopicModel(LdaModel):
                 # phi is computed implicitly below,
                 dot = np.dot(cts / phinorm, expElogbetad.T)
                 for ai, a in enumerate(authors_d):
-                    tilde_gamma[ai, :] = self.alpha + len(self.author2doc[self.id2author[a]])\
-                        * expElogthetad[ai, :] * dot
+                    tilde_gamma[ai, :] = (
+                        self.alpha + 
+                        len(self.author2doc[self.id2author[a]]) * expElogthetad[ai, :] * dot
+                    )
 
                 # Update gamma.
                 # Interpolation between document d's "local" gamma (tilde_gamma),
