@@ -489,8 +489,8 @@ class AuthorTopicModel(LdaModel):
                 dot = np.dot(cts / phinorm, expElogbetad.T)
                 for ai, a in enumerate(authors_d):
                     tilde_gamma[ai, :] = (
-                        self.alpha + 
-                        len(self.author2doc[self.id2author[a]]) * expElogthetad[ai, :] * dot
+                        self.alpha
+                        + len(self.author2doc[self.id2author[a]]) * expElogthetad[ai, :] * dot
                     )
 
                 # Update gamma.
