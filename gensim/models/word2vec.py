@@ -553,7 +553,7 @@ class Word2Vec(utils.SaveLoad):
             if sentence_no % progress_per == 0:
                 logger.info(
                     "PROGRESS: at sentence #%i, processed %i words, keeping %i word types",
-                    sentence_no, total_words, len(vocab)
+                    sentence_no, total_words, len(vocab),
                 )
             for word in sentence:
                 vocab[word] += 1
