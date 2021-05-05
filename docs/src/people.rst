@@ -52,3 +52,8 @@ Bronze Sponsors
    :target: https://eaccidents.com/
    :width: 50%
    :alt: EAccidents
+
+.. figure:: _static/images/techtarget-logo.png
+   :target: https://www.techtarget.com/
+   :width: 50%
+   :alt: TechTarget
