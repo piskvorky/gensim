@@ -13,9 +13,10 @@ distribution on new, unseen documents. The model can also be updated with new do
 for online training.
 
 The core estimation code is based on the `onlineldavb.py script
-<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
+<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by
+`Matthew D. Hoffman, David M. Blei, Francis Bach:
 Online Learning for Latent Dirichlet Allocation, NIPS 2010
-<https://scholar.google.com/citations?hl=en&user=IeHKeGYAAAAJ&view_op=list_works>`_.
+<https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
 
 The algorithm:
 
@@ -199,7 +200,7 @@ class LdaState(utils.SaveLoad):
         The number of documents is stretched in both state objects, so that they are of comparable magnitude.
         This procedure corresponds to the stochastic gradient update from
         `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-        <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_, see equations (5) and (9).
+        <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_, see equations (5) and (9).
 
         Parameters
         ----------
@@ -311,8 +312,9 @@ class LdaState(utils.SaveLoad):
 
 
 class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """Train and use Online Latent Dirichlet Allocation (OLDA) models as presented in
-    `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+    """Train and use Online Latent Dirichlet Allocation models as presented in
+    `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+    <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
 
     Examples
     -------
@@ -395,12 +397,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from
-            `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            Corresponds to Tau_0 from `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
         iterations : int, optional
@@ -643,7 +645,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """Given a chunk of sparse document vectors, estimate gamma (parameters controlling the topic weights)
         for each document in the chunk.
 
-        This function does not modify the model The whole input chunk of document is assumed to fit in RAM;
+        This function does not modify the model. The whole input chunk of document is assumed to fit in RAM;
         chunking of a large corpus must be done earlier in the pipeline. Avoids computing the `phi` variational
         parameter directly using the optimization presented in
         `Lee, Seung: Algorithms for non-negative matrix factorization"
@@ -863,8 +865,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         This update also supports updating an already trained model with new documents; the two models are then merged
         in proportion to the number of old vs. new documents. This feature is still experimental for non-stationary
         input streams. For stationary input (no topic drift in new documents), on the other hand, this equals the
-        online update of `Matthew D. Hoffman, David M. Blei, Francis Bach:
-        "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+        online update of `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+        <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_
         and is guaranteed to converge for any `decay` in (0.5, 1.0). Additionally, for smaller corpus sizes, an
         increasing `offset` may be beneficial (see Table 1 in the same paper).
 
@@ -878,12 +880,12 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from
-            `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            Corresponds to Tau_0 from `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
+            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
         passes : int, optional
             Number of passes through the corpus during training.
         update_every : int, optional
