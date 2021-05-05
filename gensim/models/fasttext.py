@@ -653,7 +653,7 @@ def _pad_ones(m, new_len):
 
 
 def load_facebook_model(path, encoding='utf-8'):
-    """Load the input-hidden weight matrix from Facebook's native fasttext `.bin` output file.
+    """Load the model from Facebook's native fasttext `.bin` output file.
 
     Notes
     ------
@@ -835,7 +835,10 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
 
     _check_model(model)
 
-    logger.info("loaded %s weight matrix for fastText model from %s", m.vectors_ngrams.shape, fin.name)
+    model.add_lifecycle_event(
+        "load_fasttext_format",
+        msg=f"loaded {m.vectors_ngrams.shape} weight matrix for fastText model from {fin.name}",
+    )
     return model
 
 
@@ -1112,11 +1115,10 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec
             for nh in ngram_hashes:
                 word_vec += ngram_weights[nh]
-            word_vec /= len(ngram_hashes)
             if norm:
                 return word_vec / np.linalg.norm(word_vec)
             else:
-                return word_vec
+                return word_vec / len(ngram_hashes)
 
     def resize_vectors(self, seed=0):
         """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""

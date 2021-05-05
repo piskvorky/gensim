@@ -17,9 +17,9 @@ import os
 import platform
 import shutil
 import sys
-from setuptools import setup, find_packages, Extension
-from setuptools.command.build_ext import build_ext
 
+from setuptools import Extension, find_packages, setup
+from setuptools.command.build_ext import build_ext
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
@@ -155,13 +155,13 @@ LONG_DESCRIPTION = u"""
 gensim -- Topic Modelling in Python
 ==============================================
 
-|Travis|_
+|GA|_
 |Wheel|_
 
-.. |Travis| image:: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
+.. |GA| image:: https://github.com/RaRe-Technologies/gensim/actions/workflows/tests.yml/badge.svg?branch=develop
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
-.. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
+.. _GA: https://github.com/RaRe-Technologies/gensim/actions
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
 .. _Wheel: https://pypi.python.org/pypi/gensim
@@ -194,7 +194,7 @@ Installation
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OS X, NumPy picks up the BLAS that comes with it automatically, so you don't need to do anything special.
+It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
 
 Install the latest version of gensim::
 
@@ -205,9 +205,9 @@ Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.
     python setup.py install
 
 
-For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/install.html>`_.
+For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/#install>`_.
 
-Gensim is being `continuously tested <https://travis-ci.org/RaRe-Technologies/gensim>`_ under Python 3.6, 3.7 and 3.8.
+Gensim is being `continuously tested <http://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 
@@ -270,15 +270,19 @@ core_testenv = [
 #    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
-    'nmslib',
-    'pyemd',
     'testfixtures',
     'Morfessor==2.0.2a4',
-    'python-Levenshtein >= 0.10.2',
 ]
 
+if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
+    core_testenv.extend([
+        'pyemd',
+        'nmslib',
+        'python-Levenshtein >= 0.10.2',
+    ])
+
 # Add additional requirements for testing on Linux that are skipped on Windows.
-linux_testenv = core_testenv[:] + visdom_req + ['pyemd', ]
+linux_testenv = core_testenv[:] + visdom_req
 
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
@@ -297,19 +301,17 @@ win_testenv = core_testenv[:]
 #
 
 docs_testenv = core_testenv + distributed_env + visdom_req + [
-    'sphinx <= 2.4.4',  # avoid `sphinx >= 3.0` that breaks the build
+    'sphinx',
     'sphinx-gallery',
     'sphinxcontrib.programoutput',
     'sphinxcontrib-napoleon',
     'matplotlib',  # expected by sphinx-gallery
-    'plotly',
     'memory_profiler',
     'annoy',
     'Pyro4',
     'nltk',
     'testfixtures',
     'statsmodels',
-    'pyemd',
     'pandas',
 ]
 
@@ -336,7 +338,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.0.0beta',
+    version='4.1.0.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 

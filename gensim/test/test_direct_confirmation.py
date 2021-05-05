@@ -31,7 +31,7 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
         self.accumulator._inverted_index = {0: {2, 3, 4}, 1: {3, 5}}
         self.accumulator._num_docs = self.num_docs
 
-    def testLogConditionalProbability(self):
+    def test_log_conditional_probability(self):
         """Test log_conditional_probability()"""
         obtained = direct_confirmation_measure.log_conditional_probability(
             self.segmentation, self.accumulator)[0]
@@ -44,7 +44,7 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
         self.assertAlmostEqual(expected, mean)
         self.assertEqual(0.0, std)
 
-    def testLogRatioMeasure(self):
+    def test_log_ratio_measure(self):
         """Test log_ratio_measure()"""
         obtained = direct_confirmation_measure.log_ratio_measure(
             self.segmentation, self.accumulator)[0]
@@ -57,7 +57,7 @@ class TestDirectConfirmationMeasure(unittest.TestCase):
         self.assertAlmostEqual(expected, mean)
         self.assertEqual(0.0, std)
 
-    def testNormalizedLogRatioMeasure(self):
+    def test_normalized_log_ratio_measure(self):
         """Test normalized_log_ratio_measure()"""
         obtained = direct_confirmation_measure.log_ratio_measure(
             self.segmentation, self.accumulator, normalize=True)[0]

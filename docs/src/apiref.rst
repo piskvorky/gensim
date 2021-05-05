@@ -11,7 +11,6 @@ Modules:
     interfaces
     utils
     matutils
-    _matutils
     downloader
     corpora/bleicorpus
     corpora/csvcorpus
@@ -21,7 +20,6 @@ Modules:
     corpora/lowcorpus
     corpora/malletcorpus
     corpora/mmcorpus
-    corpora/_mmreader
     corpora/opinosiscorpus
     corpora/sharded_corpus
     corpora/svmlightcorpus
@@ -52,7 +50,6 @@ Modules:
     models/_fasttext_bin
     models/phrases
     models/poincare
-    viz/poincare
     models/coherencemodel
     models/basemodel
     models/callbacks

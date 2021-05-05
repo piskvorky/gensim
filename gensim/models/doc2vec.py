@@ -21,7 +21,7 @@ and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_.
 
 For a usage example, see the `Doc2vec tutorial
-<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
+<https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines** (70x speedup
 compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/).
@@ -50,12 +50,6 @@ Persist a model to disk:
     >>>
     >>> model.save(fname)
     >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
-
-If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do:
-
-.. sourcecode:: pycon
-
-    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
 
 Infer vector for a new document:
 
@@ -271,6 +265,7 @@ class Doc2Vec(Word2Vec):
             .. sourcecode:: pycon
 
                 >>> model.dv['doc003']
+
         """
         corpus_iterable = documents
 
@@ -363,8 +358,10 @@ class Doc2Vec(Word2Vec):
         self.dv.expandos = other_model.dv.expandos
         self.init_weights()
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
+    def _do_train_epoch(
+        self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs
+    ):
         work, neu1 = thread_private_mem
         doctag_vectors = self.dv.vectors
         doctags_lockf = self.dv.vectors_lockf
@@ -431,10 +428,12 @@ class Doc2Vec(Word2Vec):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(),
-              **kwargs):
+    def train(
+        self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
+        epochs=None, start_alpha=None, end_alpha=None,
+        word_count=0, queue_factor=2, report_delay=1.0, callbacks=(),
+        **kwargs,
+    ):
         """Update the model's neural weights.
 
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
@@ -801,7 +800,7 @@ class Doc2Vec(Word2Vec):
             return super(Doc2Vec, cls).load(*args, rethrow=True, **kwargs)
         except AttributeError as ae:
             logger.error(
-                "Model load error. Was model saved using code from an older Gensim Version? "
+                "Model load error. Was model saved using code from an older Gensim version? "
                 "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae

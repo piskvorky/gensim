@@ -26,13 +26,13 @@ class TestDictionary(unittest.TestCase):
     def setUp(self):
         self.texts = common_texts
 
-    def testDocFreqOneDoc(self):
+    def test_doc_freq_one_doc(self):
         texts = [['human', 'interface', 'computer']]
         d = Dictionary(texts)
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.dfs, expected)
 
-    def testDocFreqAndToken2IdForSeveralDocsWithOneWord(self):
+    def test_doc_freq_and_token2id_for_several_docs_with_one_word(self):
         # two docs
         texts = [['human'], ['human']]
         d = Dictionary(texts)
@@ -60,7 +60,7 @@ class TestDictionary(unittest.TestCase):
         expected = {'human': 0}
         self.assertEqual(d.token2id, expected)
 
-    def testDocFreqForOneDocWithSeveralWord(self):
+    def test_doc_freq_for_one_doc_with_several_word(self):
         # two words
         texts = [['human', 'cat']]
         d = Dictionary(texts)
@@ -73,7 +73,7 @@ class TestDictionary(unittest.TestCase):
         expected = {0: 1, 1: 1, 2: 1}
         self.assertEqual(d.dfs, expected)
 
-    def testDocFreqAndCollectionFreq(self):
+    def test_doc_freq_and_collection_freq(self):
         # one doc
         texts = [['human', 'human', 'human']]
         d = Dictionary(texts)
@@ -92,7 +92,7 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(d.cfs, {0: 3})
         self.assertEqual(d.dfs, {0: 3})
 
-    def testBuild(self):
+    def test_build(self):
         d = Dictionary(self.texts)
 
         # Since we don't specify the order in which dictionaries are built,
@@ -110,7 +110,7 @@ class TestDictionary(unittest.TestCase):
         self.assertEqual(sorted(d.token2id.keys()), expected_keys)
         self.assertEqual(sorted(d.token2id.values()), expected_values)
 
-    def testMerge(self):
+    def test_merge(self):
         d = Dictionary(self.texts)
         f = Dictionary(self.texts[:3])
         g = Dictionary(self.texts[3:])
@@ -118,7 +118,7 @@ class TestDictionary(unittest.TestCase):
         f.merge_with(g)
         self.assertEqual(sorted(d.token2id.keys()), sorted(f.token2id.keys()))
 
-    def testFilter(self):
+    def test_filter(self):
         d = Dictionary(self.texts)
         d.filter_extremes(no_below=2, no_above=1.0, keep_n=4)
         dfs_expected = {0: 3, 1: 3, 2: 3, 3: 3}
@@ -161,13 +161,13 @@ class TestDictionary(unittest.TestCase):
         expected = {'graph', 'trees', 'system', 'user', 'worda'}
         self.assertEqual(set(d.token2id.keys()), expected)
 
-    def testFilterMostFrequent(self):
+    def test_filter_most_frequent(self):
         d = Dictionary(self.texts)
         d.filter_n_most_frequent(4)
         expected = {0: 2, 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2, 7: 2}
         self.assertEqual(d.dfs, expected)
 
-    def testFilterTokens(self):
+    def test_filter_tokens(self):
         self.maxDiff = 10000
         d = Dictionary(self.texts)
 

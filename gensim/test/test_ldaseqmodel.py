@@ -209,7 +209,7 @@ class TestLdaSeq(unittest.TestCase):
         )
 
     # testing topic word proportions
-    def testTopicWord(self):
+    def test_topic_word(self):
 
         topics = self.ldaseq.print_topics(0)
         expected_topic_word = [('skills', 0.035999999999999997)]
@@ -217,12 +217,12 @@ class TestLdaSeq(unittest.TestCase):
         self.assertAlmostEqual(topics[0][0][1], expected_topic_word[0][1], places=2)
 
     # testing document-topic proportions
-    def testDocTopic(self):
+    def test_doc_topic(self):
         doc_topic = self.ldaseq.doc_topics(0)
         expected_doc_topic = 0.00066577896138482028
         self.assertAlmostEqual(doc_topic[0], expected_doc_topic, places=2)
 
-    def testDtypeBackwardCompatibility(self):
+    def test_dtype_backward_compatibility(self):
         ldaseq_3_0_1_fname = datapath('DTM/ldaseq_3_0_1_model')
         test_doc = [(547, 1), (549, 1), (552, 1), (555, 1)]
         expected_topics = [0.99751244, 0.00248756]

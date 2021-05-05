@@ -6,3 +6,4 @@
    auto_examples/index
    apiref
    support
+   people
