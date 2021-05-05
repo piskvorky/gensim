@@ -3,20 +3,22 @@
 #
 # Authors: Tobias Brigl <github.com/sezanzeb>, Alex Salles <alex.salles@gmail.com>,
 # Alex Loosley <aloosley@alumni.brown.edu>, Data Reply Munich
-#
+# Copyright (C) 2021 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
-Extracts reliable topics that are consistently learned across multiple LDA models. eLDA has the added benefit that
-the user does not need to know the exact number of topics the topic model should extract ahead of time
+Extracts reliable topics that are consistently learned across multiple LDA models, for higher reproducibility
+and less noise. eLDA has the added benefit that the user does not need to know the exact number of topics the topic
+model should extract ahead of time.
 
-For more details read our paper (https://www.hip70890b.de/machine_learning/ensemble_LDA/).
+For more details read `our thesis <https://www.sezanzeb.de/machine_learning/ensemble_LDA/>`_.
 
 Usage examples
 --------------
 
-Train an ensemble of LdaModels using a Gensim corpus
+Train an ensemble of LdaModels using a Gensim corpus:
 
 .. sourcecode:: pycon
 
@@ -32,7 +34,7 @@ Train an ensemble of LdaModels using a Gensim corpus
     >>> # keyword argument, as they are passed through to the children.
     >>> elda = EnsembleLda(corpus=common_corpus, id2word=common_dictionary, num_topics=10, num_models=4)
 
-Save a model to disk, or reload a pre-trained model
+Save a model to disk, or reload a pre-trained model:
 
 .. sourcecode:: pycon
 
@@ -45,7 +47,7 @@ Save a model to disk, or reload a pre-trained model
     >>> # Load a potentially pretrained model from disk.
     >>> elda = EnsembleLda.load(temp_file)
 
-Query, the model using new, unseen documents
+Query, the model using new, unseen documents:
 
 .. sourcecode:: pycon
 
@@ -60,7 +62,7 @@ Query, the model using new, unseen documents
     >>> unseen_doc = other_corpus[0]
     >>> vector = elda[unseen_doc]  # get topic probability distribution for a document
 
-Increase the ensemble size by adding a new model. Make sure it uses the same dictionary
+Increase the ensemble size by adding a new model. Make sure it uses the same dictionary:
 
 .. sourcecode:: pycon
 
@@ -70,28 +72,17 @@ Increase the ensemble size by adding a new model. Make sure it uses the same dic
     >>> vector = elda[unseen_doc]
 
 To optimize the ensemble for your specific case, the children can be clustered again using
-different hyperparameters
+different hyperparameters:
 
 .. sourcecode:: pycon
 
     >>> elda.recluster(eps=0.2)
 
-References
-----------
-.. [1] REHUREK, Radim and Sojka, PETR, 2010, Software framework for topic modelling with large corpora. In : THE LREC
-       2010 WORKSHOP ON NEW CHALLENGES FOR NLP FRAMEWORKS [online]. Msida : University of Malta. 2010. p. 45-50.
-       Available from: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.695.4595
-
-.. [2] BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
-       Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
-       https://www.hip70890b.de/machine_learning/ensemble_LDA/
-
 Citation
 --------
-At the moment, there is no paper associated to ensemble LDA but we are working on publicly releasing Tobi Brigl's
-bachelor thesis on the topic.  In the meantime, please include a mention of us (Brigl, T.; Salles, A.; Loosley, A) and
-a link to this file (https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/ensemblelda.py) if this work
-is presented, further developed, or used as the basis for a published result.
+BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
+Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
+https://www.sezanzeb.de/machine_learning/ensemble_LDA/
 
 Other Notes
 -----------
@@ -118,7 +109,7 @@ class EnsembleLda(SaveLoad):
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
     Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
-    the user does not need to know the exact number of topics the topic model should extract ahead of time [2].
+    the user does not need to know the exact number of topics the topic model should extract ahead of time.
 
     """
 
