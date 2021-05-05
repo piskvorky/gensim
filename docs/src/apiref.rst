@@ -20,6 +20,7 @@ Modules:
     corpora/lowcorpus
     corpora/malletcorpus
     corpora/mmcorpus
+    corpora/opinosiscorpus
     corpora/sharded_corpus
     corpora/svmlightcorpus
     corpora/textcorpus
@@ -27,6 +28,7 @@ Modules:
     corpora/wikicorpus
     models/ldamodel
     models/ldamulticore
+    models/ensemblelda
     models/nmf
     models/lsimodel
     models/ldaseqmodel
