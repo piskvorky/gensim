@@ -531,7 +531,7 @@ class EnsembleLda(SaveLoad):
         self.asymmetric_distance_matrix_outdated = True
 
     def _teardown(self, pipes, processes, i):
-        """close pipes and terminate processes
+        """Close pipes and terminate processes.
 
         Parameters
         ----------
@@ -806,7 +806,7 @@ class EnsembleLda(SaveLoad):
 
         Returns
         -------
-        2D Numpy.numpy.ndarray of floats
+        2D numpy.ndarray of floats
             Asymmetric distance matrix of size ``len(ttda1)`` by ``len(ttda2)``.
 
         """
