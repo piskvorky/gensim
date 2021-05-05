@@ -5,6 +5,7 @@ Changes
 
 - LsiModel: Only log top words that actually exist in the dictionary (PR [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091), [@kmurphy4](https://github.com/kmurphy4))
 - [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness))
+- fix bug when loading saved Phrases model (PR [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116), [@aloknayak29](https://github.com/aloknayak29))
 
 ### Documentation
 
