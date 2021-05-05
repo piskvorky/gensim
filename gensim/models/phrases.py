@@ -62,11 +62,11 @@ Examples
 """
 
 import logging
-from collections import defaultdict
 import itertools
 from math import log
 import pickle
 from inspect import getfullargspec as getargspec
+import time
 
 from gensim import utils, interfaces
 
@@ -412,7 +412,7 @@ s        """
             if not isinstance(word, str):
                 logger.info("old version of %s loaded, upgrading %i words in memory", cls.__name__, len(model.vocab))
                 logger.info("re-save the loaded model to avoid this upgrade in the future")
-                vocab = defaultdict(int)
+                vocab = {}
                 for key, value in model.vocab.items():  # needs lots of extra RAM temporarily!
                     vocab[str(key, encoding='utf8')] = value
                 model.vocab = vocab
@@ -554,7 +554,7 @@ class Phrases(_PhrasesTransformation):
         self.min_count = min_count
         self.threshold = threshold
         self.max_vocab_size = max_vocab_size
-        self.vocab = defaultdict(int)  # mapping between token => its count
+        self.vocab = {}  # mapping between token => its count
         self.min_reduce = 1  # ignore any tokens with count smaller than this
         self.delimiter = delimiter
         self.progress_per = progress_per
@@ -567,7 +567,9 @@ class Phrases(_PhrasesTransformation):
             raise pickle.PickleError(f'Custom scoring function in {self.__class__.__name__} must be pickle-able')
 
         if sentences is not None:
+            start = time.time()
             self.add_vocab(sentences)
+            self.add_lifecycle_event("created", msg=f"built {self} in {time.time() - start:.2f}s")
 
     def __str__(self):
         return "%s<%i vocab, min_count=%s, threshold=%s, max_vocab_size=%s>" % (
@@ -579,7 +581,7 @@ class Phrases(_PhrasesTransformation):
     def _learn_vocab(sentences, max_vocab_size, delimiter, connector_words, progress_per):
         """Collect unigram and bigram counts from the `sentences` iterable."""
         sentence_no, total_words, min_reduce = -1, 0, 1
-        vocab = defaultdict(int)
+        vocab = {}
         logger.info("collecting all words and their counts")
         for sentence_no, sentence in enumerate(sentences):
             if sentence_no % progress_per == 0:
@@ -590,10 +592,11 @@ class Phrases(_PhrasesTransformation):
             start_token, in_between = None, []
             for word in sentence:
                 if word not in connector_words:
-                    vocab[word] += 1
+                    vocab[word] = vocab.get(word, 0) + 1
                     if start_token is not None:
                         phrase_tokens = itertools.chain([start_token], in_between, [word])
-                        vocab[delimiter.join(phrase_tokens)] += 1
+                        joined_phrase_token = delimiter.join(phrase_tokens)
+                        vocab[joined_phrase_token] = vocab.get(joined_phrase_token, 0) + 1
                     start_token, in_between = word, []  # treat word as both end of a phrase AND beginning of another
                 elif start_token is not None:
                     in_between.append(word)
@@ -654,7 +657,7 @@ class Phrases(_PhrasesTransformation):
             logger.info("merging %i counts into %s", len(vocab), self)
             self.min_reduce = max(self.min_reduce, min_reduce)
             for word, count in vocab.items():
-                self.vocab[word] += count
+                self.vocab[word] = self.vocab.get(word, 0) + count
             if len(self.vocab) > self.max_vocab_size:
                 utils.prune_vocab(self.vocab, self.min_reduce)
                 self.min_reduce += 1
@@ -666,17 +669,17 @@ class Phrases(_PhrasesTransformation):
 
     def score_candidate(self, word_a, word_b, in_between):
         # Micro optimization: check for quick early-out conditions, before the actual scoring.
-        word_a_cnt = self.vocab[word_a]
+        word_a_cnt = self.vocab.get(word_a, 0)
         if word_a_cnt <= 0:
             return None, None
 
-        word_b_cnt = self.vocab[word_b]
+        word_b_cnt = self.vocab.get(word_b, 0)
         if word_b_cnt <= 0:
             return None, None
 
         phrase = self.delimiter.join([word_a] + in_between + [word_b])
         # XXX: Why do we care about *all* phrase tokens? Why not just score the start+end bigram?
-        phrase_cnt = self.vocab[phrase]
+        phrase_cnt = self.vocab.get(phrase, 0)
         if phrase_cnt <= 0:
             return None, None
 
@@ -772,8 +775,9 @@ class FrozenPhrases(_PhrasesTransformation):
         self.scoring = phrases_model.scoring
         self.connector_words = phrases_model.connector_words
         logger.info('exporting phrases from %s', phrases_model)
+        start = time.time()
         self.phrasegrams = phrases_model.export_phrases()
-        logger.info('exported %s', self)
+        self.add_lifecycle_event("created", msg=f"exported {self} from {phrases_model} in {time.time() - start:.2f}s")
 
     def __str__(self):
         return "%s<%i phrases, min_count=%s, threshold=%s>" % (

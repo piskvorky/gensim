@@ -125,11 +125,11 @@ class TestNormModel(unittest.TestCase):
         # Test if error is raised on unsupported input type
         self.assertRaises(ValueError, lambda model, doc: model.normalize(doc), self.model_l2, [1, 2, 3])
 
-    def testInit(self):
+    def test_init(self):
         """Test if error messages raised on unsupported norm"""
         self.assertRaises(ValueError, normmodel.NormModel, self.corpus, 'l0')
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models.tst')
         model = normmodel.NormModel(self.corpus)
         model.save(fname)
@@ -139,7 +139,7 @@ class TestNormModel(unittest.TestCase):
         # try projecting an empty vector
         self.assertTrue(np.allclose(model.normalize(tstvec), model2.normalize(tstvec)))
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models.tst.gz')
         model = normmodel.NormModel(self.corpus)
         model.save(fname)

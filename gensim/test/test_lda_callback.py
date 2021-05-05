@@ -35,7 +35,7 @@ class TestLdaCallback(unittest.TestCase):
         self.host = "http://localhost"
         self.port = 8097
 
-    def testCallbackUpdateGraph(self):
+    def test_callback_update_graph(self):
         with subprocess.Popen(['python', '-m', 'visdom.server', '-port', str(self.port)]) as proc:
             # wait for visdom server startup (any better way?)
             viz = Visdom(server=self.host, port=self.port)

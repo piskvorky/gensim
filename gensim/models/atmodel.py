@@ -188,12 +188,24 @@ class AuthorTopicModel(LdaModel):
             Controls how old documents are forgotten.
         offset : float, optional
             Controls down-weighting of iterations.
-        alpha : float, optional
-            Hyperparameters for author-topic model.Supports special values of 'asymmetric'
-            and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
-            the latter learns an asymmetric prior directly from your data.
-        eta : float, optional
-            Hyperparameters for author-topic model.
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         update_every : int, optional
             Make updates in topic probability for latest mini-batch.
         eval_every : int, optional
@@ -279,22 +291,16 @@ class AuthorTopicModel(LdaModel):
         self.init_empty_corpus()
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
-
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, str):
-            if eta == 'asymmetric':
-                raise ValueError("The 'asymmetric' option cannot be used for eta")
-
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-
-        self.random_state = utils.get_random_state(random_state)
-
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
             (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms)
         )
+
+        self.random_state = utils.get_random_state(random_state)
 
         # VB constants
         self.iterations = iterations
@@ -463,11 +469,11 @@ class AuthorTopicModel(LdaModel):
                 ids = [int(idx) for idx, _ in doc]
             else:
                 ids = [idx for idx, _ in doc]
-            ids = np.array(ids, dtype=np.int)
-            cts = np.fromiter((cnt for _, cnt in doc), dtype=np.int, count=len(doc))
+            ids = np.array(ids, dtype=int)
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=int, count=len(doc))
 
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=np.int)
+            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=int)
 
             gammad = self.state.gamma[authors_d, :]  # gamma of document d before update.
             tilde_gamma = gammad.copy()  # gamma that will be updated.
@@ -975,9 +981,9 @@ class AuthorTopicModel(LdaModel):
             else:
                 doc_no = d
             # Get all authors in current document, and convert the author names to integer IDs.
-            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=np.int)
-            ids = np.fromiter((id for id, _ in doc), dtype=np.int, count=len(doc))  # Word IDs in doc.
-            cts = np.fromiter((cnt for _, cnt in doc), dtype=np.int, count=len(doc))  # Word counts.
+            authors_d = np.fromiter((self.author2id[a] for a in self.doc2author[doc_no]), dtype=int)
+            ids = np.fromiter((id for id, _ in doc), dtype=int, count=len(doc))  # Word IDs in doc.
+            cts = np.fromiter((cnt for _, cnt in doc), dtype=int, count=len(doc))  # Word counts.
 
             if d % self.chunksize == 0:
                 logger.debug("bound: at document #%i in chunk", d)

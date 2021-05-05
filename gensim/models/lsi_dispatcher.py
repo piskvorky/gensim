@@ -278,7 +278,11 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
     parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
-        'maxsize', type=int, help='Maximum number of jobs to be kept pre-fetched in the queue.', default=MAX_JOBS_QUEUE
+        'maxsize',
+        nargs='?',
+        type=int,
+        help='Maximum number of jobs to be kept pre-fetched in the queue.',
+        default=MAX_JOBS_QUEUE,
     )
     args = parser.parse_args()
 

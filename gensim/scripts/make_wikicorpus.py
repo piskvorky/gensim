@@ -18,7 +18,7 @@ This actually creates several files:
 * `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation in Matrix Market format
 * `OUTPUT_PREFIX_bow.mm.index`: index for `OUTPUT_PREFIX_bow.mm`
 * `OUTPUT_PREFIX_bow.mm.metadata.cpickle`: titles of documents
-* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation in Matix Market format
+* `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation in Matrix Market format
 * `OUTPUT_PREFIX_tfidf.mm.index`: index for `OUTPUT_PREFIX_tfidf.mm`
 * `OUTPUT_PREFIX.tfidf_model`: TF-IDF model
 

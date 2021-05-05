@@ -84,7 +84,7 @@ class AnnoyIndexer():
                 raise ValueError("Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used")
             self._build_from_model(kv.get_normed_vectors(), kv.index_to_key, kv.vector_size)
 
-    def save(self, fname, protocol=2):
+    def save(self, fname, protocol=utils.PICKLE_PROTOCOL):
         """Save AnnoyIndexer instance to disk.
 
         Parameters

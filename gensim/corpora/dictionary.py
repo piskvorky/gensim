@@ -77,6 +77,10 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if documents is not None:
             self.add_documents(documents, prune_at=prune_at)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"built {self} from {self.num_docs} documents (total {self.num_pos} corpus positions)",
+            )
 
     def __getitem__(self, tokenid):
         """Get the string token that corresponds to `tokenid`.
@@ -198,10 +202,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             # update Dictionary with the document
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
 
-        logger.info(
-            "built %s from %i documents (total %i corpus positions)",
-            self, self.num_docs, self.num_pos
-        )
+        logger.info("built %s from %i documents (total %i corpus positions)", self, self.num_docs, self.num_pos)
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """Convert `document` into the bag-of-words (BoW) format = list of `(token_id, token_count)` tuples.

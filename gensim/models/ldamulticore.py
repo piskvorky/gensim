@@ -128,19 +128,23 @@ class LdaMulticore(LdaModel):
             Number of documents to be used in each training chunk.
         passes : int, optional
             Number of passes through the corpus during training.
-        alpha : {np.ndarray, str}, optional
-            Can be set to an 1D array of length equal to the number of expected topics that expresses
-            our a-priori belief for the each topics' probability.
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
+
             Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`.
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
 
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-        eta : {float, np.array, str}, optional
-            A-priori belief on word probability, this can be:
-
-                * scalar for a symmetric prior over topic/word probability,
-                * vector of length num_words to denote an asymmetric user defined probability for each word,
-                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
-                * the string 'auto' to learn the asymmetric prior from the data.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from
@@ -174,14 +178,14 @@ class LdaMulticore(LdaModel):
         self.batch = batch
 
         if isinstance(alpha, str) and alpha == 'auto':
-            raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
+            raise NotImplementedError("auto-tuning alpha not implemented in LdaMulticore; use plain LdaModel.")
 
         super(LdaMulticore, self).__init__(
             corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype,
         )
 
     def update(self, corpus, chunks_as_numpy=False):

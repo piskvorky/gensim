@@ -121,7 +121,7 @@ class TestWord2Vec2Tensor(unittest.TestCase):
         self.tensor_file = self.output_folder + '_tensor.tsv'
         self.vector_file = self.output_folder + '_vector.tsv'
 
-    def testConversion(self):
+    def test_conversion(self):
         word2vec2tensor(word2vec_model_path=self.datapath, tensor_filename=self.output_folder)
 
         with utils.open(self.metadata_file, 'rb') as f:

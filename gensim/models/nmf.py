@@ -92,12 +92,13 @@ A lot of parameters can be tuned to optimize training for your specific case
 The NMF should be used whenever one needs extremely fast and memory optimized topic model.
 
 """
-import collections
 
+
+import collections.abc
 import logging
+
 import numpy as np
 import scipy.sparse
-from gensim.models.nmf_pgd import solve_h
 from scipy.stats import halfnorm
 
 from gensim import interfaces
@@ -105,10 +106,16 @@ from gensim import matutils
 from gensim import utils
 from gensim.interfaces import TransformedCorpus
 from gensim.models import basemodel, CoherenceModel
+from gensim.models.nmf_pgd import solve_h
 
 logger = logging.getLogger(__name__)
 
-OLD_SCIPY = int(scipy.__version__.split('.')[1]) <= 18
+
+def version_tuple(version, prefix=2):
+    return tuple(map(int, version.split(".")[:prefix]))
+
+
+OLD_SCIPY = version_tuple(scipy.__version__) <= (0, 18)
 
 
 class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
@@ -559,7 +566,6 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of batches after which l2 norm of (v - Wh) is computed. Decreases performance if set too low.
 
         """
-
         # use parameters given in constructor, unless user explicitly overrode them
         if passes is None:
             passes = self.passes
@@ -585,13 +591,13 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             logger.warning("Nmf.update() called with an empty corpus")
             return
 
-        if isinstance(corpus, collections.Iterator) and self.passes > 1:
+        if isinstance(corpus, collections.abc.Iterator) and self.passes > 1:
             raise ValueError("Corpus is an iterator, only `passes=1` is valid.")
 
         logger.info(
-            "running NMF training, %s topics, %i passes over the supplied corpus of %s documents, evaluating l2 norm "
-            "every %i documents",
-            self.num_topics, passes, lencorpus, evalafter,
+            "running NMF training, %s topics, %i passes over the supplied corpus of %s documents, evaluating L2 "
+            "norm every %i documents",
+            self.num_topics, passes, "unknown number of" if lencorpus is None else lencorpus, evalafter,
         )
 
         chunk_overall_idx = 1
@@ -624,10 +630,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
                     chunk_len = len(chunk)
 
-                logger.info(
-                    "PROGRESS: pass %i, at document #%i/%s",
-                    pass_, chunk_idx * chunksize + chunk_len, lencorpus
-                )
+                if np.isinf(lencorpus):
+                    logger.info(
+                        "PROGRESS: pass %i, at document #%i",
+                        pass_, chunk_idx * chunksize + chunk_len
+                    )
+                else:
+                    logger.info(
+                        "PROGRESS: pass %i, at document #%i/%i",
+                        pass_, chunk_idx * chunksize + chunk_len, lencorpus
+                    )
 
                 if self._W is None:
                     # If `self._W` is not set (i.e. the first batch being handled), compute the initial matrix using the
@@ -639,7 +651,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 h = self._h
 
                 if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % eval_every == 0):
-                    logger.info("L2 norm: {}".format(self.l2_norm(v)))
+                    logger.info("L2 norm: %s", self.l2_norm(v))
                     self.print_topics(5)
 
                 self.A *= chunk_overall_idx - 1
@@ -650,13 +662,11 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self.B += v.dot(h.T)
                 self.B /= chunk_overall_idx
 
-                previous_w_error = self._w_error
-
                 self._solve_w()
 
                 chunk_overall_idx += 1
 
-                logger.info("W error diff: {}".format((self._w_error - previous_w_error)))
+                logger.info("W error: %s", self._w_error)
 
     def _solve_w(self):
         """Update W."""
@@ -668,9 +678,12 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         eta = self._kappa / np.linalg.norm(self.A)
 
         for iter_number in range(self._w_max_iter):
-            logger.debug("w_error: {}".format(self._w_error))
+            logger.debug("w_error: %s", self._w_error)
 
             WA = self._W.dot(self.A)
+
+            self._W -= eta * (WA - self.B)
+            self._transform()
 
             error_ = error(WA)
 
@@ -678,12 +691,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._w_error < np.inf
                 and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
             ):
+                self._w_error = error_
                 break
 
             self._w_error = error_
-
-            self._W -= eta * (WA - self.B)
-            self._transform()
 
     def _apply(self, corpus, chunksize=None, **kwargs):
         """Apply the transformation to a whole corpus and get the result as another corpus.
@@ -721,7 +732,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
             return scipy.sparse.csc_matrix.dot(dense, csc)
 
     def _solveproj(self, v, W, h=None, v_max=None):
-        """Update residuals and representation(h) matrices.
+        """Update residuals and representation (h) matrices.
 
         Parameters
         ----------
@@ -753,7 +764,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         h_error = None
 
         for iter_number in range(self._h_max_iter):
-            logger.debug("h_error: {}".format(h_error))
+            logger.debug("h_error: %s", h_error)
 
             Wtv = self._dense_dot_csc(Wt, v)
 

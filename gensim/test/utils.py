@@ -142,7 +142,7 @@ def get_tmpfile(suffix):
         >>> loaded_model = LsiModel.load(tmp_f)
 
     """
-    return os.path.join(tempfile.gettempdir(), suffix)
+    return os.path.join(tempfile.mkdtemp(), suffix)
 
 
 @contextlib.contextmanager

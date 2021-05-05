@@ -4,14 +4,14 @@
 Support
 =======
 
+**⚠️ Please don't send me private emails unless you have a substantial budget for commercial support (see below).**
+
 Open source support
 -------------------
 
-The main communication channel is the `Gensim mailing list <https://groups.google.com/group/gensim>`_.
+The main communication channel is the free `Gensim mailing list <https://groups.google.com/group/gensim>`_.
 
-This is the preferred way to ask for help, report problems and share insights with the community. Newbie questions are perfectly fine, as long as you've read the :ref:`tutorials <sphx_glr_auto_examples>`.
-
-**⚠️ Please don't send me private emails unless you have a substantial budget for commercial support (see below).**
+This is the preferred way to ask for help, report problems and share insights with the community. Newbie questions are perfectly fine, as long as you've read the :ref:`tutorials <sphx_glr_auto_examples>` and `FAQ <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ>`_.
 
 FAQ and some useful snippets of code are maintained on GitHub: https://github.com/RARE-Technologies/gensim/wiki/Recipes-&-FAQ.
 
@@ -23,11 +23,11 @@ We're on `Twitter @gensim_py <https://twitter.com/gensim_py>`_. You can also try
 Commercial support
 ------------------
 
-I run a consulting R&D company focused on data mining and unstructured text processing, https://rare-technologies.com.
+If your company needs commercial support, please consider `becoming a Gensim sponsor <https://github.com/sponsors/piskvorky>`_. How it works: you chip in, we prioritize your tickets.
 
-If you need commercial support for Gensim or a corporate training in machine learning, `get in touch <http://rare-technologies.com/contact>`_ for a quote.
+Corporate sponsorship means sustainability. It allows us to dedicate our time keeping Gensim stable and performant for you.
 
-We're not interested in any sort of equity arrangements.
+The Gold Sponsor 👑 tier also allows for a commercial non-LGPL license of Gensim.
 
 
 For developers
