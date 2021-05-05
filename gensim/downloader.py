@@ -357,7 +357,6 @@ def _download(name):
         If md5sum on client and in repo are different.
 
     """
-    print('_download')
     url_load_file = "{base}/{fname}/__init__.py".format(base=DOWNLOAD_BASE_URL, fname=name)
     data_folder_dir = os.path.join(BASE_DIR, name)
     data_folder_dir_tmp = data_folder_dir + '_tmp'
