@@ -9,7 +9,7 @@
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
-Extract reliable topics that are consistently learned across multiple LDA models, for higher reproducibility
+Extract stable topics that are consistently learned across multiple LDA models, for higher reproducibility
 and less noise. eLDA has the added benefit that the user does not need to know the exact number of topics the topic
 model should extract ahead of time.
 
@@ -82,11 +82,6 @@ BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet 
 Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
 https://www.sezanzeb.de/machine_learning/ensemble_LDA/
 
-Other Notes
------------
-The adjectives stable and reliable (topics) are used somewhat interchangeably throughout the doc strings and
-comments.
-
 """
 import logging
 import os
@@ -106,7 +101,7 @@ logger = logging.getLogger(__name__)
 class EnsembleLda(SaveLoad):
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
-    Extracts reliable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
+    Extracts stable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
     the user does not need to know the exact number of topics the topic model should extract ahead of time.
 
     """
@@ -1102,10 +1097,10 @@ class EnsembleLda(SaveLoad):
         # Run CBDBSCAN to get topic clusters:
         self._generate_topic_clusters(eps, min_samples)
 
-        # Interpret the results of CBDBSCAN to identify reliable topics:
+        # Interpret the results of CBDBSCAN to identify stable topics:
         self._generate_stable_topics(min_cores)
 
-        # Create gensim LdaModel representation of topic model with reliable topics (can be used for inference):
+        # Create gensim LdaModel representation of topic model with stable topics (can be used for inference):
         self.generate_gensim_representation()
 
     # GENSIM API
@@ -1188,8 +1183,7 @@ class CBDBSCAN:
        6. (e.g. Scan candidate T_5 with respect to parent T_3 that has parent_neighbours T_5)
 
     The CB step has the effect that it enforces cluster compactness and allows the model to avoid creating clusters for
-    unreliable topics made of a composition of multiple reliable topics (something that occurs often LDA models that is
-    one cause of unreliable topics).
+    unstable topics made of a composition of multiple stable topics.
 
     """
 
