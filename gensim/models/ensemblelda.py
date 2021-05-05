@@ -9,11 +9,9 @@
 
 """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
-Extracts reliable topics that are consistently learned across multiple LDA models, for higher reproducibility
+Extract reliable topics that are consistently learned across multiple LDA models, for higher reproducibility
 and less noise. eLDA has the added benefit that the user does not need to know the exact number of topics the topic
 model should extract ahead of time.
-
-For more details read `our thesis <https://www.sezanzeb.de/machine_learning/ensemble_LDA/>`_.
 
 Usage examples
 --------------
