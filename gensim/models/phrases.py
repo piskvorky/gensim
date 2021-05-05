@@ -396,8 +396,7 @@ s        """
                 model.connector_words = model.common_terms
                 del model.common_terms
             else:
-                logger.warning('older version of %s loaded without common_terms attribute, '
-                               'setting connector_words to an empty set', cls.__name__)
+                logger.warning('loaded older version of %s, setting connector_words to an empty set', cls.__name__)
                 model.connector_words = frozenset()
 
         if not hasattr(model, 'corpus_word_count'):
