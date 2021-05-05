@@ -31,9 +31,12 @@ from nltk.stem.wordnet import WordNetLemmatizer
 
 lemmatizer = WordNetLemmatizer()
 docs = api.load('text8')
-docs = [[lemmatizer.lemmatize(token) for token in doc] for doc in docs]
-dictionary = Dictionary(docs)
+
+dictionary = Dictionary()
+for doc in docs:
+    dictionary.add_documents([[lemmatizer.lemmatize(token) for token in doc]])
 dictionary.filter_extremes(no_below=20, no_above=0.5)
+
 corpus = [dictionary.doc2bow(doc) for doc in docs]
 
 ###############################################################################
