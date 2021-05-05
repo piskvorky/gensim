@@ -252,7 +252,7 @@ class EnsembleLda(SaveLoad):
         if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
             return
 
-        logger.info("generating {} topic models...".format(num_models))
+        logger.info(f"generating {num_models} topic models...")
 
         if ensemble_workers > 1:
             self._generate_topic_models_multiproc(num_models, ensemble_workers)
@@ -281,15 +281,14 @@ class EnsembleLda(SaveLoad):
                 del self.topic_model_class_string
             except ModuleNotFoundError:
                 logger.error(
-                    'Could not import the "{}" module in order to provide the "{}" class as '
-                    '"topic_model_class" attribute. {}'
-                    .format(self.topic_model_class_string, self.topic_model_class_string, instruction)
+                    f'Could not import the "{self.topic_model_class_string}" module in order to provide the '
+                    f'"{self.topic_model_class_string}" class as "topic_model_class" attribute. {instruction}'
                 )
             except AttributeError:
                 logger.error(
-                    'Could not import the "{}" class from the "{}" module in order to set the '
-                    '"topic_model_class" attribute. {}'
-                    .format(self.topic_model_class_string, self.topic_model_module_string, instruction)
+                    f'Could not import the "{self.topic_model_class_string}" class from the '
+                    f'"{self.topic_model_module_string}" module in order to set the "topic_model_class" attribute. '
+                    f'{instruction}'
                 )
         return self.topic_model_class
 
@@ -476,7 +475,7 @@ class EnsembleLda(SaveLoad):
 
             # unknown
             else:
-                raise ValueError("target is of unknown type or a list of unknown types: {}".format(type(target[0])))
+                raise ValueError(f"target is of unknown type or a list of unknown types: {type(target[0])}")
 
             # new models were added, increase num_models
             # if the user didn't provide a custon numer to use
@@ -508,7 +507,7 @@ class EnsembleLda(SaveLoad):
 
             # unknown
             else:
-                raise ValueError("target is of unknown type or a list of unknown types: {}".format(type(target[0])))
+                raise ValueError(f"target is of unknown type or a list of unknown types: {type(target[0])}")
 
             # in this case, len(self.tms) should
             # always match self.num_models
@@ -519,13 +518,12 @@ class EnsembleLda(SaveLoad):
                 )
             self.num_models = len(self.tms)
 
-        logger.info("ensemble contains {} models and {} topics now".format(self.num_models, len(self.ttda)))
+        logger.info(f"ensemble contains {self.num_models} models and {len(self.ttda)} topics now")
 
         if self.ttda.shape[1] != ttda.shape[1]:
             raise ValueError(
-                "target ttda dimensions do not match. Topics must be {} but was {} elements large".format(
-                    self.ttda.shape[-1], ttda.shape[-1],
-                )
+                f"target ttda dimensions do not match. Topics must be {self.ttda.shape[-1]} but was {ttda.shape[-1]} "
+                f"elements large"
             )
         self.ttda = np.append(self.ttda, ttda, axis=0)
 
@@ -533,7 +531,7 @@ class EnsembleLda(SaveLoad):
         self.asymmetric_distance_matrix_outdated = True
 
     def _teardown(self, pipes, processes, i):
-        """close pipes and terminate processes
+        """Close pipes and terminate processes.
 
         Parameters
         ----------
@@ -545,7 +543,7 @@ class EnsembleLda(SaveLoad):
                 index of the process that could not be started
 
         """
-        logger.error("could not start process {}".format(i))
+        logger.error(f"could not start process {i}")
 
         for pipe in pipes:
             pipe[1].close()
@@ -654,7 +652,7 @@ class EnsembleLda(SaveLoad):
 
         """
         if pipe is not None:
-            logger.info("spawned worker to generate {} topic models".format(num_models))
+            logger.info(f"spawned worker to generate {num_models} topic models")
 
         if random_states is None:
             random_states = [self.random_state.randint(self._MAX_RANDOM_STATE) for _ in range(num_models)]
@@ -697,7 +695,7 @@ class EnsembleLda(SaveLoad):
 
     def _asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
         """Worker that computes the distance to all other nodes from a chunk of nodes."""
-        logger.info("spawned worker to generate {} rows of the asymmetric distance matrix".format(n_ttdas))
+        logger.info(f"spawned worker to generate {n_ttdas} rows of the asymmetric distance matrix")
         # the chunk of ttda that's going to be calculated:
         ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
         distance_chunk = self._calculate_asymmetric_distance_matrix_chunk(
@@ -724,7 +722,7 @@ class EnsembleLda(SaveLoad):
         if threshold is None:
             threshold = {"mass": 0.95, "rank": 0.11}[method]
 
-        logger.info("generating a {} x {} asymmetric distance matrix...".format(len(self.ttda), len(self.ttda)))
+        logger.info(f"generating a {len(self.ttda)} x {len(self.ttda)} asymmetric distance matrix...")
 
         # singlecore
         if workers is not None and workers <= 1:
@@ -808,7 +806,7 @@ class EnsembleLda(SaveLoad):
 
         Returns
         -------
-        2D Numpy.numpy.ndarray of floats
+        2D numpy.ndarray of floats
             Asymmetric distance matrix of size ``len(ttda1)`` by ``len(ttda2)``.
 
         """
@@ -819,7 +817,7 @@ class EnsembleLda(SaveLoad):
             # the worker might not have received a ttda because it was chunked up too much
 
             if method not in ["mass", "rank"]:
-                raise ValueError("method {} unknown".format(method))
+                raise ValueError(f"method {method} unknown")
 
             # select masking method:
             def mass_masking(a):
@@ -866,7 +864,7 @@ class EnsembleLda(SaveLoad):
                     distances[ttd1_idx][ttd2_idx] = distance
 
             percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
-            logger.info('the given threshold of {} covered on average {}% of tokens'.format(threshold, percent))
+            logger.info(f'the given threshold of {threshold} covered on average {percent}% of tokens')
 
         return distances
 
