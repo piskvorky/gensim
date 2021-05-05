@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Author: Tobias B <github.com/sezanzeb>
+# Author: Tobias B <proxima@sezanzeb.de>
+# Copyright (C) 2021 Radim Rehurek <me@radimrehurek.com>
+# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
 """Creates a corpus and dictionary from the Opinosis dataset.

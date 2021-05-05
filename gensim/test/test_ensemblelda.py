@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Author: Tobias B <github.com/sezanzeb>
+# Author: Tobias B <proxima@sezanzeb.de>
 
 """
 Automated tests for checking the EnsembleLda Class
