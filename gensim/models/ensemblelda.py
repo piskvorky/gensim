@@ -545,9 +545,9 @@ class EnsembleLda(SaveLoad):
         """
         logger.error(f"could not start process {i}")
 
-        for pipe in pipes:
-            pipe[1].close()
-            pipe[0].close()
+        for parent_conn, child_conn in pipes:
+            child_conn.close()
+            parent_conn.close()
 
         for process in processes:
             if process.is_alive():
@@ -621,9 +621,9 @@ class EnsembleLda(SaveLoad):
 
         # aggregate results
         # will also block until workers are finished
-        for pipe in pipes:
-            answer = pipe[0].recv()  # [0], because that is the parentConn
-            pipe[0].close()
+        for parent_conn, _ in pipes:
+            answer = parent_conn.recv()  # [0], because that is the parentConn
+            parent_conn.close()
             # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             if not self.memory_friendly_ttda:
                 self.tms += answer
@@ -771,9 +771,9 @@ class EnsembleLda(SaveLoad):
         distances = []
         # note, that the following loop maintains order in how the ttda will be concatenated
         # which is very important. Ordering in ttda has to be the same as when using only one process
-        for pipe in pipes:
-            answer = pipe[0].recv()  # [0], because that is the parentConn
-            pipe[0].close()  # child conn will be closed from inside the worker
+        for parent_conn, _ in pipes:
+            answer = parent_conn.recv()  # [0], because that is the parentConn
+            parent_conn.close()  # child conn will be closed from inside the worker
             # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             distances.append(answer[1])
 
