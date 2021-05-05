@@ -4,6 +4,7 @@ Changes
 ## Unreleased
 
 - LsiModel: Only log top words that actually exist in the dictionary (PR [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091), [@kmurphy4](https://github.com/kmurphy4))
+- Added import to Nmf docs, and to models/__init__.py (PR [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131), [@properGrammar](https://github.com/properGrammar))
 - [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness))
 
 ### Documentation
