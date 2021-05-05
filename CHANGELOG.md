@@ -4,6 +4,7 @@ Changes
 ## Unreleased
 
 - LsiModel: Only log top words that actually exist in the dictionary (PR [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091), [@kmurphy4](https://github.com/kmurphy4))
+- Improve & unify docs for dirichlet priors (PR [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125), [@jonaschn](https://github.com/jonaschn))
 
 ### Documentation
 
