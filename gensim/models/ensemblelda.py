@@ -620,7 +620,7 @@ class EnsembleLda(SaveLoad):
         # aggregate results
         # will also block until workers are finished
         for parent_conn, _ in pipes:
-            answer = parent_conn.recv()  # [0], because that is the parentConn
+            answer = parent_conn.recv()
             parent_conn.close()
             # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             if not self.memory_friendly_ttda:
@@ -770,7 +770,7 @@ class EnsembleLda(SaveLoad):
         # note, that the following loop maintains order in how the ttda will be concatenated
         # which is very important. Ordering in ttda has to be the same as when using only one process
         for parent_conn, _ in pipes:
-            answer = parent_conn.recv()  # [0], because that is the parentConn
+            answer = parent_conn.recv()
             parent_conn.close()  # child conn will be closed from inside the worker
             # this does basically the same as the _generate_topic_models function (concatenate all the ttdas):
             distances.append(answer[1])
