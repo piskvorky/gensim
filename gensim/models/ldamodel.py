@@ -374,21 +374,24 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         update_every : int, optional
             Number of documents to be iterated through for each update.
             Set to 0 for batch learning, > 1 for online iterative learning.
-        alpha : {numpy.ndarray, str}, optional
-            Can be set to an 1D array of length equal to the number of expected topics that expresses
-            our a-priori belief for each topics' probability.
-            Alternatively default prior selecting strategies can be employed by supplying a string:
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
 
-                * 'symmetric': Default; uses a fixed symmetric prior per topic,
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
-        eta : {float, np.array, str}, optional
-            A-priori belief on word probability, this can be:
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
 
-                * scalar for a symmetric prior over topic/word probability,
-                * vector of length num_words to denote an asymmetric user defined probability for each word,
-                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
-                * the string 'auto' to learn the asymmetric prior from the data.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
             when each new document is examined. Corresponds to Kappa from
@@ -409,7 +412,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
         ns_conf : dict of (str, object), optional
-            Key word parameters propagated to :func:`gensim.utils.getNS` to get a Pyro4 Nameserved.
+            Key word parameters propagated to :func:`gensim.utils.getNS` to get a Pyro4 nameserver.
             Only used if `distributed` is set to True.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
@@ -459,21 +462,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.callbacks = callbacks
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
-
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, str):
-            if eta == 'asymmetric':
-                raise ValueError("The 'asymmetric' option cannot be used for eta")
-
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-
-        self.random_state = utils.get_random_state(random_state)
-
         assert self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
             (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
+
+        self.random_state = utils.get_random_state(random_state)
 
         # VB constants
         self.iterations = iterations
@@ -531,24 +528,36 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        prior : {str, list of float, numpy.ndarray of float, float}
-            A-priori belief on word probability. If `name` == 'eta' then the prior can be:
+        prior : {float, numpy.ndarray of float, list of float, str}
+            A-priori belief on document-topic distribution. If `name` == 'alpha', then the prior can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
 
-                * scalar for a symmetric prior over topic/word probability,
-                * vector of length num_words to denote an asymmetric user defined probability for each word,
-                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
-                * the string 'auto' to learn the asymmetric prior from the data.
-
-            If `name` == 'alpha', then the prior can be:
-
-                * an 1D array of length equal to the number of expected topics,
-                * 'symmetric': Uses a fixed symmetric prior per topic,
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
                 * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
+
+            A-priori belief on topic-word distribution. If `name` == 'eta' then the prior can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
             or by the eta (1 parameter per unique term in the vocabulary).
 
+        Returns
+        -------
+        init_prior: numpy.ndarray
+            Initialized Dirichlet prior:
+            If 'alpha' was provided as `name` the shape is (self.num_topics, ).
+            If 'eta' was provided as `name` the shape is (len(self.id2word), ).
+        is_auto: bool
+            Flag that shows if hyperparameter optimization should be used or not.
         """
         if prior is None:
             prior = 'symmetric'
@@ -570,6 +579,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     dtype=self.dtype, count=prior_shape,
                 )
             elif prior == 'asymmetric':
+                if name == 'eta':
+                    raise ValueError("The 'asymmetric' option cannot be used for eta")
                 init_prior = np.fromiter(
                     (1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
                     dtype=self.dtype, count=prior_shape,
