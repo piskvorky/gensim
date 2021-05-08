@@ -8,6 +8,7 @@ Changes
 - Improve & unify docs for dirichlet priors (PR [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125), [@jonaschn](https://github.com/jonaschn))
 - Materialize and copy the corpus passed to SoftCosineSimilarity (PR [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128), [@Witiko](https://github.com/Witiko))
 - [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness))
+- fix bug when loading saved Phrases model (PR [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116), [@aloknayak29](https://github.com/aloknayak29))
 
 ### Documentation
 
