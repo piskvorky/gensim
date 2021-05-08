@@ -937,7 +937,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         """
         self.similarity_matrix = similarity_matrix
 
-        self.corpus = corpus
+        self.corpus = list(corpus)
         self.num_best = num_best
         self.chunksize = chunksize
         self.normalized = normalized
