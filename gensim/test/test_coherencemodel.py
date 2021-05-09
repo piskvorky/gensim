@@ -45,9 +45,19 @@ class TestCoherenceModel(unittest.TestCase):
             ['time', 'graph', 'survey', 'minors']
         ]
         self.topics3 = [
-            ['human', 'computer', 'system', 'interface'],
+            ['token', 'computer', 'system', 'interface'],
             ['graph', 'minors', 'trees', 'eps']
         ]
+        # using this list the model should be unable to interpret topic 
+        # as either a list of tokens or a list of ids
+        self.topics4 = [ 
+            ['not a token', 'not an id', 'tests using', "this list"],
+            ['should raise', 'an error', 'to pass', 'correctly']
+        ]
+        self.topicIds1 = []
+        for topic in self.topics1:
+            self.topicIds1.append([self.dictionary.token2id[token] for token in topic])
+        
 
         self.ldamodel = LdaModel(
             corpus=self.corpus, id2word=self.dictionary, num_topics=2,
@@ -85,6 +95,9 @@ class TestCoherenceModel(unittest.TestCase):
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm2 = CoherenceModel(topics=self.topics2, **kwargs)
         cm3 = CoherenceModel(topics=self.topics3, **kwargs)
+        cm4 = CoherenceModel(topics=self.topicIds1, **kwargs)
+        self.assertRaises(ValueError,lambda: CoherenceModel(topics=self.topics4, **kwargs))
+        self.assertEqual(cm1.get_coherence(), cm4.get_coherence())
         self.assertIsInstance(cm3.get_coherence(), np.double)
         self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
 
