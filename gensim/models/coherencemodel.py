@@ -441,15 +441,14 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = new_topics
 
     def _ensure_elements_are_ids(self, topic):
-        tokens = [t for t in topic if t in self.dictionary.token2id]
-        elements_are_tokens = np.array([self.dictionary.token2id[token] for token in tokens])
-        elements_are_ids = np.array([i for i in topic if i in self.dictionary.id2token])
-        if elements_are_tokens.size > elements_are_ids.size:
-            return elements_are_tokens
-        elif elements_are_ids.size > elements_are_tokens.size:
-            return elements_are_ids
+        ids_from_tokens = [self.dictionary.token2id[t] for t in topic if t in self.dictionary.token2id]
+        ids_from_ids = [i for i in topic if i in self.dictionary]
+        if len(ids_from_tokens) > len(ids_from_ids):
+            return np.array(ids_from_tokens)
+        elif len(ids_from_ids) > len(ids_from_tokens):
+            return np.array(ids_from_ids)
         else:
-            raise Exception("Topic list is not a list of lists of tokens or ids")
+            raise ValueError('unable to interpret topic as either a list of tokens or a list of ids')
                
     def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):
