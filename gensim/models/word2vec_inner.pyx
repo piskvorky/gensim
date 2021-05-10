@@ -112,12 +112,12 @@ cdef void w2v_fast_sentence_sg_hs(
     """
 
     cdef long long a, b
-    cdef long long row1 = <unsigned long long>word2_index * <unsigned long long>size, row2, sgn
+    cdef long long row1 = <long long>word2_index * <long long>size, row2, sgn
     cdef REAL_t f, g, f_dot, lprob
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelen):
-        row2 = <unsigned long long>word_point[b] * <unsigned long long>size
+        row2 = <long long>word_point[b] * <long long>size
         f_dot = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
