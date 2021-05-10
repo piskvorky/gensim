@@ -137,6 +137,7 @@ cdef void w2v_fast_sentence_sg_hs(
 
     our_saxpy(&size, &words_lockf[word2_index % lockf_len], work, &ONE, &syn0[row1], &ONE)
 
+
 # to support random draws from negative-sampling cum_table
 cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:
     cdef unsigned long long mid
@@ -405,6 +406,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     cdef REAL_t f, g, count, inv_count = 1.0, label, log_e_f_dot, f_dot
     cdef np.uint32_t target_index, word_index
     cdef int d, m
+
     word_index = indexes[i]
 
     memset(neu1, 0, size * cython.sizeof(REAL_t))
@@ -533,6 +535,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     if c.hs:
         vocab_codes = model.wv.expandos['code']
         vocab_points = model.wv.expandos['point']
+
     # prepare C structures so we can go "full C" and release the Python GIL
     c.sentence_idx[0] = 0  # indices of the first sentence always start at 0
     for sent in sentences:
