@@ -14,9 +14,12 @@ for online training.
 
 The core estimation code is based on the `onlineldavb.py script
 <https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by
-`Matthew D. Hoffman, David M. Blei, Francis Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010
-<https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
+Matthew D. Hoffman, David M. Blei, Francis Bach:
+`'Online Learning for Latent Dirichlet Allocation', NIPS 2010`_.
+
+.. _'Online Learning for Latent Dirichlet Allocation', NIPS 2010: online-lda_
+.. _'Online Learning for LDA' by Hoffman et al.: online-lda_
+.. _online-lda: https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf
 
 The algorithm:
 
@@ -199,8 +202,7 @@ class LdaState(utils.SaveLoad):
 
         The number of documents is stretched in both state objects, so that they are of comparable magnitude.
         This procedure corresponds to the stochastic gradient update from
-        `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-        <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_, see equations (5) and (9).
+        `'Online Learning for LDA' by Hoffman et al.`_, see equations (5) and (9).
 
         Parameters
         ----------
@@ -312,9 +314,7 @@ class LdaState(utils.SaveLoad):
 
 
 class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """Train and use Online Latent Dirichlet Allocation models as presented in
-    `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-    <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
+    """Train and use Online Latent Dirichlet Allocation models as presented in `'Online Learning for LDA' by Hoffman et al.`_
 
     Examples
     -------
@@ -396,13 +396,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 * 'auto': Learns an asymmetric prior from the corpus.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from
-            `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
+            when each new document is examined.
+            Corresponds to :math:`\\kappa` from `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
         iterations : int, optional
@@ -862,13 +860,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Notes
         -----
-        This update also supports updating an already trained model with new documents; the two models are then merged
-        in proportion to the number of old vs. new documents. This feature is still experimental for non-stationary
-        input streams. For stationary input (no topic drift in new documents), on the other hand, this equals the
-        online update of `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-        <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_
-        and is guaranteed to converge for any `decay` in (0.5, 1.0). Additionally, for smaller corpus sizes, an
-        increasing `offset` may be beneficial (see Table 1 in the same paper).
+        This update also supports updating an already trained model (`self`) with new documents from `corpus`;
+        the two models are then merged in proportion to the number of old vs. new documents.
+        This feature is still experimental for non-stationary input streams.
+
+        For stationary input (no topic drift in new documents), on the other hand,
+        this equals the online update of `'Online Learning for LDA' by Hoffman et al.`_
+        and is guaranteed to converge for any `decay` in (0.5, 1].
+        Additionally, for smaller corpus sizes,
+        an increasing `offset` may be beneficial (see Table 1 in the same paper).
 
         Parameters
         ----------
@@ -879,13 +879,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Number of documents to be used in each training chunk.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from
-            `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-            <https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf>`_.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         passes : int, optional
             Number of passes through the corpus during training.
         update_every : int, optional
