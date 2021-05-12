@@ -23,6 +23,9 @@ The model was introduced by  `Rosen-Zvi and co-authors: "The Author-Topic Model 
 <https://arxiv.org/abs/1207.4169>`_. The model correlates the authorship information with the topics to give a better
 insight on the subject knowledge of an author.
 
+.. _'Online Learning for LDA' by Hoffman et al.: online-lda_
+.. _online-lda: https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf
+
 Example
 -------
 .. sourcecode:: pycon
@@ -185,9 +188,12 @@ class AuthorTopicModel(LdaModel):
         iterations : int, optional
             Maximum number of times the model loops over each document.
         decay : float, optional
-            Controls how old documents are forgotten.
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
-            Controls down-weighting of iterations.
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         alpha : {float, numpy.ndarray of float, list of float, str}, optional
             A-priori belief on document-topic distribution, this can be:
                 * scalar for a symmetric prior over document-topic distribution,
@@ -618,15 +624,14 @@ class AuthorTopicModel(LdaModel):
 
         Notes
         -----
-        This update also supports updating an already trained model (self)
-        with new documents from `corpus`: the two models are then merged in proportion to the number of old vs. new
-        documents. This feature is still experimental for non-stationary input streams.
+        This update also supports updating an already trained model (`self`) with new documents from `corpus`;
+        the two models are then merged in proportion to the number of old vs. new documents.
+        This feature is still experimental for non-stationary input streams.
 
-        For stationary input (no topic drift in new documents), on the other hand, this equals the online update of
-        `Hoffman et al. Stochastic Variational Inference
-        <http://www.jmlr.org/papers/volume14/hoffman13a/hoffman13a.pdf>`_ and is guaranteed to converge for any `decay`
-        in (0.5, 1.0>. Additionally, for smaller `corpus` sizes, an increasing `offset` may be beneficial (see
-        Table 1 in Hoffman et al.)
+        For stationary input (no topic drift in new documents), on the other hand, this equals the
+        online update of `'Online Learning for LDA' by Hoffman et al.`_
+        and is guaranteed to converge for any `decay` in (0.5, 1]. Additionally, for smaller corpus sizes, an
+        increasing `offset` may be beneficial (see Table 1 in the same paper).
 
         If update is called with authors that already exist in the model, it will resume training on not only new
         documents for that author, but also the previously seen documents. This is necessary for those authors' topic
@@ -653,9 +658,12 @@ class AuthorTopicModel(LdaModel):
         chunksize : int, optional
             Controls the size of the mini-batches.
         decay : float, optional
-            Controls how old documents are forgotten.
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
-            Controls down-weighting of iterations.
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         passes : int, optional
             Number of times the model makes a pass over the entire training data.
         update_every : int, optional
