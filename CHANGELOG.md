@@ -10,6 +10,9 @@ Changes
 - [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness))
 - Update link to Hoffman paper (online VB LDA) (PR [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133), [@jonaschn](https://github.com/jonaschn))
 - fix bug when loading saved Phrases model (PR [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116), [@aloknayak29](https://github.com/aloknayak29))
+- Optimize performance of Author-Topic model (PR [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978), [@horpto](https://github.com/horpto))
+
+### :+1: Improvements
 
 ### Documentation
 
