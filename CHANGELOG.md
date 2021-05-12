@@ -4,10 +4,12 @@ Changes
 ## Unreleased
 
 - LsiModel: Only log top words that actually exist in the dictionary (PR [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091), [@kmurphy4](https://github.com/kmurphy4))
+- Added import to Nmf docs, and to models/__init__.py (PR [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131), [@properGrammar](https://github.com/properGrammar))
 - Improve & unify docs for dirichlet priors (PR [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125), [@jonaschn](https://github.com/jonaschn))
 - Materialize and copy the corpus passed to SoftCosineSimilarity (PR [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128), [@Witiko](https://github.com/Witiko))
 - [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness))
 - Update link to Hoffman paper (online VB LDA) (PR [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133), [@jonaschn](https://github.com/jonaschn))
+- fix bug when loading saved Phrases model (PR [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116), [@aloknayak29](https://github.com/aloknayak29))
 
 ### Documentation
 
