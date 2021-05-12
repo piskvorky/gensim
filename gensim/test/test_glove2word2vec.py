@@ -23,7 +23,7 @@ class TestGlove2Word2Vec(unittest.TestCase):
         self.datapath = datapath('test_glove.txt')
         self.output_file = get_tmpfile('glove2word2vec.test')
 
-    def testConversion(self):
+    def test_conversion(self):
         check_output(args=[
             sys.executable, '-m', 'gensim.scripts.glove2word2vec',
             '--input', self.datapath, '--output', self.output_file

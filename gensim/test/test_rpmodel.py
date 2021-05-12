@@ -24,7 +24,7 @@ class TestRpModel(unittest.TestCase):
     def setUp(self):
         self.corpus = MmCorpus(datapath('testcorpus.mm'))
 
-    def testTransform(self):
+    def test_transform(self):
         # create the transformation model
         # HACK; set fixed seed so that we always get the same random matrix (and can compare against expected results)
         np.random.seed(13)
@@ -38,7 +38,7 @@ class TestRpModel(unittest.TestCase):
         expected = np.array([-0.70710677, 0.70710677])
         self.assertTrue(np.allclose(vec, expected))  # transformed entries must be equal up to sign
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models.tst')
         model = rpmodel.RpModel(self.corpus, num_topics=2)
         model.save(fname)
@@ -48,7 +48,7 @@ class TestRpModel(unittest.TestCase):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models.tst.gz')
         model = rpmodel.RpModel(self.corpus, num_topics=2)
         model.save(fname)

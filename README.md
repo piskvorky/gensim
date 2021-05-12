@@ -7,9 +7,9 @@ Google because of Github's proxying issues. See:
 https://github.com/RaRe-Technologies/gensim/issues/2805
 -->
 
-[![Build Status](https://travis-ci.org/RaRe-Technologies/gensim.svg?branch=develop)](https://travis-ci.org/RaRe-Technologies/gensim)
+[![Build Status](https://github.com/RaRe-Technologies/gensim/actions/workflows/tests.yml/badge.svg?branch=develop)](https://github.com/RaRe-Technologies/gensim/actions)
 [![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
-[![Downloads](https://img.shields.io/pypi/dm/gensim?color=blue)](https://pepy.tech/project/gensim/month)
+[![Downloads](https://img.shields.io/pypi/dm/gensim?color=blue)](https://pepy.tech/project/gensim/)
 [![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
 [![Mailing List](https://img.shields.io/badge/-Mailing%20List-blue.svg)](https://groups.google.com/forum/#!forum/gensim)
 [![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&style=flat&logo=twitter&label=Follow&color=blue)](https://twitter.com/gensim_py)
@@ -19,12 +19,8 @@ and *similarity retrieval* with large corpora. Target audience is the
 *natural language processing* (NLP) and *information retrieval* (IR)
 community.
 
-<!--
-## :pizza: Hacktoberfest 2019 :beer:
+## ⚠️  Please [sponsor Gensim](https://github.com/sponsors/piskvorky) to help sustain this open source project ❤️
 
-We are accepting PRs for Hacktoberfest!
-See [here](HACKTOBERFEST.md) for details.
--->
 
 Features
 --------
@@ -57,10 +53,10 @@ scientific computing. You must have them installed prior to installing
 gensim.
 
 It is also recommended you install a fast BLAS library before installing
-NumPy. This is optional, but using an optimized BLAS such as [ATLAS] or
+NumPy. This is optional, but using an optimized BLAS such as MKL, [ATLAS] or
 [OpenBLAS] is known to improve performance by as much as an order of
-magnitude. On OS X, NumPy picks up the BLAS that comes with it
-automatically, so you don’t need to do anything special.
+magnitude. On OSX, NumPy picks up its vecLib BLAS automatically,
+so you don’t need to do anything special.
 
 Install the latest version of gensim:
 
@@ -77,7 +73,8 @@ package:
 
 For alternative modes of installation, see the [documentation].
 
-Gensim is being [continuously tested](https://travis-ci.org/RaRe-Technologies/gensim) under Python 3.6, 3.7 and 3.8.
+Gensim is being [continuously tested](http://radimrehurek.com/gensim/#testing) under all
+[supported Python versions](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 How come gensim is so fast and memory efficient? Isn’t it pure Python, and isn’t Python slow and greedy?
@@ -110,9 +107,12 @@ Documentation
 Support
 -------
 
-Ask open-ended or research questions on the [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+For commercial support, please see [Gensim sponsorship](https://github.com/sponsors/piskvorky).
 
-Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to follow the issue template will be closed without inspection.
+Ask open-ended questions on the public [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+
+Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but please **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to provide the requested details will be closed without inspection.
+
 
 ---------
 
@@ -162,14 +162,11 @@ BibTeX entry:
 
   [citing gensim in academic papers and theses]: https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C
 
-  [Travis CI for automated testing]: https://travis-ci.org/RaRe-Technologies/gensim
   [design goals]: http://radimrehurek.com/gensim/about.html
   [RaRe Technologies]: http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
   [rare\_tech]: //rare-technologies.com
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
-
-
 
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model

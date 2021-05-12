@@ -22,17 +22,6 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
     Wrap a term-document matrix on disk (in matrix-market format), and present it
     as an object which supports iteration over the matrix rows (~documents).
 
-    Notable instance attributes:
-
-    Attributes
-    ----------
-    num_docs : int
-        Number of documents in the market matrix file.
-    num_terms : int
-        Number of features (terms, topics).
-    num_nnz : int
-        Number of non-zero elements in the sparse MM matrix.
-
     Notes
     -----
     The file is read into memory one document at a time, not the whole matrix at once,

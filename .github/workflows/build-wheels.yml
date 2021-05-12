@@ -1,0 +1,86 @@
+name: Build wheels
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+  schedule:
+    - cron: '0 0 * * sun,wed'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [ubuntu-latest, macos-latest]
+        platform: [x64]
+        include:
+        - os: ubuntu-latest
+          python-version: 3.7
+          skip-network-tests: 1
+        - os: ubuntu-latest
+          python-version: 3.8
+          skip-network-tests: 1
+        - os: macos-latest
+          travis-os-name: osx  # For multibuild
+          skip-network-tests: 1
+    env:
+      PKG_NAME: gensim
+      REPO_DIR: gensim
+      BUILD_COMMIT: HEAD
+      PLAT: x86_64
+      UNICODE_WIDTH: 32
+      MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
+      TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest mock cython nmslib pyemd testfixtures scikit-learn pyemd
+      DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
+      TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
+      SKIP_NETWORK_TESTS: ${{ matrix.skip-network-tests }}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    - name: Print environment variables
+      run: |
+        echo "PLAT: ${PLAT}"
+        echo "DOCKER_TEST_IMAGE: ${DOCKER_TEST_IMAGE}"
+        echo "TEST_DEPENDS: ${TEST_DEPENDS}"
+        echo "TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"
+        echo "SKIP_NETWORK_TESTS: ${SKIP_NETWORK_TESTS}"
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install virtualenv
+    - name: Build and Install Wheels
+      run: |
+        echo ::group::Set up Multibuild
+        source multibuild/common_utils.sh
+        source multibuild/travis_steps.sh
+        source config.sh
+        echo ::endgroup::
+        echo ::group::Before install
+        before_install
+        echo ::endgroup::
+        echo ::group::Build wheel
+        build_wheel $REPO_DIR ${{ matrix.PLAT }}
+        echo ::endgroup::
+        echo ::group::Install run
+        install_run ${{ matrix.PLAT }}
+        echo ::endgroup::
+    - name: Upload wheels to s3://gensim-wheels
+      if: always()
+      run: |
+            pip install wheelhouse-uploader
+            ls wheelhouse/*.whl
+            python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn

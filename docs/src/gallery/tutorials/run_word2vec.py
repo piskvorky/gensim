@@ -197,8 +197,8 @@ print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
 from gensim.test.utils import datapath
 from gensim import utils
 
-class MyCorpus(object):
-    """An interator that yields sentences (lists of str)."""
+class MyCorpus:
+    """An iterator that yields sentences (lists of str)."""
 
     def __iter__(self):
         corpus_path = datapath('lee_background.cor')

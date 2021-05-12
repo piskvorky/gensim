@@ -90,7 +90,7 @@ class TestLdaModelInner(unittest.TestCase):
         self.num_runs = 100  # test functions with *num_runs* random inputs
         self.num_topics = 100
 
-    def testLogSumExp(self):
+    def test_log_sum_exp(self):
         # test logsumexp
         rs = self.random_state
 
@@ -104,7 +104,7 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "logsumexp failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
-    def testMeanAbsoluteDifference(self):
+    def test_mean_absolute_difference(self):
         # test mean_absolute_difference
         rs = self.random_state
 
@@ -119,7 +119,7 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "mean_absolute_difference failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
-    def testDirichletExpectation(self):
+    def test_dirichlet_expectation(self):
         # test dirichlet_expectation
         rs = self.random_state
 
@@ -144,7 +144,7 @@ class TestLdaModelInner(unittest.TestCase):
 
 def manual_unitvec(vec):
     # manual unit vector calculation for UnitvecTestCase
-    vec = vec.astype(np.float)
+    vec = vec.astype(float)
     if sparse.issparse(vec):
         vec_sum_of_squares = vec.multiply(vec)
         unit = 1. / np.sqrt(vec_sum_of_squares.sum())

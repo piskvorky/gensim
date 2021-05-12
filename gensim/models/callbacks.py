@@ -61,7 +61,7 @@ Create a callback to print progress information to the console:
     ...
     >>>
     >>> epoch_logger = EpochLogger()
-    >>> w2v_model = Word2Vec(common_texts, iter=5, size=10, min_count=0, seed=42, callbacks=[epoch_logger])
+    >>> w2v_model = Word2Vec(common_texts, epochs=5, vector_size=10, min_count=0, seed=42, callbacks=[epoch_logger])
     Epoch #0 start
     Epoch #0 end
     Epoch #1 start
@@ -106,7 +106,7 @@ except ImportError:
     VISDOM_INSTALLED = False
 
 
-class Metric(object):
+class Metric:
     """Base Metric class for topic model evaluation metrics.
 
     Concrete implementations include:
@@ -442,7 +442,7 @@ class ConvergenceMetric(Metric):
         return np.sum(diff_diagonal)
 
 
-class Callback(object):
+class Callback:
     """A class representing routines called reactively at specific phases during trained.
 
     These can be used to log or visualize the training progress using any of the metric scores developed before.
@@ -568,7 +568,7 @@ class Callback(object):
         return current_metrics
 
 
-class CallbackAny2Vec(object):
+class CallbackAny2Vec:
     """Base class to build callbacks for :class:`~gensim.models.word2vec.Word2Vec` & subclasses.
 
     Callbacks are used to apply custom functions over the model at specific points
@@ -577,6 +577,11 @@ class CallbackAny2Vec(object):
     want some action to be taken).
 
     See examples at the module level docstring for how to define your own callbacks by inheriting  from this class.
+
+    As of gensim 4.0.0, the following callbacks are no longer supported, and overriding them will have no effect:
+
+    - on_batch_begin
+    - on_batch_end
 
     """
     def on_epoch_begin(self, model):
@@ -592,28 +597,6 @@ class CallbackAny2Vec(object):
 
     def on_epoch_end(self, model):
         """Method called at the end of each epoch.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
-            Current model.
-
-        """
-        pass
-
-    def on_batch_begin(self, model):
-        """Method called at the start of each batch.
-
-        Parameters
-        ----------
-        model : :class:`~gensim.models.word2vec.Word2Vec` or subclass
-            Current model.
-
-        """
-        pass
-
-    def on_batch_end(self, model):
-        """Method called at the end of each batch.
 
         Parameters
         ----------

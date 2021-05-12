@@ -26,7 +26,7 @@ class TestSegmentation(unittest.TestCase):
             array([5, 2, 7])
         ]
 
-    def testSOnePre(self):
+    def test_s_one_pre(self):
         """Test s_one_pre segmentation."""
         actual = segmentation.s_one_pre(self.topics)
         expected = [
@@ -36,7 +36,7 @@ class TestSegmentation(unittest.TestCase):
         ]
         self.assertTrue(np.allclose(actual, expected))
 
-    def testSOneOne(self):
+    def test_s_one_one(self):
         """Test s_one_one segmentation."""
         actual = segmentation.s_one_one(self.topics)
         expected = [
@@ -46,7 +46,7 @@ class TestSegmentation(unittest.TestCase):
         ]
         self.assertTrue(np.allclose(actual, expected))
 
-    def testSOneSet(self):
+    def test_s_one_set(self):
         """Test s_one_set segmentation."""
         actual = segmentation.s_one_set(self.topics)
         expected = [

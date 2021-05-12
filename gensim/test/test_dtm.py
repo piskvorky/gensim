@@ -26,7 +26,7 @@ class TestDtmModel(unittest.TestCase):
         if not self.dtm_path:
             self.skipTest("$DTM_PATH is not properly set up.")
 
-    def testDtm(self):
+    def test_dtm(self):
         if self.dtm_path is not None:
             model = gensim.models.wrappers.DtmModel(
                 self.dtm_path, self.corpus, self.time_slices, num_topics=2,
@@ -40,7 +40,7 @@ class TestDtmModel(unittest.TestCase):
             self.assertEqual(len(one_topic), 10)
             self.assertEqual(one_topic[0][1], u'idexx')
 
-    def testDim(self):
+    def test_dim(self):
         if self.dtm_path is not None:
             model = gensim.models.wrappers.DtmModel(
                 self.dtm_path, self.corpus, self.time_slices, num_topics=2,
@@ -55,7 +55,7 @@ class TestDtmModel(unittest.TestCase):
             self.assertEqual(one_topic[0][1], u'skills')
 
     # In stderr expect "Error opening file /tmp/a65419_train_out/initial-lda-ss.dat. Failing."
-    def testCalledProcessError(self):
+    def test_called_process_error(self):
         if self.dtm_path is not None:
             with self.assertRaises(CalledProcessError):
                 gensim.models.wrappers.DtmModel(

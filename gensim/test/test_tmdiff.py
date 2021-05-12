@@ -20,7 +20,7 @@ class TestLdaDiff(unittest.TestCase):
         self.n_ann_terms = 10
         self.model = LdaModel(corpus=self.corpus, id2word=self.dictionary, num_topics=self.num_topics, passes=10)
 
-    def testBasic(self):
+    def test_basic(self):
         # test for matrix case
         mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms)
 
@@ -34,7 +34,7 @@ class TestLdaDiff(unittest.TestCase):
         self.assertEqual(mdiff.shape, (self.num_topics,))
         self.assertEqual(len(annotation), self.num_topics)
 
-    def testIdentity(self):
+    def test_identity(self):
         for dist_name in ["hellinger", "kullback_leibler", "jaccard"]:
             # test for matrix case
             mdiff, annotation = self.model.diff(self.model, n_ann_terms=self.n_ann_terms, distance=dist_name)
@@ -62,7 +62,7 @@ class TestLdaDiff(unittest.TestCase):
             if dist_name == "jaccard":
                 self.assertTrue(np.allclose(mdiff, np.zeros(mdiff.shape, dtype=mdiff.dtype)))
 
-    def testInput(self):
+    def test_input(self):
         self.assertRaises(ValueError, self.model.diff, self.model, n_ann_terms=self.n_ann_terms, distance='something')
         self.assertRaises(ValueError, self.model.diff, [], n_ann_terms=self.n_ann_terms, distance='something')
 
