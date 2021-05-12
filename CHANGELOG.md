@@ -5,6 +5,8 @@ Changes
 
 This release contains a major refactoring.
 
+- Optimize performance of Author-Topic model (PR [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978), [@horpto](https://github.com/horpto))
+
 ### :+1: Improvements
 
 * Refactor ldamulticore to serialize less data (PR [#2300](https://github.com/RaRe-Technologies/gensim/pull/2300), __[@horpto](https://github.com/horpto)__)
