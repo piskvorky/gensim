@@ -30,7 +30,7 @@ with smart_open.open(url) as fin:
 
 prinfo['user_login'] = prinfo['user']['login']
 prinfo['user_html_url'] = prinfo['user']['html_url']
-text = '- %(title)s (PR [#%(number)s](%(html_url)s), [@%(user_login)s](%(user_html_url)s))' % prinfo
+text = '[#%(number)s](%(html_url)s): %(title)s, by [@%(user_login)s](%(user_html_url)s)' % prinfo
 copy_to_clipboard(text)
 
 prinfo['head_repo_html_url'] = prinfo['head']['repo']['html_url']
