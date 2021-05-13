@@ -932,11 +932,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.state.numdocs += lencorpus
 
         if update_every:
-            updatetype = "online"
-            if passes == 1:
-                updatetype += " (single-pass)"
-            else:
-                updatetype += " (multi-pass)"
+            updatetype = "online (single-pass)" if self.passes == 1 else "online (multi-pass)"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"

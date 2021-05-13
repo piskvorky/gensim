@@ -232,11 +232,7 @@ class LdaMulticore(LdaModel):
 
         # Same as in LdaModel but self.workers (processes) is used instead of self.numworkers (machines)
         if self.update_every:
-            updatetype = "online"
-            if self.passes == 1:
-                updatetype += " (single-pass)"
-            else:
-                updatetype += " (multi-pass)"
+            updatetype = "online (single-pass)" if self.passes == 1 else "online (multi-pass)"
             updateafter = min(lencorpus, self.update_every * self.workers * self.chunksize)
         else:
             updatetype = "batch"

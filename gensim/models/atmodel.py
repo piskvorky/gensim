@@ -804,7 +804,7 @@ class AuthorTopicModel(LdaModel):
         self.state.numdocs += lencorpus
 
         if update_every:
-            updatetype = "online"
+            updatetype = "online (single-pass)" if self.passes == 1 else "online (multi-pass)"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
