@@ -71,6 +71,10 @@ cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, con
     for i from 0 <= i < N[0] by 1:
         Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
 
+cdef long long _mul(const np.uint32_t a, const int b) nogil: 
+    """Safe multiplication of ints with explict typecasting"""
+    return <long long>a * <long long>b
+        
 cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
@@ -112,12 +116,12 @@ cdef void w2v_fast_sentence_sg_hs(
     """
 
     cdef long long a, b
-    cdef long long row1 = word2_index * size, row2, sgn
+    cdef long long row1 = _mul(word2_index, size), row2, sgn
     cdef REAL_t f, g, f_dot, lprob
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelen):
-        row2 = word_point[b] * size
+        row2 = _mul(word_point[b], size)
         f_dot = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
@@ -206,7 +210,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
 
     """
     cdef long long a
-    cdef long long row1 = word2_index * size, row2
+    cdef long long row1 = _mul(word2_index, size), row2
     cdef unsigned long long modulo = 281474976710655ULL
     cdef REAL_t f, g, label, f_dot, log_e_f_dot
     cdef np.uint32_t target_index
@@ -225,7 +229,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
                 continue
             label = <REAL_t>0.0
 
-        row2 = target_index * size
+        row2 = _mul(target_index, size)
         f_dot = our_dot(&size, &syn0[row1], &ONE, &syn1neg[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
@@ -309,7 +313,7 @@ cdef void w2v_fast_sentence_cbow_hs(
             continue
         else:
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
+            our_saxpy(&size, &ONEF, &syn0[_mul(indexes[m], size)], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
     if cbow_mean:
@@ -317,7 +321,7 @@ cdef void w2v_fast_sentence_cbow_hs(
 
     memset(work, 0, size * cython.sizeof(REAL_t))
     for b in range(codelens[i]):
-        row2 = word_point[b] * size
+        row2 = _mul(word_point[b], size)
         f_dot = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
@@ -342,7 +346,7 @@ cdef void w2v_fast_sentence_cbow_hs(
         if m == i:
             continue
         else:
-            our_saxpy(&size, &words_lockf[indexes[m] % lockf_len], work, &ONE, &syn0[indexes[m] * size], &ONE)
+            our_saxpy(&size, &words_lockf[indexes[m] % lockf_len], work, &ONE, &syn0[_mul(indexes[m],size)], &ONE)
 
 
 cdef unsigned long long w2v_fast_sentence_cbow_neg(
@@ -416,7 +420,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
             continue
         else:
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
+            our_saxpy(&size, &ONEF, &syn0[_mul(indexes[m], size)], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
     if cbow_mean:
@@ -435,7 +439,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
                 continue
             label = <REAL_t>0.0
 
-        row2 = target_index * size
+        row2 = _mul(target_index, size)
         f_dot = our_dot(&size, neu1, &ONE, &syn1neg[row2], &ONE)
         if f_dot <= -MAX_EXP or f_dot >= MAX_EXP:
             continue
@@ -459,7 +463,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
         if m == i:
             continue
         else:
-            our_saxpy(&size, &words_lockf[indexes[m] % lockf_len], work, &ONE, &syn0[indexes[m]*size], &ONE)
+            our_saxpy(&size, &words_lockf[indexes[m] % lockf_len], work, &ONE, &syn0[_mul(indexes[m], size)], &ONE)
 
     return next_random
 
@@ -784,11 +788,11 @@ cdef void score_pair_sg_hs(
     const np.uint32_t word2_index, REAL_t *work) nogil:
 
     cdef long long b
-    cdef long long row1 = word2_index * size, row2, sgn
+    cdef long long row1 = _mul(word2_index, size), row2, sgn
     cdef REAL_t f
 
     for b in range(codelen):
-        row2 = word_point[b] * size
+        row2 = _mul(word_point[b], size)
         f = our_dot(&size, &syn0[row1], &ONE, &syn1[row2], &ONE)
         sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
         f *= sgn
@@ -889,14 +893,14 @@ cdef void score_pair_cbow_hs(
             continue
         else:
             count += ONEF
-            our_saxpy(&size, &ONEF, &syn0[indexes[m] * size], &ONE, neu1, &ONE)
+            our_saxpy(&size, &ONEF, &syn0[_mul(indexes[m], size)], &ONE, neu1, &ONE)
     if count > (<REAL_t>0.5):
         inv_count = ONEF/count
     if cbow_mean:
         sscal(&size, &inv_count, neu1, &ONE)
 
     for b in range(codelens[i]):
-        row2 = word_point[b] * size
+        row2 = _mul(word_point[b], size)
         f = our_dot(&size, neu1, &ONE, &syn1[row2], &ONE)
         sgn = (-1)**word_code[b] # ch function: 0-> 1, 1 -> -1
         f *= sgn
