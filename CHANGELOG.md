@@ -21,6 +21,7 @@ Changes
 * [#3123](https://github.com/RaRe-Technologies/gensim/pull/3123): Fix hyperlink for doc2vec tutorial, by [@AdityaSoni19031997](https://github.com/AdityaSoni19031997)
 * [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125): Improve & unify docs for dirichlet priors, by [@jonaschn](https://github.com/jonaschn)
 * [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133): Update link to Hoffman paper (online VB LDA), by [@jonaschn](https://github.com/jonaschn)
+* [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
 
 ## 4.0.1, 2021-04-01
 

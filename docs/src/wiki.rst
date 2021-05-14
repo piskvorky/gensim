@@ -236,5 +236,5 @@ into LDA topic distributions:
   By the way, improvements to the Wiki markup parsing code are welcome :-)
 
 .. [3] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation
-   [`pdf <http://www.cs.princeton.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_] [`code <http://www.cs.princeton.edu/~mdhoffma/>`_]
+   [`pdf <http://www.cs.columbia.edu/~blei/papers/HoffmanBleiBach2010b.pdf>`_] [`code <http://www.cs.princeton.edu/~mdhoffma/>`_]
 
