@@ -90,10 +90,7 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
     assert alpha >= 0
     assert beta >= 0
 
-    max_lengths = max(len(t1), len(t2))
-    if max_lengths == 0:
-        return 1.0
-
+    max_lengths = max(len(t1), len(t2)) or 1
     min_similarity = float(max(min(min_similarity, 1.0), 0.0))
     max_distance = int(floor(max_lengths * (1 - (min_similarity / alpha) ** (1 / beta))))
     distance = levdist(t1, t2, max_distance)
@@ -102,52 +99,63 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
 
 
 class LevenshteinSimilarityIndex(TermSimilarityIndex):
-    """
+    r"""
     Computes Levenshtein similarities between terms and retrieves most similar
     terms for a given term.
 
     Notes
     -----
-    This is a naive implementation that iteratively computes pointwise Levenshtein similarities
-    between individual terms. Using this implementation to compute the similarity of all terms in
-    real-world dictionaries such as the English Wikipedia will take years.
+    This implementation uses a VP-Tree for metric indexing.
 
     Parameters
     ----------
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         A dictionary that specifies the considered terms.
     alpha : float, optional
-        The multiplicative factor alpha defined by Charlet and Damnati (2017).
+        The multiplicative factor alpha defined by [charletetal17]_.
     beta : float, optional
-        The exponential factor beta defined by Charlet and Damnati (2017).
-    threshold : float, optional
-        Only terms more similar than `threshold` are considered when retrieving
-        the most similar terms for a given term.
+        The exponential factor beta defined by [charletetal17]_.
+
+    Attributes
+    ----------
+    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
+        A dictionary that specifies the considered terms.
+    alpha : float, optional
+        The multiplicative factor alpha defined by [charletetal17]_.
+    beta : float, optional
+        The exponential factor beta defined by [charletetal17]_.
+    index : :class:`vptree.VPTree`
+        The VP-Tree metric index.
 
     See Also
     --------
-    :func:`gensim.similarities.levenshtein.levsim`
-        The Levenshtein similarity.
+    :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
+        Retrieve most similar terms for a given term using the cosine similarity over word
+        embeddings.
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
+    References
+    ----------
+    The Levenshtein similarity in the context of term similarity was defined
+    by [charletetal17]_.
+
+    .. [charletetal17] Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3:
+       Soft-Cosine Semantic Similarity between Questions for Community Question Answering", 2017,
+       https://www.aclweb.org/anthology/S17-2051/.
+
     """
-    def __init__(self, dictionary, alpha=1.8, beta=5.0, threshold=0.0):
+    def __init__(self, dictionary, alpha=1.8, beta=5.0):
+        from vptree import VPTree
+
         self.dictionary = dictionary
         self.alpha = alpha
         self.beta = beta
-        self.threshold = threshold
+        terms = list(self.dictionary.values())
+        self.index = VPTree(terms, levdist)
         super(LevenshteinSimilarityIndex, self).__init__()
 
     def most_similar(self, t1, topn=10):
-        similarities = (
-            (levsim(t1, t2, self.alpha, self.beta, self.threshold), t2)
-            for t2 in self.dictionary.values()
-            if t1 != t2
-        )
-        most_similar = (
-            (t2, similarity)
-            for (similarity, t2) in sorted(similarities, reverse=True)
-            if similarity > 0
-        )
-        return itertools.islice(most_similar, int(topn))
+        terms = [term for _, term in self.index.get_n_nearest_neighbors(t1, int(topn + 1))]
+        most_similar = ((t2, levsim(t1, t2, self.alpha, self.beta)) for t2 in terms if t1 != t2)
+        return itertools.islice(most_similar, topn)

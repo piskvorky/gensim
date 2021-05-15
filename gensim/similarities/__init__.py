@@ -6,11 +6,14 @@ This package contains implementations of pairwise similarity queries.
 import warnings
 try:
     import Levenshtein  # noqa:F401
+    import vptree  # noqa:F401
 except ImportError:
     msg = (
         "The gensim.similarities.levenshtein submodule is disabled, because the optional "
-        "Levenshtein package <https://pypi.org/project/python-Levenshtein/> is unavailable. "
-        "Install Levenhstein (e.g. `pip install python-Levenshtein`) to suppress this warning."
+        "Levenshtein <https://pypi.org/project/python-Levenshtein/> and "
+        "vptree <https://pypi.org/project/vptree/> packages are unavailable. "
+        "Install Levenhstein and vptree (e.g. `pip install python-Levenshtein vptree`) to "
+        "suppress this warning."
     )
     warnings.warn(msg)
     LevenshteinSimilarityIndex = None
