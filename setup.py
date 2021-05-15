@@ -279,7 +279,7 @@ if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9
         'pyemd',
         'nmslib',
         'python-Levenshtein >= 0.10.2',
-        'vptree >= 1.2',
+        'lexpy >= 0.9.8',
     ])
 
 # Add additional requirements for testing on Linux that are skipped on Windows.

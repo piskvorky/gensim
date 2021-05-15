@@ -33,7 +33,6 @@ from gensim.similarities import WordEmbeddingSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
 from gensim.similarities.docsim import _nlargest
-from gensim.similarities.levenshtein import levdist, levsim
 
 try:
     from pyemd import emd  # noqa:F401
@@ -1544,74 +1543,12 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
 
-class TestLevenshteinDistance(unittest.TestCase):
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
-    def test_max_distance(self):
-        t1 = "holiday"
-        t2 = "day"
-        max_distance = max(len(t1), len(t2))
-
-        self.assertEqual(4, levdist(t1, t2))
-        self.assertEqual(4, levdist(t1, t2, 4))
-        self.assertEqual(max_distance, levdist(t1, t2, 2))
-        self.assertEqual(max_distance, levdist(t1, t2, -2))
-
-
-class TestLevenshteinSimilarity(unittest.TestCase):
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
-    def test_empty_strings(self):
-        t1 = ""
-        t2 = ""
-        alpha = 1.8
-
-        self.assertEqual(alpha, levsim(t1, t2))
-
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
-    def test_negative_hyperparameters(self):
-        t1 = "holiday"
-        t2 = "day"
-        alpha = 2.0
-        beta = 2.0
-
-        with self.assertRaises(AssertionError):
-            levsim(t1, t2, -alpha, beta)
-
-        with self.assertRaises(AssertionError):
-            levsim(t1, t2, alpha, -beta)
-
-        with self.assertRaises(AssertionError):
-            levsim(t1, t2, -alpha, -beta)
-
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
-    def test_min_similarity(self):
-        t1 = "holiday"
-        t2 = "day"
-        alpha = 2.0
-        beta = 2.0
-        similarity = alpha * (1 - 4.0 / 7)**beta
-        assert similarity > 0.1 and similarity < 0.5
-
-        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta))
-
-        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, -2))
-        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, -2.0))
-
-        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, 0))
-        self.assertAlmostEqual(similarity, levsim(t1, t2, alpha, beta, 0.0))
-
-        self.assertEqual(similarity, levsim(t1, t2, alpha, beta, 0.1))
-        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 0.5))
-        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 1.0))
-
-        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 2))
-        self.assertEqual(0.0, levsim(t1, t2, alpha, beta, 2.0))
-
-
 class TestLevenshteinSimilarityIndex(unittest.TestCase):
     def setUp(self):
         self.documents = [[u"government", u"denied", u"holiday"], [u"holiday", u"slowing", u"hollingworth"]]
         self.dictionary = Dictionary(self.documents)
-        self.index = LevenshteinSimilarityIndex(self.dictionary)
+        max_distance = max(len(term) for term in self.dictionary.values())
+        self.index = LevenshteinSimilarityIndex(self.dictionary, max_distance=max_distance)
 
     @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_topn(self):
