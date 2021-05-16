@@ -113,7 +113,7 @@ class FastSS:
         self.max_dist = max_dist
 
     def __str__(self):
-        return "%s<max_dist=%s, dictionary=%i" % (self.__class__.__name__, self.max_dist, len(self.db), )
+        return "%s<max_dist=%s, db_size=%i>" % (self.__class__.__name__, self.max_dist, len(self.db), )
 
     def __contains__(self, word):
         bkey = word.encode(ENCODING)
