@@ -8,7 +8,6 @@
 This module provides a namespace for functions that use the Levenshtein distance.
 """
 
-import itertools
 import logging
 
 from gensim.similarities.termsim import TermSimilarityIndex
@@ -95,8 +94,10 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         return similarity
 
     def most_similar(self, t1, topn=10):
+        if self.max_distance == 0:
+            return []
         terms = self.index.search_within_distance(t1, self.max_distance)
         most_similar = ((t2, self._levsim(t1, t2)) for t2 in terms if t1 != t2)
         most_similar = ((t2, similarity) for t2, similarity in most_similar if similarity > 0.0)
         most_similar = sorted(most_similar, key=lambda x: (x[1], x[0]), reverse=True)
-        return itertools.islice(most_similar, topn)
+        return most_similar[:topn]
