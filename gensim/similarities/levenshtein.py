@@ -8,7 +8,6 @@
 This module provides a namespace for functions that use the Levenshtein distance.
 """
 
-import itertools
 import logging
 from math import floor
 
@@ -138,7 +137,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
     """
 
-    def __init__(self, dictionary, alpha=1.8, beta=5.0, threshold=0.0, max_distance=2):
+    def __init__(self, dictionary, alpha=1.8, beta=5.0, threshold=0.0, max_distance=1):
         self.dictionary = dictionary
         self.alpha = alpha
         self.beta = beta
@@ -147,11 +146,16 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         for k in range(max_distance + 1):
             generate_automaton_to_file(k)
         self.max_distance = max_distance
-        self.words = list(self.dictionary.token2id)
+        self.words = list(self.dictionary.values())
         self.alphabet = set()
         self.trie = Trie(self.words, self.alphabet)
 
         super(LevenshteinSimilarityIndex, self).__init__()
+
+    def __str__(self):
+        return '%s<max_distance=%s, dictionary=%i %s…, alphabet=%s…>' % (
+            self.__class__.__name__, self.max_distance, len(self.words), self.words[:50], list(self.alphabet)[:50],
+        )
 
     def most_similar(self, t1, topn=10):
         automaton = LevenshteinAutomaton(self.max_distance, t1, self.alphabet)
