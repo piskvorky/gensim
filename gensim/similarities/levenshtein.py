@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-Fuzzy search for fast Levenshtein kNN distance queries.
+This module allows fast fuzzy search between strings, using kNN queries with Levenshtein similarity.
 """
 
 import logging
@@ -18,16 +18,14 @@ logger = logging.getLogger(__name__)
 
 class LevenshteinSimilarityIndex(TermSimilarityIndex):
     r"""
-    Retrieve the most similar terms from a static set of terms
-    ("dictionary") given a query term.
+    Retrieve the most similar terms from a static set of terms ("dictionary")
+    given a query term, using Levenshtein similarity.
 
-    Notes
-    -----
-    This implementation uses a neighbourhood algorithm (FastSS)
-    for fast nearest-neighbor retrieval of the most similar terms.
-
-    "Levenshtein similarity" is a function of Levenshtein distance,
+    "Levenshtein similarity" is a modification of the Levenshtein (edit) distance,
     defined in [charletetal17]_.
+
+    This implementation uses a neighbourhood algorithm (FastSS)
+    for fast kNN nearest-neighbor retrieval.
 
     Parameters
     ----------
@@ -39,7 +37,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         The exponential factor `beta` for the Levenshtein similarity. See [charletetal17]_.
     max_distance : int, optional
         Do not consider terms with Levenshtein distance larger than this as
-        "similar".  This is for performance reasons: keep this value below 3
+        "similar". This is done for performance reasons: keep this value below 3
         for reasonable retrieval performance. Default is 1.
 
     See Also
@@ -71,13 +69,13 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         super(LevenshteinSimilarityIndex, self).__init__()
 
     def levsim(self, t1, t2, distance):
-        """Calculate the Levenshtein similarity between two terms from their Levenshtein distance."""
+        """Calculate the Levenshtein similarity between two terms given their Levenshtein distance."""
         max_lengths = max(len(t1), len(t2)) or 1
         return self.alpha * (1.0 - distance * 1.0 / max_lengths)**self.beta
 
     def most_similar(self, t1, topn=10):
         """kNN fuzzy search: find the `topn` most similar terms from `self.dictionary` to `t1`."""
-        result = {}  # map {similar dictionary term => its levenshtein similarity to t1}
+        result = {}  # map of {dictionary term => its levenshtein similarity to t1}
         if self.max_distance > 0:
             effective_topn = topn + 1 if t1 in self.dictionary.token2id else topn
             effective_topn = min(len(self.dictionary), effective_topn)
