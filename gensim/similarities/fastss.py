@@ -132,12 +132,17 @@ class FastSS:
 
             self.db[bkey] = set2bytes(wordset)
 
-    def query(self, word):
+    def query(self, word, max_dist=None):
         """Find all words from the index that are within max_dist of `word`."""
-        res = {d: [] for d in range(self.max_dist + 1)}
+        if max_dist is None:
+            max_dist = self.max_dist
+        if max_dist > self.max_dist:
+            raise ValueError("query max_dist cannot be greater than max_dist specified in the constructor")
+
+        res = {d: [] for d in range(max_dist + 1)}
         cands = set()
 
-        for key in indexkeys(word, self.max_dist):
+        for key in indexkeys(word, max_dist):
             bkey = key.encode(ENCODING)
 
             if bkey in self.db:
@@ -145,7 +150,7 @@ class FastSS:
 
         for cand in cands:
             dist = editdist(word, cand)
-            if dist <= self.max_dist:
+            if dist <= max_dist:
                 res[dist].append(cand)
 
         return res
