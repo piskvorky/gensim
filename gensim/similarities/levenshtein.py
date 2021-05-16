@@ -12,6 +12,10 @@ import itertools
 import logging
 from math import floor
 
+from pyffs.automaton_management import generate_automaton_to_file
+from pyffs.fuzzy_search import Trie, LevenshteinAutomaton
+from pyffs.fuzzy_search.algorithms import trie_automaton_intersection
+
 from gensim.similarities.termsim import TermSimilarityIndex
 
 logger = logging.getLogger(__name__)
@@ -51,7 +55,7 @@ def levdist(t1, t2, max_distance=float("inf")):
     return distance
 
 
-def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
+def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0, distance=None):
     """Get the Levenshtein similarity between two terms.
 
     Return the Levenshtein similarity between two terms. The similarity is a
@@ -96,7 +100,8 @@ def levsim(t1, t2, alpha=1.8, beta=5.0, min_similarity=0.0):
 
     min_similarity = float(max(min(min_similarity, 1.0), 0.0))
     max_distance = int(floor(max_lengths * (1 - (min_similarity / alpha) ** (1 / beta))))
-    distance = levdist(t1, t2, max_distance)
+    if distance is None:
+        distance = levdist(t1, t2, max_distance)
     similarity = alpha * (1 - distance * 1.0 / max_lengths)**beta
     return similarity
 
@@ -132,22 +137,28 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """
-    def __init__(self, dictionary, alpha=1.8, beta=5.0, threshold=0.0):
+
+    def __init__(self, dictionary, alpha=1.8, beta=5.0, threshold=0.0, max_distance=2):
         self.dictionary = dictionary
         self.alpha = alpha
         self.beta = beta
         self.threshold = threshold
+
+        for k in range(max_distance + 1):
+            generate_automaton_to_file(k)
+        self.max_distance = max_distance
+        self.words = list(self.dictionary.token2id)
+        self.alphabet = set()
+        self.trie = Trie(self.words, self.alphabet)
+
         super(LevenshteinSimilarityIndex, self).__init__()
 
     def most_similar(self, t1, topn=10):
-        similarities = (
-            (levsim(t1, t2, self.alpha, self.beta, self.threshold), t2)
-            for t2 in self.dictionary.values()
+        automaton = LevenshteinAutomaton(self.max_distance, t1, self.alphabet)
+        similarities = [
+            (levsim(t1, t2, self.alpha, self.beta, self.threshold, distance=error), t2)
+            for error, t2 in trie_automaton_intersection(automaton, self.trie, True)
             if t1 != t2
-        )
-        most_similar = (
-            (t2, similarity)
-            for (similarity, t2) in sorted(similarities, reverse=True)
-            if similarity > 0
-        )
-        return itertools.islice(most_similar, int(topn))
+        ]
+        most_similar = [(t2, sim) for sim, t2 in similarities if sim > 0]
+        return sorted(most_similar, key=lambda item: -item[1])[ : int(topn)]
