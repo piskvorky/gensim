@@ -11,9 +11,7 @@ This module provides a namespace for functions that use the Levenshtein distance
 import logging
 from math import floor
 
-from pyffs.automaton_management import generate_automaton_to_file
-from pyffs.fuzzy_search import Trie, LevenshteinAutomaton
-from pyffs.fuzzy_search.algorithms import trie_automaton_intersection
+from gensim.similarities import fastss
 
 from gensim.similarities.termsim import TermSimilarityIndex
 
@@ -143,26 +141,24 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         self.beta = beta
         self.threshold = threshold
 
-        for k in range(max_distance + 1):
-            generate_automaton_to_file(k)
         self.max_distance = max_distance
-        self.words = list(self.dictionary.values())
-        self.alphabet = set()
-        self.trie = Trie(self.words, self.alphabet)
+        self.index = fastss.FastSS(max_dist=max_distance)
+        for word in self.dictionary.values():
+            self.index.add(word)
 
         super(LevenshteinSimilarityIndex, self).__init__()
 
     def __str__(self):
-        return '%s<max_distance=%s, dictionary=%i %s…, alphabet=%s…>' % (
-            self.__class__.__name__, self.max_distance, len(self.words), self.words[:50], list(self.alphabet)[:50],
-        )
+        return str(self.index)
 
     def most_similar(self, t1, topn=10):
-        automaton = LevenshteinAutomaton(self.max_distance, t1, self.alphabet)
-        similarities = [
-            (levsim(t1, t2, self.alpha, self.beta, self.threshold, distance=error), t2)
-            for error, t2 in trie_automaton_intersection(automaton, self.trie, True)
-            if t1 != t2
-        ]
-        most_similar = [(t2, sim) for sim, t2 in similarities if sim > 0]
-        return sorted(most_similar, key=lambda item: -item[1])[ : int(topn)]
+        result = []
+        for error, terms in sorted(self.index.query(t1).items()):
+            for t2 in terms:
+                if t1 == t2:
+                    continue
+                similarity = levsim(t1, t2, self.alpha, self.beta, self.threshold, distance=error)
+                if similarity > 0:
+                    result.append((t2, similarity))
+        result.sort(key=lambda item: (-item[1], item[0]))
+        return result[ : int(topn)]
