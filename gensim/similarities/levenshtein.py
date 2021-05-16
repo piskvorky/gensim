@@ -5,7 +5,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """
-This module provides a namespace for functions that use the Levenshtein distance.
+Fuzzy search for fast Levenshtein kNN distance queries.
 """
 
 import logging
@@ -18,41 +18,29 @@ logger = logging.getLogger(__name__)
 
 class LevenshteinSimilarityIndex(TermSimilarityIndex):
     r"""
-    Compute Levenshtein similarities between a static set of terms
-    ("dictionary") and retrieve the most similar terms for any given
-    query term.
+    Retrieve the most similar terms from a static set of terms
+    ("dictionary") given a query term.
 
     Notes
     -----
-    This implementation uses a Directed Acyclic Word Graph (DAWG)
+    This implementation uses a neighbourhood algorithm (FastSS)
     for fast nearest-neighbor retrieval of the most similar terms.
+
+    "Levenshtein similarity" is a function of Levenshtein distance,
+    defined in [charletetal17]_.
 
     Parameters
     ----------
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         A dictionary that specifies the considered terms.
     alpha : float, optional
-        Multiplicative factor `alpha` for Levenshtein similarity defined in [charletetal17]_.
+        Multiplicative factor `alpha` for the Levenshtein similarity. See [charletetal17]_.
     beta : float, optional
-        The exponential factor `beta` for Levenshtein similarity defined in [charletetal17]_.
+        The exponential factor `beta` for the Levenshtein similarity. See [charletetal17]_.
     max_distance : int, optional
         Do not consider terms with Levenshtein distance larger than this as
         "similar".  This is for performance reasons: keep this value below 3
         for reasonable retrieval performance. Default is 1.
-
-    Attributes
-    ----------
-    dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
-        A dictionary that specifies the considered terms.
-    alpha : float
-        The multiplicative factor alpha defined by [charletetal17]_.
-    beta : float
-        The exponential factor beta defined by [charletetal17]_.
-    index : :class:`lexpy.dawg.DAWG`
-        The DAWG nearest-neighbor search index.
-    max_distance : int
-        The maximum Levenshtein distance of the most similar terms.
-        Keeping this value below 3 significantly speeds up the retrieval.
 
     See Also
     --------
@@ -64,8 +52,6 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
     References
     ----------
-    The Levenshtein similarity, as a function of Levenshtein distance, was
-    defined in the context of term similarity by [charletetal17]_.
 
     .. [charletetal17] Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3:
        Soft-Cosine Semantic Similarity between Questions for Community Question Answering", 2017,
@@ -84,11 +70,13 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
         super(LevenshteinSimilarityIndex, self).__init__()
 
-    def _levsim(self, t1, t2, distance):
+    def levsim(self, t1, t2, distance):
+        """Calculate the Levenshtein similarity between two terms from their Levenshtein distance."""
         max_lengths = max(len(t1), len(t2)) or 1
         return self.alpha * (1.0 - distance * 1.0 / max_lengths)**self.beta
 
     def most_similar(self, t1, topn=10):
+        """kNN fuzzy search: find the `topn` most similar terms from `self.dictionary` to `t1`."""
         result = {}  # map {similar dictionary term => its levenshtein similarity to t1}
         if self.max_distance > 0:
             effective_topn = topn + 1 if t1 in self.dictionary.token2id else topn
@@ -108,7 +96,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
                 for t2 in self.index.query(t1, distance).get(distance, []):
                     if t1 == t2:
                         continue
-                    similarity = self._levsim(t1, t2, distance)
+                    similarity = self.levsim(t1, t2, distance)
                     if similarity > 0:
                         result[t2] = similarity
                 if len(result) >= effective_topn:
