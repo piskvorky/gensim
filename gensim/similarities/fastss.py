@@ -22,20 +22,20 @@ def editdist(s1, s2):
     """
     matrix = {}
 
-    for i in range(len(s1)+1):
+    for i in range(len(s1) + 1):
         matrix[(i, 0)] = i
-    for j in range(len(s2)+1):
+    for j in range(len(s2) + 1):
         matrix[(0, j)] = j
 
-    for i in range(1, len(s1)+1):
-        for j in range(1, len(s2)+1):
-            if s1[i-1] == s2[j-1]:
-                matrix[(i, j)] = matrix[(i-1, j-1)]
+    for i in range(1, len(s1) + 1):
+        for j in range(1, len(s2) + 1):
+            if s1[i - 1] == s2[j - 1]:
+                matrix[(i, j)] = matrix[(i - 1, j - 1)]
             else:
                 matrix[(i, j)] = min(
-                    matrix[(i-1, j)],
-                    matrix[(i, j-1)],
-                    matrix[(i-1, j-1)]
+                    matrix[(i - 1, j)],
+                    matrix[(i, j - 1)],
+                    matrix[(i - 1, j - 1)]
                 ) + 1
 
     return matrix[(i, j)]
@@ -52,7 +52,7 @@ def indexkeys(word, max_dist):
     limit = min(max_dist, wordlen) + 1
 
     for dist in range(limit):
-        variants = itertools.combinations(word, wordlen-dist)
+        variants = itertools.combinations(word, wordlen - dist)
 
         for variant in variants:
             res.add(''.join(variant))
@@ -81,7 +81,7 @@ def byte2int(b):
 def set2bytes(s):
     """Serialize a set of unicode strings into bytes.
 
-    >>> set2byte({u'a', u'b', u'c')
+    >>> set2byte({u'a', u'b', u'c'})
     b'a\x00b\x00c'
     """
     lis = []
@@ -134,7 +134,7 @@ class FastSS:
 
     def query(self, word):
         """Find all words from the index that are within max_dist of `word`."""
-        res = {d: [] for d in range(self.max_dist+1)}
+        res = {d: [] for d in range(self.max_dist + 1)}
         cands = set()
 
         for key in indexkeys(word, self.max_dist):
