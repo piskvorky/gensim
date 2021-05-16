@@ -1550,7 +1550,6 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         max_distance = max(len(term) for term in self.dictionary.values())
         self.index = LevenshteinSimilarityIndex(self.dictionary, max_distance=max_distance)
 
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_topn(self):
         """Test most_similar returns expected results."""
         results = list(self.index.most_similar(u"holiday", topn=0))
@@ -1566,14 +1565,12 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         self.assertEqual(len(self.dictionary) - 1, len(results))
         self.assertNotIn(u"holiday", results)
 
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_result_order(self):
         results = self.index.most_similar(u"holiday", topn=4)
         terms, _ = zip(*results)
         expected_terms = (u"hollingworth", u"denied", u"slowing", u"government")
         self.assertEqual(expected_terms, terms)
 
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_alpha(self):
         index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0)
         first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
@@ -1581,7 +1578,6 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
         second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         self.assertTrue(numpy.allclose(2.0 * first_similarities, second_similarities))
 
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_beta(self):
         index = LevenshteinSimilarityIndex(self.dictionary, alpha=1.0, beta=1.0)
         first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])

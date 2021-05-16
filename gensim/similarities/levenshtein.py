@@ -11,6 +11,7 @@ This module provides a namespace for functions that use the Levenshtein distance
 import logging
 
 from gensim.similarities.termsim import TermSimilarityIndex
+from gensim.similarities.fastss import FastSS
 
 logger = logging.getLogger(__name__)
 
@@ -78,32 +79,30 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         self.beta = beta
         self.max_distance = max_distance
 
-        from lexpy.dawg import DAWG
-
-        self.index = DAWG()
-        terms = sorted(self.dictionary.values())
-        self.index.add_all(terms)
-        self.index.reduce()
+        self.index = FastSS(self.max_distance)
+        for term in self.dictionary.values():
+            self.index.add(term)
 
         super(LevenshteinSimilarityIndex, self).__init__()
 
-    def _levsim(self, t1, t2):
-        from Levenshtein import distance
-
+    def _levsim(self, t1, t2, distance):
         max_lengths = max(len(t1), len(t2)) or 1
-        similarity = self.alpha * (1.0 - distance(t1, t2) * 1.0 / max_lengths)**self.beta
+        similarity = self.alpha * (1.0 - distance * 1.0 / max_lengths)**self.beta
         return similarity
 
     def most_similar(self, t1, topn=10):
-        if self.max_distance == 0:
-            terms = []
-        else:
+        most_similar = []
+        if self.max_distance > 0:
             effective_topn = topn + 1 if t1 in self.dictionary.token2id else topn
-            for max_distance in range(1, self.max_distance + 1):
-                terms = self.index.search_within_distance(t1, max_distance)
-                if len(terms) >= min(len(self.dictionary), effective_topn):
+            effective_topn = min(len(self.dictionary), effective_topn)
+            for distance in range(1, self.max_distance + 1):
+                terms = self.index.query(t1, distance)[distance]
+                for t2 in terms:
+                    if t1 == t2:
+                        continue
+                    similarity = self._levsim(t1, t2, distance)
+                    most_similar.append((t2, similarity))
+                if len(most_similar) >= effective_topn:
                     break
-        most_similar = ((t2, self._levsim(t1, t2)) for t2 in terms if t1 != t2)
-        most_similar = ((t2, similarity) for t2, similarity in most_similar if similarity > 0.0)
         most_similar = sorted(most_similar, key=lambda x: (-x[1], x[0]))
         return most_similar[:topn]
