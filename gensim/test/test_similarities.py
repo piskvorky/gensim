@@ -1553,27 +1553,25 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
     @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_topn(self):
         """Test most_similar returns expected results."""
+        results = list(self.index.most_similar(u"holiday", topn=0))
+        self.assertEqual(0, len(results))
+
         results = list(self.index.most_similar(u"holiday", topn=1))
-        self.assertLess(0, len(results))
-        self.assertGreaterEqual(1, len(results))
+        self.assertEqual(1, len(results))
 
         results = list(self.index.most_similar(u"holiday", topn=4))
-        self.assertLess(0, len(results))
-        self.assertGreaterEqual(4, len(results))
+        self.assertEqual(4, len(results))
+
+        results = list(self.index.most_similar(u"holiday", topn=len(self.dictionary)))
+        self.assertEqual(len(self.dictionary) - 1, len(results))
+        self.assertNotIn(u"holiday", results)
 
     @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_result_order(self):
         results = self.index.most_similar(u"holiday", topn=4)
         terms, _ = zip(*results)
-        terms = list(terms)
-        expected_terms = [u"hollingworth", u"slowing", u"denied", u"government"]
-        expected_terms = [term for term in expected_terms if term in terms]
+        expected_terms = (u"hollingworth", u"slowing", u"denied", u"government")
         self.assertEqual(expected_terms, terms)
-
-    @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
-    def test_most_similar_skips_self(self):
-        terms = [term for term, similarity in self.index.most_similar(u"holiday", topn=len(self.dictionary))]
-        self.assertFalse(u"holiday" in terms)
 
     @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")
     def test_most_similar_alpha(self):
