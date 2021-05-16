@@ -100,9 +100,9 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
                     if t1 == t2:
                         continue
                     similarity = self._levsim(t1, t2, distance)
-                    most_similar.append((t2, similarity))
+                    if similarity > 0.0:
+                        most_similar.append((t2, similarity))
                 if len(most_similar) >= effective_topn:
                     break
-        most_similar = ((t2, similarity) for t2, similarity in most_similar if similarity > 0.0)
         most_similar = sorted(most_similar, key=lambda x: (-x[1], x[0]))
         return most_similar[:topn]
