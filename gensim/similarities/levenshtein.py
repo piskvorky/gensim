@@ -95,8 +95,13 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
     def most_similar(self, t1, topn=10):
         if self.max_distance == 0:
-            return []
-        terms = self.index.search_within_distance(t1, self.max_distance)
+            terms = []
+        else:
+            effective_topn = topn + 1 if t1 in self.dictionary.token2id else topn
+            for max_distance in range(1, self.max_distance + 1):
+                terms = self.index.search_within_distance(t1, max_distance)
+                if len(terms) >= min(len(self.dictionary), effective_topn):
+                    break
         most_similar = ((t2, self._levsim(t1, t2)) for t2 in terms if t1 != t2)
         most_similar = ((t2, similarity) for t2, similarity in most_similar if similarity > 0.0)
         most_similar = sorted(most_similar, key=lambda x: (x[1], x[0]), reverse=True)
