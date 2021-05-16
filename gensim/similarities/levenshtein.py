@@ -86,23 +86,32 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
 
     def _levsim(self, t1, t2, distance):
         max_lengths = max(len(t1), len(t2)) or 1
-        similarity = self.alpha * (1.0 - distance * 1.0 / max_lengths)**self.beta
-        return similarity
+        return self.alpha * (1.0 - distance * 1.0 / max_lengths)**self.beta
 
     def most_similar(self, t1, topn=10):
-        most_similar = []
+        result = {}  # map {similar dictionary term => its levenshtein similarity to t1}
         if self.max_distance > 0:
             effective_topn = topn + 1 if t1 in self.dictionary.token2id else topn
             effective_topn = min(len(self.dictionary), effective_topn)
+
+            # Implement a "distance backoff" algorithm:
+            # Start with max_distance=1, for performance. And if that doesn't return enough results,
+            # continue with max_distance=2 etc, all the way until self.max_distance which
+            # is a hard cutoff.
+            # At that point stop searching, even if we don't have topn results yet.
+            #
+            # We use the backoff algo to speed up queries for short terms. These return enough results already
+            # with max_distance=1.
+            #
+            # See the discussion at https://github.com/RaRe-Technologies/gensim/pull/3146
             for distance in range(1, self.max_distance + 1):
-                terms = self.index.query(t1, distance)[distance]
-                for t2 in terms:
+                for t2 in self.index.query(t1, distance).get(distance, []):
                     if t1 == t2:
                         continue
                     similarity = self._levsim(t1, t2, distance)
-                    most_similar.append((t2, similarity))
-                if len(most_similar) >= effective_topn:
+                    if similarity > 0:
+                        result[t2] = similarity
+                if len(result) >= effective_topn:
                     break
-        most_similar = ((t2, similarity) for t2, similarity in most_similar if similarity > 0.0)
-        most_similar = sorted(most_similar, key=lambda x: (-x[1], x[0]))
-        return most_similar[:topn]
+
+        return sorted(result.items(), key=lambda x: (-x[1], x[0]))[:topn]

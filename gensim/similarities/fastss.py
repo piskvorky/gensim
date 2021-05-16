@@ -137,7 +137,10 @@ class FastSS:
         if max_dist is None:
             max_dist = self.max_dist
         if max_dist > self.max_dist:
-            raise ValueError("query max_dist cannot be greater than max_dist specified in the constructor")
+            raise ValueError(
+                f"query max_dist={max_dist} cannot be greater than "
+                f"max_dist={self.max_dist} specified in the constructor"
+            )
 
         res = {d: [] for d in range(max_dist + 1)}
         cands = set()
