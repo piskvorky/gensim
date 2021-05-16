@@ -52,8 +52,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         The DAWG nearest-neighbor search index.
     max_distance : int
         The maximum Levenshtein distance of the most similar terms.
-        Keeping this value below 3 has a significant impact on the
-        retrieval performance.
+        Keeping this value below 2 significantly speeds up the retrieval.
 
     See Also
     --------
