@@ -1570,7 +1570,7 @@ class TestLevenshteinSimilarityIndex(unittest.TestCase):
     def test_most_similar_result_order(self):
         results = self.index.most_similar(u"holiday", topn=4)
         terms, _ = zip(*results)
-        expected_terms = (u"hollingworth", u"slowing", u"denied", u"government")
+        expected_terms = (u"hollingworth", u"denied", u"slowing", u"government")
         self.assertEqual(expected_terms, terms)
 
     @unittest.skipIf(LevenshteinSimilarityIndex is None, "gensim.similarities.levenshtein is disabled")

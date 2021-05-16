@@ -17,8 +17,9 @@ logger = logging.getLogger(__name__)
 
 class LevenshteinSimilarityIndex(TermSimilarityIndex):
     r"""
-    Computes Levenshtein similarities between terms and retrieves most similar
-    terms for a given term.
+    Compute Levenshtein similarities between a static set of terms
+    ("dictionary") and retrieve the most similar terms for any given
+    query term.
 
     Notes
     -----
@@ -30,13 +31,13 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     dictionary : :class:`~gensim.corpora.dictionary.Dictionary`
         A dictionary that specifies the considered terms.
     alpha : float, optional
-        The multiplicative factor alpha defined by [charletetal17]_.
+        Multiplicative factor `alpha` for Levenshtein similarity defined in [charletetal17]_.
     beta : float, optional
-        The exponential factor beta defined by [charletetal17]_.
+        The exponential factor `beta` for Levenshtein similarity defined in [charletetal17]_.
     max_distance : int, optional
-        The maximum Levenshtein distance of the most similar terms.
-        Keeping this value below 3 has a significant impact on the
-        retrieval performance. Default is 1.
+        Do not consider terms with Levenshtein distance larger than this as
+        "similar".  This is for performance reasons: keep this value below 3
+        for reasonable retrieval performance. Default is 1.
 
     Attributes
     ----------
@@ -56,15 +57,15 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     See Also
     --------
     :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
-        Retrieve most similar terms for a given term using the cosine similarity over word
-        embeddings.
+        Retrieve most similar terms for a given term using the cosine
+        similarity over word embeddings.
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     References
     ----------
-    The Levenshtein similarity in the context of term similarity was defined
-    by [charletetal17]_.
+    The Levenshtein similarity, as a function of Levenshtein distance, was
+    defined in the context of term similarity by [charletetal17]_.
 
     .. [charletetal17] Delphine Charlet and Geraldine Damnati, "SimBow at SemEval-2017 Task 3:
        Soft-Cosine Semantic Similarity between Questions for Community Question Answering", 2017,
@@ -104,5 +105,5 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
                     break
         most_similar = ((t2, self._levsim(t1, t2)) for t2 in terms if t1 != t2)
         most_similar = ((t2, similarity) for t2, similarity in most_similar if similarity > 0.0)
-        most_similar = sorted(most_similar, key=lambda x: (x[1], x[0]), reverse=True)
+        most_similar = sorted(most_similar, key=lambda x: (-x[1], x[0]))
         return most_similar[:topn]

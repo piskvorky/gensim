@@ -112,7 +112,8 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     exponent : float, optional
         Take the word embedding similarities larger than `threshold` to the power of `exponent`.
     kwargs : dict or None
-        A dict with keyword arguments that will be passed to the `KeyedVectors.most_similar` method
+        A dict with keyword arguments that will be passed to the
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.most_similar` method
         when retrieving the word embeddings closest to a given word embedding.
 
     See Also
