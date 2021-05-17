@@ -196,12 +196,12 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
         return (-term_idf, term_index)
 
     if tfidf is None:
-        logger.info("iterating over columns in dictionary order")
         columns = sorted(dictionary.keys())
+        logger.info("iterating over %i columns in dictionary order", len(columns))
     else:
         assert max(tfidf.idfs) == matrix_order - 1
-        logger.info("iterating over columns in tf-idf order")
         columns = sorted(tfidf.idfs.keys(), key=tfidf_sort_key)
+        logger.info("iterating over %i columns in tf-idf order", len(columns))
 
     nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
 

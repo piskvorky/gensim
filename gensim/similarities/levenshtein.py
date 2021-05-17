@@ -61,11 +61,8 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
         self.alpha = alpha
         self.beta = beta
         self.max_distance = max_distance
-
-        self.index = FastSS(self.max_distance)
-        for term in self.dictionary.values():
-            self.index.add(term)
-
+        logger.info("creating FastSS index from %s", dictionary)
+        self.index = FastSS(words=self.dictionary.values(), max_dist=max_distance)
         super(LevenshteinSimilarityIndex, self).__init__()
 
     def levsim(self, t1, t2, distance):
