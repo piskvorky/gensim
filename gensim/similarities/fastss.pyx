@@ -11,15 +11,18 @@
 
 """Create and query FastSS index for fast approximate string similarity search."""
 
-import struct
 import itertools
 
 
 DEF MAX_WORD_LENGTH = 255  # a trade-off between speed (fast stack allocations) and versatility (long strings)
 
 
-def editdist(s1: unicode, s2: unicode, max_dist = None):
-    """Return the Levenshtein distance between two strings if their distance is <= max_dist, or max_dist+1 otherwise."""
+def editdist(s1: unicode, s2: unicode, max_dist=None):
+    """
+    If the Levenshtein distance between two strings is <= max_dist, return that distance.
+    Otherwise return max_dist+1.
+
+    """
     if s1 == s2:
         return 0
 
@@ -80,24 +83,6 @@ def indexkeys(word, max_dist):
     return res
 
 
-def int2byte(i):
-    """Encode an int <0, 255> into an 8-bit unsigned byte.
-
-    >>> int2byte(1)
-    b'\x01'
-    """
-    return struct.pack('B', i)
-
-
-def byte2int(b):
-    """Decode an 8-bit unsigned byte into an int.
-
-    >>> byte2int(b'\x01')
-    1
-    """
-    return struct.unpack('B', b)[0]
-
-
 def set2bytes(s):
     """Serialize a set of unicode strings into bytes.
 
@@ -110,7 +95,7 @@ def set2bytes(s):
 def bytes2set(b):
     """Deserialize bytes into a set of unicode strings.
 
-    >>> int2byte(b'a\x00b\x00c')
+    >>> bytes2set(b'a\x00b\x00c')
     {u'a', u'b', u'c'}
     """
     if not b:
