@@ -1830,7 +1830,7 @@ class Word2Vec(utils.SaveLoad):
 
         # propagate hidden -> output and take softmax to get probabilities
         prob_values = np.exp(np.dot(l1, self.syn1neg.T))
-        prob_values /= sum(prob_values)
+        prob_values /= np.sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
         # returning the most probable output words with their probabilities
         return [(self.wv.index_to_key[index1], prob_values[index1]) for index1 in top_indices]
