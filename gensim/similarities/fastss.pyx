@@ -1,5 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env cython
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: cdivision=True
+# cython: embedsignature=True
+# coding: utf-8
 #
 # Copyright (C) 2021 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
@@ -9,42 +13,52 @@
 
 import struct
 import itertools
-import logging
-
-logger = logging.getLogger(__name__)
 
 
-def editdist(s1, s2, maximum=None):
-    """Return the Levenshtein distance between two strings, or maximum+1 if the distance is larger than `maximum`."""
-    # TODO: rewrite in C; big impact on query performance!
+DEF MAX_WORD_LENGTH = 255  # a trade-off between speed (fast stack allocations) and versatility (long strings)
+
+
+def editdist(s1: unicode, s2: unicode, max_dist = None):
+    """Return the Levenshtein distance between two strings if their distance is <= max_dist, or max_dist+1 otherwise."""
     if s1 == s2:
         return 0
 
     if len(s1) > len(s2):
         s1, s2 = s2, s1
 
-    if maximum is None:
-        maximum = len(s1)
+    cdef unsigned char len_s1 = len(s1)
+    cdef unsigned char len_s2 = len(s2)
+    cdef unsigned char maximum = min(len_s2, max_dist or 255)
 
-    if len(s2) - len(s1) > maximum:
+    if len_s2 - len_s1 > maximum:
         return maximum + 1
 
-    distances = range(len(s1) + 1)
-    for i2, c2 in enumerate(s2):
-        distances_ = [i2 + 1]
-        all_bad = i2 > maximum
-        for i1, c1 in enumerate(s1):
-            if c1 == c2:
+    if len_s1 > MAX_WORD_LENGTH:
+        raise ValueError(f"editdist doesn't support strings longer than {MAX_WORD_LENGTH} characters")
+
+    cdef unsigned char[MAX_WORD_LENGTH + 1] distances, distances_
+    cdef unsigned char all_bad, i1, i2, val, pos_now = 0
+    for i1 in range(len_s1 + 1):
+        distances[i1] = i1
+
+    for i2 in range(len_s2):
+        pos_now = 0
+        distances_[0] = i2 + 1
+        all_bad = i2 >= maximum
+        for i1 in range(len_s1):
+            if s1[i1] == s2[i2]:
                 val = distances[i1]
             else:
-                val = 1 + min((distances[i1], distances[i1 + 1], distances_[-1]))
-            distances_.append(val)
+                val = 1 + min((distances[i1], distances[i1 + 1], distances_[pos_now]))
+            pos_now += 1
+            distances_[pos_now] = val
             if all_bad and val <= maximum:
-                all_bad = False
+                all_bad = 0
         if all_bad:
             return maximum + 1
-        distances = distances_
-    return distances[-1]
+        distances, distances_ = distances_, distances
+
+    return distances[pos_now]
 
 
 def indexkeys(word, max_dist):
@@ -110,7 +124,7 @@ class FastSS:
     def __init__(self, words=None, max_dist=2):
         """
         Create a FastSS index. The index will contain encoded variants of all
-        indexed words.
+        indexed words, allowing fast "fuzzy string similarity" queries.
 
         max_dist: maximum allowed edit distance of an indexed word to a query word. Keep
         max_dist<=3 for sane performance.
@@ -162,7 +176,7 @@ class FastSS:
                 cands.update(bytes2set(self.db[bkey]))
 
         for cand in cands:
-            dist = editdist(word, cand, max_dist)
+            dist = editdist(word, cand, max_dist=max_dist)
             if dist <= max_dist:
                 res[dist].append(cand)
 

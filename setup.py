@@ -27,6 +27,7 @@ c_extensions = {
     'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
     'gensim._matutils': 'gensim/_matutils.c',
     'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
+    'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
 }
 
 cpp_extensions = {
