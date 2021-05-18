@@ -61,7 +61,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
        https://www.aclweb.org/anthology/S17-2051/.
 
     """
-    def __init__(self, dictionary, alpha=1.8, beta=5.0, max_distance=1):
+    def __init__(self, dictionary, alpha=1.8, beta=5.0, max_distance=2):
         self.dictionary = dictionary
         self.alpha = alpha
         self.beta = beta

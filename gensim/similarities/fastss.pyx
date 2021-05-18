@@ -40,28 +40,26 @@ def editdist(s1: unicode, s2: unicode, max_dist=None):
         return maximum + 1
 
     cdef unsigned char[MAX_WORD_LENGTH + 1] distances, distances_
-    cdef unsigned char all_bad, i1, i2, val, pos_now = 0
+    cdef unsigned char all_bad, i1, i2, val
     for i1 in range(len_s1 + 1):
         distances[i1] = i1
 
     for i2 in range(len_s2):
-        pos_now = 0
         distances_[0] = i2 + 1
         all_bad = i2 >= maximum
         for i1 in range(len_s1):
             if s1[i1] == s2[i2]:
                 val = distances[i1]
             else:
-                val = 1 + min((distances[i1], distances[i1 + 1], distances_[pos_now]))
-            pos_now += 1
-            distances_[pos_now] = val
+                val = 1 + min((distances[i1], distances[i1 + 1], distances_[i1]))
+            distances_[i1 + 1] = val
             if all_bad and val <= maximum:
                 all_bad = 0
         if all_bad:
             return maximum + 1
         distances, distances_ = distances_, distances
 
-    return distances[pos_now]
+    return distances[len_s1]
 
 
 def indexkeys(word, max_dist):
