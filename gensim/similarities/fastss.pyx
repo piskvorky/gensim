@@ -31,13 +31,13 @@ def editdist(s1: unicode, s2: unicode, max_dist=None):
 
     cdef unsigned char len_s1 = len(s1)
     cdef unsigned char len_s2 = len(s2)
-    cdef unsigned char maximum = min(len_s2, max_dist or 255)
 
+    if len_s2 > MAX_WORD_LENGTH:
+        raise ValueError(f"editdist doesn't support strings longer than {MAX_WORD_LENGTH} characters")
+
+    cdef unsigned char maximum = min(len_s2, max_dist or 255)
     if len_s2 - len_s1 > maximum:
         return maximum + 1
-
-    if len_s1 > MAX_WORD_LENGTH:
-        raise ValueError(f"editdist doesn't support strings longer than {MAX_WORD_LENGTH} characters")
 
     cdef unsigned char[MAX_WORD_LENGTH + 1] distances, distances_
     cdef unsigned char all_bad, i1, i2, val, pos_now = 0

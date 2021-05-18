@@ -11,7 +11,12 @@ This module allows fast fuzzy search between strings, using kNN queries with Lev
 import logging
 
 from gensim.similarities.termsim import TermSimilarityIndex
-from gensim.similarities.fastss import FastSS
+from gensim import utils
+try:
+    from gensim.similarities.fastss import FastSS
+except ImportError:
+    raise utils.NO_CYTHON
+
 
 logger = logging.getLogger(__name__)
 
