@@ -13,7 +13,7 @@ import logging
 from gensim.similarities.termsim import TermSimilarityIndex
 from gensim import utils
 try:
-    from gensim.similarities.fastss import FastSS
+    from gensim.similarities.fastss import FastSS, editdist  # noqa:F401
 except ImportError:
     raise utils.NO_CYTHON
 
@@ -29,7 +29,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     "Levenshtein similarity" is a modification of the Levenshtein (edit) distance,
     defined in [charletetal17]_.
 
-    This implementation uses a neighbourhood algorithm (FastSS)
+    This implementation uses the FastSS neighbourhood algorithm
     for fast kNN nearest-neighbor retrieval.
 
     Parameters
