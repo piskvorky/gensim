@@ -51,9 +51,8 @@ RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 NO_CYTHON = RuntimeError(
     "Compiled extensions are unavailable. "
-    "Without them, this Gensim functionality is disabled. "
     "If you've installed from a package, ask the package maintainer to include compiled extensions. "
-    "If you're building Gensim from source yourself, install cython and gcc, and then "
+    "If you're building Gensim from source yourself, install Cython and a C compiler, and then "
     "run `python setup.py build_ext --inplace` to retry. "
 )
 """An exception that gensim code raises when Cython extensions are unavailable."""

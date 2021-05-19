@@ -14,7 +14,7 @@
 import itertools
 
 
-DEF MAX_WORD_LENGTH = 255  # a trade-off between speed (fast stack allocations) and versatility (long strings)
+DEF MAX_WORD_LENGTH = 254  # a trade-off between speed (fast stack allocations) and versatility (long strings)
 
 
 def editdist(s1: unicode, s2: unicode, max_dist=None):
@@ -29,37 +29,39 @@ def editdist(s1: unicode, s2: unicode, max_dist=None):
     if len(s1) > len(s2):
         s1, s2 = s2, s1
 
-    cdef unsigned char len_s1 = len(s1)
-    cdef unsigned char len_s2 = len(s2)
-
-    if len_s2 > MAX_WORD_LENGTH:
+    if len(s2) > MAX_WORD_LENGTH:
         raise ValueError(f"editdist doesn't support strings longer than {MAX_WORD_LENGTH} characters")
 
-    cdef unsigned char maximum = min(len_s2, max_dist or 255)
+    cdef unsigned char len_s1 = len(s1)
+    cdef unsigned char len_s2 = len(s2)
+    cdef unsigned char maximum = min(len_s2, max_dist or MAX_WORD_LENGTH)
+
     if len_s2 - len_s1 > maximum:
         return maximum + 1
 
-    cdef unsigned char[MAX_WORD_LENGTH + 1] distances, distances_
     cdef unsigned char all_bad, i1, i2, val
+    cdef unsigned char[MAX_WORD_LENGTH + 1] row1, row2
+    cdef unsigned char * row_new = &row1[0]
+    cdef unsigned char * row_old = &row2[0]
     for i1 in range(len_s1 + 1):
-        distances[i1] = i1
+        row_old[i1] = i1
 
     for i2 in range(len_s2):
-        distances_[0] = i2 + 1
+        row_new[0] = i2 + 1
         all_bad = i2 >= maximum
         for i1 in range(len_s1):
             if s1[i1] == s2[i2]:
-                val = distances[i1]
+                val = row_old[i1]
             else:
-                val = 1 + min((distances[i1], distances[i1 + 1], distances_[i1]))
-            distances_[i1 + 1] = val
+                val = 1 + min((row_old[i1], row_old[i1 + 1], row_new[i1]))
+            row_new[i1 + 1] = val
             if all_bad and val <= maximum:
                 all_bad = 0
         if all_bad:
             return maximum + 1
-        distances, distances_ = distances_, distances
+        row_new, row_old = row_old, row_new
 
-    return distances[len_s1]
+    return row_old[len_s1]
 
 
 def indexkeys(word, max_dist):
