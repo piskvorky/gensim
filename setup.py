@@ -315,7 +315,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.11.3'
+NUMPY_STR = 'numpy >= 1.17.0'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
