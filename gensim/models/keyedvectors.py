@@ -171,6 +171,7 @@ import sys
 import itertools
 import warnings
 from numbers import Integral
+from typing import Iterable
 
 from numpy import (
     dot, float32 as REAL, double, array, zeros, vstack,
@@ -1694,6 +1695,41 @@ class KeyedVectors(utils.SaveLoad):
             "intersect_word2vec_format",
             msg=f"merged {overlap_count} vectors into {self.vectors.shape} matrix from {fname}",
         )
+
+    def vectors_for_all(self, keys: Iterable) -> 'KeyedVectors':
+        """Produces vectors for all keys in a given iterable.
+
+        Notes
+        -----
+        A new :class:`KeyedVectors` object will always be produced.
+
+        In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
+        vectors for out-of-vocabulary keys (words) may be inferred. In other classes
+        such as :class:`KeyedVectors`, out-of-vocabulary keys will be omitted
+        in the produced :class:`KeyedVectors` object.
+
+        Additional attributes set via the :meth:`KeyedVectors.set_vecattr` method
+        will not be preserved in the produced :class:`KeyedVectors` object.
+
+        Parameters
+        ----------
+        keys : iterable of str
+            The keys that will be vectorized.
+
+        Returns
+        -------
+        keyedvectors : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            Vectors for all the given keys.
+
+        """
+        vocabulary = sorted(set(filter(lambda key: key in self, keys)))
+        vocab_size = len(vocabulary)
+        datatype = self.vectors.dtype
+        kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)
+        for key in vocabulary:
+            weights = self[key]
+            _add_word_to_kv(kv, None, key, weights, vocab_size)
+        return kv
 
     def _upconvert_old_d2vkv(self):
         """Convert a deserialized older Doc2VecKeyedVectors instance to latest generic KeyedVectors"""

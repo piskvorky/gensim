@@ -850,6 +850,35 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
         self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
+    def test_vectors_for_all(self):
+        """Test vectors_for_all returns expected results."""
+        words = [
+            'responding',
+            'approached',
+            'chairman',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.test_model.wv.vectors_for_all(words)
+
+        expected = 5
+        predicted = len(vectors_for_all)
+        self.assertEqual(expected, predicted)
+
+        expected = self.test_model.wv['responding']
+        predicted = vectors_for_all['responding']
+        self.assertTrue(np.allclose(expected, predicted))
+
+        smaller_distance = np.linalg.norm(
+            vectors_for_all['an out-of-vocabulary word']
+            - vectors_for_all['another out-of-vocabulary word']
+        )
+        greater_distance = np.linalg.norm(
+            vectors_for_all['an out-of-vocabulary word']
+            - vectors_for_all['responding']
+        )
+        self.assertGreater(greater_distance, smaller_distance)
+
 
 with open(datapath('toy-data.txt')) as fin:
     TOY_SENTENCES = [fin.read().strip().split(' ')]

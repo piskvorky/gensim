@@ -39,6 +39,25 @@ class TestKeyedVectors(unittest.TestCase):
         predicted = [result[0] for result in self.vectors.most_similar('war', topn=5)]
         self.assertEqual(expected, predicted)
 
+    def test_vectors_for_all(self):
+        """Test vectors_for_all returns expected results."""
+        words = [
+            'conflict',
+            'administration',
+            'terrorism',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.vectors.vectors_for_all(words)
+
+        expected = 3
+        predicted = len(vectors_for_all)
+        self.assertEqual(expected, predicted)
+
+        expected = self.vectors['conflict']
+        predicted = vectors_for_all['conflict']
+        self.assertTrue(np.allclose(expected, predicted))
+
     def test_most_similar_topn(self):
         """Test most_similar returns correct results when `topn` is specified."""
         self.assertEqual(len(self.vectors.most_similar('war', topn=5)), 5)
