@@ -1799,7 +1799,7 @@ class Word2Vec(utils.SaveLoad):
 
         Parameters
         ----------
-        context_words_list : list of str OR list of int
+        context_words_list : list of (str OR int)
             If list of str: List of context words.
             If list of int: List of indices of context words in `self.wv.vectors`
         topn : int, optional
