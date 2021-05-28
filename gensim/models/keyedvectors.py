@@ -1698,7 +1698,7 @@ class KeyedVectors(utils.SaveLoad):
         )
 
     def vectors_for_all(self, keys: Union[Iterable, Dictionary]) -> 'KeyedVectors':
-        """Produces vectors for all given keys.
+        """Produce vectors for all given keys.
 
         Notes
         -----
