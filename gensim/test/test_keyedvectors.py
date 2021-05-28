@@ -95,7 +95,7 @@ class TestKeyedVectors(unittest.TestCase):
     def test_vectors_for_all_without_copy_vecattrs(self):
         """Test vectors_for_all returns can copy vector attributes."""
         words = ['conflict']
-        vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=True)
+        vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=False)
 
         expected = None
         predicted = vectors_for_all.get_vecattr('conflict', 'count')
