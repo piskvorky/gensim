@@ -1722,7 +1722,7 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        keys : {iterable, Dictionary}
+        keys : {iterable, :class:`~gensim.corpora.dictionary.Dictionary`}
             The keys that will be vectorized.
         allow_inference : bool, optional
             In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
