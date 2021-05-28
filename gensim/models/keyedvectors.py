@@ -1724,9 +1724,10 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if isinstance(keys, Dictionary):
-            vocabulary = keys.token2id
+            vocabulary = [key for key in keys.token2id if key in self]
         else:
-            vocabulary = list(OrderedDict.fromkeys(keys))
+            vocabulary = (key for key in keys if key in self)
+            vocabulary = list(OrderedDict.fromkeys(vocabulary))  # deduplicate keys
         vocab_size = len(vocabulary)
         datatype = self.vectors.dtype
         kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)
