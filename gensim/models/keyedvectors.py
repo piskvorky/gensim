@@ -1697,17 +1697,13 @@ class KeyedVectors(utils.SaveLoad):
             msg=f"merged {overlap_count} vectors into {self.vectors.shape} matrix from {fname}",
         )
 
-    def vectors_for_all(self, keys: Union[Iterable, Dictionary]) -> 'KeyedVectors':
+    def vectors_for_all(self, keys: Union[Iterable, Dictionary],
+                        allow_inference: bool = True) -> 'KeyedVectors':
         """Produce vectors for all given keys.
 
         Notes
         -----
         A new :class:`KeyedVectors` object will always be produced.
-
-        In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
-        vectors for out-of-vocabulary keys (words) may be inferred. In other classes
-        such as :class:`KeyedVectors`, out-of-vocabulary keys will be omitted
-        in the produced :class:`KeyedVectors` object.
 
         Additional attributes set via the :meth:`KeyedVectors.set_vecattr` method
         will not be preserved in the produced :class:`KeyedVectors` object.
@@ -1716,6 +1712,9 @@ class KeyedVectors(utils.SaveLoad):
         ----------
         keys : {iterable of str, Dictionary}
             The keys that will be vectorized.
+        allow_inference : bool, optional
+            In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
+            vectors for out-of-vocabulary keys (words) may be inferred.
 
         Returns
         -------
@@ -1723,16 +1722,23 @@ class KeyedVectors(utils.SaveLoad):
             Vectors for all the given keys.
 
         """
+        def is_key_defined(key) -> bool:
+            if allow_inference:
+                return key in self
+            else:
+                return key in self.key_to_index
+
         if isinstance(keys, Dictionary):
-            term_ids = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing frequency
-            vocabulary = [term_id for term_id, freq in term_ids if term_id in self]
-        else:
-            vocabulary = (key for key in keys if key in self)
-            vocabulary = list(OrderedDict.fromkeys(vocabulary))  # deduplicate keys
+            keys = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing collection frequency
+            keys = (key for key, _ in keys)
+        keys = filter(is_key_defined, keys)  # remove undefined keys
+        vocabulary = list(OrderedDict.fromkeys(keys))  # deduplicate keys
+
         vocab_size = len(vocabulary)
         datatype = self.vectors.dtype
-        kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)
-        for key in vocabulary:
+        kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)  # preallocate new object
+
+        for key in vocabulary:  # produce and index vectors for all the given keys
             weights = self[key]
             _add_word_to_kv(kv, None, key, weights, vocab_size)
         return kv
