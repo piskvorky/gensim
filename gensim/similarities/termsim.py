@@ -114,11 +114,10 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     >>> from gensim.models.word2vec import LineSentence
     >>> from gensim.similarities import WordEmbeddingSimilarityIndex
     >>>
-    >>> corpus = common_texts
-    >>> model = FastText(corpus, vector_size=20, min_count=1)  # train word-vectors on a corpus
+    >>> model = FastText(common_texts, vector_size=20, min_count=1)  # train word-vectors on a corpus
     >>> different_corpus = LineSentence(datapath('lee_background.cor'))
     >>> dictionary = Dictionary(different_corpus)  # construct a vocabulary on a different corpus
-    >>> word_vectors = model.wv.vectors_for_all(dictionary.token2id)  # remove OOV word-vectors and infer new words
+    >>> word_vectors = model.wv.vectors_for_all(dictionary)  # remove OOV word-vectors and infer new words
     >>> assert len(dictionary) == len(word_vectors)  # all words from our vocabulary received their word-vectors
     >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors)
 
@@ -433,7 +432,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
     >>> annoy = AnnoyIndexer(model, num_trees=2)  # use annoy for faster word similarity lookups
     >>> dictionary = Dictionary(common_texts)
-    >>> word_vectors = model.wv.vectors_for_all(dictionary.token2id)
+    >>> word_vectors = model.wv.vectors_for_all(dictionary)
     >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors, kwargs={'indexer': annoy})
     >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
     >>> similarity_matrix = SparseTermSimilarityMatrix(termsim_index, dictionary, symmetric=True, dominant=True)

@@ -171,7 +171,7 @@ import sys
 import itertools
 import warnings
 from numbers import Integral
-from typing import Iterable
+from typing import Iterable, Union
 
 from numpy import (
     dot, float32 as REAL, double, array, zeros, vstack,
@@ -1696,8 +1696,8 @@ class KeyedVectors(utils.SaveLoad):
             msg=f"merged {overlap_count} vectors into {self.vectors.shape} matrix from {fname}",
         )
 
-    def vectors_for_all(self, keys: Iterable) -> 'KeyedVectors':
-        """Produces vectors for all keys in a given iterable.
+    def vectors_for_all(self, keys: Union[Iterable, Dictionary]) -> 'KeyedVectors':
+        """Produces vectors for all given keys.
 
         Notes
         -----
@@ -1713,7 +1713,7 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        keys : iterable of str
+        keys : {iterable of str, Dictionary}
             The keys that will be vectorized.
 
         Returns
@@ -1722,7 +1722,10 @@ class KeyedVectors(utils.SaveLoad):
             Vectors for all the given keys.
 
         """
-        vocabulary = sorted(set(filter(lambda key: key in self, keys)))
+        if isinstance(keys, Dictionary):
+            vocabulary = keys.token2id
+        else:
+            vocabulary = sorted(set(filter(lambda key: key in self, keys)))
         vocab_size = len(vocabulary)
         datatype = self.vectors.dtype
         kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)
