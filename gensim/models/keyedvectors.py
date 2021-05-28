@@ -1728,18 +1728,20 @@ class KeyedVectors(utils.SaveLoad):
                 return key in self.key_to_index
 
         if isinstance(keys, Dictionary):
-            keys = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing collection frequency
-            keys = (key for key, _ in keys)
-        keys = filter(is_key_defined, keys)  # remove undefined keys
-        vocabulary = list(OrderedDict.fromkeys(keys))  # deduplicate keys
+            vocab = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing collection frequency
+            vocab = (keys[key] for key, _ in vocab)
+        else:
+            vocab = keys
 
-        vocab_size = len(vocabulary)
+        vocab = filter(is_key_defined, vocab)  # remove undefined keys
+        vocab = list(OrderedDict.fromkeys(vocab))  # deduplicate keys
+
         datatype = self.vectors.dtype
-        kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)  # preallocate new KeyedVectors object
+        kv = KeyedVectors(self.vector_size, len(vocab), dtype=datatype)  # preallocate new KeyedVectors object
 
-        for key in vocabulary:  # produce and index vectors for all the given keys
+        for key in vocab:  # produce and index vectors for all the given keys
             weights = self[key]
-            _add_word_to_kv(kv, None, key, weights, vocab_size)
+            _add_word_to_kv(kv, None, key, weights, len(vocab))
             if not copy_vecattrs:
                 continue
             for attr in self.expandos:  # copy vector attributes to the new KeyedVectors object
