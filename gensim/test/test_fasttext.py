@@ -851,7 +851,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
     def test_vectors_for_all_with_inference(self):
-        """Test vectors_for_all returns expected results."""
+        """Test vectors_for_all can infer new vectors."""
         words = [
             'responding',
             'approached',
@@ -859,7 +859,7 @@ class TestFastTextModel(unittest.TestCase):
             'an out-of-vocabulary word',
             'another out-of-vocabulary word',
         ]
-        vectors_for_all = self.test_model.wv.vectors_for_all(words, allow_inference=True)
+        vectors_for_all = self.test_model.wv.vectors_for_all(words)
 
         expected = 5
         predicted = len(vectors_for_all)
@@ -880,7 +880,7 @@ class TestFastTextModel(unittest.TestCase):
         self.assertGreater(greater_distance, smaller_distance)
 
     def test_vectors_for_all_without_inference(self):
-        """Test vectors_for_all returns expected results."""
+        """Test vectors_for_all does not infer new vectors when prohibited."""
         words = [
             'responding',
             'approached',
@@ -897,6 +897,23 @@ class TestFastTextModel(unittest.TestCase):
         expected = self.test_model.wv['responding']
         predicted = vectors_for_all['responding']
         self.assertTrue(np.allclose(expected, predicted))
+
+    def test_vectors_for_all_with_copy_vecattrs(self):
+        """Test vectors_for_all returns can copy vector attributes."""
+        words = ['responding']
+        vectors_for_all = self.test_model.wv.vectors_for_all(words, copy_vecattrs=True)
+
+        expected = self.test_model.wv.get_vecattr('responding', 'count')
+        predicted = vectors_for_all.get_vecattr('responding', 'count')
+        self.assertEqual(expected, predicted)
+
+    def test_vectors_for_all_without_copy_vecattrs(self):
+        """Test vectors_for_all returns can copy vector attributes."""
+        words = ['responding']
+        vectors_for_all = self.test_model.wv.vectors_for_all(words)
+
+        with self.assertRaises(KeyError):
+            vectors_for_all.get_vecattr('responding', 'count')
 
 
 with open(datapath('toy-data.txt')) as fin:

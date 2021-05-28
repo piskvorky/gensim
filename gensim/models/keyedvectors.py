@@ -1698,15 +1698,9 @@ class KeyedVectors(utils.SaveLoad):
         )
 
     def vectors_for_all(self, keys: Union[Iterable, Dictionary],
-                        allow_inference: bool = True) -> 'KeyedVectors':
-        """Produce vectors for all given keys.
-
-        Notes
-        -----
-        A new :class:`KeyedVectors` object will always be produced.
-
-        Additional attributes set via the :meth:`KeyedVectors.set_vecattr` method
-        will not be preserved in the produced :class:`KeyedVectors` object.
+                        allow_inference: bool = True,
+                        copy_vecattrs: bool = False) -> 'KeyedVectors':
+        """Produce vectors for all given keys as a new :class:`KeyedVectors` object.
 
         Parameters
         ----------
@@ -1714,7 +1708,12 @@ class KeyedVectors(utils.SaveLoad):
             The keys that will be vectorized.
         allow_inference : bool, optional
             In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
-            vectors for out-of-vocabulary keys (words) may be inferred.
+            vectors for out-of-vocabulary keys (words) may be inferred. Default is True.
+        copy_vecattrs : bool, optional
+            Additional attributes set via the :meth:`KeyedVectors.set_vecattr` method
+            will be preserved in the produced :class:`KeyedVectors` object. Default is False.
+            To ensure that *all* the produced vectors will have vector attributes assigned,
+            you should set `allow_inference=False`.
 
         Returns
         -------
@@ -1736,11 +1735,19 @@ class KeyedVectors(utils.SaveLoad):
 
         vocab_size = len(vocabulary)
         datatype = self.vectors.dtype
-        kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)  # preallocate new object
+        kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)  # preallocate new KeyedVectors object
 
         for key in vocabulary:  # produce and index vectors for all the given keys
             weights = self[key]
             _add_word_to_kv(kv, None, key, weights, vocab_size)
+            if not copy_vecattrs:
+                continue
+            for attr in self.expandos:  # copy vector attributes to the new KeyedVectors object
+                try:
+                    val = self.get_vecattr(key, attr)
+                    kv.set_vecattr(key, attr, val)
+                except KeyError:
+                    pass
         return kv
 
     def _upconvert_old_d2vkv(self):
