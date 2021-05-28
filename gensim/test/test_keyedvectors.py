@@ -64,7 +64,7 @@ class TestKeyedVectors(unittest.TestCase):
         words = Dictionary([[
             'conflict',
             'administration',
-            'terrorism',
+            'terrorism', 'terrorism',
             'an out-of-vocabulary word',
             'another out-of-vocabulary word',
         ]])
@@ -77,6 +77,11 @@ class TestKeyedVectors(unittest.TestCase):
         expected = self.vectors['conflict']
         predicted = vectors_for_all['conflict']
         self.assertTrue(np.allclose(expected, predicted))
+
+        # terrorism has the highest frequency, so it should be indexed first
+        expected = 'terrorism'
+        predicted = vectors_for_all.index_to_key[0]
+        self.assertEqual(expected, predicted)
 
     def test_most_similar_topn(self):
         """Test most_similar returns correct results when `topn` is specified."""

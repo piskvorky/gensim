@@ -1724,7 +1724,8 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if isinstance(keys, Dictionary):
-            vocabulary = [key for key in keys.token2id if key in self]
+            term_ids = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing frequency
+            vocabulary = [term_id for term_id, freq in term_ids if term_id in self]
         else:
             vocabulary = (key for key in keys if key in self)
             vocabulary = list(OrderedDict.fromkeys(vocabulary))  # deduplicate keys
