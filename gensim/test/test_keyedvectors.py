@@ -14,6 +14,7 @@ import unittest
 
 import numpy as np
 
+from gensim.corpora.dictionary import Dictionary
 from gensim.models.keyedvectors import KeyedVectors, REAL, pseudorandom_weak_vector
 from gensim.test.utils import datapath
 import gensim.models.keyedvectors
@@ -39,8 +40,8 @@ class TestKeyedVectors(unittest.TestCase):
         predicted = [result[0] for result in self.vectors.most_similar('war', topn=5)]
         self.assertEqual(expected, predicted)
 
-    def test_vectors_for_all(self):
-        """Test vectors_for_all returns expected results."""
+    def test_vectors_for_all_list(self):
+        """Test vectors_for_all returns expected results with a list."""
         words = [
             'conflict',
             'administration',
@@ -48,6 +49,25 @@ class TestKeyedVectors(unittest.TestCase):
             'an out-of-vocabulary word',
             'another out-of-vocabulary word',
         ]
+        vectors_for_all = self.vectors.vectors_for_all(words)
+
+        expected = 3
+        predicted = len(vectors_for_all)
+        self.assertEqual(expected, predicted)
+
+        expected = self.vectors['conflict']
+        predicted = vectors_for_all['conflict']
+        self.assertTrue(np.allclose(expected, predicted))
+
+    def test_vectors_for_all_dictionary(self):
+        """Test vectors_for_all returns expected results with a dictionary."""
+        words = Dictionary([[
+            'conflict',
+            'administration',
+            'terrorism',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]])
         vectors_for_all = self.vectors.vectors_for_all(words)
 
         expected = 3
