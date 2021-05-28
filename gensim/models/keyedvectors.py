@@ -1702,6 +1702,24 @@ class KeyedVectors(utils.SaveLoad):
                         copy_vecattrs: bool = False) -> 'KeyedVectors':
         """Produce vectors for all given keys as a new :class:`KeyedVectors` object.
 
+        Notes
+        -----
+        The keys will always be deduplicated. For optimal performance, you should not pass entire
+        corpora to the method. Instead, you should construct a
+        :class:`~gensim.corpora.dictionary.Dictionary` object out of your corpus first:
+
+        >>> import gensim.downloader as api
+        >>> from gensim.test.utils import common_texts
+        >>>
+        >>> model = api.load('word2vec-google-news-300')
+        >>> corpus = common_texts
+        >>> dictionary = Dictionary(corpus)  # construct a vocabulary out of your corpus
+        >>> word_vectors = model.wv.vectors_for_all(dictionary)  # create word-vectors for words in your corpus
+
+        If the keys are a :class:`~gensim.corpora.dictionary.Dictionary` object, they will be
+        sorted in a decreasing order of collection frequency (`Dictionary.cfs`) before producing
+        the new :class:`KeyedVectors` object to improve cache-warmness for subsequent operations.
+
         Parameters
         ----------
         keys : {iterable, Dictionary}
