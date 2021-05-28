@@ -1704,7 +1704,7 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        keys : {iterable of str, Dictionary}
+        keys : {iterable, Dictionary}
             The keys that will be vectorized.
         allow_inference : bool, optional
             In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
