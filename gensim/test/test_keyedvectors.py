@@ -41,7 +41,7 @@ class TestKeyedVectors(unittest.TestCase):
         self.assertEqual(expected, predicted)
 
     def test_vectors_for_all_list(self):
-        """Test vectors_for_all returns expected results with a list."""
+        """Test vectors_for_all returns expected results with a list of keys."""
         words = [
             'conflict',
             'administration',
@@ -60,7 +60,7 @@ class TestKeyedVectors(unittest.TestCase):
         self.assertTrue(np.allclose(expected, predicted))
 
     def test_vectors_for_all_dictionary(self):
-        """Test vectors_for_all returns expected results with a dictionary."""
+        """Test vectors_for_all returns expected results with a Dictionary of keys."""
         words = Dictionary([[
             'conflict',
             'administration',
@@ -81,6 +81,24 @@ class TestKeyedVectors(unittest.TestCase):
         # terrorism has the highest frequency, so it should be indexed first
         expected = 'terrorism'
         predicted = vectors_for_all.index_to_key[0]
+        self.assertEqual(expected, predicted)
+
+    def test_vectors_for_all_with_copy_vecattrs(self):
+        """Test vectors_for_all returns can copy vector attributes."""
+        words = ['conflict']
+        vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=True)
+
+        expected = self.vectors.get_vecattr('conflict', 'count')
+        predicted = vectors_for_all.get_vecattr('conflict', 'count')
+        self.assertEqual(expected, predicted)
+
+    def test_vectors_for_all_without_copy_vecattrs(self):
+        """Test vectors_for_all returns can copy vector attributes."""
+        words = ['conflict']
+        vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=True)
+
+        expected = None
+        predicted = vectors_for_all.get_vecattr('conflict', 'count')
         self.assertEqual(expected, predicted)
 
     def test_most_similar_topn(self):

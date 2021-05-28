@@ -898,23 +898,6 @@ class TestFastTextModel(unittest.TestCase):
         predicted = vectors_for_all['responding']
         self.assertTrue(np.allclose(expected, predicted))
 
-    def test_vectors_for_all_with_copy_vecattrs(self):
-        """Test vectors_for_all returns can copy vector attributes."""
-        words = ['responding']
-        vectors_for_all = self.test_model.wv.vectors_for_all(words, copy_vecattrs=True)
-
-        expected = self.test_model.wv.get_vecattr('responding', 'count')
-        predicted = vectors_for_all.get_vecattr('responding', 'count')
-        self.assertEqual(expected, predicted)
-
-    def test_vectors_for_all_without_copy_vecattrs(self):
-        """Test vectors_for_all returns can copy vector attributes."""
-        words = ['responding']
-        vectors_for_all = self.test_model.wv.vectors_for_all(words)
-
-        with self.assertRaises(KeyError):
-            vectors_for_all.get_vecattr('responding', 'count')
-
 
 with open(datapath('toy-data.txt')) as fin:
     TOY_SENTENCES = [fin.read().strip().split(' ')]
