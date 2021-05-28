@@ -97,9 +97,9 @@ class TestKeyedVectors(unittest.TestCase):
         words = ['conflict']
         vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=False)
 
-        expected = None
+        not_expected = self.vectors.get_vecattr('conflict', 'count')
         predicted = vectors_for_all.get_vecattr('conflict', 'count')
-        self.assertEqual(expected, predicted)
+        self.assertNotEqual(not_expected, predicted)
 
     def test_most_similar_topn(self):
         """Test most_similar returns correct results when `topn` is specified."""
