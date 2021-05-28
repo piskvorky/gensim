@@ -172,6 +172,7 @@ import itertools
 import warnings
 from numbers import Integral
 from typing import Iterable, Union
+from collections import OrderedDict
 
 from numpy import (
     dot, float32 as REAL, double, array, zeros, vstack,
@@ -1725,7 +1726,7 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(keys, Dictionary):
             vocabulary = keys.token2id
         else:
-            vocabulary = sorted(set(filter(lambda key: key in self, keys)))
+            vocabulary = list(OrderedDict.fromkeys(keys))
         vocab_size = len(vocabulary)
         datatype = self.vectors.dtype
         kv = KeyedVectors(self.vector_size, vocab_size, dtype=datatype)
