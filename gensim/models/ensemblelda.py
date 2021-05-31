@@ -18,6 +18,12 @@ Ensemble LDA addresses the issue by training an ensemble of topic models and thr
 across the ensemble. In this regard, the topics extracted are more reliable and there is the added benefit over many
 topic models that the user does not need to know the exact number of topics ahead of time.
 
+For more information see the link in the :ref:`Citation` below, watch our Machine Learning Prague 2019 talk `Solving
+the Text Labeling challenge with EnsembleLDA and Active Learning
+<https://slideslive.com/38913528/solving-the-text-labeling-challenge-with-ensemblelda-and-active-learning?locale=cs>`_,
+or view our `Machine Learning Summer School poster
+<https://github.com/aloosley/ensembleLDA/blob/master/mlss/mlss_poster_v2.pdf>`_.
+
 Usage examples
 --------------
 
