@@ -9,14 +9,14 @@
 
 """Ensemble Latent Dirichlet Allocation (eLDA), an algorithm for extracting reliable topics.
 
-In topic modeling, the aim is to find a set of topics that represents global structure of a corpus of documents. One
-issue that occur with topics extracted from an NMF or LDA model is reproducibility. That is, if the topic model is
+The aim of topic modelling is to find a set of topics that represent the global structure of a corpus of documents. One
+issue that occurs with topics extracted from an NMF or LDA model is reproducibility. That is, if the topic model is
 trained repeatedly allowing only the random seed to change, would the same (or similar) topic representation be reliably
-learned.
+learned. Unreliable topics are undesireable because they are not a good representation of the corpus.
 
 Ensemble LDA addresses the issue by training an ensemble of topic models and throwing out topics that do not reoccur
-across the ensemble. In this regard, the topics extracted are reliable and there is the added benefit over many topic
-models that the user does not need to know the exact number of topics ahead of time.
+across the ensemble. In this regard, the topics extracted are more reliable and there is the added benefit over many
+topic models that the user does not need to know the exact number of topics ahead of time.
 
 Usage examples
 --------------
