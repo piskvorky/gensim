@@ -14,7 +14,6 @@ import unittest
 
 import numpy as np
 
-from gensim.corpora.dictionary import Dictionary
 from gensim.models.keyedvectors import KeyedVectors, REAL, pseudorandom_weak_vector
 from gensim.test.utils import datapath
 import gensim.models.keyedvectors
@@ -58,30 +57,6 @@ class TestKeyedVectors(unittest.TestCase):
         expected = self.vectors['conflict']
         predicted = vectors_for_all['conflict']
         self.assertTrue(np.allclose(expected, predicted))
-
-    def test_vectors_for_all_dictionary(self):
-        """Test vectors_for_all returns expected results with a Dictionary of keys."""
-        words = Dictionary([[
-            'conflict',
-            'administration',
-            'terrorism', 'terrorism',
-            'an out-of-vocabulary word',
-            'another out-of-vocabulary word',
-        ]])
-        vectors_for_all = self.vectors.vectors_for_all(words)
-
-        expected = 3
-        predicted = len(vectors_for_all)
-        self.assertEqual(expected, predicted)
-
-        expected = self.vectors['conflict']
-        predicted = vectors_for_all['conflict']
-        self.assertTrue(np.allclose(expected, predicted))
-
-        # terrorism has the highest frequency, so it should be indexed first
-        expected = 'terrorism'
-        predicted = vectors_for_all.index_to_key[0]
-        self.assertEqual(expected, predicted)
 
     def test_vectors_for_all_with_copy_vecattrs(self):
         """Test vectors_for_all returns can copy vector attributes."""
