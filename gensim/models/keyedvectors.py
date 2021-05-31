@@ -1739,19 +1739,13 @@ class KeyedVectors(utils.SaveLoad):
             Vectors for all the given keys.
 
         """
-        def is_key_defined(key) -> bool:
-            if allow_inference:
-                return key in self
-            else:
-                return key in self.key_to_index
-
         if isinstance(keys, Dictionary):
             vocab = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing collection frequency
             vocab = (keys[key] for key, _ in vocab)
         else:
             vocab = keys
 
-        vocab = filter(is_key_defined, vocab)  # remove undefined keys
+        vocab = (key in (self if allow_inference else self.key_to_index) for key in vocab)  # remove undefined keys
         vocab = list(OrderedDict.fromkeys(vocab))  # deduplicate keys
 
         datatype = self.vectors.dtype
