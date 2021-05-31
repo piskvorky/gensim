@@ -171,7 +171,7 @@ import sys
 import itertools
 import warnings
 from numbers import Integral
-from typing import Iterable, Union
+from typing import Iterable
 from collections import OrderedDict
 
 from numpy import (
@@ -1697,32 +1697,30 @@ class KeyedVectors(utils.SaveLoad):
             msg=f"merged {overlap_count} vectors into {self.vectors.shape} matrix from {fname}",
         )
 
-    def vectors_for_all(self, keys: Union[Iterable, Dictionary],
-                        allow_inference: bool = True,
+    def vectors_for_all(self, keys: Iterable, allow_inference: bool = True,
                         copy_vecattrs: bool = False) -> 'KeyedVectors':
         """Produce vectors for all given keys as a new :class:`KeyedVectors` object.
 
         Notes
         -----
         The keys will always be deduplicated. For optimal performance, you should not pass entire
-        corpora to the method. Instead, you should construct a
-        :class:`~gensim.corpora.dictionary.Dictionary` object out of your corpus first:
+        corpora to the method. Instead, you should construct a dictionary of unique words in your
+        corpus:
 
+        >>> from collections import Counter
+        >>> import itertools
         >>> import gensim.downloader as api
         >>> from gensim.test.utils import common_texts
         >>>
         >>> model = api.load('word2vec-google-news-300')
         >>> corpus = common_texts
-        >>> dictionary = Dictionary(corpus)  # construct a vocabulary out of your corpus
-        >>> word_vectors = model.wv.vectors_for_all(dictionary)  # create word-vectors for words in your corpus
-
-        If the keys are a :class:`~gensim.corpora.dictionary.Dictionary` object, they will be
-        sorted in a decreasing order of collection frequency (`Dictionary.cfs`) before producing
-        the new :class:`KeyedVectors` object to improve cache-warmness for subsequent operations.
+        >>> word_counts = Counter(itertools.chain.from_iterable(corpus))  # count words in your corpus
+        >>> words_by_freq = (k for k, v in word_counts.most_common())
+        >>> word_vectors = model.wv.vectors_for_all(words_by_freq)  # create word-vectors for words in your corpus
 
         Parameters
         ----------
-        keys : {iterable, :class:`~gensim.corpora.dictionary.Dictionary`}
+        keys : iterable
             The keys that will be vectorized.
         allow_inference : bool, optional
             In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
@@ -1739,12 +1737,6 @@ class KeyedVectors(utils.SaveLoad):
             Vectors for all the given keys.
 
         """
-        if isinstance(keys, Dictionary):
-            vocab = sorted(keys.cfs.items(), key=lambda x: (-x[1], x[0]))  # sort by decreasing collection frequency
-            vocab = (keys[key] for key, _ in vocab)
-        else:
-            vocab = keys
-
         vocab = (key for key in keys if key in (self if allow_inference else self.key_to_index))  # drop undefined keys
         vocab = list(OrderedDict.fromkeys(vocab))  # deduplicate keys
 

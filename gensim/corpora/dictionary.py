@@ -10,6 +10,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 import logging
 import itertools
+from typing import Optional, List
 
 from gensim import utils
 
@@ -688,6 +689,32 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
+
+    def most_common(self, n: Optional[int] = None, include_counts: bool = True) -> List[str]:
+        """Return a list of the n most common words and optionally their counts from the most common to the least.
+
+        Words with equal counts are ordered in the increasing order of their ids.
+
+        Parameters
+        ----------
+        n : int or None, optional
+            The number of most common words to be returned. If `None`, all words in the dictionary
+            will be returned. Default is `None`.
+        include_counts : bool
+            Whether the counts of the n most common words will also be returned. Default is `True`.
+
+        Returns
+        -------
+        most_common : list of {(str, int), str}
+            The n most common words and optionally their counts from the most common to the least.
+
+        """
+        most_common = [
+            (self[word], count) if include_counts else self[word]
+            for word, count
+            in sorted(self.cfs.items(), key=lambda x: (-x[1], x[0]))[:n]
+        ]
+        return most_common
 
     @staticmethod
     def from_corpus(corpus, id2word=None):

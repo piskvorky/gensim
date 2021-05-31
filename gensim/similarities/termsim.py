@@ -105,8 +105,10 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     Notes
     -----
     By fitting the word embeddings to a vocabulary that you will be using, you
-    will eliminate all out-of-vocabulary (OOV) words that you would otherwise
-    receive from the `most_similar` method:
+    can eliminate all out-of-vocabulary (OOV) words that you would otherwise
+    receive from the `most_similar` method. In subword models such as fastText,
+    this procedure will also infer word-vectors for words from your vocabulary
+    that previously had no word-vector.
 
     >>> from gensim.test.utils import common_texts, datapath
     >>> from gensim.corpora import Dictionary
@@ -117,7 +119,8 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     >>> model = FastText(common_texts, vector_size=20, min_count=1)  # train word-vectors on a corpus
     >>> different_corpus = LineSentence(datapath('lee_background.cor'))
     >>> dictionary = Dictionary(different_corpus)  # construct a vocabulary on a different corpus
-    >>> word_vectors = model.wv.vectors_for_all(dictionary)  # remove OOV word-vectors and infer new words
+    >>> words = dictionary.most_common(include_counts=False)
+    >>> word_vectors = model.wv.vectors_for_all(words))  # remove OOV word-vectors and infer word-vectors for new words
     >>> assert len(dictionary) == len(word_vectors)  # all words from our vocabulary received their word-vectors
     >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors)
 
