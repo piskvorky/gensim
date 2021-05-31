@@ -435,7 +435,8 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
     >>> annoy = AnnoyIndexer(model, num_trees=2)  # use annoy for faster word similarity lookups
     >>> dictionary = Dictionary(common_texts)
-    >>> word_vectors = model.wv.vectors_for_all(dictionary)
+    >>> words = dictionary.most_common(include_counts=False)
+    >>> word_vectors = model.wv.vectors_for_all(words)
     >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors, kwargs={'indexer': annoy})
     >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
     >>> similarity_matrix = SparseTermSimilarityMatrix(termsim_index, dictionary, symmetric=True, dominant=True)
