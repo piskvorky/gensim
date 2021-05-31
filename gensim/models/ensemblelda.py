@@ -7,11 +7,16 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 
-"""Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
+"""Ensemble Latent Dirichlet Allocation (eLDA), an algorithm for extracting reliable topics.
 
-Extract stable topics that are consistently learned across multiple LDA models, for higher reproducibility
-and less noise. eLDA has the added benefit that the user does not need to know the exact number of topics the topic
-model should extract ahead of time.
+In topic modeling, the aim is to find a set of topics that represents global structure of a corpus of documents. One
+issue that occur with topics extracted from an NMF or LDA model is reproducibility. That is, if the topic model is
+trained repeatedly allowing only the random seed to change, would the same (or similar) topic representation be reliably
+learned.
+
+Ensemble LDA addresses the issue by training an ensemble of topic models and throwing out topics that do not reoccur
+across the ensemble. In this regard, the topics extracted are reliable and there is the added benefit over many topic
+models that the user does not need to know the exact number of topics ahead of time.
 
 Usage examples
 --------------
