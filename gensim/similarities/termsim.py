@@ -120,7 +120,7 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     >>> different_corpus = LineSentence(datapath('lee_background.cor'))
     >>> dictionary = Dictionary(different_corpus)  # construct a vocabulary on a different corpus
     >>> words = dictionary.most_common(include_counts=False)
-    >>> word_vectors = model.wv.vectors_for_all(words))  # remove OOV word-vectors and infer word-vectors for new words
+    >>> word_vectors = model.wv.vectors_for_all(words)  # remove OOV word-vectors and infer word-vectors for new words
     >>> assert len(dictionary) == len(word_vectors)  # all words from our vocabulary received their word-vectors
     >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors)
 
