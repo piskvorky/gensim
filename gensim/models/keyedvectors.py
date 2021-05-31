@@ -1758,8 +1758,7 @@ class KeyedVectors(utils.SaveLoad):
                 continue
             for attr in self.expandos:  # copy vector attributes to the new KeyedVectors object
                 try:
-                    val = self.get_vecattr(key, attr)
-                    kv.set_vecattr(key, attr, val)
+                    kv.set_vecattr(key, attr, self.get_vecattr(key, attr))
                 except KeyError:
                     pass
         return kv
