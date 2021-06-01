@@ -71,7 +71,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces transformations and demonstrates their use on a toy corpus.">
 
 .. only:: html
 
@@ -92,7 +92,7 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates querying a corpus for similar documents.">
 
 .. only:: html
 
@@ -169,7 +169,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
 
@@ -190,7 +190,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec.">
 
 .. only:: html
 
@@ -288,7 +288,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora and pretrained models. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora and pretrained models.">
 
 .. only:: html
 
@@ -309,7 +309,7 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="How to author documentation for Gensim. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="How to author documentation for Gensim.">
 
 .. only:: html
 
@@ -426,13 +426,13 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 
   .. container:: sphx-glr-download sphx-glr-download-python
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip <//Volumes/work/workspace/gensim/trunk/docs/src/auto_examples/auto_examples_python.zip>`
+    :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
 
 
 
   .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip <//Volumes/work/workspace/gensim/trunk/docs/src/auto_examples/auto_examples_jupyter.zip>`
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html
