@@ -89,5 +89,7 @@ gensim/models/fasttext_inner.c
 gensim/models/nmf_pgd.c
 gensim/models/word2vec_corpusfile.cpp
 gensim/models/word2vec_inner.c
+gensim/models/ldaseq_sslm_inner.c
+gensim/models/ldaseq_posterior_inner.c
 
 .ipynb_checkpoints
