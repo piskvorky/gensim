@@ -99,10 +99,8 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
 
 class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     """
-    Use objects of this class to:
-
-    1) Compute cosine similarities between word embeddings.
-    2) Retrieve the closest word embeddings (by cosine similarity) to a given word embedding.
+    Computes cosine similarities between word embeddings and retrieves most
+    similar terms for a given term.
 
     Parameters
     ----------
@@ -114,13 +112,16 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     exponent : float, optional
         Take the word embedding similarities larger than `threshold` to the power of `exponent`.
     kwargs : dict or None
-        A dict with keyword arguments that will be passed to the `keyedvectors.most_similar` method
+        A dict with keyword arguments that will be passed to the
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.most_similar` method
         when retrieving the word embeddings closest to a given word embedding.
 
     See Also
     --------
+    :class:`~gensim.similarities.levenshtein.LevenshteinSimilarityIndex`
+        Retrieve most similar terms for a given term using the Levenshtein distance.
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
-        A sparse term similarity matrix built using a term similarity index.
+        Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """
     def __init__(self, keyedvectors, threshold=0.0, exponent=2.0, kwargs=None):
@@ -195,12 +196,12 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
         return (-term_idf, term_index)
 
     if tfidf is None:
-        logger.info("iterating over columns in dictionary order")
         columns = sorted(dictionary.keys())
+        logger.info("iterating over %i columns in dictionary order", len(columns))
     else:
         assert max(tfidf.idfs) == matrix_order - 1
-        logger.info("iterating over columns in tf-idf order")
         columns = sorted(tfidf.idfs.keys(), key=tfidf_sort_key)
+        logger.info("iterating over %i columns in tf-idf order", len(columns))
 
     nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
 

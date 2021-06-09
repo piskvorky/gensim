@@ -38,6 +38,7 @@ Train an NMF model using a Gensim corpus
 
 .. sourcecode:: pycon
 
+    >>> from gensim.models import Nmf
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora.dictionary import Dictionary
     >>>

@@ -3,14 +3,27 @@ Changes
 
 ## Unreleased
 
-- LsiModel: Only log top words that actually exist in the dictionary (PR [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091), [@kmurphy4](https://github.com/kmurphy4))
-- Improve & unify docs for dirichlet priors (PR [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125), [@jonaschn](https://github.com/jonaschn))
-- Materialize and copy the corpus passed to SoftCosineSimilarity (PR [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128), [@Witiko](https://github.com/Witiko))
-- [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness))
+### :red_circle: Bug fixes
 
-### Documentation
+* [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116): Fix bug where saved Phrases model did not load its connector_words, by [@aloknayak29](https://github.com/aloknayak29)
+* [#3136](https://github.com/RaRe-Technologies/gensim/pull/3136): fix indexing error in word2vec_inner.pyx, by [@bluekura](https://github.com/bluekura)
 
-- Fix hyperlink for doc2vec tutorial (PR [#3123](https://github.com/RaRe-Technologies/gensim/pull/3123), [@AdityaSoni19031997](https://github.com/AdityaSoni19031997))
+### :+1: Improvements
+
+* [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978): Optimize performance of Author-Topic model, by [@horpto](https://github.com/horpto)
+* [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091): LsiModel: Only log top words that actually exist in the dictionary, by [@kmurphy4](https://github.com/kmurphy4)
+* [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness)
+* [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128): Materialize and copy the corpus passed to SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
+* [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131): Added import to Nmf docs, and to models/__init__.py, by [@properGrammar](https://github.com/properGrammar)
+
+### :books: Documentation
+
+* [#3123](https://github.com/RaRe-Technologies/gensim/pull/3123): Fix hyperlink for doc2vec tutorial, by [@AdityaSoni19031997](https://github.com/AdityaSoni19031997)
+* [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125): Improve & unify docs for dirichlet priors, by [@jonaschn](https://github.com/jonaschn)
+* [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133): Update link to Hoffman paper (online VB LDA), by [@jonaschn](https://github.com/jonaschn)
+* [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
+* [#3148](https://github.com/RaRe-Technologies/gensim/pull/3148): Fix broken link in documentation, by [@rohit901](https://github.com/rohit901)
+* [#3155](https://github.com/RaRe-Technologies/gensim/pull/3155): Correct parameter name in documentation of fasttext.py, by [@bizzyvinci](https://github.com/bizzyvinci)
 
 ## 4.0.1, 2021-04-01
 
