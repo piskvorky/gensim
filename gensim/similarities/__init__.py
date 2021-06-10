@@ -10,7 +10,7 @@ except ImportError:
     msg = (
         "The gensim.similarities.levenshtein submodule is disabled, because the optional "
         "Levenshtein package <https://pypi.org/project/python-Levenshtein/> is unavailable. "
-        "Install Levenhstein (e.g. `pip install python-Levenshtein`) to suppress this warning."
+        "Install Levenshtein (e.g. `pip install python-Levenshtein`) to suppress this warning."
     )
     warnings.warn(msg)
     LevenshteinSimilarityIndex = None
