@@ -240,7 +240,7 @@ class Word2Vec(utils.SaveLoad):
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-            comment=None, max_final_vocab=None, reduced_windows=True,
+            comment=None, max_final_vocab=None, shrink_windows=True,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
@@ -345,7 +345,7 @@ class Word2Vec(utils.SaveLoad):
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
-        reduced_windows : bool, optional
+        shrink_windows : bool, optional
             If True, the effective window size is uniformly sampled from  [1, `window`]
             for each target word during training, to match the original word2vec algorithm's
             approximate weighting of context words by distance. Otherwise, the effective
@@ -382,7 +382,7 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = float(min_alpha)
 
         self.window = int(window)
-        self.reduced_windows = bool(reduced_windows)
+        self.shrink_windows = bool(shrink_windows)
         self.random = np.random.RandomState(seed)
 
         self.hs = int(hs)
@@ -426,7 +426,7 @@ class Word2Vec(utils.SaveLoad):
                 corpus_iterable=corpus_iterable, corpus_file=corpus_file, total_examples=self.corpus_count,
                 total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
                 end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks,
-                reduced_windows=self.reduced_windows)
+                shrink_windows=self.shrink_windows)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -969,7 +969,7 @@ class Word2Vec(utils.SaveLoad):
             self, corpus_iterable=None, corpus_file=None, total_examples=None,
             total_words=None, epochs=None, start_alpha=None, end_alpha=None,
             word_count=0, queue_factor=2, report_delay=1.0, compute_loss=False,
-            reduced_windows=None, callbacks=(), **kwargs,
+            shrink_windows=None, callbacks=(), **kwargs,
         ):
         """Update the model's neural weights from a sequence of sentences.
 
@@ -1026,7 +1026,7 @@ class Word2Vec(utils.SaveLoad):
         compute_loss: bool, optional
             If True, computes and stores loss value which can be retrieved using
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
-        reduced_windows : bool, optional
+        shrink_windows : bool, optional
             If True, the effective window size is uniformly sampled from  [1, `window`]
             for each target word during training, to match the original word2vec algorithm's
             approximate weighting of context words by distance. Otherwise, the effective
@@ -1050,8 +1050,8 @@ class Word2Vec(utils.SaveLoad):
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
         self.epochs = epochs
-        if reduced_windows is not None:
-            self.reduced_windows = bool(reduced_windows)
+        if shrink_windows is not None:
+            self.shrink_windows = bool(shrink_windows)
 
         self._check_training_sanity(epochs=epochs, total_examples=total_examples, total_words=total_words)
         self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=epochs)
@@ -1061,7 +1061,7 @@ class Word2Vec(utils.SaveLoad):
             msg=(
                 f"training model with {self.workers} workers on {len(self.wv)} vocabulary and "
                 f"{self.layer1_size} features, using sg={self.sg} hs={self.hs} sample={self.sample} "
-                f"negative={self.negative} window={self.window} reduced_windows={self.reduced_windows}"
+                f"negative={self.negative} window={self.window} shrink_windows={self.shrink_windows}"
             ),
         )
 

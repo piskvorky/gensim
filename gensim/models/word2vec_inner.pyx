@@ -570,7 +570,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    if model.reduced_windows:
+    if model.shrink_windows:
         for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
             c.reduced_windows[i] = item
     else:
@@ -669,7 +669,7 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    if model.reduced_windows:
+    if model.shrink_windows:
         for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
             c.reduced_windows[i] = item
     else:
