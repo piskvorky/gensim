@@ -223,13 +223,13 @@ except ImportError:
 
     def train_epoch_sg(
             model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-            _work, _neu1, compute_loss, reduced_windows,
+            _work, _neu1, compute_loss,
         ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
     def train_epoch_cbow(
             model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-            _work, _neu1, compute_loss, reduced_windows,
+            _work, _neu1, compute_loss,
         ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
@@ -240,7 +240,7 @@ class Word2Vec(utils.SaveLoad):
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-            comment=None, max_final_vocab=None, reduced_windows=True
+            comment=None, max_final_vocab=None, reduced_windows=True,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
@@ -346,8 +346,10 @@ class Word2Vec(utils.SaveLoad):
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
         reduced_windows : bool, optional
-            If True, the window size is uniformly sampled from {1, `window`}
-            during training. Otherwise, it is fixed to `window`.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Examples
         --------
@@ -916,13 +918,13 @@ class Word2Vec(utils.SaveLoad):
             examples, tally, raw_tally = train_epoch_sg(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
                 total_examples, total_words, work, neu1,
-                self.compute_loss, self.reduced_windows,
+                self.compute_loss,
             )
         else:
             examples, tally, raw_tally = train_epoch_cbow(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
                 total_examples, total_words, work, neu1,
-                self.compute_loss, self.reduced_windows,
+                self.compute_loss,
             )
 
         return examples, tally, raw_tally
@@ -950,12 +952,12 @@ class Word2Vec(utils.SaveLoad):
         if self.sg:
             tally += train_batch_sg(
                 self, sentences, alpha, work,
-                self.compute_loss, self.reduced_windows,
+                self.compute_loss,
             )
         else:
             tally += train_batch_cbow(
                 self, sentences, alpha, work, neu1,
-                self.compute_loss, self.reduced_windows,
+                self.compute_loss,
             )
         return tally, self._raw_word_count(sentences)
 
@@ -967,7 +969,7 @@ class Word2Vec(utils.SaveLoad):
             self, corpus_iterable=None, corpus_file=None, total_examples=None,
             total_words=None, epochs=None, start_alpha=None, end_alpha=None,
             word_count=0, queue_factor=2, report_delay=1.0, compute_loss=False,
-            reduced_windows=True, callbacks=(), **kwargs,
+            reduced_windows=None, callbacks=(), **kwargs,
         ):
         """Update the model's neural weights from a sequence of sentences.
 
@@ -1025,8 +1027,10 @@ class Word2Vec(utils.SaveLoad):
             If True, computes and stores loss value which can be retrieved using
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         reduced_windows : bool, optional
-            If True, the window size is uniformly sampled from {1, `window`}
-            during training. Otherwise, it is fixed to `window`.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
 
@@ -1046,7 +1050,8 @@ class Word2Vec(utils.SaveLoad):
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
         self.epochs = epochs
-        self.reduced_windows = reduced_windows
+        if reduced_windows is not None:
+            self.reduced_windows = bool(reduced_windows)
 
         self._check_training_sanity(epochs=epochs, total_examples=total_examples, total_words=total_words)
         self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=epochs)

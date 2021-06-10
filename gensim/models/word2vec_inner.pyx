@@ -502,7 +502,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-def train_batch_sg(model, sentences, alpha, _work, compute_loss, reduced_windows):
+def train_batch_sg(model, sentences, alpha, _work, compute_loss):
     """Update skip-gram model by training on a batch of sentences.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -519,9 +519,6 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, reduced_windows
         Private working memory for each worker.
     compute_loss : bool
         Whether or not the training loss should be computed in this batch.
-    reduced_windows : bool
-        Whether or not the window size should be reduced based on random
-        uniform sampling.
 
     Returns
     -------
@@ -573,12 +570,11 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, reduced_windows
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    if reduced_windows:
-        window_size = model.random.randint(0, c.window, effective_words)
+    if model.reduced_windows:
+        for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+            c.reduced_windows[i] = item
     else:
-        window_size = [0] * effective_words
-    for i, item in enumerate(window_size):
-        c.reduced_windows[i] = item
+        c.reduced_windows[:] = int(0)
 
     # release GIL & train on all sentences
     with nogil:
@@ -604,7 +600,7 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss, reduced_windows
     return effective_words
 
 
-def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, reduced_windows):
+def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
     """Update CBOW model by training on a batch of sentences.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -623,9 +619,6 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, reduce
         Private working memory for each worker.
     compute_loss : bool
         Whether or not the training loss should be computed in this batch.
-    reduced_windows : bool
-        Whether or not the window size should be reduced based on random
-        uniform sampling.
 
     Returns
     -------
@@ -676,12 +669,11 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss, reduce
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    if reduced_windows:
-        window_size = model.random.randint(0, c.window, effective_words)
+    if model.reduced_windows:
+        for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+            c.reduced_windows[i] = item
     else:
-        window_size = [0] * effective_words
-    for i, item in enumerate(window_size):
-        c.reduced_windows[i] = item
+        c.reduced_windows[:] = int(0)
 
     # release GIL & train on all sentences
     with nogil:
