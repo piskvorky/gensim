@@ -425,8 +425,7 @@ class Word2Vec(utils.SaveLoad):
             self.train(
                 corpus_iterable=corpus_iterable, corpus_file=corpus_file, total_examples=self.corpus_count,
                 total_words=self.corpus_total_words, epochs=self.epochs, start_alpha=self.alpha,
-                end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks,
-                shrink_windows=self.shrink_windows)
+                end_alpha=self.min_alpha, compute_loss=self.compute_loss, callbacks=callbacks)
         else:
             if trim_rule is not None:
                 logger.warning(
@@ -969,7 +968,7 @@ class Word2Vec(utils.SaveLoad):
             self, corpus_iterable=None, corpus_file=None, total_examples=None,
             total_words=None, epochs=None, start_alpha=None, end_alpha=None,
             word_count=0, queue_factor=2, report_delay=1.0, compute_loss=False,
-            shrink_windows=None, callbacks=(), **kwargs,
+            callbacks=(), **kwargs,
         ):
         """Update the model's neural weights from a sequence of sentences.
 
@@ -1050,8 +1049,6 @@ class Word2Vec(utils.SaveLoad):
         self.alpha = start_alpha or self.alpha
         self.min_alpha = end_alpha or self.min_alpha
         self.epochs = epochs
-        if shrink_windows is not None:
-            self.shrink_windows = bool(shrink_windows)
 
         self._check_training_sanity(epochs=epochs, total_examples=total_examples, total_words=total_words)
         self._check_corpus_sanity(corpus_iterable=corpus_iterable, corpus_file=corpus_file, passes=epochs)
