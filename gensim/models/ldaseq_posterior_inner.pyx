@@ -253,7 +253,7 @@ def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
     # TODO Would it be better to create numpy array first?
     for i in range(doc_length):
         word_ids[i] = self.doc[i][0]
-        word_counts[i] = self.doc[i][0]
+        word_counts[i] = self.doc[i][1]
 
     cdef REAL_t * gamma = <REAL_t *> (np.PyArray_DATA(self.gamma))
     cdef REAL_t * phi = <REAL_t *> (np.PyArray_DATA(self.phi))
