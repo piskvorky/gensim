@@ -301,7 +301,7 @@ class FastText(Word2Vec):
             uninitialized).
         min_count : int, optional
             The model ignores all words with total frequency lower than this.
-        size : int, optional
+        vector_size : int, optional
             Dimensionality of the word vectors.
         window : int, optional
             The maximum distance between the current and predicted word within a sentence.

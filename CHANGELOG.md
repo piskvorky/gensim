@@ -22,6 +22,8 @@ Changes
 * [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125): Improve & unify docs for dirichlet priors, by [@jonaschn](https://github.com/jonaschn)
 * [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133): Update link to Hoffman paper (online VB LDA), by [@jonaschn](https://github.com/jonaschn)
 * [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
+* [#3148](https://github.com/RaRe-Technologies/gensim/pull/3148): Fix broken link in documentation, by [@rohit901](https://github.com/rohit901)
+* [#3155](https://github.com/RaRe-Technologies/gensim/pull/3155): Correct parameter name in documentation of fasttext.py, by [@bizzyvinci](https://github.com/bizzyvinci)
 
 ## 4.0.1, 2021-04-01
 
