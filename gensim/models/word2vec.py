@@ -1799,9 +1799,9 @@ class Word2Vec(utils.SaveLoad):
 
         Parameters
         ----------
-        context_words_list : list of (str OR int)
-            If list of str: List of context words.
-            If list of int: List of indices of context words in `self.wv.vectors`
+        context_words_list : list of (str and/or int)
+            List of context words, which may be words themselves (str)
+            or their index in `self.wv.vectors` (int).
         topn : int, optional
             Return `topn` words and their probabilities.
 
@@ -1819,23 +1819,14 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self.wv, 'vectors') or not hasattr(self, 'syn1neg'):
             raise RuntimeError("Parameters required for predicting the output words not found.")
-        
-        # Retrieve indices if words were passed as input, otherwise keep the input indices
-        # Remark : out-of-vocabulary words are discarded.
-        word2_indices = []
-        max_index = self.wv.vectors.shape[0]
-        for w in context_words_list:
-            if w in self.wv:
-                word2_indices.append(self.wv.get_index(w))
-            elif isinstance(w, int) and (w < max_index):
-                word2_indices.append(w)
+        word2_indices = [self.wv.get_index(w) for w in context_words_list if w in self.wv]
 
         if not word2_indices:
             logger.warning("All the input context words are out-of-vocabulary for the current model.")
             return None
 
         l1 = np.sum(self.wv.vectors[word2_indices], axis=0)
-        if self.cbow_mean:
+        if word2_indices and self.cbow_mean:
             l1 /= len(word2_indices)
 
         # propagate hidden -> output and take softmax to get probabilities
