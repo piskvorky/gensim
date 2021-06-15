@@ -1025,11 +1025,6 @@ class Word2Vec(utils.SaveLoad):
         compute_loss: bool, optional
             If True, computes and stores loss value which can be retrieved using
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
-        shrink_windows : bool, optional
-            If True, the effective window size is uniformly sampled from  [1, `window`]
-            for each target word during training, to match the original word2vec algorithm's
-            approximate weighting of context words by distance. Otherwise, the effective
-            window size is always fixed to `window` words to either side.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
 
