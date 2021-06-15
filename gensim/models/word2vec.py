@@ -1989,6 +1989,8 @@ class Word2Vec(utils.SaveLoad):
                 self.syn1 = self.syn1
                 del self.syn1
             del self.trainables
+        if not hasattr(self, 'shrink_windows'):
+            self.shrink_windows = True
 
     def get_latest_training_loss(self):
         """Get current value of the training loss.
