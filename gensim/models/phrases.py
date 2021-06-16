@@ -364,7 +364,7 @@ s        """
                 }
             elif isinstance(component, tuple):  # 3.8 => 4.0: phrasegram keys are strings, not tuples with bytestrings
                 model.phrasegrams = {
-                    str(model.delimiter.join(component), encoding='utf8'): score
+                    str(model.delimiter.join(key), encoding='utf8'): val
                     for key, val in phrasegrams.items()
                 }
         except StopIteration:
