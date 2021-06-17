@@ -42,6 +42,62 @@ import numpy as np
 from scipy import optimize
 
 
+def sslm_counts_init(model, obs_variance, chain_variance, sstats):
+    """Initialize the State Space Language Model with LDA sufficient statistics.
+
+    Called for each topic-chain and initializes initial mean, variance and Topic-Word probabilities
+    for the first time-slice.
+
+    Parameters
+    ----------
+    obs_variance : float, optional
+        Observed variance used to approximate the true and forward variance.
+    chain_variance : float
+        Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
+    sstats : numpy.ndarray
+        Sufficient statistics of the LDA model. Corresponds to matrix beta in the linked paper for time slice 0,
+        expected shape (`self.vocab_len`, `num_topics`).
+
+    """
+    W = model.vocab_len
+    T = model.num_time_slices
+
+    log_norm_counts = np.copy(sstats)
+    log_norm_counts /= sum(log_norm_counts)
+    log_norm_counts += 1.0 / W
+    log_norm_counts /= sum(log_norm_counts)
+    log_norm_counts = np.log(log_norm_counts)
+
+    cdef StateSpaceLanguageModelConfig * config = <StateSpaceLanguageModelConfig *> malloc(
+        sizeof(StateSpaceLanguageModelConfig))
+
+
+    # setting variational observations to transformed counts
+    model.obs = (np.repeat(log_norm_counts, T, axis=0)).reshape(W, T)
+    # set variational parameters
+    model.obs_variance = obs_variance
+    model.chain_variance = chain_variance
+
+    init_sslm_config(config, model)
+
+    cdef int w
+    cdef int vocab_len = model.vocab_len
+
+    # # compute post variance, mean
+    for w in range(vocab_len):
+        compute_post_variance(config.variance, config.fwd_variance,
+                              config.obs_variance, config.chain_variance,
+                              w, config.num_time_slices)
+
+        compute_post_mean(config.mean, config.fwd_mean, config.fwd_variance,
+                              config.obs, w, config.num_time_slices,
+                              config.obs_variance, config.chain_variance)
+
+    update_zeta(config.zeta, config.mean, config.variance, config.num_time_slices, config.vocab_len)
+    compute_expected_log_prob(config.e_log_prob, config.zeta, config.mean,
+                               config.vocab_len, config.num_time_slices)
+    model.config_c_address =  <uintptr_t>(config)
+
 cdef compute_post_mean(REAL_t *mean, REAL_t *fwd_mean, const REAL_t *fwd_variance, const REAL_t *obs,
                        const int word, const int num_time_slices,
                        const REAL_t obs_variance, const REAL_t chain_variance):
@@ -698,7 +754,8 @@ def fit_sslm(model, np_sstats):
     """
 
     # Initialize C structures based on Python instance of the model
-    cdef StateSpaceLanguageModelConfig* config = <StateSpaceLanguageModelConfig *>malloc(sizeof(StateSpaceLanguageModelConfig))
+    cdef StateSpaceLanguageModelConfig * config = <StateSpaceLanguageModelConfig *> (<uintptr_t>(model.config_c_address))
+
     init_sslm_config(config, model)
 
     cdef int W = config[0].vocab_len
@@ -736,5 +793,6 @@ def fit_sslm(model, np_sstats):
     compute_expected_log_prob(config[0].e_log_prob, config[0].zeta, config[0].mean,
                               W, config[0].num_time_slices)
 
-    free(config)
+    # TODO find a way/place where to free a memory
+    # free(config)
     return bound
