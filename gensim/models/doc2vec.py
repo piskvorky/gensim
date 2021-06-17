@@ -249,6 +249,7 @@ class Doc2Vec(Word2Vec):
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
         shrink_windows : bool, optional
+            New in 4.1. Experimental.
             If True, the effective window size is uniformly sampled from  [1, `window`]
             for each target word during training, to match the original word2vec algorithm's
             approximate weighting of context words by distance. Otherwise, the effective

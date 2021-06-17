@@ -386,6 +386,7 @@ class FastText(Word2Vec):
             automatically calculated ``min_count``, the former will be used.
             Set to ``None`` if not required.
         shrink_windows : bool, optional
+            New in 4.1. Experimental.
             If True, the effective window size is uniformly sampled from  [1, `window`]
             for each target word during training, to match the original word2vec algorithm's
             approximate weighting of context words by distance. Otherwise, the effective
