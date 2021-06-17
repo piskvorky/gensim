@@ -87,10 +87,11 @@ cdef void prepare_c_structures_for_batch(
     document_len[0] = i
 
     if train_words and reduced_windows != NULL:
-        for i in range(document_len[0]):
-            if shrink_windows:
+        if shrink_windows:
+            for i in range(document_len[0]):
                 reduced_windows[i] = random_int32(next_random) % window
-            else:
+        else:
+            for i in range(document_len[0]):
                 reduced_windows[i] = 0
 
     if doc_tag < docvecs_count:

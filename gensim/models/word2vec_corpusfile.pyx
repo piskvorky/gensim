@@ -226,10 +226,11 @@ cdef void prepare_c_structures_for_batch(
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    for i in range(effective_words[0]):
-        if shrink_windows:
+    if shrink_windows:
+        for i in range(effective_words[0]):
             reduced_windows[i] = random_int32(next_random) % window
-        else:
+    else:
+        for i in range(effective_words[0]):
             reduced_windows[i] = 0
 
 

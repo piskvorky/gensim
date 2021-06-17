@@ -364,12 +364,13 @@ def train_document_dbow(model, doc_words, doctag_indexes, alpha, work=None,
     c.document_len = i
 
     if c.train_words:
+        # single randint() call avoids a big thread-synchronization slowdown
         if model.shrink_windows:
-            # single randint() call avoids a big thread-synchronization slowdown
             for i, item in enumerate(model.random.randint(0, c.window, c.document_len)):
                 c.reduced_windows[i] = item
         else:
-            c.reduced_windows[:] = int(0)
+            for i in range(c.document_len):
+                c.reduced_windows[i] = 0
 
     for i in range(c.doctag_len):
         c.doctag_indexes[i] = doctag_indexes[i]
@@ -504,7 +505,8 @@ def train_document_dm(model, doc_words, doctag_indexes, alpha, work=None, neu1=N
         for i, item in enumerate(model.random.randint(0, c.window, c.document_len)):
             c.reduced_windows[i] = item
     else:
-        c.reduced_windows[:] = int(0)
+        for i in range(c.document_len):
+            c.reduced_windows[i] = 0
 
     for i in range(c.doctag_len):
         c.doctag_indexes[i] = doctag_indexes[i]

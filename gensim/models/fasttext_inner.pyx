@@ -605,7 +605,8 @@ def train_batch_any(model, sentences, alpha, _work, _neu1):
         for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
             c.reduced_windows[i] = randint
     else:
-        c.reduced_windows[:] = int(0)
+        for i in range(num_words):
+            c.reduced_windows[i] = 0
 
     # release GIL & train on all sentences in the batch
     with nogil:

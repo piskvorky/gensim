@@ -570,7 +570,8 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
         for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
             c.reduced_windows[i] = item
     else:
-        c.reduced_windows[:] = int(0)
+        for i in range(effective_words):
+            c.reduced_windows[i] = 0
 
     # release GIL & train on all sentences
     with nogil:
@@ -669,7 +670,8 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
         for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
             c.reduced_windows[i] = item
     else:
-        c.reduced_windows[:] = int(0)
+        for i in range(effective_words):
+            c.reduced_windows[i] = 0
 
     # release GIL & train on all sentences
     with nogil:
