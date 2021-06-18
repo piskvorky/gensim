@@ -581,13 +581,13 @@ class Doc2Vec(Word2Vec):
         """
         return 60 * len(self.dv) + 140 * len(self.dv)
 
-    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
+    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None):
         """Infer a vector for given post-bulk training document.
 
         Notes
         -----
         Subsequent calls to this function may infer different representations for the same document.
-        For a more stable representation, increase the number of steps to assert a stricket convergence.
+        For a more stable representation, increase the number of epochs to assert a stricket convergence.
 
         Parameters
         ----------
@@ -1047,7 +1047,7 @@ class Doc2Vec(Word2Vec):
 
         return total_words, corpus_count
 
-    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, steps=None):
+    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, epochs=None):
         """Compute cosine similarity between two post-bulk out of training documents.
 
         Parameters
@@ -1062,7 +1062,7 @@ class Doc2Vec(Word2Vec):
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
+        epochs : int, optional
             Number of epoch to train the new document.
 
         Returns
@@ -1071,8 +1071,8 @@ class Doc2Vec(Word2Vec):
             The cosine similarity between `doc_words1` and `doc_words2`.
 
         """
-        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
-        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
+        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
         return np.dot(matutils.unitvec(d1), matutils.unitvec(d2))
 
 
