@@ -587,7 +587,7 @@ class Doc2Vec(Word2Vec):
         Notes
         -----
         Subsequent calls to this function may infer different representations for the same document.
-        For a more stable representation, increase the number of epochs to assert a stricket convergence.
+        For a more stable representation, increase the number of epochs to assert a stricter convergence.
 
         Parameters
         ----------
