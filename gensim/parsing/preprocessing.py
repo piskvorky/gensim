@@ -92,10 +92,8 @@ def remove_stopwords(s, stopwords=None):
         u'Better late never, better late.'
 
     """
-    if stopwords is None:
-        stopwords = STOPWORDS
     s = utils.to_unicode(s)
-    return " ".join(w for w in s.split() if w not in stopwords)
+    return " ".join(remove_stopword_tokens(s.split(), stopwords))
 
 
 def remove_stopword_tokens(tokens, stopwords=None):
@@ -199,7 +197,7 @@ def strip_short(s, minsize=3):
 
     """
     s = utils.to_unicode(s)
-    return " ".join(e for e in s.split() if len(e) >= minsize)
+    return " ".join(remove_short_tokens(s.split(), minsize))
 
 
 def remove_short_tokens(tokens, minsize=3):
