@@ -371,18 +371,6 @@ class TestDictionary(unittest.TestCase):
         expected = [('human', 3), ('computer', 2), ('interface', 2)]
         self.assertEqual(d.most_common(n=None), expected)
 
-    def test_most_common_with_counts(self):
-        texts = [['human', 'human', 'human', 'computer', 'computer', 'interface', 'interface']]
-        d = Dictionary(texts)
-        expected = [('human', 3), ('computer', 2), ('interface', 2)]
-        self.assertEqual(d.most_common(include_counts=True), expected)
-
-    def test_most_common_without_counts(self):
-        texts = [['human', 'human', 'human', 'computer', 'computer', 'interface', 'interface']]
-        d = Dictionary(texts)
-        expected = ['human', 'computer', 'interface']
-        self.assertEqual(d.most_common(include_counts=False), expected)
-
 
 # endclass TestDictionary
 
