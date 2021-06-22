@@ -382,6 +382,23 @@ def lower_to_unicode(text, encoding='utf8', errors='strict'):
     return utils.to_unicode(text.lower(), encoding, errors)
 
 
+def split_on_space(s):
+    """Split line by spaces, used in :class:`gensim.corpora.lowcorpus.LowCorpus`.
+
+    Parameters
+    ----------
+    s : str
+        Some line.
+
+    Returns
+    -------
+    list of str
+        List of tokens from `s`.
+
+    """
+    return [word for word in utils.to_unicode(s).strip().split(' ') if word]
+
+
 DEFAULT_FILTERS = [
     lambda x: x.lower(), strip_tags, strip_punctuation,
     strip_multiple_whitespaces, strip_numeric,
