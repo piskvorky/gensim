@@ -1748,13 +1748,12 @@ class KeyedVectors(utils.SaveLoad):
         for key in vocab:  # produce and index vectors for all the given keys
             weights = self[key]
             _add_word_to_kv(kv, None, key, weights, len(vocab))
-            if not copy_vecattrs:
-                continue
-            for attr in self.expandos:  # copy vector attributes to the new KeyedVectors object
-                try:
-                    kv.set_vecattr(key, attr, self.get_vecattr(key, attr))
-                except KeyError:
-                    pass
+            if copy_vecattrs:
+                for attr in self.expandos:
+                    try:
+                        kv.set_vecattr(key, attr, self.get_vecattr(key, attr))
+                    except KeyError:
+                        pass
         return kv
 
     def _upconvert_old_d2vkv(self):
