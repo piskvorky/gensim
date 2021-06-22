@@ -363,13 +363,13 @@ class TestDictionary(unittest.TestCase):
         texts = [['human', 'human', 'human', 'computer', 'computer', 'interface', 'interface']]
         d = Dictionary(texts)
         expected = [('human', 3), ('computer', 2)]
-        self.assertEqual(d.most_common(n=2), expected)
+        assert d.most_common(n=2) == expected
 
     def test_most_common_without_n(self):
         texts = [['human', 'human', 'human', 'computer', 'computer', 'interface', 'interface']]
         d = Dictionary(texts)
         expected = [('human', 3), ('computer', 2), ('interface', 2)]
-        self.assertEqual(d.most_common(n=None), expected)
+        assert d.most_common(n=None) == expected
 
 
 # endclass TestDictionary

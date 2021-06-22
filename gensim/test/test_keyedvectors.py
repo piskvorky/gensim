@@ -52,7 +52,7 @@ class TestKeyedVectors(unittest.TestCase):
 
         expected = 3
         predicted = len(vectors_for_all)
-        self.assertEqual(expected, predicted)
+        assert expected == predicted
 
         expected = self.vectors['conflict']
         predicted = vectors_for_all['conflict']
@@ -65,7 +65,7 @@ class TestKeyedVectors(unittest.TestCase):
 
         expected = self.vectors.get_vecattr('conflict', 'count')
         predicted = vectors_for_all.get_vecattr('conflict', 'count')
-        self.assertEqual(expected, predicted)
+        assert expected == predicted
 
     def test_vectors_for_all_without_copy_vecattrs(self):
         """Test vectors_for_all returns can copy vector attributes."""
@@ -74,7 +74,7 @@ class TestKeyedVectors(unittest.TestCase):
 
         not_expected = self.vectors.get_vecattr('conflict', 'count')
         predicted = vectors_for_all.get_vecattr('conflict', 'count')
-        self.assertNotEqual(not_expected, predicted)
+        assert not_expected != predicted
 
     def test_most_similar_topn(self):
         """Test most_similar returns correct results when `topn` is specified."""

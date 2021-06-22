@@ -863,7 +863,7 @@ class TestFastTextModel(unittest.TestCase):
 
         expected = 5
         predicted = len(vectors_for_all)
-        self.assertEqual(expected, predicted)
+        assert expected == predicted
 
         expected = self.test_model.wv['responding']
         predicted = vectors_for_all['responding']
@@ -892,7 +892,7 @@ class TestFastTextModel(unittest.TestCase):
 
         expected = 3
         predicted = len(vectors_for_all)
-        self.assertEqual(expected, predicted)
+        assert expected == predicted
 
         expected = self.test_model.wv['responding']
         predicted = vectors_for_all['responding']
