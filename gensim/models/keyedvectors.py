@@ -1742,7 +1742,6 @@ class KeyedVectors(utils.SaveLoad):
         vocab = (key for key in keys if key in (self if allow_inference else self.key_to_index))  # drop undefined keys
         vocab = list(OrderedDict.fromkeys(vocab))  # deduplicate keys
 
-        datatype = self.vectors.dtype
         kv = KeyedVectors(self.vector_size, len(vocab), dtype=self.vectors.dtype)
 
         for key in vocab:  # produce and index vectors for all the given keys
