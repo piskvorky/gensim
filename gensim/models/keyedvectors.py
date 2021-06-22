@@ -172,7 +172,6 @@ import itertools
 import warnings
 from numbers import Integral
 from typing import Iterable
-from collections import OrderedDict
 
 from numpy import (
     dot, float32 as REAL, double, array, zeros, vstack,
@@ -1739,8 +1738,14 @@ class KeyedVectors(utils.SaveLoad):
             Vectors for all the given keys.
 
         """
-        vocab = (key for key in keys if key in (self if allow_inference else self.key_to_index))  # drop undefined keys
-        vocab = list(OrderedDict.fromkeys(vocab))  # deduplicate keys
+        # Pick only the keys that actually exist & deduplicate them.
+        # We keep the original key order, to improve cache locality, for performance.
+        vocab, seen = [], set()
+        for key in keys:
+            if key not in seen:
+                seen.add(key)
+                if key in (self if allow_inference else self.key_to_index):
+                    vocab.append(key)
 
         kv = KeyedVectors(self.vector_size, len(vocab), dtype=self.vectors.dtype)
 
