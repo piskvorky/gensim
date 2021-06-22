@@ -44,8 +44,10 @@ import sys
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.parsing.preprocessing import remove_stopword_tokens, remove_short_tokens, \
-    lower_to_unicode, strip_multiple_whitespaces
+from gensim.parsing.preprocessing import (
+    remove_stopword_tokens, remove_short_tokens,
+    lower_to_unicode, strip_multiple_whitespaces,
+)
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
@@ -99,7 +101,7 @@ class TextCorpus(interfaces.CorpusABC):
 
     #. :func:`~gensim.parsing.preprocessing.lower_to_unicode` - lowercase and convert to unicode (assumes utf8 encoding)
     #. :func:`~gensim.utils.deaccent`- deaccent (asciifolding)
-    #. :func:`~gensim.parsing.preprocessing.strip_multiple_whitespaces`- collapse multiple whitespaces into a single one
+    #. :func:`~gensim.parsing.preprocessing.strip_multiple_whitespaces` - collapse multiple whitespaces into one
     #. :func:`~gensim.utils.simple_tokenize` - tokenize by splitting on whitespace
     #. :func:`~gensim.parsing.preprocessing.remove_short_tokens` - remove words less than 3 characters long
     #. :func:`~gensim.parsing.preprocessing.remove_stopword_tokens` - remove stopwords
