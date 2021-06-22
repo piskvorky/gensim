@@ -1709,11 +1709,19 @@ class KeyedVectors(utils.SaveLoad):
 
         >>> from collections import Counter
         >>> import itertools
-        >>> import gensim.downloader as api
-        >>> from gensim.test.utils import common_texts
         >>>
-        >>> model = api.load('word2vec-google-news-300')
-        >>> corpus = common_texts
+        >>> from gensim.models import FastText
+        >>> from gensim.test.utils import datapath, common_texts
+        >>>
+        >>> model_corpus_file = datapath('lee_background.cor')
+        >>> model = FastText(vector_size=100)
+        >>> model.build_vocab(corpus_file=model_corpus_file)
+        >>> model.train(  # train word vectors on some corpus
+        >>>     corpus_file=model_corpus_file, epochs=model.epochs,
+        >>>     total_examples=model.corpus_count, total_words=model.corpus_total_words,
+        >>> )
+        >>>
+        >>> corpus = common_texts  # infer word vectors for words from another corpus
         >>> word_counts = Counter(itertools.chain.from_iterable(corpus))  # count words in your corpus
         >>> words_by_freq = (k for k, v in word_counts.most_common())
         >>> word_vectors = model.wv.vectors_for_all(words_by_freq)  # create word-vectors for words in your corpus
