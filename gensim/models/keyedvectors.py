@@ -1743,7 +1743,7 @@ class KeyedVectors(utils.SaveLoad):
         vocab = list(OrderedDict.fromkeys(vocab))  # deduplicate keys
 
         datatype = self.vectors.dtype
-        kv = KeyedVectors(self.vector_size, len(vocab), dtype=datatype)  # preallocate new KeyedVectors object
+        kv = KeyedVectors(self.vector_size, len(vocab), dtype=self.vectors.dtype)
 
         for key in vocab:  # produce and index vectors for all the given keys
             weights = self[key]
