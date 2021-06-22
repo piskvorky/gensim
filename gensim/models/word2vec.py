@@ -917,14 +917,12 @@ class Word2Vec(utils.SaveLoad):
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1,
-                self.compute_loss,
+                total_examples, total_words, work, neu1, self.compute_loss
             )
         else:
             examples, tally, raw_tally = train_epoch_cbow(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1,
-                self.compute_loss,
+                total_examples, total_words, work, neu1, self.compute_loss
             )
 
         return examples, tally, raw_tally
@@ -950,15 +948,9 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(
-                self, sentences, alpha, work,
-                self.compute_loss,
-            )
+            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
         else:
-            tally += train_batch_cbow(
-                self, sentences, alpha, work, neu1,
-                self.compute_loss,
-            )
+            tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
         return tally, self._raw_word_count(sentences)
 
     def _clear_post_train(self):
@@ -966,10 +958,10 @@ class Word2Vec(utils.SaveLoad):
         self.wv.norms = None
 
     def train(
-            self, corpus_iterable=None, corpus_file=None, total_examples=None,
-            total_words=None, epochs=None, start_alpha=None, end_alpha=None,
-            word_count=0, queue_factor=2, report_delay=1.0, compute_loss=False,
-            callbacks=(), **kwargs,
+            self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
+            epochs=None, start_alpha=None, end_alpha=None, word_count=0,
+            queue_factor=2, report_delay=1.0, compute_loss=False, callbacks=(),
+            **kwargs,
         ):
         """Update the model's neural weights from a sequence of sentences.
 
