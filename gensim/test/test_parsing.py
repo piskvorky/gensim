@@ -8,9 +8,10 @@ Automated tests for the parsing module.
 import logging
 import unittest
 import numpy as np
+import gensim.parsing.preprocessing as preprocessing
 from gensim.parsing.preprocessing import \
     remove_stopwords, strip_punctuation2, strip_tags, strip_short, strip_numeric, strip_non_alphanum, \
-    strip_multiple_whitespaces, split_alphanum, stem_text
+    strip_multiple_whitespaces, split_alphanum, stem_text, remove_stopword_tokens, remove_short_tokens, split_on_space
 
 
 # several documents
@@ -66,6 +67,27 @@ class TestPreprocessing(unittest.TestCase):
 
     def test_strip_stopwords(self):
         self.assertEqual(remove_stopwords("the world is square"), "world square")
+
+        # confirm redifining the global `STOPWORDS` working
+        STOPWORDS = preprocessing.STOPWORDS
+        preprocessing.STOPWORDS = frozenset(["the"])
+        self.assertEqual(remove_stopwords("the world is square"), "world is square")
+        preprocessing.STOPWORDS = STOPWORDS
+
+    def test_strip_stopword_tokens(self):
+        self.assertEqual(remove_stopword_tokens(["the", "world", "is", "sphere"]), ["world", "sphere"])
+
+        # confirm redifining the global `STOPWORDS` working
+        STOPWORDS = preprocessing.STOPWORDS
+        preprocessing.STOPWORDS = frozenset(["the"])
+        self.assertEqual(remove_stopword_tokens(["the", "world", "is", "sphere"]), ["world", "is", "sphere"])
+        preprocessing.STOPWORDS = STOPWORDS
+
+    def test_strip_short_tokens(self):
+        self.assertEqual(remove_short_tokens(["salut", "les", "amis", "du", "59"], 3), ["salut", "les", "amis"])
+
+    def test_split_on_space(self):
+        self.assertEqual(split_on_space(" salut   les  amis du 59 "), ["salut", "les", "amis", "du", "59"])
 
     def test_stem_text(self):
         target = \
