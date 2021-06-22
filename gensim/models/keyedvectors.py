@@ -1713,14 +1713,8 @@ class KeyedVectors(utils.SaveLoad):
         >>> from gensim.models import FastText
         >>> from gensim.test.utils import datapath, common_texts
         >>>
-        >>> model_corpus_file = datapath('lee_background.cor')
-        >>> model = FastText(vector_size=100)
-        >>> model.build_vocab(corpus_file=model_corpus_file)
-        >>> model.train(  # train word vectors on some corpus
-        >>>     corpus_file=model_corpus_file, epochs=model.epochs,
-        >>>     total_examples=model.corpus_count, total_words=model.corpus_total_words,
-        >>> )
-        >>>
+        >>> model_corpus_file = datapath('lee_background.cor')  # train word vectors on some corpus
+        >>> model = FastText(corpus_file=model_corpus_file, vector_size=20, min_count=1)
         >>> corpus = common_texts  # infer word vectors for words from another corpus
         >>> word_counts = Counter(itertools.chain.from_iterable(corpus))  # count words in your corpus
         >>> words_by_freq = (k for k, v in word_counts.most_common())
