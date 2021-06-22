@@ -55,23 +55,22 @@ Access the document embeddings generated from the DTM
 import logging
 
 import numpy as np
-from scipy.special import digamma, gammaln
-from scipy import optimize
-
 from gensim import utils, matutils
 from gensim.models import ldamodel
-
+from .ldaseq_sslm_inner import fit_sslm, sslm_counts_init
+from .ldaseq_posterior_inner import fit_lda_post
 
 logger = logging.getLogger(__name__)
 
 
 class LdaSeqModel(utils.SaveLoad):
     """Estimate Dynamic Topic Model parameters based on a training corpus."""
+
     def __init__(
             self, corpus=None, time_slice=None, id2word=None, alphas=0.01, num_topics=10,
             initialize='gensim', sstats=None, lda_model=None, obs_variance=0.5, chain_variance=0.005, passes=10,
             random_state=None, lda_inference_max_iter=25, em_min_iter=6, em_max_iter=20, chunksize=100,
-        ):
+    ):
         """
 
         Parameters
@@ -211,7 +210,7 @@ class LdaSeqModel(utils.SaveLoad):
         self.alphas = alpha
         for k, chain in enumerate(self.topic_chains):
             sstats = init_suffstats[:, k]
-            sslm.sslm_counts_init(chain, topic_obs_variance, topic_chain_variance, sstats)
+            chain.sslm_counts_init(topic_obs_variance, topic_chain_variance, sstats)
 
             # initialize the below matrices only if running DIM
             # ldaseq.topic_chains[k].w_phi_l = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
@@ -297,7 +296,6 @@ class LdaSeqModel(utils.SaveLoad):
             convergence = np.fabs((bound - old_bound) / old_bound)
 
             if convergence < LDASQE_EM_THRESHOLD:
-
                 lda_inference_max_iter = MAX_ITER
                 logger.info("Starting final iterations, max iter is %i", lda_inference_max_iter)
                 convergence = 1.0
@@ -426,16 +424,16 @@ class LdaSeqModel(utils.SaveLoad):
 
                 # TODO: replace fit_lda_post with appropriate ldamodel functions, if possible.
                 if iter_ == 0:
-                    doc_lhood = LdaPost.fit_lda_post(
-                        ldapost, doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter
+                    doc_lhood = ldapost.fit_lda_post(
+                        doc_num, time, None, lda_inference_max_iter=lda_inference_max_iter
                     )
                 else:
-                    doc_lhood = LdaPost.fit_lda_post(
-                        ldapost, doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter
+                    doc_lhood = ldapost.fit_lda_post(
+                        doc_num, time, self, lda_inference_max_iter=lda_inference_max_iter
                     )
 
                 if topic_suffstats is not None:
-                    topic_suffstats = LdaPost.update_lda_seq_ss(ldapost, time, doc, topic_suffstats)
+                    topic_suffstats = ldapost.update_lda_seq_ss(time, doc, topic_suffstats)
 
                 gammas[doc_index] = ldapost.gamma
                 bound += doc_lhood
@@ -485,7 +483,7 @@ class LdaSeqModel(utils.SaveLoad):
 
         for k, chain in enumerate(self.topic_chains):
             logger.info("Fitting topic number %i", k)
-            lhood_term = sslm.fit_sslm(chain, topic_suffstats[k])
+            lhood_term = chain.fit_sslm(topic_suffstats[k])
             lhood += lhood_term
 
         return lhood
@@ -679,7 +677,7 @@ class LdaSeqModel(utils.SaveLoad):
         time_lhoods = []
         for time in range(self.num_time_slices):
             lda_model = self.make_lda_seq_slice(lda_model, time)  # create lda_seq slice
-            lhood = LdaPost.fit_lda_post(ldapost, 0, time, self)
+            lhood = ldapost.fit_lda_post(0, time, self)
             time_lhoods.append(lhood)
 
         doc_topic = ldapost.gamma / ldapost.gamma.sum()
@@ -709,13 +707,13 @@ class sslm(utils.SaveLoad):
         self.num_topics = num_topics
 
         # setting up matrices
-        self.obs = np.zeros((vocab_len, num_time_slices))
-        self.e_log_prob = np.zeros((vocab_len, num_time_slices))
-        self.mean = np.zeros((vocab_len, num_time_slices + 1))
-        self.fwd_mean = np.zeros((vocab_len, num_time_slices + 1))
-        self.fwd_variance = np.zeros((vocab_len, num_time_slices + 1))
-        self.variance = np.zeros((vocab_len, num_time_slices + 1))
-        self.zeta = np.zeros(num_time_slices)
+        self.obs = np.zeros((vocab_len, num_time_slices), dtype=np.float64)
+        self.e_log_prob = np.zeros((vocab_len, num_time_slices), dtype=np.float64)
+        self.mean = np.zeros((vocab_len, num_time_slices + 1), dtype=np.float64)
+        self.fwd_mean = np.zeros((vocab_len, num_time_slices + 1), dtype=np.float64)
+        self.fwd_variance = np.zeros((vocab_len, num_time_slices + 1), dtype=np.float64)
+        self.variance = np.zeros((vocab_len, num_time_slices + 1), dtype=np.float64)
+        self.zeta = np.zeros(num_time_slices, dtype=np.float64)
 
         # the following are class variables which are to be integrated during Document Influence Model
         self.m_update_coeff = None
@@ -726,157 +724,7 @@ class sslm(utils.SaveLoad):
         self.w_phi_sum = None
         self.w_phi_l_sq = None
         self.m_update_coeff_g = None
-
-    def update_zeta(self):
-        """Update the Zeta variational parameter.
-
-        Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)),
-        over every time-slice. It is the value of variational parameter zeta which maximizes the lower bound.
-
-        Returns
-        -------
-        list of float
-            The updated zeta values for each time slice.
-
-        """
-        for j, val in enumerate(self.zeta):
-            self.zeta[j] = np.sum(np.exp(self.mean[:, j + 1] + self.variance[:, j + 1] / 2))
-        return self.zeta
-
-    def compute_post_variance(self, word, chain_variance):
-        r"""Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
-        <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
-
-        This function accepts the word to compute variance for, along with the associated sslm class object,
-        and returns the `variance` and the posterior approximation `fwd_variance`.
-
-        Notes
-        -----
-        This function essentially computes Var[\beta_{t,w}] for t = 1:T
-
-        .. :math::
-
-            fwd\_variance[t] \equiv E((beta_{t,w}-mean_{t,w})^2 |beta_{t}\ for\ 1:t) =
-            (obs\_variance / fwd\_variance[t - 1] + chain\_variance + obs\_variance ) *
-            (fwd\_variance[t - 1] + obs\_variance)
-
-        .. :math::
-
-            variance[t] \equiv E((beta_{t,w}-mean\_cap_{t,w})^2 |beta\_cap_{t}\ for\ 1:t) =
-            fwd\_variance[t - 1] + (fwd\_variance[t - 1] / fwd\_variance[t - 1] + obs\_variance)^2 *
-            (variance[t - 1] - (fwd\_variance[t-1] + obs\_variance))
-
-        Parameters
-        ----------
-        word: int
-            The word's ID.
-        chain_variance : float
-            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
-
-        Returns
-        -------
-        (numpy.ndarray, numpy.ndarray)
-            The first returned value is the variance of each word in each time slice, the second value is the
-            inferred posterior variance for the same pairs.
-
-        """
-        INIT_VARIANCE_CONST = 1000
-
-        T = self.num_time_slices
-        variance = self.variance[word]
-        fwd_variance = self.fwd_variance[word]
-        # forward pass. Set initial variance very high
-        fwd_variance[0] = chain_variance * INIT_VARIANCE_CONST
-        for t in range(1, T + 1):
-            if self.obs_variance:
-                c = self.obs_variance / (fwd_variance[t - 1] + chain_variance + self.obs_variance)
-            else:
-                c = 0
-            fwd_variance[t] = c * (fwd_variance[t - 1] + chain_variance)
-
-        # backward pass
-        variance[T] = fwd_variance[T]
-        for t in range(T - 1, -1, -1):
-            if fwd_variance[t] > 0.0:
-                c = np.power((fwd_variance[t] / (fwd_variance[t] + chain_variance)), 2)
-            else:
-                c = 0
-            variance[t] = (c * (variance[t + 1] - chain_variance)) + ((1 - c) * fwd_variance[t])
-
-        return variance, fwd_variance
-
-    def compute_post_mean(self, word, chain_variance):
-        """Get the mean, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
-        <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
-
-        Notes
-        -----
-        This function essentially computes E[\beta_{t,w}] for t = 1:T.
-
-        .. :math::
-
-            Fwd_Mean(t) ≡  E(beta_{t,w} | beta_ˆ 1:t )
-            = (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance ) * fwd_mean[t - 1] +
-            (1 - (obs_variance / fwd_variance[t - 1] + chain_variance + obs_variance)) * beta
-
-        .. :math::
-
-            Mean(t) ≡ E(beta_{t,w} | beta_ˆ 1:T )
-            = fwd_mean[t - 1] + (obs_variance / fwd_variance[t - 1] + obs_variance) +
-            (1 - obs_variance / fwd_variance[t - 1] + obs_variance)) * mean[t]
-
-        Parameters
-        ----------
-        word: int
-            The word's ID.
-        chain_variance : float
-            Gaussian parameter defined in the beta distribution to dictate how the beta values evolve over time.
-
-        Returns
-        -------
-        (numpy.ndarray, numpy.ndarray)
-            The first returned value is the mean of each word in each time slice, the second value is the
-            inferred posterior mean for the same pairs.
-
-        """
-        T = self.num_time_slices
-        obs = self.obs[word]
-        fwd_variance = self.fwd_variance[word]
-        mean = self.mean[word]
-        fwd_mean = self.fwd_mean[word]
-
-        # forward
-        fwd_mean[0] = 0
-        for t in range(1, T + 1):
-            c = self.obs_variance / (fwd_variance[t - 1] + chain_variance + self.obs_variance)
-            fwd_mean[t] = c * fwd_mean[t - 1] + (1 - c) * obs[t - 1]
-
-        # backward pass
-        mean[T] = fwd_mean[T]
-        for t in range(T - 1, -1, -1):
-            if chain_variance == 0.0:
-                c = 0.0
-            else:
-                c = chain_variance / (fwd_variance[t] + chain_variance)
-            mean[t] = c * fwd_mean[t] + (1 - c) * mean[t + 1]
-        return mean, fwd_mean
-
-    def compute_expected_log_prob(self):
-        """Compute the expected log probability given values of m.
-
-        The appendix describes the Expectation of log-probabilities in equation 5 of the DTM paper;
-        The below implementation is the result of solving the equation and is implemented as in the original
-        Blei DTM code.
-
-        Returns
-        -------
-        numpy.ndarray of float
-            The expected value for the log probabilities for each word and time slice.
-
-        """
-        for (w, t), val in np.ndenumerate(self.e_log_prob):
-            self.e_log_prob[w][t] = self.mean[w][t + 1] - np.log(self.zeta[t])
-        return self.e_log_prob
+        self.config_c_address = 0
 
     def sslm_counts_init(self, obs_variance, chain_variance, sstats):
         """Initialize the State Space Language Model with LDA sufficient statistics.
@@ -895,28 +743,8 @@ class sslm(utils.SaveLoad):
             expected shape (`self.vocab_len`, `num_topics`).
 
         """
-        W = self.vocab_len
-        T = self.num_time_slices
 
-        log_norm_counts = np.copy(sstats)
-        log_norm_counts /= sum(log_norm_counts)
-        log_norm_counts += 1.0 / W
-        log_norm_counts /= sum(log_norm_counts)
-        log_norm_counts = np.log(log_norm_counts)
-
-        # setting variational observations to transformed counts
-        self.obs = (np.repeat(log_norm_counts, T, axis=0)).reshape(W, T)
-        # set variational parameters
-        self.obs_variance = obs_variance
-        self.chain_variance = chain_variance
-
-        # compute post variance, mean
-        for w in range(W):
-            self.variance[w], self.fwd_variance[w] = self.compute_post_variance(w, self.chain_variance)
-            self.mean[w], self.fwd_mean[w] = self.compute_post_mean(w, self.chain_variance)
-
-        self.zeta = self.update_zeta()
-        self.e_log_prob = self.compute_expected_log_prob()
+        sslm_counts_init(self, obs_variance, chain_variance, sstats)
 
     def fit_sslm(self, sstats):
         """Fits variational distribution.
@@ -938,308 +766,8 @@ class sslm(utils.SaveLoad):
             The lower bound for the true posterior achieved using the fitted approximate distribution.
 
         """
-        W = self.vocab_len
-        bound = 0
-        old_bound = 0
-        sslm_fit_threshold = 1e-6
-        sslm_max_iter = 2
-        converged = sslm_fit_threshold + 1
 
-        # computing variance, fwd_variance
-        self.variance, self.fwd_variance = \
-            (np.array(x) for x in zip(*(self.compute_post_variance(w, self.chain_variance) for w in range(W))))
-
-        # column sum of sstats
-        totals = sstats.sum(axis=0)
-        iter_ = 0
-
-        model = "DTM"
-        if model == "DTM":
-            bound = self.compute_bound(sstats, totals)
-        if model == "DIM":
-            bound = self.compute_bound_fixed(sstats, totals)
-
-        logger.info("initial sslm bound is %f", bound)
-
-        while converged > sslm_fit_threshold and iter_ < sslm_max_iter:
-            iter_ += 1
-            old_bound = bound
-            self.obs, self.zeta = self.update_obs(sstats, totals)
-
-            if model == "DTM":
-                bound = self.compute_bound(sstats, totals)
-            if model == "DIM":
-                bound = self.compute_bound_fixed(sstats, totals)
-
-            converged = np.fabs((bound - old_bound) / old_bound)
-            logger.info("iteration %i iteration lda seq bound is %f convergence is %f", iter_, bound, converged)
-
-        self.e_log_prob = self.compute_expected_log_prob()
-        return bound
-
-    def compute_bound(self, sstats, totals):
-        """Compute the maximized lower bound achieved for the log probability of the true posterior.
-
-        Uses the formula presented in the appendix of the DTM paper (formula no. 5).
-
-        Parameters
-        ----------
-        sstats : numpy.ndarray
-            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
-            time slice, expected shape (`self.vocab_len`, `num_topics`).
-        totals : list of int of length `len(self.time_slice)`
-            The totals for each time slice.
-
-        Returns
-        -------
-        float
-            The maximized lower bound.
-
-        """
-        w = self.vocab_len
-        t = self.num_time_slices
-
-        term_1 = 0
-        term_2 = 0
-        term_3 = 0
-
-        val = 0
-        ent = 0
-
-        chain_variance = self.chain_variance
-        # computing mean, fwd_mean
-        self.mean, self.fwd_mean = \
-            (np.array(x) for x in zip(*(self.compute_post_mean(w, self.chain_variance) for w in range(w))))
-        self.zeta = self.update_zeta()
-
-        val = sum(self.variance[w][0] - self.variance[w][t] for w in range(w)) / 2 * chain_variance
-
-        logger.info("Computing bound, all times")
-
-        for t in range(1, t + 1):
-            term_1 = 0.0
-            term_2 = 0.0
-            ent = 0.0
-            for w in range(w):
-
-                m = self.mean[w][t]
-                prev_m = self.mean[w][t - 1]
-
-                v = self.variance[w][t]
-
-                # w_phi_l is only used in Document Influence Model; the values are always zero in this case
-                # w_phi_l = sslm.w_phi_l[w][t - 1]
-                # exp_i = np.exp(-prev_m)
-                # term_1 += (np.power(m - prev_m - (w_phi_l * exp_i), 2) / (2 * chain_variance)) -
-                # (v / chain_variance) - np.log(chain_variance)
-
-                term_1 += \
-                    (np.power(m - prev_m, 2) / (2 * chain_variance)) - (v / chain_variance) - np.log(chain_variance)
-                term_2 += sstats[w][t - 1] * m
-                ent += np.log(v) / 2  # note the 2pi's cancel with term1 (see doc)
-
-            term_3 = -totals[t - 1] * np.log(self.zeta[t - 1])
-            val += term_2 + term_3 + ent - term_1
-
-        return val
-
-    def update_obs(self, sstats, totals):
-        """Optimize the bound with respect to the observed variables.
-
-        TODO:
-        This is by far the slowest function in the whole algorithm.
-        Replacing or improving the performance of this would greatly speed things up.
-
-        Parameters
-        ----------
-        sstats : numpy.ndarray
-            Sufficient statistics for a particular topic. Corresponds to matrix beta in the linked paper for the first
-            time slice, expected shape (`self.vocab_len`, `num_topics`).
-        totals : list of int of length `len(self.time_slice)`
-            The totals for each time slice.
-
-        Returns
-        -------
-        (numpy.ndarray of float, numpy.ndarray of float)
-            The updated optimized values for obs and the zeta variational parameter.
-
-        """
-
-        OBS_NORM_CUTOFF = 2
-        STEP_SIZE = 0.01
-        TOL = 1e-3
-
-        W = self.vocab_len
-        T = self.num_time_slices
-
-        runs = 0
-        mean_deriv_mtx = np.zeros((T, T + 1))
-
-        norm_cutoff_obs = None
-        for w in range(W):
-            w_counts = sstats[w]
-            counts_norm = 0
-            # now we find L2 norm of w_counts
-            for i in range(len(w_counts)):
-                counts_norm += w_counts[i] * w_counts[i]
-
-            counts_norm = np.sqrt(counts_norm)
-
-            if counts_norm < OBS_NORM_CUTOFF and norm_cutoff_obs is not None:
-                obs = self.obs[w]
-                norm_cutoff_obs = np.copy(obs)
-            else:
-                if counts_norm < OBS_NORM_CUTOFF:
-                    w_counts = np.zeros(len(w_counts))
-
-                # TODO: apply lambda function
-                for t in range(T):
-                    mean_deriv_mtx[t] = self.compute_mean_deriv(w, t, mean_deriv_mtx[t])
-
-                deriv = np.zeros(T)
-                args = self, w_counts, totals, mean_deriv_mtx, w, deriv
-                obs = self.obs[w]
-                model = "DTM"
-
-                if model == "DTM":
-                    # slowest part of method
-                    obs = optimize.fmin_cg(
-                        f=f_obs, fprime=df_obs, x0=obs, gtol=TOL, args=args, epsilon=STEP_SIZE, disp=0
-                    )
-                if model == "DIM":
-                    pass
-                runs += 1
-
-                if counts_norm < OBS_NORM_CUTOFF:
-                    norm_cutoff_obs = obs
-
-                self.obs[w] = obs
-
-        self.zeta = self.update_zeta()
-
-        return self.obs, self.zeta
-
-    def compute_mean_deriv(self, word, time, deriv):
-        """Helper functions for optimizing a function.
-
-        Compute the derivative of:
-
-        .. :math::
-
-            E[\beta_{t,w}]/d obs_{s,w} for t = 1:T.
-
-        Parameters
-        ----------
-        word : int
-            The word's ID.
-        time : int
-            The time slice.
-        deriv : list of float
-            Derivative for each time slice.
-
-        Returns
-        -------
-        list of float
-            Mean derivative for each time slice.
-
-        """
-
-        T = self.num_time_slices
-        fwd_variance = self.variance[word]
-
-        deriv[0] = 0
-
-        # forward pass
-        for t in range(1, T + 1):
-            if self.obs_variance > 0.0:
-                w = self.obs_variance / (fwd_variance[t - 1] + self.chain_variance + self.obs_variance)
-            else:
-                w = 0.0
-            val = w * deriv[t - 1]
-            if time == t - 1:
-                val += (1 - w)
-            deriv[t] = val
-
-        for t in range(T - 1, -1, -1):
-            if self.chain_variance == 0.0:
-                w = 0.0
-            else:
-                w = self.chain_variance / (fwd_variance[t] + self.chain_variance)
-            deriv[t] = w * deriv[t] + (1 - w) * deriv[t + 1]
-
-        return deriv
-
-    def compute_obs_deriv(self, word, word_counts, totals, mean_deriv_mtx, deriv):
-        """Derivation of obs which is used in derivative function `df_obs` while optimizing.
-
-        Parameters
-        ----------
-        word : int
-            The word's ID.
-        word_counts : list of int
-            Total word counts for each time slice.
-        totals : list of int of length `len(self.time_slice)`
-            The totals for each time slice.
-        mean_deriv_mtx : list of float
-            Mean derivative for each time slice.
-        deriv : list of float
-            Mean derivative for each time slice.
-
-        Returns
-        -------
-        list of float
-            Mean derivative for each time slice.
-
-        """
-
-        # flag
-        init_mult = 1000
-
-        T = self.num_time_slices
-
-        mean = self.mean[word]
-        variance = self.variance[word]
-
-        # only used for DIM mode
-        # w_phi_l = self.w_phi_l[word]
-        # m_update_coeff = self.m_update_coeff[word]
-
-        # temp_vector holds temporary zeta values
-        self.temp_vect = np.zeros(T)
-
-        for u in range(T):
-            self.temp_vect[u] = np.exp(mean[u + 1] + variance[u + 1] / 2)
-
-        for t in range(T):
-            mean_deriv = mean_deriv_mtx[t]
-            term1 = 0
-            term2 = 0
-            term3 = 0
-            term4 = 0
-
-            for u in range(1, T + 1):
-                mean_u = mean[u]
-                mean_u_prev = mean[u - 1]
-                dmean_u = mean_deriv[u]
-                dmean_u_prev = mean_deriv[u - 1]
-
-                term1 += (mean_u - mean_u_prev) * (dmean_u - dmean_u_prev)
-                term2 += (word_counts[u - 1] - (totals[u - 1] * self.temp_vect[u - 1] / self.zeta[u - 1])) * dmean_u
-
-                model = "DTM"
-                if model == "DIM":
-                    # do some stuff
-                    pass
-
-            if self.chain_variance:
-                term1 = - (term1 / self.chain_variance)
-                term1 = term1 - (mean[0] * mean_deriv[0]) / (init_mult * self.chain_variance)
-            else:
-                term1 = 0.0
-
-            deriv[t] = term1 + term2 + term3 + term4
-
-        return deriv
+        return fit_sslm(self, sstats)
 
 
 class LdaPost(utils.SaveLoad):
@@ -1288,137 +816,8 @@ class LdaPost(utils.SaveLoad):
         self.doc_weight = None
         self.renormalized_doc_weight = None
 
-    def update_phi(self, doc_number, time):
-        """Update variational multinomial parameters, based on a document and a time-slice.
-
-        This is done based on the original Blei-LDA paper, where:
-        log_phi := beta * exp(Ψ(gamma)), over every topic for every word.
-
-        TODO: incorporate lee-sueng trick used in
-        **Lee, Seung: Algorithms for non-negative matrix factorization, NIPS 2001**.
-
-        Parameters
-        ----------
-        doc_number : int
-            Document number. Unused.
-        time : int
-            Time slice. Unused.
-
-        Returns
-        -------
-        (list of float, list of float)
-            Multinomial parameters, and their logarithm, for each word in the document.
-
-        """
-        num_topics = self.lda.num_topics
-        # digamma values
-        dig = np.zeros(num_topics)
-
-        for k in range(num_topics):
-            dig[k] = digamma(self.gamma[k])
-
-        n = 0   # keep track of iterations for phi, log_phi
-        for word_id, count in self.doc:
-            for k in range(num_topics):
-                self.log_phi[n][k] = dig[k] + self.lda.topics[word_id][k]
-
-            log_phi_row = self.log_phi[n]
-            phi_row = self.phi[n]
-
-            # log normalize
-            v = log_phi_row[0]
-            for i in range(1, len(log_phi_row)):
-                v = np.logaddexp(v, log_phi_row[i])
-
-            # subtract every element by v
-            log_phi_row = log_phi_row - v
-            phi_row = np.exp(log_phi_row)
-            self.log_phi[n] = log_phi_row
-            self.phi[n] = phi_row
-            n += 1  # increase iteration
-
-        return self.phi, self.log_phi
-
-    def update_gamma(self):
-        """Update variational dirichlet parameters.
-
-        This operations is described in the original Blei LDA paper:
-        gamma = alpha + sum(phi), over every topic for every word.
-
-        Returns
-        -------
-        list of float
-            The updated gamma parameters for each word in the document.
-
-        """
-        self.gamma = np.copy(self.lda.alpha)
-        n = 0  # keep track of number of iterations for phi, log_phi
-        for word_id, count in self.doc:
-            phi_row = self.phi[n]
-            for k in range(self.lda.num_topics):
-                self.gamma[k] += phi_row[k] * count
-            n += 1
-
-        return self.gamma
-
-    def init_lda_post(self):
-        """Initialize variational posterior. """
-        total = sum(count for word_id, count in self.doc)
-        self.gamma.fill(self.lda.alpha[0] + float(total) / self.lda.num_topics)
-        self.phi[:len(self.doc), :] = 1.0 / self.lda.num_topics
-        # doc_weight used during DIM
-        # ldapost.doc_weight = None
-
-    def compute_lda_lhood(self):
-        """Compute the log likelihood bound.
-
-        Returns
-        -------
-        float
-            The optimal lower bound for the true posterior using the approximate distribution.
-
-        """
-        num_topics = self.lda.num_topics
-        gamma_sum = np.sum(self.gamma)
-
-        # to be used in DIM
-        # sigma_l = 0
-        # sigma_d = 0
-
-        lhood = gammaln(np.sum(self.lda.alpha)) - gammaln(gamma_sum)
-        self.lhood[num_topics] = lhood
-
-        # influence_term = 0
-        digsum = digamma(gamma_sum)
-
-        model = "DTM"  # noqa:F841
-        for k in range(num_topics):
-            # below code only to be used in DIM mode
-            # if ldapost.doc_weight is not None and (model == "DIM" or model == "fixed"):
-            #     influence_topic = ldapost.doc_weight[k]
-            #     influence_term = \
-            #           - ((influence_topic * influence_topic + sigma_l * sigma_l) / 2.0 / (sigma_d * sigma_d))
-
-            e_log_theta_k = digamma(self.gamma[k]) - digsum
-            lhood_term = \
-                (self.lda.alpha[k] - self.gamma[k]) * e_log_theta_k + \
-                gammaln(self.gamma[k]) - gammaln(self.lda.alpha[k])
-            # TODO: check why there's an IF
-            n = 0
-            for word_id, count in self.doc:
-                if self.phi[n][k] > 0:
-                    lhood_term += \
-                        count * self.phi[n][k] * (e_log_theta_k + self.lda.topics[word_id][k] - self.log_phi[n][k])
-                n += 1
-            self.lhood[k] = lhood_term
-            lhood += lhood_term
-            # in case of DIM add influence term
-            # lhood += influence_term
-
-        return lhood
-
     def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
-                    lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
+                     lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
         """Posterior inference for lda.
 
         Parameters
@@ -1448,51 +847,8 @@ class LdaPost(utils.SaveLoad):
             The optimal lower bound for the true posterior using the approximate distribution.
         """
 
-        self.init_lda_post()
-        # sum of counts in a doc
-        total = sum(count for word_id, count in self.doc)
-
-        model = "DTM"
-        if model == "DIM":
-            # if in DIM then we initialise some variables here
-            pass
-
-        lhood = self.compute_lda_lhood()
-        lhood_old = 0
-        converged = 0
-        iter_ = 0
-
-        # first iteration starts here
-        iter_ += 1
-        lhood_old = lhood
-        self.gamma = self.update_gamma()
-
-        model = "DTM"
-
-        if model == "DTM" or sslm is None:
-            self.phi, self.log_phi = self.update_phi(doc_number, time)
-        elif model == "DIM" and sslm is not None:
-            self.phi, self.log_phi = self.update_phi_fixed(doc_number, time, sslm, g3_matrix, g4_matrix, g5_matrix)
-
-        lhood = self.compute_lda_lhood()
-        converged = np.fabs((lhood_old - lhood) / (lhood_old * total))
-
-        while converged > LDA_INFERENCE_CONVERGED and iter_ <= lda_inference_max_iter:
-
-            iter_ += 1
-            lhood_old = lhood
-            self.gamma = self.update_gamma()
-            model = "DTM"
-
-            if model == "DTM" or sslm is None:
-                self.phi, self.log_phi = self.update_phi(doc_number, time)
-            elif model == "DIM" and sslm is not None:
-                self.phi, self.log_phi = self.update_phi_fixed(doc_number, time, sslm, g3_matrix, g4_matrix, g5_matrix)
-
-            lhood = self.compute_lda_lhood()
-            converged = np.fabs((lhood_old - lhood) / (lhood_old * total))
-
-        return lhood
+        return np.array(fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED,
+                                     lda_inference_max_iter, g, g3_matrix, g4_matrix, g5_matrix))
 
     def update_lda_seq_ss(self, time, doc, topic_suffstats):
         """Update lda sequence sufficient statistics from an lda posterior.
@@ -1527,119 +883,3 @@ class LdaPost(utils.SaveLoad):
             topic_suffstats[k] = topic_ss
 
         return topic_suffstats
-
-
-# the following functions are used in update_obs as the objective function.
-def f_obs(x, *args):
-    """Function which we are optimising for minimizing obs.
-
-    Parameters
-    ----------
-    x : list of float
-        The obs values for this word.
-    sslm : :class:`~gensim.models.ldaseqmodel.sslm`
-        The State Space Language Model for DTM.
-    word_counts : list of int
-        Total word counts for each time slice.
-    totals : list of int of length `len(self.time_slice)`
-        The totals for each time slice.
-    mean_deriv_mtx : list of float
-        Mean derivative for each time slice.
-    word : int
-        The word's ID.
-    deriv : list of float
-        Mean derivative for each time slice.
-
-    Returns
-    -------
-    list of float
-        The value of the objective function evaluated at point `x`.
-
-    """
-    sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
-    # flag
-    init_mult = 1000
-
-    T = len(x)
-    val = 0
-    term1 = 0
-    term2 = 0
-
-    # term 3 and 4 for DIM
-    term3 = 0
-    term4 = 0
-
-    sslm.obs[word] = x
-    sslm.mean[word], sslm.fwd_mean[word] = sslm.compute_post_mean(word, sslm.chain_variance)
-
-    mean = sslm.mean[word]
-    variance = sslm.variance[word]
-
-    # only used for DIM mode
-    # w_phi_l = sslm.w_phi_l[word]
-    # m_update_coeff = sslm.m_update_coeff[word]
-
-    for t in range(1, T + 1):
-        mean_t = mean[t]
-        mean_t_prev = mean[t - 1]
-
-        val = mean_t - mean_t_prev
-        term1 += val * val
-        term2 += word_counts[t - 1] * mean_t - totals[t - 1] * np.exp(mean_t + variance[t] / 2) / sslm.zeta[t - 1]
-
-        model = "DTM"
-        if model == "DIM":
-            # stuff happens
-            pass
-
-    if sslm.chain_variance > 0.0:
-
-        term1 = - (term1 / (2 * sslm.chain_variance))
-        term1 = term1 - mean[0] * mean[0] / (2 * init_mult * sslm.chain_variance)
-    else:
-        term1 = 0.0
-
-    final = -(term1 + term2 + term3 + term4)
-
-    return final
-
-
-def df_obs(x, *args):
-    """Derivative of the objective function which optimises obs.
-
-    Parameters
-    ----------
-    x : list of float
-        The obs values for this word.
-    sslm : :class:`~gensim.models.ldaseqmodel.sslm`
-        The State Space Language Model for DTM.
-    word_counts : list of int
-        Total word counts for each time slice.
-    totals : list of int of length `len(self.time_slice)`
-        The totals for each time slice.
-    mean_deriv_mtx : list of float
-        Mean derivative for each time slice.
-    word : int
-        The word's ID.
-    deriv : list of float
-        Mean derivative for each time slice.
-
-    Returns
-    -------
-    list of float
-        The derivative of the objective function evaluated at point `x`.
-
-    """
-    sslm, word_counts, totals, mean_deriv_mtx, word, deriv = args
-
-    sslm.obs[word] = x
-    sslm.mean[word], sslm.fwd_mean[word] = sslm.compute_post_mean(word, sslm.chain_variance)
-
-    model = "DTM"
-    if model == "DTM":
-        deriv = sslm.compute_obs_deriv(word, word_counts, totals, mean_deriv_mtx, deriv)
-    elif model == "DIM":
-        deriv = sslm.compute_obs_deriv_fixed(
-            p.word, p.word_counts, p.totals, p.sslm, p.mean_deriv_mtx, deriv)  # noqa:F821
-
-    return np.negative(deriv)

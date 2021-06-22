@@ -22,7 +22,6 @@ from .ldaseqmodel import LdaSeqModel  # noqa:F401
 from .fasttext import FastText  # noqa:F401
 from .translation_matrix import TranslationMatrix, BackMappingTranslationMatrix  # noqa:F401
 from .nmf import Nmf  # noqa:F401
-from .ldaseqmodel_optimized import LdaSeqModel_V4
 
 from gensim import interfaces, utils
 

@@ -4,11 +4,11 @@
 # cython: cdivision=True
 # cython: embedsignature=True
 
+
 from libc.math cimport pow, log, exp, abs, sqrt
 from libc.string cimport memcpy
 from libc.stdlib cimport malloc, free
 from libc.stdint cimport uintptr_t
-
 
 cimport numpy as np
 
@@ -35,7 +35,7 @@ cdef init_sslm_config(StateSpaceLanguageModelConfig * config, model):
     # Default initialization should raise exception if it used without proper initialization
     config[0].deriv = NULL
     config[0].mean_deriv_mtx = NULL
-    word = -1
+    config[0].word = -1
 
 
 import numpy as np
@@ -85,22 +85,29 @@ def sslm_counts_init(model, obs_variance, chain_variance, sstats):
 
     # # compute post variance, mean
     for w in range(vocab_len):
-        compute_post_variance(config.variance, config.fwd_variance,
-                              config.obs_variance, config.chain_variance,
-                              w, config.num_time_slices)
+        compute_post_variance(
+            config.variance, config.fwd_variance,
+            config.obs_variance, config.chain_variance,
+            w, config.num_time_slices
+        )
 
-        compute_post_mean(config.mean, config.fwd_mean, config.fwd_variance,
-                              config.obs, w, config.num_time_slices,
-                              config.obs_variance, config.chain_variance)
+        compute_post_mean(
+            config.mean, config.fwd_mean, config.fwd_variance,
+            config.obs, w, config.num_time_slices,
+            config.obs_variance, config.chain_variance
+        )
 
     update_zeta(config.zeta, config.mean, config.variance, config.num_time_slices, config.vocab_len)
-    compute_expected_log_prob(config.e_log_prob, config.zeta, config.mean,
-                               config.vocab_len, config.num_time_slices)
+    compute_expected_log_prob(config.e_log_prob, config.zeta, config.mean, config.vocab_len, config.num_time_slices)
+
     model.config_c_address =  <uintptr_t>(config)
 
-cdef compute_post_mean(REAL_t *mean, REAL_t *fwd_mean, const REAL_t *fwd_variance, const REAL_t *obs,
-                       const int word, const int num_time_slices,
-                       const REAL_t obs_variance, const REAL_t chain_variance):
+
+cdef compute_post_mean(
+        REAL_t *mean, REAL_t *fwd_mean, const REAL_t *fwd_variance, const REAL_t *obs,
+        const int word, const int num_time_slices,
+        const REAL_t obs_variance, const REAL_t chain_variance
+     ):
     """Get the mean, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
     <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
@@ -141,8 +148,7 @@ cdef compute_post_mean(REAL_t *mean, REAL_t *fwd_mean, const REAL_t *fwd_varianc
 
 
     """
-    # print("")
-    cdef Py_ssize_t T = num_time_slices
+
     obs = obs + word * num_time_slices
     fwd_variance = fwd_variance + word * (num_time_slices + 1)
     mean = mean + word * (num_time_slices + 1)
@@ -154,14 +160,14 @@ cdef compute_post_mean(REAL_t *mean, REAL_t *fwd_mean, const REAL_t *fwd_varianc
     # forward
     fwd_mean[0] = 0
 
-    for t in range(1, T + 1):
+    for t in range(1, num_time_slices + 1):
         c = obs_variance / (fwd_variance[t - 1] + chain_variance + obs_variance)
         fwd_mean[t] = c * fwd_mean[t - 1] + (1 - c) * obs[t - 1]
 
     # backward pass
-    mean[T] = fwd_mean[T]
+    mean[num_time_slices] = fwd_mean[num_time_slices]
 
-    for t in range(T - 1, -1, -1):
+    for t in range(num_time_slices - 1, -1, -1):
         if chain_variance == 0.0:
             c = 0.0
         else:
@@ -169,9 +175,11 @@ cdef compute_post_mean(REAL_t *mean, REAL_t *fwd_mean, const REAL_t *fwd_varianc
         mean[t] = c * fwd_mean[t] + (1 - c) * mean[t + 1]
 
 
-cdef compute_post_variance(REAL_t *variance, REAL_t *fwd_variance,
-                           const REAL_t obs_variance, const REAL_t chain_variance,
-                           const int word, const int num_time_slices):
+cdef compute_post_variance(
+        REAL_t *variance, REAL_t *fwd_variance,
+        const REAL_t obs_variance, const REAL_t chain_variance,
+        const int word, const int num_time_slices
+     ):
     r"""Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
     <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
@@ -211,7 +219,6 @@ cdef compute_post_variance(REAL_t *variance, REAL_t *fwd_variance,
     """
     cdef int INIT_VARIANCE_CONST = 1000
 
-    cdef Py_ssize_t T = num_time_slices
     variance = variance + word * (num_time_slices + 1)
     fwd_variance = fwd_variance + word * (num_time_slices + 1)
     cdef REAL_t c
@@ -220,7 +227,7 @@ cdef compute_post_variance(REAL_t *variance, REAL_t *fwd_variance,
     # forward pass. Set initial variance very high
     fwd_variance[0] = chain_variance * INIT_VARIANCE_CONST
 
-    for t in range(1, T + 1):
+    for t in range(1, num_time_slices + 1):
         if obs_variance != 0.0:
             c = obs_variance / (fwd_variance[t - 1] + chain_variance + obs_variance)
         else:
@@ -228,8 +235,8 @@ cdef compute_post_variance(REAL_t *variance, REAL_t *fwd_variance,
         fwd_variance[t] = c * (fwd_variance[t - 1] + chain_variance)
 
     # backward pass
-    variance[T] = fwd_variance[T]
-    for t in range(T - 1, -1, -1):
+    variance[num_time_slices] = fwd_variance[num_time_slices]
+    for t in range(num_time_slices - 1, -1, -1):
         if fwd_variance[t] > 0.0:
             c = pow((fwd_variance[t] / (fwd_variance[t] + chain_variance)), 2)
         else:
@@ -237,8 +244,10 @@ cdef compute_post_variance(REAL_t *variance, REAL_t *fwd_variance,
         variance[t] = c * (variance[t + 1] - chain_variance) + (1 - c) * fwd_variance[t]
 
 
-cdef compute_mean_deriv(REAL_t *deriv, const REAL_t *variance, const REAL_t obs_variance, const REAL_t chain_variance,
-                        const int word, const int time, const int num_time_slices):
+cdef compute_mean_deriv(
+        REAL_t *deriv, const REAL_t *variance, const REAL_t obs_variance, const REAL_t chain_variance,
+        const int word, const int time, const int num_time_slices
+     ):
     """Helper functions for optimizing a function.
 
     Compute the derivative of:
@@ -265,8 +274,6 @@ cdef compute_mean_deriv(REAL_t *deriv, const REAL_t *variance, const REAL_t obs_
         Number of time slices in the model.
     """
 
-    cdef Py_ssize_t T = num_time_slices
-
     cdef REAL_t *fwd_variance = variance + word * (num_time_slices + 1)
     cdef Py_ssize_t t
     cdef REAL_t val
@@ -275,7 +282,7 @@ cdef compute_mean_deriv(REAL_t *deriv, const REAL_t *variance, const REAL_t obs_
     deriv[0] = 0
 
     # forward pass
-    for t in range(1, T + 1):
+    for t in range(1, num_time_slices + 1):
         if obs_variance > 0.0:
             w = obs_variance / (fwd_variance[t - 1] + chain_variance + obs_variance)
         else:
@@ -287,7 +294,7 @@ cdef compute_mean_deriv(REAL_t *deriv, const REAL_t *variance, const REAL_t obs_
 
         deriv[t] = val
 
-    for t in range(T - 1, -1, -1):
+    for t in range(num_time_slices - 1, -1, -1):
         if chain_variance == 0.0:
             w = 0.0
         else:
@@ -296,10 +303,11 @@ cdef compute_mean_deriv(REAL_t *deriv, const REAL_t *variance, const REAL_t obs_
         deriv[t] = w * deriv[t] + (1 - w) * deriv[t + 1]
 
 
-cdef compute_obs_deriv(REAL_t *deriv, const REAL_t *mean, const REAL_t *mean_deriv_mtx, const REAL_t *variance,
-                       const REAL_t *zeta, const REAL_t *totals, const REAL_t *word_counts,
-                       const REAL_t chain_variance, const int word, const int num_time_slices
-                       ):
+cdef compute_obs_deriv(
+        REAL_t *deriv, const REAL_t *mean, const REAL_t *mean_deriv_mtx, const REAL_t *variance,
+        const REAL_t *zeta, const REAL_t *totals, const REAL_t *word_counts,
+        const REAL_t chain_variance, const int word, const int num_time_slices
+     ):
     """Derivation of obs which is used in derivative function `df_obs` while optimizing.
 
     Parameters
@@ -327,24 +335,22 @@ cdef compute_obs_deriv(REAL_t *deriv, const REAL_t *mean, const REAL_t *mean_der
 
     cdef REAL_t init_mult = 1000
 
-    cdef Py_ssize_t T = num_time_slices
-
     mean = mean + word * (num_time_slices + 1)
     variance = variance + word * (num_time_slices + 1)
 
     cdef Py_ssize_t u, t
     cdef REAL_t term1, term2, term3, term4
 
-    cdef REAL_t *temp_vect = <REAL_t *> malloc(T * sizeof(REAL_t))
+    cdef REAL_t *temp_vect = <REAL_t *> malloc(num_time_slices * sizeof(REAL_t))
     if temp_vect == NULL:
         raise
 
-    for u in range(T):
+    for u in range(num_time_slices):
         temp_vect[u] = exp(mean[u + 1] + variance[u + 1] / 2)
 
     cdef REAL_t *mean_deriv = NULL
 
-    for t in range(T):
+    for t in range(num_time_slices):
 
         mean_deriv = mean_deriv_mtx + t * (num_time_slices + 1)
         term1 = 0.0
@@ -352,7 +358,7 @@ cdef compute_obs_deriv(REAL_t *deriv, const REAL_t *mean, const REAL_t *mean_der
         term3 = 0.0
         term4 = 0.0
 
-        for u in range(1, T + 1):
+        for u in range(1, num_time_slices + 1):
             term1 += (mean[u] - mean[u - 1]) * (mean_deriv[u] - mean_deriv[u - 1])
             term2 += (word_counts[u - 1] - (totals[u - 1] * temp_vect[u - 1] / zeta[u - 1])) * mean_deriv[u]
 
@@ -367,8 +373,10 @@ cdef compute_obs_deriv(REAL_t *deriv, const REAL_t *mean, const REAL_t *mean_der
 
     free(temp_vect)
 
-cdef update_zeta(REAL_t * zeta, const REAL_t *mean, const REAL_t *variance,
-                 const int num_time_slices, const int vocab_len):
+cdef update_zeta(
+        REAL_t * zeta, const REAL_t *mean, const REAL_t *variance,
+        const int num_time_slices, const int vocab_len
+     ):
     """Update the Zeta variational parameter.
 
     Zeta is described in the appendix and is equal to sum (exp(mean[word] + Variance[word] / 2)),
@@ -395,8 +403,6 @@ cdef update_zeta(REAL_t * zeta, const REAL_t *mean, const REAL_t *variance,
         temp = 0.0
 
         for w in range(vocab_len):
-            # TODO check if it possible to use BLAS here
-            # TODO compare with original code, some info about log
             temp += exp(mean[w * (num_time_slices + 1) + i + 1] + variance[
                 w * (num_time_slices + 1) + i + 1] / 2.0)
 
@@ -425,8 +431,8 @@ cdef REAL_t compute_bound(StateSpaceLanguageModelConfig * config, REAL_t *sstats
 
     """
 
-    cdef int vocab_len = config[0].vocab_len
-    cdef Py_ssize_t T = config[0].num_time_slices
+    cdef int vocab_len = config.vocab_len
+    cdef Py_ssize_t num_time_slices = config.num_time_slices
 
     cdef REAL_t term_1 = 0.0
     cdef REAL_t term_2 = 0.0
@@ -435,47 +441,48 @@ cdef REAL_t compute_bound(StateSpaceLanguageModelConfig * config, REAL_t *sstats
     cdef REAL_t val = 0.0
     cdef REAL_t ent = 0.0
 
-    cdef REAL_t chain_variance = config[0].chain_variance
+    cdef REAL_t chain_variance = config.chain_variance
 
-    cdef REAL_t *mean = config[0].mean
-    cdef REAL_t *fwd_mean = config[0].fwd_mean
-    cdef REAL_t *variance = config[0].variance
-    cdef REAL_t *zeta = config[0].zeta
+    cdef REAL_t *mean = config.mean
+    cdef REAL_t *fwd_mean = config.fwd_mean
+    cdef REAL_t *variance = config.variance
+    cdef REAL_t *zeta = config.zeta
 
     cdef Py_ssize_t i, t, w
 
     for i in range(vocab_len):
-        config[0].word = i
-        compute_post_mean(mean, fwd_mean, config[0].fwd_variance, config[0].obs,
-                          i, T, config[0].obs_variance, chain_variance)
+        config.word = i
+        compute_post_mean(
+            mean, fwd_mean, config.fwd_variance, config.obs,
+            i, num_time_slices, config.obs_variance, chain_variance
+        )
 
-    update_zeta(zeta, mean, variance, T, vocab_len)
+    update_zeta(zeta, mean, variance, num_time_slices, vocab_len)
 
     val = 0.0
 
     for i in range(vocab_len):
-        val += variance[i * (config[0].num_time_slices + 1)] - variance[i * (config[0].num_time_slices + 1) + T]
+        val += variance[i * (num_time_slices + 1)] - variance[i * (num_time_slices + 1) + num_time_slices]
 
     # TODO check if it is correct, not val (2.0 / chain_variance)
     val = val / 2.0 * chain_variance
 
     cdef REAL_t m, prev_m, v
 
-    for t in range(1, T + 1):
+    for t in range(1, num_time_slices + 1):
 
         term_1 = 0.0
         term_2 = 0.0
         ent = 0.0
 
         for w in range(vocab_len):
-            m = mean[w * (config[0].num_time_slices + 1) + t]
-            prev_m = mean[w * (config[0].num_time_slices + 1) + t - 1]
+            m = mean[w * (num_time_slices + 1) + t]
+            prev_m = mean[w * (num_time_slices + 1) + t - 1]
 
-            v = variance[w * (config[0].num_time_slices + 1) + t]
+            v = variance[w * (num_time_slices + 1) + t]
 
-            term_1 += \
-                (pow(m - prev_m, 2) / (2 * chain_variance)) - (v / chain_variance) - log(chain_variance)
-            term_2 += sstats[w * config[0].num_time_slices + t - 1] * m
+            term_1 += (pow(m - prev_m, 2) / (2 * chain_variance)) - (v / chain_variance) - log(chain_variance)
+            term_2 += sstats[w * num_time_slices + t - 1] * m
 
             ent += log(v) / 2  # note the 2pi's cancel with term1 (see doc)
 
@@ -486,8 +493,10 @@ cdef REAL_t compute_bound(StateSpaceLanguageModelConfig * config, REAL_t *sstats
     return val
 
 #
-cdef compute_expected_log_prob(REAL_t *e_log_prob, const REAL_t *zeta, const REAL_t *mean,
-                               const int vocab_len, const int num_time_slices):
+cdef compute_expected_log_prob(
+        REAL_t *e_log_prob, const REAL_t *zeta, const REAL_t *mean,
+        const int vocab_len, const int num_time_slices
+     ):
     """Compute the expected log probability given values of m.
 
     The appendix describes the Expectation of log-probabilities in equation 5 of the DTM paper;
@@ -541,68 +550,74 @@ cdef update_obs(StateSpaceLanguageModelConfig *config, REAL_t *sstats, REAL_t *t
     cdef REAL_t STEP_SIZE = 0.01
     cdef REAL_t TOL = 0.001
 
-    cdef Py_ssize_t W = config[0].vocab_len
-    cdef Py_ssize_t T = config[0].num_time_slices
+    cdef Py_ssize_t vocab_len = config.vocab_len
+    cdef Py_ssize_t num_time_slices = config.num_time_slices
 
     cdef int runs = 0
 
-    cdef REAL_t *mean_deriv_mtx = <REAL_t *> malloc(T * (T + 1) * sizeof(REAL_t))
+    cdef REAL_t *mean_deriv_mtx = <REAL_t *> malloc(num_time_slices * (num_time_slices + 1) * sizeof(REAL_t))
     if mean_deriv_mtx == NULL:
         raise
     cdef Py_ssize_t w, t
     cdef REAL_t counts_norm
 
     cdef REAL_t * obs
-    config[0].totals = totals
+    config.totals = totals
 
-    np_norm_cutoff_obs = np.zeros(T, dtype=np.double)
-    np_w_counts = np.zeros(T, dtype=np.double)
-    np_obs = np.zeros(T, dtype=np.double)
+    # TODO check if it should be changed to C memory allocation
+    np_norm_cutoff_obs = np.zeros(num_time_slices, dtype=np.double)
+    # TODO check if it should be changed to C memory allocation
+    np_w_counts = np.zeros(num_time_slices, dtype=np.double)
+
+    # Allocate it as numpy array to pass it to Python code (optimize.fmin_cg)
+    np_obs = np.zeros(num_time_slices, dtype=np.double)
 
     # This is a work memory for df_obs function
-    working_array = np.zeros(T, dtype=np.double)
+    working_array = np.zeros(num_time_slices, dtype=np.double)
 
     cdef REAL_t *norm_cutoff_obs = NULL
     cdef REAL_t *w_counts
 
-    for w in range(W):
-        w_counts = sstats + w * config[0].num_time_slices
-        config[0].word = w
+    for w in range(vocab_len):
+        w_counts = sstats + w * num_time_slices
+        config.word = w
 
         counts_norm = 0.0
 
         # now we find L2 norm of w_counts
-        for i in range(config[0].num_time_slices):
+        for i in range(num_time_slices):
             counts_norm += w_counts[i] * w_counts[i]
 
         counts_norm = sqrt(counts_norm)
 
         if counts_norm < OBS_NORM_CUTOFF and norm_cutoff_obs is not NULL:
-            obs = config[0].obs + w * config[0].num_time_slices
+            obs = config.obs + w * num_time_slices
             norm_cutoff_obs = <REAL_t *> (np.PyArray_DATA(np_norm_cutoff_obs))
             # norm_cutoff_obs = <REAL_t *> malloc(config[0].num_time_slices * sizeof(REAL_t))
             if norm_cutoff_obs == NULL:
                 raise
-            memcpy(norm_cutoff_obs, obs, config[0].num_time_slices * sizeof(REAL_t))
+            memcpy(norm_cutoff_obs, obs, num_time_slices * sizeof(REAL_t))
 
         else:
             if counts_norm < OBS_NORM_CUTOFF:
-                np_w_counts = np.zeros(config[0].num_time_slices, dtype=np.double)
+                np_w_counts = np.zeros(num_time_slices, dtype=np.double)
                 w_counts = <REAL_t *> (np.PyArray_DATA(np_w_counts))
 
-            for t in range(T):
-                compute_mean_deriv(mean_deriv_mtx + t * (config[0].num_time_slices + 1), config[0].variance,
-                                   config[0].obs_variance, config[0].chain_variance, w, t, T)
+            for t in range(num_time_slices):
+                compute_mean_deriv(
+                    mean_deriv_mtx + t * (num_time_slices + 1), config.variance,
+                    config.obs_variance, config.chain_variance, w, t, num_time_slices
+                )
 
-            np_deriv = np.zeros(T, dtype=np.double)
+            np_deriv = np.zeros(num_time_slices, dtype=np.double)
             deriv = <REAL_t *> (np.PyArray_DATA(np_deriv))
-            config[0].deriv = deriv
+            config.deriv = deriv
 
             obs = <REAL_t *> (np.PyArray_DATA(np_obs))
-            memcpy(obs, config[0].obs + w * config[0].num_time_slices, config[0].num_time_slices * sizeof(REAL_t))
+            memcpy(obs, config.obs + w * num_time_slices, num_time_slices * sizeof(REAL_t))
 
-            config[0].word_counts = w_counts
-            config[0].mean_deriv_mtx = mean_deriv_mtx
+            config.word_counts = w_counts
+            config.mean_deriv_mtx = mean_deriv_mtx
 
             # Passing C config structure as integer in Python code
             args = (<uintptr_t>(config),working_array)
@@ -618,12 +633,12 @@ cdef update_obs(StateSpaceLanguageModelConfig *config, REAL_t *sstats, REAL_t *t
             if counts_norm < OBS_NORM_CUTOFF:
 
                 norm_cutoff_obs = <REAL_t *> (np.PyArray_DATA(np_norm_cutoff_obs))
-                memcpy(norm_cutoff_obs, obs, config[0].num_time_slices * sizeof(REAL_t))
+                memcpy(norm_cutoff_obs, obs, num_time_slices * sizeof(REAL_t))
 
-            memcpy(config[0].obs + w * config[0].num_time_slices, obs, config[0].num_time_slices * sizeof(REAL_t))
+            memcpy(config.obs + w * num_time_slices, obs, num_time_slices * sizeof(REAL_t))
 
-    update_zeta(config[0].zeta, config[0].mean, config[0].variance,
-                config[0].num_time_slices, config[0].vocab_len)
+    update_zeta(config.zeta, config.mean, config.variance,
+                num_time_slices, config.vocab_len)
 
     free(mean_deriv_mtx)
 
@@ -651,7 +666,8 @@ def f_obs(_x, uintptr_t c, work_array):
 
     # flag
     cdef int init_mult = 1000
-    cdef Py_ssize_t T = config[0].num_time_slices
+    cdef Py_ssize_t num_time_slices = config.num_time_slices
+
     cdef Py_ssize_t t
 
     cdef REAL_t val = 0.0
@@ -663,26 +679,28 @@ def f_obs(_x, uintptr_t c, work_array):
     cdef REAL_t term4 = 0.0
 
     # obs[word] = x
-    memcpy(config[0].obs + config[0].word * config[0].num_time_slices, x, config[0].num_time_slices * sizeof(REAL_t))
+    memcpy(config.obs + config.word * num_time_slices, x, num_time_slices * sizeof(REAL_t))
 
-    compute_post_mean(config[0].mean, config[0].fwd_mean, config[0].fwd_variance, config[0].obs,
-                      config[0].word, config[0].num_time_slices, config[0].obs_variance, config[0].chain_variance)
+    compute_post_mean(
+        config.mean, config.fwd_mean, config.fwd_variance, config.obs,
+        config.word, num_time_slices, config.obs_variance, config.chain_variance
+    )
 
-    cdef REAL_t *mean = config[0].mean + config[0].word * (config[0].num_time_slices + 1)
-    cdef REAL_t *variance = config[0].variance + config[0].word * (config[0].num_time_slices + 1)
+    cdef REAL_t *mean = config.mean + config.word * (num_time_slices + 1)
+    cdef REAL_t *variance = config.variance + config.word * (num_time_slices + 1)
 
-    for t in range(1, T + 1):
+    for t in range(1, num_time_slices + 1):
 
         term1 += (mean[t] - mean[t - 1]) * (mean[t] - mean[t - 1])
 
-        term2 += config[0].word_counts[t - 1] * mean[t] - config[0].totals[t - 1] * \
-                 exp(mean[t] + variance[t] / 2) / config[0].zeta[t - 1]
+        term2 += config.word_counts[t - 1] * mean[t] - config.totals[t - 1] * \
+                 exp(mean[t] + variance[t] / 2) / config.zeta[t - 1]
 
 
-    if config[0].chain_variance > 0.0:
+    if config.chain_variance > 0.0:
 
-        term1 = -(term1 / (2 * config[0].chain_variance)) - \
-                mean[0] * mean[0] / (2 * init_mult * config[0].chain_variance)
+        term1 = -(term1 / (2 * config.chain_variance)) - \
+                mean[0] * mean[0] / (2 * init_mult * config.chain_variance)
     else:
         term1 = 0.0
 
@@ -711,21 +729,25 @@ def df_obs(_x, uintptr_t c, work_array):
     cdef REAL_t *x = <REAL_t *> (np.PyArray_DATA(_x))
 
 
-    memcpy(config[0].obs + config[0].num_time_slices * config[0].word, x, config[0].num_time_slices * sizeof(REAL_t))
+    memcpy(config.obs + config.num_time_slices * config.word, x, config.num_time_slices * sizeof(REAL_t))
 
-    compute_post_mean(config[0].mean, config[0].fwd_mean, config[0].fwd_variance, config[0].obs,
-                      config[0].word, config[0].num_time_slices, config[0].obs_variance, config[0].chain_variance)
+    compute_post_mean(
+        config.mean, config.fwd_mean, config.fwd_variance, config.obs,
+        config.word, config.num_time_slices, config.obs_variance, config.chain_variance
+    )
 
-    compute_obs_deriv(config[0].deriv, config[0].mean, config[0].mean_deriv_mtx, config[0].variance,
-                      config[0].zeta, config[0].totals, config[0].word_counts,
-                      config[0].chain_variance, config[0].word, config[0].num_time_slices)
+    compute_obs_deriv(
+        config.deriv, config.mean, config.mean_deriv_mtx, config.variance,
+        config.zeta, config.totals, config.word_counts,
+        config.chain_variance, config.word, config.num_time_slices
+    )
 
-    for i in range(config[0].num_time_slices):
-        config[0].deriv[i] = -config[0].deriv[i]
+    for i in range(config.num_time_slices):
+        config.deriv[i] = -config.deriv[i]
 
     cdef REAL_t *temp_ptr = <REAL_t *>(np.PyArray_DATA(work_array))
 
-    memcpy(temp_ptr, config[0].deriv, config[0].num_time_slices * sizeof(REAL_t))
+    memcpy(temp_ptr, config.deriv, config.num_time_slices * sizeof(REAL_t))
 
     return work_array
 
@@ -754,22 +776,25 @@ def fit_sslm(model, np_sstats):
     """
 
     # Initialize C structures based on Python instance of the model
-    cdef StateSpaceLanguageModelConfig * config = <StateSpaceLanguageModelConfig *> (<uintptr_t>(model.config_c_address))
+    cdef StateSpaceLanguageModelConfig * config = \
+        <StateSpaceLanguageModelConfig *> (<uintptr_t>(model.config_c_address))
 
     init_sslm_config(config, model)
 
-    cdef int W = config[0].vocab_len
     cdef REAL_t old_bound = 0.0
     cdef REAL_t sslm_fit_threshold = 0.000001
-    cdef int sslm_max_iter = 2
     cdef REAL_t converged = sslm_fit_threshold + 1
+    cdef int sslm_max_iter = 2
 
+    cdef int vocab_len = config.vocab_len
     cdef int w
 
-    for w in range(W):
-        config[0].word = w
-        compute_post_variance(config[0].variance, config[0].fwd_variance, config[0].obs_variance,
-                              config[0].chain_variance, w, config[0].num_time_slices)
+    for w in range(vocab_len):
+
+        compute_post_variance(
+            config.variance, config.fwd_variance, config.obs_variance,
+            config.chain_variance, w, config.num_time_slices
+        )
 
     cdef REAL_t *sstats = <REAL_t *> (np.PyArray_DATA(np_sstats))
 
@@ -790,8 +815,10 @@ def fit_sslm(model, np_sstats):
 
         converged = abs((bound - old_bound) / old_bound)
 
-    compute_expected_log_prob(config[0].e_log_prob, config[0].zeta, config[0].mean,
-                              W, config[0].num_time_slices)
+    compute_expected_log_prob(
+        config.e_log_prob, config.zeta, config.mean,
+        vocab_len, config.num_time_slices
+    )
 
     # TODO find a way/place where to free a memory
     # free(config)

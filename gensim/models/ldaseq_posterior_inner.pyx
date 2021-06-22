@@ -1,3 +1,5 @@
+import numpy as np
+
 from scipy.special.cython_special cimport gammaln
 from scipy.special.cython_special cimport psi
 
@@ -7,14 +9,15 @@ from libc.stdlib cimport malloc, free
 
 cimport numpy as np
 
-import numpy as np
 
 ctypedef np.float64_t REAL_t
 
 
-cdef update_phi(REAL_t * gamma, REAL_t *phi, REAL_t * log_phi,
-               int * word_ids, REAL_t * lda_topics, const int num_topics,
-               const int doc_length):
+cdef update_phi(
+        REAL_t * gamma, REAL_t *phi, REAL_t * log_phi,
+        int * word_ids, REAL_t * lda_topics, const int num_topics,
+        const int doc_length
+     ):
 
     """Update variational multinomial parameters, based on a document and a time-slice.
 
@@ -48,8 +51,6 @@ cdef update_phi(REAL_t * gamma, REAL_t *phi, REAL_t * log_phi,
     cdef REAL_t * dig = <REAL_t *> malloc(num_topics * sizeof(REAL_t))
     if dig == NULL:
         raise
-    if dig == NULL:
-        print("NULL pointer")
 
     for k in range(num_topics):
         dig[k] = psi(gamma[k])
@@ -59,9 +60,7 @@ cdef update_phi(REAL_t * gamma, REAL_t *phi, REAL_t * log_phi,
 
     for i in range(doc_length):
         for k in range(num_topics):
-            # TODO check if proper indexing
-            log_phi[i * num_topics + k] = \
-                dig[k] + lda_topics[word_ids[i] * num_topics + k]
+            log_phi[i * num_topics + k] = dig[k] + lda_topics[word_ids[i] * num_topics + k]
 
         log_phi_row = log_phi + i * num_topics
 
@@ -73,7 +72,6 @@ cdef update_phi(REAL_t * gamma, REAL_t *phi, REAL_t * log_phi,
             v = log(exp(v) + exp(log_phi_row[i]))
 
         # subtract every element by v
-        # TODO blas
         for i in range(num_topics):
             log_phi_row[i] = log_phi_row[i] - v
 
@@ -87,8 +85,10 @@ cdef update_phi_fixed():
     return
 
 
-cdef update_gamma(REAL_t * gamma, const REAL_t * phi, const REAL_t *lda_alpha,
-                  const int *word_counts, const int num_topics, const int doc_length):
+cdef update_gamma(
+        REAL_t * gamma, const REAL_t * phi, const REAL_t *lda_alpha,
+        const int *word_counts, const int num_topics, const int doc_length
+     ):
     """Update variational dirichlet parameters.
 
     This operations is described in the original Blei LDA paper:
@@ -96,13 +96,13 @@ cdef update_gamma(REAL_t * gamma, const REAL_t * phi, const REAL_t *lda_alpha,
 
     Parameters
     ----------
-    gamma: size of num_topics. int/out-parameter
+    gamma: size of num_topics. 
     
-    phi: size of (max_doc_len, num_topics). in-parameter
+    phi: size of (max_doc_len, num_topics). 
     
-    lda_alpha: size of num_topics. in-parameter
+    lda_alpha: size of num_topics. 
     
-    word_counts: size of doc_length. in-parameter
+    word_counts: size of doc_length. 
     
     num_topics: number of topics in the model 
     
@@ -118,10 +118,12 @@ cdef update_gamma(REAL_t * gamma, const REAL_t * phi, const REAL_t *lda_alpha,
             gamma[k] += phi[i * num_topics + k] * word_counts[i]
 
 
-cdef REAL_t compute_lda_lhood(REAL_t * lhood, const REAL_t *gamma, const REAL_t * phi, const REAL_t *log_phi,
-                       const REAL_t * lda_alpha, const REAL_t *lda_topics,
-                       int *word_counts, int *word_ids,
-                       const int num_topics, const int doc_length):
+cdef REAL_t compute_lda_lhood(
+        REAL_t * lhood, const REAL_t *gamma, const REAL_t * phi, const REAL_t *log_phi,
+        const REAL_t * lda_alpha, const REAL_t *lda_topics,
+        int *word_counts, int *word_ids,
+        const int num_topics, const int doc_length
+     ):
     """Compute the log likelihood bound.
     Parameters
     ----------
@@ -129,7 +131,7 @@ cdef REAL_t compute_lda_lhood(REAL_t * lhood, const REAL_t *gamma, const REAL_t 
     
     lhood: size of num_topics + 1
     
-    phi: size of (max_doc_len, num_topics). in-parameter
+    phi: size of (max_doc_len, num_topics).
     
     log_phi: size of (max_doc_len, num_topics). in-parameter
     
@@ -154,7 +156,6 @@ cdef REAL_t compute_lda_lhood(REAL_t * lhood, const REAL_t *gamma, const REAL_t 
     cdef int i
 
     cdef REAL_t gamma_sum = 0.0
-
     for i in range(num_topics):
         gamma_sum += gamma[i]
 
@@ -172,9 +173,7 @@ cdef REAL_t compute_lda_lhood(REAL_t * lhood, const REAL_t *gamma, const REAL_t 
 
         e_log_theta_k = psi(gamma[k]) - digsum
 
-        lhood_term = \
-            (lda_alpha[k] - gamma[k]) * e_log_theta_k + \
-            gammaln(gamma[k]) - gammaln(lda_alpha[k])
+        lhood_term = (lda_alpha[k] - gamma[k]) * e_log_theta_k + gammaln(gamma[k]) - gammaln(lda_alpha[k])
 
         # TODO: check why there's an IF
         for i in range(doc_length):
@@ -189,9 +188,11 @@ cdef REAL_t compute_lda_lhood(REAL_t * lhood, const REAL_t *gamma, const REAL_t 
 
     return lhood_v
 
-cdef init_lda_post(REAL_t *gamma, REAL_t * phi, const int *word_counts,
-                   const REAL_t *lda_alpha,
-                   const int doc_length, const int num_topics):
+cdef init_lda_post(
+        REAL_t *gamma, REAL_t * phi, const int *word_counts,
+        const REAL_t *lda_alpha,
+        const int doc_length, const int num_topics
+     ):
 
     """Initialize variational posterior. """
 
@@ -216,8 +217,10 @@ cdef init_lda_post(REAL_t *gamma, REAL_t * phi, const int *word_counts,
             phi_doc[j] = init_value
 
 
-def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
-                lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
+def fit_lda_post(
+        self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
+        lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None
+    ):
     """Posterior inference for lda.
 
     Parameters
@@ -272,9 +275,11 @@ def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
     # sum of counts in a doc
     cdef REAL_t total = sum(count for word_id, count in self.doc)
 
-    cdef REAL_t lhood_v = compute_lda_lhood(lhood, gamma, phi, log_phi,
-                                          lda_alpha, lda_topics, word_counts, word_ids,
-                                          num_topics, doc_length)
+    cdef REAL_t lhood_v = compute_lda_lhood(
+        lhood, gamma, phi, log_phi,
+        lda_alpha, lda_topics, word_counts, word_ids,
+        num_topics, doc_length
+    )
 
     cdef REAL_t lhood_old = 0.0
     cdef REAL_t converged = 0.0
@@ -290,9 +295,11 @@ def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
     # if model == "DTM" or sslm is None:
     update_phi(gamma, phi, log_phi, word_ids, lda_topics, num_topics, doc_length)
 
-    lhood_v = compute_lda_lhood(lhood, gamma, phi, log_phi,
-                              lda_alpha, lda_topics, word_counts, word_ids,
-                              num_topics, doc_length)
+    lhood_v = compute_lda_lhood(
+        lhood, gamma, phi, log_phi,
+        lda_alpha, lda_topics, word_counts, word_ids,
+        num_topics, doc_length
+    )
 
     converged = abs((lhood_old - lhood_v) / (lhood_old * total))
 
@@ -305,9 +312,11 @@ def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
 
         update_phi(gamma, phi, log_phi, word_ids, lda_topics, num_topics, doc_length)
 
-        lhood_v = compute_lda_lhood(lhood, gamma, phi, log_phi,
-                              lda_alpha, lda_topics, word_counts, word_ids,
-                              num_topics, doc_length)
+        lhood_v = compute_lda_lhood(
+            lhood, gamma, phi, log_phi,
+            lda_alpha, lda_topics, word_counts, word_ids,
+            num_topics, doc_length
+        )
 
         converged = np.fabs((lhood_old - lhood_v) / (lhood_old * total))
 
