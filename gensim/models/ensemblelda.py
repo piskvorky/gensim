@@ -109,6 +109,10 @@ from gensim.utils import SaveLoad
 
 logger = logging.getLogger(__name__)
 
+# _COSINE_DISTANCE_CALCULATION_THRESHOLD is used so that cosine distance calculations can be sped up by skipping
+# distance calculations for highly masked topic-term distributions
+_COSINE_DISTANCE_CALCULATION_THRESHOLD = 0.05
+
 
 def _is_valid_core(topic):
     """Check if the topic is a valid core.
@@ -318,10 +322,6 @@ class EnsembleLda(SaveLoad):
         # Set random state
         # nps max random state of 2**32 - 1 is too large for windows:
         self._MAX_RANDOM_STATE = np.iinfo(np.int32).max
-
-        # _COSINE_DISTANCE_CALCULATION_THRESHOLD is used so that cosine distance calculations can be sped up by skipping
-        # distance calculations for highly masked topic-term distributions
-        self._COSINE_DISTANCE_CALCULATION_THRESHOLD = 0.05
 
         if "id2word" not in gensim_kw_args:
             gensim_kw_args["id2word"] = None
@@ -967,7 +967,7 @@ class EnsembleLda(SaveLoad):
 
                     # Smart distance calculation avoids calculating cosine distance for highly masked topic-term
                     # distributions that will have distance values near 1.
-                    if ttd2_masked.sum() <= self._COSINE_DISTANCE_CALCULATION_THRESHOLD:
+                    if ttd2_masked.sum() <= _COSINE_DISTANCE_CALCULATION_THRESHOLD:
                         distance = 1
                     else:
                         distance = cosine(ttd1_masked, ttd2_masked)
