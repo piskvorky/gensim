@@ -1,7 +1,12 @@
-import numpy as np
+#!/usr/bin/env cython
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: cdivision=True
+# cython: embedsignature=True
 
-from scipy.special.cython_special cimport gammaln
-from scipy.special.cython_special cimport psi
+
+import numpy as np
+from scipy.special import gammaln, psi
 
 from libc.math cimport exp, log, abs
 from libc.string cimport memcpy
