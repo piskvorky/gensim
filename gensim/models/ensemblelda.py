@@ -840,7 +840,6 @@ class EnsembleLda(SaveLoad):
             self.asymmetric_distance_matrix = self._calculate_asymmetric_distance_matrix_chunk(
                 ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method,
             )
-            return self.asymmetric_distance_matrix
 
         # else, if workers > 1 use multiprocessing
         # best performance on 2-core machine: 2 workers
@@ -893,8 +892,6 @@ class EnsembleLda(SaveLoad):
             process.terminate()
 
         self.asymmetric_distance_matrix = np.concatenate(distances)
-
-        return self.asymmetric_distance_matrix
 
     def _calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, threshold, start_index, method):
         """Calculate an (asymmetric) distance from each topic in ``ttda1`` to each topic in ``ttda2``.
@@ -1140,7 +1137,7 @@ class EnsembleLda(SaveLoad):
         """
         return self.stable_topics
 
-    def _has_gensim_representation(self):
+    def _ensure_gensim_representation(self):
         """Check if stable topics and the internal gensim representation exist. Raise an error if not."""
         if self.classic_model_representation is None:
             if len(self.stable_topics) == 0:
@@ -1150,22 +1147,22 @@ class EnsembleLda(SaveLoad):
 
     def __getitem__(self, i):
         """See :meth:`gensim.models.LdaModel.__getitem__`."""
-        self._has_gensim_representation()
+        self._ensure_gensim_representation()
         return self.classic_model_representation[i]
 
     def inference(self, *posargs, **kwargs):
         """See :meth:`gensim.models.LdaModel.inference`."""
-        self._has_gensim_representation()
+        self._ensure_gensim_representation()
         return self.classic_model_representation.inference(*posargs, **kwargs)
 
     def log_perplexity(self, *posargs, **kwargs):
         """See :meth:`gensim.models.LdaModel.log_perplexity`."""
-        self._has_gensim_representation()
+        self._ensure_gensim_representation()
         return self.classic_model_representation.log_perplexity(*posargs, **kwargs)
 
     def print_topics(self, *posargs, **kwargs):
         """See :meth:`gensim.models.LdaModel.print_topics`."""
-        self._has_gensim_representation()
+        self._ensure_gensim_representation()
         return self.classic_model_representation.print_topics(*posargs, **kwargs)
 
     @property
