@@ -135,6 +135,8 @@ class EnsembleLda(SaveLoad):
             Examples:
                 * 'ldamulticore' (default, recommended)
                 * 'lda'
+                * ldamodel.LdaModel
+                * ldamulticore.LdaMulticore
         ensemble_workers : int, optional
             Spawns that many processes and distributes the models from the ensemble to those as evenly as possible.
             num_models should be a multiple of ensemble_workers.
