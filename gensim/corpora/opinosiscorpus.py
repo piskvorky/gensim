@@ -22,7 +22,7 @@ from gensim.parsing.porter import PorterStemmer
 from gensim.parsing.preprocessing import STOPWORDS
 
 
-class OpinosisCorpus():
+class OpinosisCorpus:
     """Creates a corpus and dictionary from the Opinosis dataset.
 
     http://kavita-ganesan.com/opinosis-opinion-dataset/
