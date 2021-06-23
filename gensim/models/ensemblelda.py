@@ -110,6 +110,131 @@ from gensim.utils import SaveLoad
 logger = logging.getLogger(__name__)
 
 
+def _is_valid_core(topic):
+    """Check if the topic is a valid core.
+
+    Parameters
+    ----------
+    topic : {'is_core', 'valid_parents', 'label'}
+        topic to validate
+
+    """
+    return topic["is_core"] and (topic["valid_parents"] == {topic["label"]})
+
+
+def _remove_from_all_sets(label, clusters):
+    """Remove a label from every set in "neighboring_labels" for each core in ``clusters``."""
+    for cluster in clusters:
+        for neighboring_labels_set in cluster["neighboring_labels"]:
+            if label in neighboring_labels_set:
+                neighboring_labels_set.remove(label)
+
+
+def _contains_isolated_cores(label, cluster, min_cores):
+    """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
+    return sum(map(lambda x: x == {label}, cluster["neighboring_labels"])) >= min_cores
+
+
+def _aggregate_topics(grouped_by_labels):
+    """Aggregate the labeled topics to a list of clusters.
+
+    Parameters
+    ----------
+    grouped_by_labels : dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
+        The return value of _group_by_labels. A mapping of the label to a list of each topic which belongs to the
+        label.
+
+    Returns
+    -------
+        list of {'max_num_neighboring_labels', 'neighboring_labels', 'label'}
+        max_num_neighboring_labels is the max number of parent labels among each topic of a given cluster. label
+        refers to the label identifier of the cluster. neighboring_labels is a concatenated list of the
+        neighboring_labels sets of each topic. Its sorted by max_num_neighboring_labels in descending
+        order. There is one single element for each cluster.
+
+    """
+    clusters = []
+
+    for label, group in grouped_by_labels.items():
+        max_num_neighboring_labels = 0
+        neighboring_labels = []  # will be a list of sets
+
+        for topic in group:
+            max_num_neighboring_labels = max(topic["num_neighboring_labels"], max_num_neighboring_labels)
+            neighboring_labels.append(topic["neighboring_labels"])
+
+        neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
+
+        clusters.append({
+            "max_num_neighboring_labels": max_num_neighboring_labels,
+            "neighboring_labels": neighboring_labels,
+            "label": label,
+            "num_cores": len([topic for topic in group if topic["is_core"]]),
+        })
+
+    logger.info("found %s clusters", len(clusters))
+
+    return clusters
+
+
+def _group_by_labels(results):
+    """Group all the learned cores by their label, which was assigned in the cluster_model.
+
+    Parameters
+    ----------
+    results : {list of {'is_core', 'neighboring_labels', 'label'}}
+        After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
+        member, which can be used as the argument to this function. It's a list of infos gathered during
+        the clustering step and each element in the list corresponds to a single topic.
+
+    Returns
+    -------
+        dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
+        A mapping of the label to a list of topics that belong to that particular label. Also adds
+        a new member to each topic called num_neighboring_labels, which is the number of
+        neighboring_labels of that topic.
+
+    """
+    grouped_by_labels = {}
+    for topic in results:
+        if topic["is_core"]:
+            topic = topic.copy()
+
+            # counts how many different labels a core has as parents
+            topic["num_neighboring_labels"] = len(topic["neighboring_labels"])
+
+            label = topic["label"]
+            if label not in grouped_by_labels:
+                grouped_by_labels[label] = []
+            grouped_by_labels[label].append(topic)
+    return grouped_by_labels
+
+
+def _teardown(pipes, processes, i):
+    """Close pipes and terminate processes.
+
+    Parameters
+    ----------
+        pipes : {list of :class:`multiprocessing.Pipe`}
+            list of pipes that the processes use to communicate with the parent
+        processes : {list of :class:`multiprocessing.Process`}
+            list of worker processes
+        i : int
+            index of the process that could not be started
+
+    """
+    logger.error(f"could not start process {i}")
+
+    for parent_conn, child_conn in pipes:
+        child_conn.close()
+        parent_conn.close()
+
+    for process in processes:
+        if process.is_alive():
+            process.terminate()
+        del process
+
+
 class EnsembleLda(SaveLoad):
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
@@ -540,30 +665,6 @@ class EnsembleLda(SaveLoad):
         # tell recluster that the distance matrix needs to be regenerated
         self.asymmetric_distance_matrix_outdated = True
 
-    def _teardown(self, pipes, processes, i):
-        """Close pipes and terminate processes.
-
-        Parameters
-        ----------
-            pipes : {list of :class:`multiprocessing.Pipe`}
-                list of pipes that the processes use to communicate with the parent
-            processes : {list of :class:`multiprocessing.Process`}
-                list of worker processes
-            i : int
-                index of the process that could not be started
-
-        """
-        logger.error(f"could not start process {i}")
-
-        for parent_conn, child_conn in pipes:
-            child_conn.close()
-            parent_conn.close()
-
-        for process in processes:
-            if process.is_alive():
-                process.terminate()
-            del process
-
     def _generate_topic_models_multiproc(self, num_models, ensemble_workers):
         """Generate the topic models to form the ensemble in a multiprocessed way.
 
@@ -626,7 +727,7 @@ class EnsembleLda(SaveLoad):
                 num_models_unhandled -= num_subprocess_models
 
             except ProcessError:
-                self._teardown(pipes, processes, i)
+                _teardown(pipes, processes, i)
                 raise ProcessError
 
         # aggregate results
@@ -775,7 +876,7 @@ class EnsembleLda(SaveLoad):
                 process.start()
 
             except ProcessError:
-                self._teardown(pipes, processes, i)
+                _teardown(pipes, processes, i)
                 raise ProcessError
 
         distances = []
@@ -901,101 +1002,6 @@ class EnsembleLda(SaveLoad):
         self.cluster_model = CBDBSCAN(eps=eps, min_samples=min_samples)
         self.cluster_model.fit(self.asymmetric_distance_matrix)
 
-    def _is_valid_core(self, topic):
-        """Check if the topic is a valid core.
-
-        Parameters
-        ----------
-        topic : {'is_core', 'valid_parents', 'label'}
-            topic to validate
-
-        """
-        return topic["is_core"] and (topic["valid_parents"] == {topic["label"]})
-
-    def _group_by_labels(self, results):
-        """Group all the learned cores by their label, which was assigned in the cluster_model.
-
-        Parameters
-        ----------
-        results : {list of {'is_core', 'neighboring_labels', 'label'}}
-            After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
-            member, which can be used as the argument to this function. It's a list of infos gathered during
-            the clustering step and each element in the list corresponds to a single topic.
-
-        Returns
-        -------
-            dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
-            A mapping of the label to a list of topics that belong to that particular label. Also adds
-            a new member to each topic called num_neighboring_labels, which is the number of
-            neighboring_labels of that topic.
-
-        """
-        grouped_by_labels = {}
-        for topic in results:
-            if topic["is_core"]:
-                topic = topic.copy()
-
-                # counts how many different labels a core has as parents
-                topic["num_neighboring_labels"] = len(topic["neighboring_labels"])
-
-                label = topic["label"]
-                if label not in grouped_by_labels:
-                    grouped_by_labels[label] = []
-                grouped_by_labels[label].append(topic)
-        return grouped_by_labels
-
-    def _aggregate_topics(self, grouped_by_labels):
-        """Aggregate the labeled topics to a list of clusters.
-
-        Parameters
-        ----------
-        grouped_by_labels : dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
-            The return value of _group_by_labels. A mapping of the label to a list of each topic which belongs to the
-            label.
-
-        Returns
-        -------
-            list of {'max_num_neighboring_labels', 'neighboring_labels', 'label'}
-            max_num_neighboring_labels is the max number of parent labels among each topic of a given cluster. label
-            refers to the label identifier of the cluster. neighboring_labels is a concatenated list of the
-            neighboring_labels sets of each topic. Its sorted by max_num_neighboring_labels in descending
-            order. There is one single element for each cluster.
-
-        """
-        clusters = []
-
-        for label, group in grouped_by_labels.items():
-            max_num_neighboring_labels = 0
-            neighboring_labels = []  # will be a list of sets
-
-            for topic in group:
-                max_num_neighboring_labels = max(topic["num_neighboring_labels"], max_num_neighboring_labels)
-                neighboring_labels.append(topic["neighboring_labels"])
-
-            neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
-
-            clusters.append({
-                "max_num_neighboring_labels": max_num_neighboring_labels,
-                "neighboring_labels": neighboring_labels,
-                "label": label,
-                "num_cores": len([topic for topic in group if topic["is_core"]]),
-            })
-
-        logger.info("found %s clusters", len(clusters))
-
-        return clusters
-
-    def _remove_from_all_sets(self, label, clusters):
-        """Remove a label from every set in "neighboring_labels" for each core in ``clusters``."""
-        for cluster in clusters:
-            for neighboring_labels_set in cluster["neighboring_labels"]:
-                if label in neighboring_labels_set:
-                    neighboring_labels_set.remove(label)
-
-    def _contains_isolated_cores(self, label, cluster, min_cores):
-        """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
-        return sum(map(lambda x: x == {label}, cluster["neighboring_labels"])) >= min_cores
-
     def _generate_stable_topics(self, min_cores=None):
         """Generate stable topics out of the clusters.
 
@@ -1028,9 +1034,9 @@ class EnsembleLda(SaveLoad):
 
         results = self.cluster_model.results
 
-        grouped_by_labels = self._group_by_labels(results)
+        grouped_by_labels = _group_by_labels(results)
 
-        clusters = self._aggregate_topics(grouped_by_labels)
+        clusters = _aggregate_topics(grouped_by_labels)
 
         # Clusters with noisy invalid neighbors may have a harder time being marked as stable, so start with the
         # easy ones and potentially already remove some noise by also sorting smaller clusters to the front.
@@ -1049,17 +1055,17 @@ class EnsembleLda(SaveLoad):
             cluster["is_valid"] = None
             if cluster["num_cores"] < min_cores:
                 cluster["is_valid"] = False
-                self._remove_from_all_sets(cluster["label"], sorted_clusters)
+                _remove_from_all_sets(cluster["label"], sorted_clusters)
 
         # now that invalid clusters are removed, check which clusters contain enough cores that don't belong to any
         # other cluster.
         for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
             label = cluster["label"]
-            if self._contains_isolated_cores(label, cluster, min_cores):
+            if _contains_isolated_cores(label, cluster, min_cores):
                 cluster["is_valid"] = True
             else:
                 cluster["is_valid"] = False
-                self._remove_from_all_sets(label, sorted_clusters)
+                _remove_from_all_sets(label, sorted_clusters)
 
         # list of all the label numbers that are valid
         valid_labels = np.array([cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]])
@@ -1068,7 +1074,7 @@ class EnsembleLda(SaveLoad):
             topic["valid_parents"] = {label for label in topic["neighboring_labels"] if label in valid_labels}
 
         # keeping only VALID cores
-        valid_core_mask = np.vectorize(self._is_valid_core)(results)
+        valid_core_mask = np.vectorize(_is_valid_core)(results)
         valid_topics = self.ttda[valid_core_mask]
         topic_labels = np.array([topic["label"] for topic in results])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
