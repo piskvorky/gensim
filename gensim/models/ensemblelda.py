@@ -298,7 +298,6 @@ class EnsembleLda(SaveLoad):
         return self.topic_model_class
 
     def save(self, *args, **kwargs):
-        """See :meth:`gensim.utils.SaveLoad.save`."""
         if self.get_topic_model_class() is not None:
             self.topic_model_module_string = self.topic_model_class.__module__
             self.topic_model_class_string = self.topic_model_class.__name__
@@ -308,7 +307,11 @@ class EnsembleLda(SaveLoad):
     save.__doc__ = SaveLoad.save.__doc__
 
     def convert_to_memory_friendly(self):
-        """Remove the stored gensim models and only keep their ttdas."""
+        """Remove the stored gensim models and only keep their ttdas.
+
+        This frees up memory, but you won't have access to the individual  models anymore if you intended to use them
+        outside of the ensemble.
+        """
         self.tms = []
         self.memory_friendly_ttda = True
 

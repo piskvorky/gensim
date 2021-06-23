@@ -372,8 +372,6 @@ def _download(name):
 
             fname = "{f}.gz_0{p}".format(f=name, p=part)
             dst_path = os.path.join(tmp_dir, fname)
-            print('downloading', url_data)
-            print()
             urllib.urlretrieve(
                 url_data, dst_path,
                 reporthook=partial(_progress, part=part, total_parts=total_parts)
@@ -395,8 +393,6 @@ def _download(name):
         url_data = "{base}/{fname}/{fname}.gz".format(base=DOWNLOAD_BASE_URL, fname=name)
         fname = "{fname}.gz".format(fname=name)
         dst_path = os.path.join(tmp_dir, fname)
-        print('downloading', url_data, 'to', dst_path, data_folder_dir)
-        print()
         urllib.urlretrieve(url_data, dst_path, reporthook=_progress)
         if _calculate_md5_checksum(dst_path) == _get_checksum(name):
             sys.stdout.write("\n")
