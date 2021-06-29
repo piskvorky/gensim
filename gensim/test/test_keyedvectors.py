@@ -56,7 +56,7 @@ class TestKeyedVectors(unittest.TestCase):
 
         expected = self.vectors['conflict']
         predicted = vectors_for_all['conflict']
-        self.assertTrue(np.allclose(expected, predicted))
+        assert np.allclose(expected, predicted)
 
     def test_vectors_for_all_with_copy_vecattrs(self):
         """Test vectors_for_all returns can copy vector attributes."""

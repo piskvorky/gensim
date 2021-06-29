@@ -877,7 +877,7 @@ class TestFastTextModel(unittest.TestCase):
             vectors_for_all['an out-of-vocabulary word']
             - vectors_for_all['responding']
         )
-        self.assertGreater(greater_distance, smaller_distance)
+        assert greater_distance > smaller_distance
 
     def test_vectors_for_all_without_inference(self):
         """Test vectors_for_all does not infer new vectors when prohibited."""
@@ -896,7 +896,7 @@ class TestFastTextModel(unittest.TestCase):
 
         expected = self.test_model.wv['responding']
         predicted = vectors_for_all['responding']
-        self.assertTrue(np.allclose(expected, predicted))
+        assert np.allclose(expected, predicted)
 
 
 with open(datapath('toy-data.txt')) as fin:
