@@ -21,6 +21,7 @@ Changes
 * [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131): Added import to Nmf docs, and to models/__init__.py, by [@properGrammar](https://github.com/properGrammar)
 * [#3163](https://github.com/RaRe-Technologies/gensim/pull/3163): Optimize word mover distance (WMD) computation, by [@flowlight0](https://github.com/flowlight0)
 * [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
+* [#3169](https://github.com/RaRe-Technologies/gensim/pull/3169): Implement `shrink_windows` argument for Word2Vec., by [@M-Demay](https://github.com/M-Demay)
 
 ### :books: Documentation
 
