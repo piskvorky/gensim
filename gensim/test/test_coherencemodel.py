@@ -46,9 +46,9 @@ class TestCoherenceModel(unittest.TestCase):
             ['token', 'computer', 'system', 'interface'],
             ['graph', 'minors', 'trees', 'eps']
         ]
-        # using this list the model should be unable to interpret topic 
+        # using this list the model should be unable to interpret topic
         # as either a list of tokens or a list of ids
-        self.topics4 = [ 
+        self.topics4 = [
             ['not a token', 'not an id', 'tests using', "this list"],
             ['should raise', 'an error', 'to pass', 'correctly']
         ]
