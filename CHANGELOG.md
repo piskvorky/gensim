@@ -26,7 +26,7 @@ Changes
 * [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
 * [#3148](https://github.com/RaRe-Technologies/gensim/pull/3148): Fix broken link in documentation, by [@rohit901](https://github.com/rohit901)
 * [#3155](https://github.com/RaRe-Technologies/gensim/pull/3155): Correct parameter name in documentation of fasttext.py, by [@bizzyvinci](https://github.com/bizzyvinci)
-
+* [#2964](https://github.com/RaRe-Technologies/gensim/pull/2964): Document that preprocessing.strip_punctuation is limited to ASCII, by [@sciatro](https://github.com/sciatro)
 ## 4.0.1, 2021-04-01
 
 Bugfix release to address issues with Wheels on Windows:
