@@ -6,7 +6,9 @@ Changes
 ### :red_circle: Bug fixes
 
 * [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116): Fix bug where saved Phrases model did not load its connector_words, by [@aloknayak29](https://github.com/aloknayak29)
-* [#3136](https://github.com/RaRe-Technologies/gensim/pull/3136): fix indexing error in word2vec_inner.pyx, by [@bluekura](https://github.com/bluekura)
+* [#3136](https://github.com/RaRe-Technologies/gensim/pull/3136): Fix indexing error in word2vec_inner.pyx, by [@bluekura](https://github.com/bluekura)
+* [#3174](https://github.com/RaRe-Technologies/gensim/pull/3174): Fix a bug when upgrading phraser from gensim 3.x to 4.0, by [@emgucv](https://github.com/emgucv)
+* [#3176](https://github.com/RaRe-Technologies/gensim/pull/3176): Eliminate obsolete step parameter from doc2vec infer_vector and similarity_unseen_docs, by [@rock420](https://github.com/rock420)
 
 ### :+1: Improvements
 
@@ -16,6 +18,7 @@ Changes
 * [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128): Materialize and copy the corpus passed to SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
 * [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131): Added import to Nmf docs, and to models/__init__.py, by [@properGrammar](https://github.com/properGrammar)
 * [#3163](https://github.com/RaRe-Technologies/gensim/pull/3163): Optimize word mover distance (WMD) computation, by [@flowlight0](https://github.com/flowlight0)
+* [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
 
 ### :books: Documentation
 
@@ -25,7 +28,7 @@ Changes
 * [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
 * [#3148](https://github.com/RaRe-Technologies/gensim/pull/3148): Fix broken link in documentation, by [@rohit901](https://github.com/rohit901)
 * [#3155](https://github.com/RaRe-Technologies/gensim/pull/3155): Correct parameter name in documentation of fasttext.py, by [@bizzyvinci](https://github.com/bizzyvinci)
-
+* [#2964](https://github.com/RaRe-Technologies/gensim/pull/2964): Document that preprocessing.strip_punctuation is limited to ASCII, by [@sciatro](https://github.com/sciatro)
 ## 4.0.1, 2021-04-01
 
 Bugfix release to address issues with Wheels on Windows:
