@@ -452,7 +452,7 @@ class CoherenceModel(interfaces.TransformationABC):
             return np.array(ids_from_ids)
         else:
             raise ValueError('unable to interpret topic as either a list of tokens or a list of ids')
-               
+
     def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):
             logger.debug("Wiping cached accumulator since it does not contain all relevant ids.")
