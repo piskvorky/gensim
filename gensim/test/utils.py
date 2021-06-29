@@ -142,7 +142,7 @@ def get_tmpfile(suffix):
         >>> loaded_model = LsiModel.load(tmp_f)
 
     """
-    return os.path.join(tempfile.gettempdir(), suffix)
+    return os.path.join(tempfile.mkdtemp(), suffix)
 
 
 @contextlib.contextmanager
@@ -208,7 +208,7 @@ common_dictionary = Dictionary(common_texts)
 common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
 
 
-class LeeCorpus(object):
+class LeeCorpus:
     def __iter__(self):
         with open(datapath('lee_background.cor')) as f:
             for line in f:

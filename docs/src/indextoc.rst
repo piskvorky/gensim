@@ -3,7 +3,7 @@
    :maxdepth: 1
 
    intro
-   distributed
-   support
-   wiki
+   auto_examples/index
    apiref
+   support
+   people

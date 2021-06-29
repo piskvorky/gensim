@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module contains functions to perform segmentation on a list of topics."""
@@ -11,7 +10,8 @@ import logging
 
 from gensim.topic_coherence.text_analysis import (
     CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
-    WordVectorsAccumulator)
+    WordVectorsAccumulator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -218,7 +218,7 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
         ...     ['human', 'interface', 'computer'],
         ...     ['survey', 'user', 'computer', 'system', 'response', 'time']
         ... ]
-        >>> model = word2vec.Word2Vec(sentences, size=100, min_count=1)
+        >>> model = word2vec.Word2Vec(sentences, vector_size=100, min_count=1)
         >>> accumulator = probability_estimation.p_word2vec(texts, segmented_topics, dictionary, 2, 1, model)
 
     """

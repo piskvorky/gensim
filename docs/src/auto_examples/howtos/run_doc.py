@@ -2,10 +2,8 @@ r"""
 How to Author Gensim Documentation
 ==================================
 
-Some tips of how to author documentation for ``gensim``.
+How to author documentation for Gensim.
 """
-
-import sys
 
 ###############################################################################
 # Background
@@ -113,7 +111,7 @@ Brief description.
 # This is a more flexible approach that enables you to tweak parts of the documentation and re-run them as necessary.
 #
 # Once you're happy with the notebook, convert it to a script.py.
-# There's a helpful `script <https://github.com/mpenkov/gensim/blob/numfocus/docs/src/tools/to_python.py>`__ that will do it for you.
+# There's a helpful `script <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tools/to_python.py>`__ that will do it for you.
 # To use it::
 #
 #     python to_python.py < notebook.ipynb > script.py

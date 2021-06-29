@@ -16,7 +16,7 @@ This actually creates three files:
 
 * `OUTPUT_PREFIX_wordids.txt`: mapping between words and their integer ids
 * `OUTPUT_PREFIX_bow.mm`: bag-of-words (word counts) representation, in
-  Matrix Matrix format
+  Matrix Market format
 * `OUTPUT_PREFIX_tfidf.mm`: TF-IDF representation
 * `OUTPUT_PREFIX.tfidf_model`: TF-IDF model dump
 
@@ -35,7 +35,6 @@ Example:
   python -m gensim.scripts.make_wikicorpus ~/gensim/results/enwiki-latest-pages-articles.xml.bz2 ~/gensim/results/wiki
 """
 
-
 import logging
 import os.path
 import sys
@@ -43,12 +42,10 @@ import sys
 from gensim.corpora import Dictionary, HashDictionary, MmCorpus, WikiCorpus
 from gensim.models import TfidfModel
 
-
 # Wiki is first scanned for all distinct word types (~7M). The types that
 # appear in more than 10% of articles are removed and from the rest, the
 # DEFAULT_DICT_SIZE most frequent types are kept.
 DEFAULT_DICT_SIZE = 100000
-
 
 if __name__ == '__main__':
     program = os.path.basename(sys.argv[0])

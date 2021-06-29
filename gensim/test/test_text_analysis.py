@@ -8,7 +8,7 @@ from gensim.topic_coherence.text_analysis import (
 from gensim.test.utils import common_texts
 
 
-class BaseTestCases(object):
+class BaseTestCases:
 
     class TextAnalyzerTestBase(unittest.TestCase):
         texts = [
