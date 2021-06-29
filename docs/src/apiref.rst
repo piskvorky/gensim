@@ -11,7 +11,6 @@ Modules:
     interfaces
     utils
     matutils
-    _matutils
     downloader
     corpora/bleicorpus
     corpora/csvcorpus
@@ -21,7 +20,6 @@ Modules:
     corpora/lowcorpus
     corpora/malletcorpus
     corpora/mmcorpus
-    corpora/_mmreader
     corpora/sharded_corpus
     corpora/svmlightcorpus
     corpora/textcorpus
@@ -53,37 +51,13 @@ Modules:
     models/coherencemodel
     models/basemodel
     models/callbacks
-    models/utils_any2vec
-    models/_utils_any2vec
     models/word2vec_inner
     models/doc2vec_inner
     models/fasttext_inner
-    models/wrappers/ldamallet
-    models/wrappers/dtmmodel
-    models/wrappers/ldavowpalwabbit.rst
-    models/wrappers/wordrank
-    models/wrappers/varembed
-    models/wrappers/fasttext
-    models/deprecated/doc2vec
-    models/deprecated/fasttext
-    models/deprecated/word2vec
-    models/deprecated/keyedvectors
-    models/deprecated/fasttext_wrapper
-    models/base_any2vec
     similarities/docsim
     similarities/termsim
-    similarities/index
-    sklearn_api/atmodel
-    sklearn_api/d2vmodel
-    sklearn_api/hdp
-    sklearn_api/ldamodel
-    sklearn_api/ldaseqmodel
-    sklearn_api/lsimodel
-    sklearn_api/phrases
-    sklearn_api/rpmodel
-    sklearn_api/text2bow
-    sklearn_api/tfidf
-    sklearn_api/w2vmodel
+    similarities/annoy
+    similarities/nmslib
     test/utils
     topic_coherence/aggregation
     topic_coherence/direct_confirmation_measure
@@ -96,19 +70,8 @@ Modules:
     scripts/make_wikicorpus
     scripts/word2vec_standalone
     scripts/make_wiki_online
-    scripts/make_wiki_online_lemma
     scripts/make_wiki_online_nodebug
     scripts/word2vec2tensor
     scripts/segment_wiki
     parsing/porter
     parsing/preprocessing
-    summarization/bm25
-    summarization/commons
-    summarization/graph
-    summarization/keywords
-    summarization/mz_entropy
-    summarization/pagerank_weighted
-    summarization/summariser
-    summarization/syntactic_unit
-    summarization/textcleaner
-    viz/poincare

@@ -19,8 +19,6 @@ import numpy as np
 from gensim.matutils import argsort
 from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
 from gensim.models.ldamodel import LdaModel
-from gensim.models.wrappers import LdaMallet
-from gensim.models.wrappers import LdaVowpalWabbit
 from gensim.test.utils import get_tmpfile, common_texts, common_dictionary, common_corpus
 
 
@@ -57,33 +55,11 @@ class TestCoherenceModel(unittest.TestCase):
         self.topicIds1 = []
         for topic in self.topics1:
             self.topicIds1.append([self.dictionary.token2id[token] for token in topic])
-        
 
         self.ldamodel = LdaModel(
             corpus=self.corpus, id2word=self.dictionary, num_topics=2,
             passes=0, iterations=0
         )
-
-        mallet_home = os.environ.get('MALLET_HOME', None)
-        self.mallet_path = os.path.join(mallet_home, 'bin', 'mallet') if mallet_home else None
-        if self.mallet_path:
-            self.malletmodel = LdaMallet(
-                mallet_path=self.mallet_path, corpus=self.corpus,
-                id2word=self.dictionary, num_topics=2, iterations=0
-            )
-
-        vw_path = os.environ.get('VOWPAL_WABBIT_PATH', None)
-        if not vw_path:
-            logging.info(
-                "Environment variable 'VOWPAL_WABBIT_PATH' not specified, skipping sanity checks for LDA Model"
-            )
-            self.vw_path = None
-        else:
-            self.vw_path = vw_path
-            self.vwmodel = LdaVowpalWabbit(
-                self.vw_path, corpus=self.corpus, id2word=self.dictionary,
-                num_topics=2, passes=0
-            )
 
     def check_coherence_measure(self, coherence):
         """Check provided topic coherence algorithm on given topics"""
@@ -139,64 +115,6 @@ class TestCoherenceModel(unittest.TestCase):
     def testCnpmiLdaModel(self):
         """Perform sanity check to see if c_npmi coherence works with LDA Model"""
         CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_npmi')
-
-    def testUMassMalletModel(self):
-        """Perform sanity check to see if u_mass coherence works with LDA Mallet gensim wrapper"""
-        self._check_for_mallet()
-        CoherenceModel(model=self.malletmodel, corpus=self.corpus, coherence='u_mass')
-
-    def _check_for_mallet(self):
-        if not self.mallet_path:
-            raise SkipTest("Mallet not installed")
-
-    def testCvMalletModel(self):
-        """Perform sanity check to see if c_v coherence works with LDA Mallet gensim wrapper"""
-        self._check_for_mallet()
-        CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_v')
-
-    def testCw2vMalletModel(self):
-        """Perform sanity check to see if c_w2v coherence works with LDA Mallet gensim wrapper"""
-        self._check_for_mallet()
-        CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_w2v')
-
-    def testCuciMalletModel(self):
-        """Perform sanity check to see if c_uci coherence works with LDA Mallet gensim wrapper"""
-        self._check_for_mallet()
-        CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_uci')
-
-    def testCnpmiMalletModel(self):
-        """Perform sanity check to see if c_npmi coherence works with LDA Mallet gensim wrapper"""
-        self._check_for_mallet()
-        CoherenceModel(model=self.malletmodel, texts=self.texts, coherence='c_npmi')
-
-    def testUMassVWModel(self):
-        """Perform sanity check to see if u_mass coherence works with LDA VW gensim wrapper"""
-        self._check_for_vw()
-        CoherenceModel(model=self.vwmodel, corpus=self.corpus, coherence='u_mass')
-
-    def _check_for_vw(self):
-        if not self.vw_path:
-            raise SkipTest("Vowpal Wabbit not installed")
-
-    def testCvVWModel(self):
-        """Perform sanity check to see if c_v coherence works with LDA VW gensim wrapper"""
-        self._check_for_vw()
-        CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_v')
-
-    def testCw2vVWModel(self):
-        """Perform sanity check to see if c_w2v coherence works with LDA VW gensim wrapper"""
-        self._check_for_vw()
-        CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_w2v')
-
-    def testCuciVWModel(self):
-        """Perform sanity check to see if c_uci coherence works with LDA VW gensim wrapper"""
-        self._check_for_vw()
-        CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_uci')
-
-    def testCnpmiVWModel(self):
-        """Perform sanity check to see if c_npmi coherence works with LDA VW gensim wrapper"""
-        self._check_for_vw()
-        CoherenceModel(model=self.vwmodel, texts=self.texts, coherence='c_npmi')
 
     def testErrors(self):
         """Test if errors are raised on bad input"""

@@ -136,9 +136,9 @@ print(corpus)
 from smart_open import open  # for transparently opening remote files
 
 
-class MyCorpus(object):
+class MyCorpus:
     def __iter__(self):
-        for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
+        for line in open('https://radimrehurek.com/mycorpus.txt'):
             # assume there's one document per line, tokens separated by whitespace
             yield dictionary.doc2bow(line.lower().split())
 
@@ -154,7 +154,7 @@ class MyCorpus(object):
 # in RAM at once. You can even create the documents on the fly!
 
 ###############################################################################
-# Download the sample `mycorpus.txt file here <./mycorpus.txt>`_. The assumption that
+# Download the sample `mycorpus.txt file here <https://radimrehurek.com/mycorpus.txt>`_. The assumption that
 # each document occupies one line in a single file is not important; you can mold
 # the `__iter__` function to fit your input format, whatever it is.
 # Walking directories, parsing XML, accessing the network...
@@ -179,16 +179,15 @@ for vector in corpus_memory_friendly:  # load one vector into memory at a time
 #
 # Similarly, to construct the dictionary without loading all texts into memory:
 
-from six import iteritems
 # collect statistics about all tokens
-dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/gensim/mycorpus.txt'))
+dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/mycorpus.txt'))
 # remove stop words and words that appear only once
 stop_ids = [
     dictionary.token2id[stopword]
     for stopword in stoplist
     if stopword in dictionary.token2id
 ]
-once_ids = [tokenid for tokenid, docfreq in iteritems(dictionary.dfs) if docfreq == 1]
+once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.items() if docfreq == 1]
 dictionary.filter_tokens(stop_ids + once_ids)  # remove stop words and words that appear only once
 dictionary.compactify()  # remove gaps in id sequence after words that were removed
 print(dictionary)
@@ -303,12 +302,8 @@ scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 # .. [1] This is the same corpus as used in
 #        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
 
-###############################################################################
-# Here we show a pretty fastText logo so that our gallery picks it up as a thumbnail.
-#
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 img = mpimg.imread('run_corpora_and_vector_spaces.png')
 imgplot = plt.imshow(img)
-plt.axis('off')
-plt.show()
+_ = plt.axis('off')

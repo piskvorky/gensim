@@ -29,7 +29,7 @@ class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.class_ = hdpmodel.HdpModel
         self.model = self.class_(corpus, id2word=dictionary, random_state=np.random.seed(0))
 
-    def testTopicValues(self):
+    def test_topic_values(self):
         """
         Check show topics method
         """
@@ -42,7 +42,7 @@ class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         return
 
-    def testLDAmodel(self):
+    def test_ldamodel(self):
         """
         Create ldamodel object, and check if the corresponding alphas are equal.
         """

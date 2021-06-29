@@ -37,7 +37,7 @@ class TestLogEntropyModel(unittest.TestCase):
         """Test creating a model using an empty input; should fail."""
         self.assertRaises(ValueError, logentropy_model.LogEntropyModel, corpus=self.corpus_empty)
 
-    def testTransform(self):
+    def test_transform(self):
         # create the transformation model
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=False)
 
@@ -52,7 +52,7 @@ class TestLogEntropyModel(unittest.TestCase):
         ]
         self.assertTrue(np.allclose(transformed, expected))
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models_logentry.tst')
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
         model.save(fname)
@@ -61,7 +61,7 @@ class TestLogEntropyModel(unittest.TestCase):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models_logentry.tst.gz')
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
         model.save(fname)

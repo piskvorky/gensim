@@ -10,19 +10,7 @@
 How to Author Gensim Documentation
 ==================================
 
-Some tips of how to author documentation for ``gensim``.
-
-
-.. code-block:: default
-
-
-    import sys
-
-
-
-
-
-
+How to author documentation for Gensim.
 
 Background
 ----------
@@ -136,7 +124,7 @@ If the above is not your cup of tea, you can also author your documentation as a
 This is a more flexible approach that enables you to tweak parts of the documentation and re-run them as necessary.
 
 Once you're happy with the notebook, convert it to a script.py.
-There's a helpful `script <https://github.com/mpenkov/gensim/blob/numfocus/docs/src/tools/to_python.py>`__ that will do it for you.
+There's a helpful `script <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tools/to_python.py>`__ that will do it for you.
 To use it::
 
     python to_python.py < notebook.ipynb > script.py
@@ -208,9 +196,9 @@ At that stage, give yourself a pat on the back: you're done!
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.149 seconds)
+   **Total running time of the script:** ( 0 minutes  1.226 seconds)
 
-**Estimated memory usage:**  6 MB
+**Estimated memory usage:**  9 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_doc.py:

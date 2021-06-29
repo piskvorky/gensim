@@ -49,7 +49,6 @@ The model can be updated (trained) with new documents via
     >>> hdp.update([[(1, 2)], [(1, 1), (4, 5)]])
 
 """
-from __future__ import with_statement
 
 import logging
 import time
@@ -57,13 +56,12 @@ import warnings
 
 import numpy as np
 from scipy.special import gammaln, psi  # gamma function utils
-from six.moves import zip, range
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import dirichlet_expectation, mean_absolute_difference
 from gensim.models import basemodel, ldamodel
-
 from gensim.utils import deprecated
+
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +140,7 @@ def lda_e_step(doc_word_ids, doc_word_counts, alpha, beta, max_iter=100):
     return likelihood, gamma
 
 
-class SuffStats(object):
+class SuffStats:
     """Stores sufficient statistics for the current chunk of document(s) whenever Hdp model is updated with new corpus.
     These stats are used when updating lambda and top level sticks. The statistics include number of documents in the
     chunk, length of words in the documents and top level truncation level.
@@ -955,7 +953,7 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         return score
 
 
-class HdpTopicFormatter(object):
+class HdpTopicFormatter:
     """Helper class for :class:`gensim.models.hdpmodel.HdpModel` to format the output of topics."""
     (STYLE_GENSIM, STYLE_PRETTY) = (1, 2)
 

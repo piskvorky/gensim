@@ -1,4 +1,13 @@
-"""Bumps the version of gensim in all the required places."""
+"""
+Bump the version of Gensim in all the required places.
+
+Usage: python3 bump_version.py <OLD_VERSION> <NEW_VERSION>
+
+Example:
+    python3 bump_version.py "4.0.0beta" "4.0.0rc1"
+
+"""
+
 import os.path
 import re
 import sys
@@ -29,7 +38,7 @@ def bump_docs_src_conf_py(root, previous_version, new_version):
     path = os.path.join(root, 'docs', 'src', 'conf.py')
 
     short_previous_version = '.'.join(previous_version.split('.')[:2])
-    short_new_version = '.'.join(new_version.split('.')[:2])
+    short_new_version = new_version  # '.'.join(new_version.split('.')[:2])
     pattern = re.compile("^version = '%s'$" % short_previous_version, re.MULTILINE)
     repl = "version = '%s'" % short_new_version
     bump(path, pattern, repl, check=False)  # short version won't always change

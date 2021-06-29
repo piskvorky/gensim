@@ -19,7 +19,6 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
    - ? `Colouring words by topic in a document, print words in a
      topics <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_methods.ipynb>`__
    - ? `Topic Coherence, a metric that correlates that human judgement on topic quality. <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/topic_coherence_tutorial.ipynb>`__
-   - ? `Compare topics and documents using Jaccard, Kullback-Leibler and Hellinger similarities <https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/tutorials/run_distance_metrics.html>`__
    - ? `America's Next Topic Model slides <https://speakerdeck.com/tmylk/americas-next-topic-model-at-pydata-berlin-august-2016?slide=7>`__
       - How to choose your next topic model, presented at Pydata Berlin 10 August 2016 by Lev Konstantinovsky
    - ?  `Dynamic Topic Modeling and Dynamic Influence Model Tutorial <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/dtm_example.ipynb>`__

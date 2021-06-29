@@ -1,4 +1,5 @@
-class BaseTopicModel(object):
+class BaseTopicModel:
+
     def print_topic(self, topicno, topn=10):
         """Get a single topic as a formatted string.
 
