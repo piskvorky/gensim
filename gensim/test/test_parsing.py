@@ -8,9 +8,18 @@ Automated tests for the parsing module.
 import logging
 import unittest
 import numpy as np
-from gensim.parsing.preprocessing import \
-    remove_stopwords, strip_punctuation, strip_tags, strip_short, strip_numeric, strip_non_alphanum, \
-    strip_multiple_whitespaces, split_alphanum, stem_text
+
+from gensim.parsing.preprocessing import (
+    remove_stopwords,
+    stem_text,
+    split_alphanum,
+    strip_multiple_whitespaces,
+    strip_non_alphanum,
+    strip_numeric,
+    strip_punctuation,
+    strip_short,
+    strip_tags,
+)
 
 
 # several documents
