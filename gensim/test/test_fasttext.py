@@ -867,7 +867,7 @@ class TestFastTextModel(unittest.TestCase):
 
         expected = self.test_model.wv['responding']
         predicted = vectors_for_all['responding']
-        self.assertTrue(np.allclose(expected, predicted))
+        assert np.allclose(expected, predicted)
 
         smaller_distance = np.linalg.norm(
             vectors_for_all['an out-of-vocabulary word']
