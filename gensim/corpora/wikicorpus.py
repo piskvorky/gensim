@@ -634,7 +634,6 @@ class WikiCorpus(TextCorpus):
         self.token_min_len = token_min_len
         self.token_max_len = token_max_len
         self.lower = lower
-        
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts(dictionary_mode=True))
         else:
