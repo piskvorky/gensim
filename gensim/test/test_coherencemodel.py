@@ -9,9 +9,7 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 import logging
-import os
 import unittest
-from unittest import SkipTest
 import multiprocessing as mp
 from functools import partial
 
@@ -72,7 +70,7 @@ class TestCoherenceModel(unittest.TestCase):
         cm2 = CoherenceModel(topics=self.topics2, **kwargs)
         cm3 = CoherenceModel(topics=self.topics3, **kwargs)
         cm4 = CoherenceModel(topics=self.topicIds1, **kwargs)
-        self.assertRaises(ValueError,lambda: CoherenceModel(topics=self.topics4, **kwargs))
+        self.assertRaises(ValueError, lambda: CoherenceModel(topics=self.topics4, **kwargs))
         self.assertEqual(cm1.get_coherence(), cm4.get_coherence())
         self.assertIsInstance(cm3.get_coherence(), np.double)
         self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
