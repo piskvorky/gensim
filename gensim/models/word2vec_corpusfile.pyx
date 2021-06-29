@@ -186,7 +186,9 @@ cdef void prepare_c_structures_for_batch(
         vector[vector[string]] &sentences, int sample, int hs, int window, long long *total_words,
         int *effective_words, int *effective_sentences, unsigned long long *next_random,
         cvocab_t *vocab, int *sentence_idx, np.uint32_t *indexes, int *codelens,
-        np.uint8_t **codes, np.uint32_t **points, np.uint32_t *reduced_windows) nogil:
+        np.uint8_t **codes, np.uint32_t **points, np.uint32_t *reduced_windows,
+        int shrink_windows,
+    ) nogil:
     cdef VocabItem word
     cdef string token
     cdef vector[string] sent
@@ -224,8 +226,12 @@ cdef void prepare_c_structures_for_batch(
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    for i in range(effective_words[0]):
-        reduced_windows[i] = random_int32(next_random) % window
+    if shrink_windows:
+        for i in range(effective_words[0]):
+            reduced_windows[i] = random_int32(next_random) % window
+    else:
+        for i in range(effective_words[0]):
+            reduced_windows[i] = 0
 
 
 cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:
@@ -250,7 +256,7 @@ cdef REAL_t get_next_alpha(
 
 
 def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                   _neu1, compute_loss):
+                   _neu1, compute_loss,):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -295,6 +301,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
     cdef long long total_sentences = 0
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int shrink_windows = int(model.shrink_windows)
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work)
 
@@ -311,7 +318,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
             prepare_c_structures_for_batch(
                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
                 &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes,
-                c.codelens, c.codes, c.points, c.reduced_windows)
+                c.codelens, c.codes, c.points, c.reduced_windows, shrink_windows)
 
             for sent_idx in range(effective_sentences):
                 idx_start = c.sentence_idx[sent_idx]
@@ -350,7 +357,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
 
 def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                     _neu1, compute_loss):
+                     _neu1, compute_loss,):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -395,6 +402,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     cdef long long total_sentences = 0
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int shrink_windows = int(model.shrink_windows)
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)
 
@@ -411,7 +419,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
             prepare_c_structures_for_batch(
                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
                 &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,
-                c.indexes, c.codelens, c.codes, c.points, c.reduced_windows)
+                c.indexes, c.codelens, c.codes, c.points, c.reduced_windows, shrink_windows)
 
             for sent_idx in range(effective_sentences):
                 idx_start = c.sentence_idx[sent_idx]

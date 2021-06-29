@@ -59,7 +59,7 @@ cdef void prepare_c_structures_for_batch(
         int *effective_words, unsigned long long *next_random, cvocab_t *vocab,
         np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
         np.uint32_t *reduced_windows, int *document_len, int train_words,
-        int docvecs_count, int doc_tag,
+        int docvecs_count, int doc_tag, int shrink_windows,
     ) nogil:
     cdef VocabItem predict_word
     cdef string token
@@ -87,8 +87,12 @@ cdef void prepare_c_structures_for_batch(
     document_len[0] = i
 
     if train_words and reduced_windows != NULL:
-        for i in range(document_len[0]):
-            reduced_windows[i] = random_int32(next_random) % window
+        if shrink_windows:
+            for i in range(document_len[0]):
+                reduced_windows[i] = random_int32(next_random) % window
+        else:
+            for i in range(document_len[0]):
+                reduced_windows[i] = 0
 
     if doc_tag < docvecs_count:
         effective_words[0] += 1
@@ -160,6 +164,7 @@ def d2v_train_epoch_dbow(
     cdef long long total_documents = 0
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int shrink_windows = int(model.shrink_windows)
 
     cdef vector[string] doc_words
     cdef long long _doc_tag = start_doctag
@@ -183,7 +188,7 @@ def d2v_train_epoch_dbow(
             prepare_c_structures_for_batch(
                 doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
                 &c.next_random, vocab.get_vocab_ptr(), c.indexes, c.codelens,  c.codes, c.points,
-                c.reduced_windows, &document_len, c.train_words, c.docvecs_count, _doc_tag)
+                c.reduced_windows, &document_len, c.train_words, c.docvecs_count, _doc_tag, shrink_windows)
 
             for i in range(document_len):
                 if c.train_words:  # simultaneous skip-gram wordvec-training
@@ -300,6 +305,7 @@ def d2v_train_epoch_dm(
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
     cdef REAL_t count, inv_count = 1.0
+    cdef int shrink_windows = int(model.shrink_windows)
 
     cdef vector[string] doc_words
     cdef long long _doc_tag = start_doctag
@@ -323,7 +329,7 @@ def d2v_train_epoch_dm(
             prepare_c_structures_for_batch(
                 doc_words, c.sample, c.hs, c.window, &total_words, &effective_words, &c.next_random,
                 vocab.get_vocab_ptr(), c.indexes, c.codelens, c.codes, c.points, c.reduced_windows,
-                &document_len, c.train_words, c.docvecs_count, _doc_tag)
+                &document_len, c.train_words, c.docvecs_count, _doc_tag, shrink_windows)
 
             for i in range(document_len):
                 j = i - c.window + c.reduced_windows[i]
@@ -453,6 +459,7 @@ def d2v_train_epoch_dm_concat(
     cdef long long total_documents = 0
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int shrink_windows = int(model.shrink_windows)
 
     cdef vector[string] doc_words
     cdef long long _doc_tag = start_doctag
@@ -490,7 +497,8 @@ def d2v_train_epoch_dm_concat(
             prepare_c_structures_for_batch(
                 doc_words, c.sample, c.hs, c.window, &total_words, &effective_words,
                 &c.next_random, vocab.get_vocab_ptr(), c.indexes, c.codelens, c.codes,
-                c.points, NULL, &document_len, c.train_words, c.docvecs_count, _doc_tag)
+                c.points, NULL, &document_len, c.train_words, c.docvecs_count, _doc_tag,
+                shrink_windows)
 
             for i in range(document_len):
                 j = i - c.window      # negative OK: will pad with null word

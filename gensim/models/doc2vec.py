@@ -158,7 +158,7 @@ class Doctag:
 class Doc2Vec(Word2Vec):
     def __init__(self, documents=None, corpus_file=None, vector_size=100, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, dv=None, dv_mapfile=None, comment=None, trim_rule=None, callbacks=(),
-                 window=5, epochs=10, **kwargs):
+                 window=5, epochs=10, shrink_windows=True, **kwargs):
         """Class for training, using and evaluating neural networks described in
         `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
 
@@ -248,6 +248,12 @@ class Doc2Vec(Word2Vec):
 
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Some important internal attributes are the following:
 
@@ -294,6 +300,7 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
+            shrink_windows=shrink_windows,
             **kwargs,
         )
 

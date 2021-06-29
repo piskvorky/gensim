@@ -397,12 +397,12 @@ class TestFastTextModel(unittest.TestCase):
         dist = self.test_model.wv.wmdistance(doc, oov_doc)
         self.assertNotEqual(float('inf'), dist)
 
-    def test_cbow_hs_training(self):
+    def test_cbow_hs_training(self, shrink_windows=True):
 
         model_gensim = FT_gensim(
             vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
             min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET, shrink_windows=shrink_windows)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -429,12 +429,12 @@ class TestFastTextModel(unittest.TestCase):
             overlap_count, 2,
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
-    def test_cbow_hs_training_fromfile(self):
+    def test_cbow_hs_training_fromfile(self, shrink_windows=True):
         with temporary_file('gensim_fasttext.tst') as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
                 min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4, shrink_windows=shrink_windows)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -465,12 +465,12 @@ class TestFastTextModel(unittest.TestCase):
                 overlap_count, 2,
                 "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
-    def test_sg_hs_training(self):
+    def test_sg_hs_training(self, shrink_windows=True):
 
         model_gensim = FT_gensim(
             vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
             min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET, shrink_windows=shrink_windows)
 
         lee_data = LineSentence(datapath('lee_background.cor'))
         model_gensim.build_vocab(lee_data)
@@ -497,12 +497,12 @@ class TestFastTextModel(unittest.TestCase):
             overlap_count, 2,
             "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
 
-    def test_sg_hs_training_fromfile(self):
+    def test_sg_hs_training_fromfile(self, shrink_windows=True):
         with temporary_file('gensim_fasttext.tst') as corpus_file:
             model_gensim = FT_gensim(
                 vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
                 min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
+                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET, shrink_windows=shrink_windows)
 
             lee_data = LineSentence(datapath('lee_background.cor'))
             utils.save_as_line_sentence(lee_data, corpus_file)
@@ -532,6 +532,18 @@ class TestFastTextModel(unittest.TestCase):
             self.assertGreaterEqual(
                 overlap_count, 2,
                 "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
+
+    def test_cbow_hs_training_fixedwindowsize(self):
+        self.test_cbow_hs_training(shrink_windows=False)
+
+    def test_cbow_hs_training_fixedwindowsize_fromfile(self):
+        self.test_cbow_hs_training_fromfile(shrink_windows=False)
+
+    def test_sg_hs_training_fixedwindowsize(self):
+        self.test_sg_hs_training(shrink_windows=False)
+
+    def test_sg_hs_training_fixedwindowsize_fromfile(self):
+        self.test_sg_hs_training_fromfile(shrink_windows=False)
 
     def test_cbow_neg_training(self):
 
