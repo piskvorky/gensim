@@ -2,7 +2,7 @@ r"""
 How to Compare LDA Models
 =========================
 
-Demonstrates how you can compare a topic model with itself or other models.
+Demonstrates how you can visualize and compare trained topic models.
 
 """
 
@@ -15,7 +15,6 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # First, clean up the 20 Newsgroups dataset. We will use it to fit LDA.
 # ---------------------------------------------------------------------
 #
-
 
 from string import punctuation
 from nltk import RegexpTokenizer
@@ -32,7 +31,7 @@ stemmer = PorterStemmer()
 translate_tab = {ord(p): u" " for p in punctuation}
 
 def text2tokens(raw_text):
-    """Convert a raw text to a list of stemmed tokens."""
+    """Split the raw_text string into a list of stemmed tokens."""
     clean_text = raw_text.lower().translate(translate_tab)
     tokens = [token.strip() for token in tokenizer.tokenize(clean_text)]
     tokens = [token for token in tokens if token not in eng_stopwords]
@@ -59,12 +58,12 @@ num_topics = 15
 
 lda_fst = LdaMulticore(
     corpus=d2b_dataset, num_topics=num_topics, id2word=dictionary,
-    workers=4, eval_every=None, passes=10, batch=True
+    workers=4, eval_every=None, passes=10, batch=True,
 )
 
 lda_snd = LdaMulticore(
     corpus=d2b_dataset, num_topics=num_topics, id2word=dictionary,
-    workers=4, eval_every=None, passes=20, batch=True
+    workers=4, eval_every=None, passes=20, batch=True,
 )
 
 ###############################################################################
@@ -76,7 +75,6 @@ lda_snd = LdaMulticore(
 # If you're running via a Jupyter notebook, then you'll get a nice interactive Plotly heatmap.
 # If you're viewing the static version of the page, you'll get a similar matplotlib heatmap, but it won't be interactive.
 #
-
 
 def plot_difference_plotly(mdiff, title="", annotation=None):
     """Plot the difference between models.
@@ -162,7 +160,8 @@ print(LdaMulticore.diff.__doc__)
 #
 # * :raw-html-m2r:`<span style="color:blue">almost blue cell</span>` - strongly correlated topics.
 #
-# In an ideal world, we would like to see different topics decorrelated between themselves. In this case, our matrix would look like this:
+# In an ideal world, we would like to see different topics decorrelated between themselves.
+# In this case, our matrix would look like this:
 #
 
 
@@ -182,11 +181,7 @@ plot_difference(mdiff, title="Topic difference (one model) in ideal world")
 #
 # Short description (interactive annotations only):
 #
-#
-#
 # * ``+++ make, world, well`` - words from the intersection of topics = present in both topics;
-#
-#
 #
 # * ``--- money, day, still`` - words from the symmetric difference of topics = present in one topic but not the other.
 #
@@ -197,14 +192,14 @@ plot_difference(mdiff, title="Topic difference (one model) [jaccard distance]", 
 
 ###############################################################################
 #
-# If you compare a model with itself, you want to see as many red elements as possible (except diagonal). With this picture, you can look at the not very red elements and understand which topics in the model are very similar and why (you can read annotation if you move your pointer to cell).
+# If you compare a model with itself, you want to see as many red elements as
+# possible (except on the diagonal). With this picture, you can look at the
+# "not very red elements" and understand which topics in the model are very
+# similar and why (you can read annotation if you move your pointer to cell).
 #
+# Jaccard is a stable and robust distance function, but sometimes not sensitive
+# enough. Let's try to use the Hellinger distance instead.
 #
-#
-#
-# Jaccard is stable and robust distance function, but this function not enough sensitive for some purposes. Let's try to use Hellinger distance now.
-#
-
 
 mdiff, annotation = lda_fst.diff(lda_fst, distance='hellinger', num_words=50)
 plot_difference(mdiff, title="Topic difference (one model)[hellinger distance]", annotation=annotation)
@@ -213,9 +208,8 @@ plot_difference(mdiff, title="Topic difference (one model)[hellinger distance]",
 #
 # You see that everything has become worse, but remember that everything depends on the task.
 #
-#
-#
-# You need to choose the function with which your personal point of view about topics similarity and your task (from my experience, Jaccard is fine).
+# Choose a distance function that matches your upstream task better: what kind of "similarity" is
+# relevant to you. From my (Ivan's) experience, Jaccard is fine.
 #
 
 
@@ -239,5 +233,6 @@ plot_difference(mdiff, title="Topic difference (two models)[jaccard distance]", 
 
 ###############################################################################
 #
-# Looking at this matrix, you can find similar and different topics (and relevant tokens which describe the intersection and difference).
+# Looking at this matrix, you can find similar and different topics between the two models.
+# The plot also includes relevant tokens describing the topics' intersection and difference.
 #

@@ -20,7 +20,7 @@ import dictionary  # for constructing word->id mappings
 logger = logging.getLogger('gensim.corpora.dmlcorpus')
 
 
-class DmlConfig(object):
+class DmlConfig:
     """
     DmlConfig contains parameters necessary for the abstraction of a 'corpus of
     articles' (see the `DmlCorpus` class).

@@ -17,11 +17,11 @@ import logging
 from functools import partial
 import re
 
+import numpy as np
+
 from gensim import interfaces, matutils, utils
 from gensim.utils import deprecated
-from six import iteritems, iterkeys
 
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -69,11 +69,6 @@ def resolve_weights(smartirs):
     ValueError
         If `smartirs` is not a string of length 3 or one of the decomposed value
         doesn't fit the list of permissible values.
-
-    See Also
-    --------
-    ~gensim.sklearn_api.tfidf.TfIdfTransformer, TfidfModel : Classes that also use the SMART scheme.
-
     """
     if isinstance(smartirs, str) and re.match(r"...\....", smartirs):
         match = re.match(r"(?P<ddd>...)\.(?P<qqq>...)", smartirs)
@@ -155,7 +150,7 @@ def precompute_idfs(wglobal, dfs, total_docs):
     """
     # not strictly necessary and could be computed on the fly in TfidfModel__getitem__.
     # this method is here just to speed things up a little.
-    return {termid: wglobal(df, total_docs) for termid, df in iteritems(dfs)}
+    return {termid: wglobal(df, total_docs) for termid, df in dfs.items()}
 
 
 def smartirs_wlocal(tf, local_scheme):
@@ -389,7 +384,7 @@ class TfidfModel(interfaces.TransformationABC):
             self.num_docs, self.num_nnz = dictionary.num_docs, dictionary.num_nnz
             self.cfs = dictionary.cfs.copy()
             self.dfs = dictionary.dfs.copy()
-            self.term_lens = {termid: len(term) for termid, term in iteritems(dictionary)}
+            self.term_lens = {termid: len(term) for termid, term in dictionary.items()}
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
             if not id2word:
                 self.id2word = dictionary
@@ -415,7 +410,7 @@ class TfidfModel(interfaces.TransformationABC):
             self.pivot = 1.0 * self.num_nnz / self.num_docs
         elif n_n == "b":
             self.pivot = 1.0 * sum(
-                self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in iterkeys(dictionary)
+                self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in dictionary.keys()
             ) / self.num_docs
 
     @classmethod
@@ -468,11 +463,14 @@ class TfidfModel(interfaces.TransformationABC):
         self.dfs = dfs
         self.term_lengths = None
         # and finally compute the idf weights
-        logger.info(
-            "calculating IDF weights for %i documents and %i features (%i matrix non-zeros)",
-            self.num_docs, max(dfs.keys()) + 1 if dfs else 0, self.num_nnz
-        )
         self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
+        self.add_lifecycle_event(
+            "initialize",
+            msg=(
+                f"calculated IDF weights for {self.num_docs} documents and {max(dfs.keys()) + 1 if dfs else 0}"
+                f" features ({self.num_nnz} matrix non-zeros)"
+            ),
+        )
 
     def __getitem__(self, bow, eps=1e-12):
         """Get the tf-idf representation of an input vector and/or corpus.

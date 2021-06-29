@@ -21,7 +21,7 @@ and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_.
 
 For a usage example, see the `Doc2vec tutorial
-<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
+<https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines** (70x speedup
 compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/).
@@ -51,12 +51,6 @@ Persist a model to disk:
     >>> model.save(fname)
     >>> model = Doc2Vec.load(fname)  # you can continue training with the loaded model!
 
-If you're finished training a model (=no more updates, only querying, reduce memory usage), you can do:
-
-.. sourcecode:: pycon
-
-    >>> model.delete_temporary_training_data(keep_doctags_vectors=True, keep_inference=True)
-
 Infer vector for a new document:
 
 .. sourcecode:: pycon
@@ -77,7 +71,7 @@ import numpy as np
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.utils import deprecated
-from gensim.models import Word2Vec
+from gensim.models import Word2Vec, FAST_VERSION  # noqa: F401
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 
 logger = logging.getLogger(__name__)
@@ -271,6 +265,7 @@ class Doc2Vec(Word2Vec):
             .. sourcecode:: pycon
 
                 >>> model.dv['doc003']
+
         """
         corpus_iterable = documents
 
@@ -286,6 +281,9 @@ class Doc2Vec(Word2Vec):
 
         self.vector_size = vector_size
         self.dv = dv or KeyedVectors(self.vector_size, mapfile_path=dv_mapfile)
+        # EXPERIMENTAL lockf feature; create minimal no-op lockf arrays (1 element of 1.0)
+        # advanced users should directly resize/adjust as desired after any vocab growth
+        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
 
         super(Doc2Vec, self).__init__(
             sentences=corpus_iterable,
@@ -296,7 +294,8 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
-            **kwargs)
+            **kwargs,
+        )
 
     @property
     def dm(self):
@@ -329,11 +328,10 @@ class Doc2Vec(Word2Vec):
         self.wv.norms = None
         self.dv.norms = None
 
-    def reset_weights(self):
-        super(Doc2Vec, self).reset_weights()
-        self.dv.resize_vectors()
-        self.dv.randomly_initialize_vectors()
-        self.dv.vectors_lockf = np.ones(1, dtype=REAL)  # 0.0 values suppress word-backprop-updates; 1.0 allows
+    def init_weights(self):
+        super(Doc2Vec, self).init_weights()
+        # to not use an identical rnd stream as words, deterministically change seed (w/ 1000th prime)
+        self.dv.resize_vectors(seed=self.seed + 7919)
 
     def reset_from(self, other_model):
         """Copy shareable data structures from another (possibly pre-trained) model.
@@ -358,10 +356,12 @@ class Doc2Vec(Word2Vec):
         self.dv.key_to_index = other_model.dv.key_to_index
         self.dv.index_to_key = other_model.dv.index_to_key
         self.dv.expandos = other_model.dv.expandos
-        self.reset_weights()
+        self.init_weights()
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
+    def _do_train_epoch(
+        self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs
+    ):
         work, neu1 = thread_private_mem
         doctag_vectors = self.dv.vectors
         doctags_lockf = self.dv.vectors_lockf
@@ -428,10 +428,12 @@ class Doc2Vec(Word2Vec):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(),
-              **kwargs):
+    def train(
+        self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
+        epochs=None, start_alpha=None, end_alpha=None,
+        word_count=0, queue_factor=2, report_delay=1.0, callbacks=(),
+        **kwargs,
+    ):
         """Update the model's neural weights.
 
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
@@ -579,13 +581,13 @@ class Doc2Vec(Word2Vec):
         """
         return 60 * len(self.dv) + 140 * len(self.dv)
 
-    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
+    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None):
         """Infer a vector for given post-bulk training document.
 
         Notes
         -----
         Subsequent calls to this function may infer different representations for the same document.
-        For a more stable representation, increase the number of steps to assert a stricket convergence.
+        For a more stable representation, increase the number of epochs to assert a stricter convergence.
 
         Parameters
         ----------
@@ -748,7 +750,7 @@ class Doc2Vec(Word2Vec):
     @deprecated(
         "Gensim 4.0.0 implemented internal optimizations that make calls to init_sims() unnecessary. "
         "init_sims() is now obsoleted and will be completely removed in future versions. "
-        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4#init_sims"
+        "See https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4"
     )
     def init_sims(self, replace=False):
         """
@@ -798,7 +800,7 @@ class Doc2Vec(Word2Vec):
             return super(Doc2Vec, cls).load(*args, rethrow=True, **kwargs)
         except AttributeError as ae:
             logger.error(
-                "Model load error. Was model saved using code from an older Gensim Version? "
+                "Model load error. Was model saved using code from an older Gensim version? "
                 "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae
@@ -1045,7 +1047,7 @@ class Doc2Vec(Word2Vec):
 
         return total_words, corpus_count
 
-    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, steps=None):
+    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, epochs=None):
         """Compute cosine similarity between two post-bulk out of training documents.
 
         Parameters
@@ -1060,7 +1062,7 @@ class Doc2Vec(Word2Vec):
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
+        epochs : int, optional
             Number of epoch to train the new document.
 
         Returns
@@ -1069,8 +1071,8 @@ class Doc2Vec(Word2Vec):
             The cosine similarity between `doc_words1` and `doc_words2`.
 
         """
-        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
-        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
+        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
         return np.dot(matutils.unitvec(d1), matutils.unitvec(d2))
 
 
@@ -1082,7 +1084,7 @@ class Doc2VecTrainables(utils.SaveLoad):
     """Obsolete class retained for now as load-compatibility state capture"""
 
 
-class TaggedBrownCorpus(object):
+class TaggedBrownCorpus:
     def __init__(self, dirname):
         """Reader for the `Brown corpus (part of NLTK data) <http://www.nltk.org/book/ch02.html#tab-brown-sources>`_.
 
@@ -1120,7 +1122,7 @@ class TaggedBrownCorpus(object):
                     yield TaggedDocument(words, ['%s_SENT_%s' % (fname, item_no)])
 
 
-class TaggedLineDocument(object):
+class TaggedLineDocument:
     def __init__(self, source):
         """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 

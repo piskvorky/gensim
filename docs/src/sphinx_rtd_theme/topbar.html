@@ -1,0 +1,61 @@
+<div id="Top_bar">
+  <div class="container">
+    <div class="column one">
+      <div class="top_bar_left clearfix">
+        <div class="logo">
+          <a id="logo" href="{{ pathto("index") }}" title="Gensim: Topic modelling for humans"
+             data-height="60"
+             data-padding="30"><img class="logo-main scale-with-grid"
+                                    src="{{ pathto('_static/images/gensim.png', 1) }}"
+                                    data-retina="{{ pathto('_static/images/gensim.png', 1) }}"
+                                    data-height="78"
+                                    alt="Gensim: Topic modelling for humans" data-no-retina
+                                    style="min-height: 60px"><img
+                  class="logo-sticky scale-with-grid" src="{{ pathto('_static/images/gensim.png', 1) }}"
+                  data-retina="{{ pathto('_static/images/gensim.png', 1) }}" data-height="78"
+                  alt="Gensim: Topic modelling for humans" data-no-retina><img
+                  class="logo-mobile scale-with-grid" src="{{ pathto('_static/images/gensim.png', 1) }}"
+                  data-retina="{{ pathto('_static/images/gensim.png', 1) }}" data-height="78"
+                  alt="Gensim: Topic modelling for humans" data-no-retina><img
+                  class="logo-mobile-sticky scale-with-grid"
+                  src="{{ pathto('_static/images/gensim.png', 1) }}"
+                  data-retina="{{ pathto('_static/images/gensim.png', 1) }}" data-height="78"
+                  alt="Gensim: Topic modelling for humans" data-no-retina></a>
+        </div>
+        <div class="menu_wrapper">
+          <nav id="menu">
+            <ul id="menu-main-menu" class="menu menu-main">
+              <li{% if pagename == "index" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("index") }}"><span>Home</span></a>
+              </li>
+              <li{% if pagename == "auto_examples/index" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("auto_examples/index") }}#documentation"><span>Documentation</span></a>
+              </li>
+              <li{% if pagename == "support" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("support") }}#support"><span>Support</span></a>
+              </li>
+              <li{% if pagename == "apiref" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("apiref") }}#api-reference"><span>API</span></a>
+              </li>
+              <li{% if pagename == "intro" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("intro") }}#what-is-gensim"><span>About</span></a>
+              </li>
+              <li{% if pagename == "intro" %} class="current-menu-item"{% endif %}>
+                <a href="{{ pathto("people") }}"><span style="color: #ff7a17">Donate</span></a>
+              </li>
+            </ul>
+          </nav>
+          <a class="responsive-menu-toggle" href="#"><i class="icon-menu-fine"></i></a>
+        </div>
+
+      </div>
+      <div class="top_bar_right">
+        <div class="top_bar_right_wrapper">
+          <a href="https://github.com/RaRe-Technologies/gensim" class="action_button topbar_action_button">
+            Fork on Github <i class="icon-github"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

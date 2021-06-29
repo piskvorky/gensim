@@ -53,20 +53,19 @@ Command line arguments
 
 """
 
-from __future__ import with_statement
 import os
 import sys
 import logging
 import argparse
 import threading
 import tempfile
-try:
-    import Queue
-except ImportError:
-    import queue as Queue
+import queue as Queue
+
 import Pyro4
+
 from gensim.models import lsimodel
 from gensim import utils
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +73,7 @@ logger = logging.getLogger(__name__)
 SAVE_DEBUG = 0  # save intermediate models after every SAVE_DEBUG updates (0 for never)
 
 
-class Worker(object):
+class Worker:
     def __init__(self):
         """Partly initialize the model.
 

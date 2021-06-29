@@ -26,7 +26,7 @@ Example usage
     >>> from gensim.models import Word2Vec
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, iter=10, seed=2)
+    >>> model = Word2Vec(sentences, min_count=1, epochs=10, seed=2)
     >>>
     >>> indexer = NmslibIndexer(model)
     >>> model.wv.most_similar("cat", topn=2, indexer=indexer)
@@ -42,7 +42,7 @@ Load and save example
     >>> from tempfile import mkstemp
     >>>
     >>> sentences = [['cute', 'cat', 'say', 'meow'], ['cute', 'dog', 'say', 'woof']]
-    >>> model = Word2Vec(sentences, min_count=1, seed=2, iter=10)
+    >>> model = Word2Vec(sentences, min_count=1, seed=2, epochs=10)
     >>>
     >>> indexer = NmslibIndexer(model)
     >>> _, temp_fn = mkstemp()
@@ -85,6 +85,7 @@ try:
 except ImportError:
     raise ImportError("NMSLIB not installed. To use the NMSLIB indexer, please run `pip install nmslib`.")
 
+from gensim import utils
 from gensim.models.doc2vec import Doc2Vec
 from gensim.models.word2vec import Word2Vec
 from gensim.models.fasttext import FastText
@@ -141,7 +142,7 @@ class NmslibIndexer():
             else:
                 raise ValueError("model must be a Word2Vec, Doc2Vec, FastText or KeyedVectors instance")
 
-    def save(self, fname, protocol=2):
+    def save(self, fname, protocol=utils.PICKLE_PROTOCOL):
         """Save this NmslibIndexer instance to a file.
 
         Parameters

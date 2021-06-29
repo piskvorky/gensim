@@ -14,7 +14,6 @@ import logging
 from math import sqrt
 
 import numpy as np
-from six.moves import range
 from scipy import sparse
 
 from gensim.matutils import corpus2csc
@@ -22,9 +21,11 @@ from gensim.utils import SaveLoad, is_corpus
 
 logger = logging.getLogger(__name__)
 
-NON_NEGATIVE_NORM_ASSERTION_MESSAGE = u"sparse documents must not contain any explicit " \
-    u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any " \
+NON_NEGATIVE_NORM_ASSERTION_MESSAGE = (
+    u"sparse documents must not contain any explicit "
+    u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any "
     u"nonzero bag-of-words vector x."
+)
 
 
 class TermSimilarityIndex(SaveLoad):
@@ -34,7 +35,7 @@ class TermSimilarityIndex(SaveLoad):
     See Also
     --------
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
-        Build a term similarity matrix and compute the Soft Cosine Measure.
+        A sparse term similarity matrix built using a term similarity index.
 
     """
     def most_similar(self, term, topn=10):
@@ -78,7 +79,7 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
     See Also
     --------
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
-        Build a term similarity matrix and compute the Soft Cosine Measure.
+        A sparse term similarity matrix built using a term similarity index.
 
     Notes
     -----
@@ -98,10 +99,8 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
 
 class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     """
-    Use objects of this class to:
-
-    1) Compute cosine similarities between word embeddings.
-    2) Retrieve the closest word embeddings (by cosine similarity) to a given word embedding.
+    Computes cosine similarities between word embeddings and retrieves most
+    similar terms for a given term.
 
     Parameters
     ----------
@@ -113,11 +112,14 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     exponent : float, optional
         Take the word embedding similarities larger than `threshold` to the power of `exponent`.
     kwargs : dict or None
-        A dict with keyword arguments that will be passed to the `keyedvectors.most_similar` method
+        A dict with keyword arguments that will be passed to the
+        :meth:`~gensim.models.keyedvectors.KeyedVectors.most_similar` method
         when retrieving the word embeddings closest to a given word embedding.
 
     See Also
     --------
+    :class:`~gensim.similarities.levenshtein.LevenshteinSimilarityIndex`
+        Retrieve most similar terms for a given term using the Levenshtein distance.
     :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
@@ -194,12 +196,12 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
         return (-term_idf, term_index)
 
     if tfidf is None:
-        logger.info("iterating over columns in dictionary order")
         columns = sorted(dictionary.keys())
+        logger.info("iterating over %i columns in dictionary order", len(columns))
     else:
         assert max(tfidf.idfs) == matrix_order - 1
-        logger.info("iterating over columns in tf-idf order")
         columns = sorted(tfidf.idfs.keys(), key=tfidf_sort_key)
+        logger.info("iterating over %i columns in tf-idf order", len(columns))
 
     nonzero_counter_dtype = _shortest_uint_dtype(nonzero_limit)
 
@@ -404,12 +406,12 @@ class SparseTermSimilarityMatrix(SaveLoad):
     --------
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora import Dictionary
-    >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
-    >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
+    >>> from gensim.models import Word2Vec
+    >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix, WordEmbeddingSimilarityIndex
     >>> from gensim.similarities.index import AnnoyIndexer
     >>> from scikits.sparse.cholmod import cholesky
     >>>
-    >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+    >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
     >>> annoy = AnnoyIndexer(model, num_trees=2)  # use annoy for faster word similarity lookups
     >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv, kwargs={'indexer': annoy})
     >>> dictionary = Dictionary(common_texts)
@@ -422,8 +424,7 @@ class SparseTermSimilarityMatrix(SaveLoad):
     >>>
     >>> word_embeddings = cholesky(similarity_matrix.matrix).L()  # obtain word embeddings from similarity matrix
 
-    Check out `Tutorial Notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_scm.html>`_
     for more examples.
 
     Parameters
@@ -466,6 +467,15 @@ class SparseTermSimilarityMatrix(SaveLoad):
     ------
     ValueError
         If `dictionary` is empty.
+
+    See Also
+    --------
+    :class:`~gensim.similarities.docsim.SoftCosineSimilarity`
+        A document similarity index using the soft cosine similarity over the term similarity matrix.
+    :class:`~gensim.similarities.termsim.LevenshteinSimilarityIndex`
+        A term similarity index that computes Levenshtein similarities between terms.
+    :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
+        A term similarity index that computes cosine similarities between word embeddings.
 
     """
     def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,
