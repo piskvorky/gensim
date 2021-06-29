@@ -9,6 +9,7 @@ Changes
 * [#3136](https://github.com/RaRe-Technologies/gensim/pull/3136): Fix indexing error in word2vec_inner.pyx, by [@bluekura](https://github.com/bluekura)
 * [#3174](https://github.com/RaRe-Technologies/gensim/pull/3174): Fix a bug when upgrading phraser from gensim 3.x to 4.0, by [@emgucv](https://github.com/emgucv)
 * [#3176](https://github.com/RaRe-Technologies/gensim/pull/3176): Eliminate obsolete step parameter from doc2vec infer_vector and similarity_unseen_docs, by [@rock420](https://github.com/rock420)
+* [#2830](https://github.com/RaRe-Technologies/gensim/pull/2830): Fixed KeyError in coherence model, by [@pietrotrope](https://github.com/pietrotrope)
 
 ### :+1: Improvements
 
