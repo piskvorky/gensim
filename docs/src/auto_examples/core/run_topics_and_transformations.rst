@@ -370,7 +370,7 @@ Gensim implements several popular Vector Space Model algorithms:
   See also :ref:`wiki` for further speed-ups by distributing the computation across
   a cluster of computers.
 
-* `Random Projections, RP <http://www.cis.hut.fi/ella/publications/randproj_kdd.pdf>`_ aim to
+* `Random Projections, RP <http://www.inf.fu-berlin.de/lehre/WS08/ME/randproj_kdd.pdf>`_ aim to
   reduce vector space dimensionality. This is a very efficient (both memory- and
   CPU-friendly) approach to approximating TfIdf distances between documents, by throwing in a little randomness.
   Recommended target dimensionality is again in the hundreds/thousands, depending on your dataset.
