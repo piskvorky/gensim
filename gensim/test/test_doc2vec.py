@@ -718,8 +718,8 @@ class ConcatenatedDoc2Vec:
     def epochs(self):
         return self.models[0].epochs
 
-    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None, steps=None):
-        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs, steps) for model in self.models])
+    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None):
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs) for model in self.models])
 
     def train(self, *ignore_args, **ignore_kwargs):
         pass  # train subcomponents individually
