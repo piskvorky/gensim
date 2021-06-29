@@ -240,7 +240,7 @@ class Word2Vec(utils.SaveLoad):
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-            comment=None, max_final_vocab=None,
+            comment=None, max_final_vocab=None, shrink_windows=True,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
@@ -345,6 +345,12 @@ class Word2Vec(utils.SaveLoad):
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Examples
         --------
@@ -377,6 +383,7 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = float(min_alpha)
 
         self.window = int(window)
+        self.shrink_windows = bool(shrink_windows)
         self.random = np.random.RandomState(seed)
 
         self.hs = int(hs)
@@ -910,12 +917,12 @@ class Word2Vec(utils.SaveLoad):
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1, self.compute_loss,
+                total_examples, total_words, work, neu1, self.compute_loss
             )
         else:
             examples, tally, raw_tally = train_epoch_cbow(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1, self.compute_loss,
+                total_examples, total_words, work, neu1, self.compute_loss
             )
 
         return examples, tally, raw_tally
@@ -1039,7 +1046,7 @@ class Word2Vec(utils.SaveLoad):
             msg=(
                 f"training model with {self.workers} workers on {len(self.wv)} vocabulary and "
                 f"{self.layer1_size} features, using sg={self.sg} hs={self.hs} sample={self.sample} "
-                f"negative={self.negative} window={self.window}"
+                f"negative={self.negative} window={self.window} shrink_windows={self.shrink_windows}"
             ),
         )
 
@@ -1970,6 +1977,8 @@ class Word2Vec(utils.SaveLoad):
                 self.syn1 = self.syn1
                 del self.syn1
             del self.trainables
+        if not hasattr(self, 'shrink_windows'):
+            self.shrink_windows = True
 
     def get_latest_training_loss(self):
         """Get current value of the training loss.

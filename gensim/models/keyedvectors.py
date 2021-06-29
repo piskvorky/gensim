@@ -179,6 +179,7 @@ from numpy import (
 )
 import numpy as np
 from scipy import stats
+from scipy.spatial.distance import cdist
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -902,23 +903,16 @@ class KeyedVectors(utils.SaveLoad):
             # Both documents are composed of a single unique token => zero distance.
             return 0.0
 
-        # Sets for faster look-up.
-        docset1 = set(document1)
-        docset2 = set(document2)
+        doclist1 = list(set(document1))
+        doclist2 = list(set(document2))
+        v1 = np.array([self.get_vector(token, norm=norm) for token in doclist1])
+        v2 = np.array([self.get_vector(token, norm=norm) for token in doclist2])
+        doc1_indices = dictionary.doc2idx(doclist1)
+        doc2_indices = dictionary.doc2idx(doclist2)
 
         # Compute distance matrix.
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-        for i, t1 in dictionary.items():
-            if t1 not in docset1:
-                continue
-
-            for j, t2 in dictionary.items():
-                if t2 not in docset2 or distance_matrix[i, j] != 0.0:
-                    continue
-
-                # Compute Euclidean distance between (potentially unit-normed) word vectors.
-                distance_matrix[i, j] = distance_matrix[j, i] = np.sqrt(
-                    np_sum((self.get_vector(t1, norm=norm) - self.get_vector(t2, norm=norm))**2))
+        distance_matrix[np.ix_(doc1_indices, doc2_indices)] = cdist(v1, v2)
 
         if abs(np_sum(distance_matrix)) < 1e-8:
             # `emd` gets stuck if the distance matrix contains only zeros.

@@ -33,6 +33,7 @@ from gensim.similarities import WordEmbeddingSimilarityIndex
 from gensim.similarities import SparseTermSimilarityMatrix
 from gensim.similarities import LevenshteinSimilarityIndex
 from gensim.similarities.docsim import _nlargest
+from gensim.similarities.fastss import editdist
 
 try:
     from pyemd import emd  # noqa:F401
@@ -1629,6 +1630,32 @@ class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
         index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
         second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         self.assertTrue(numpy.allclose(first_similarities**2.0, second_similarities))
+
+
+class TestFastSS(unittest.TestCase):
+    def test_editdist_same_unicode_kind_latin1(self):
+        """Test editdist returns the expected result with two Latin-1 strings."""
+        expected = 2
+        actual = editdist('Zizka', 'siska')
+        assert expected == actual
+
+    def test_editdist_same_unicode_kind_ucs2(self):
+        """Test editdist returns the expected result with two UCS-2 strings."""
+        expected = 2
+        actual = editdist('Žižka', 'šiška')
+        assert expected == actual
+
+    def test_editdist_same_unicode_kind_ucs4(self):
+        """Test editdist returns the expected result with two UCS-4 strings."""
+        expected = 2
+        actual = editdist('Žižka 😀', 'šiška 😀')
+        assert expected == actual
+
+    def test_editdist_different_unicode_kinds(self):
+        """Test editdist returns the expected result with strings of different Unicode kinds."""
+        expected = 2
+        actual = editdist('Žižka', 'siska')
+        assert expected == actual
 
 
 if __name__ == '__main__':
