@@ -714,6 +714,54 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
         self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
 
+    def test_vectors_for_all_with_inference(self):
+        """Test vectors_for_all can infer new vectors."""
+        words = [
+            'responding',
+            'approached',
+            'chairman',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.test_model.wv.vectors_for_all(words)
+
+        expected = 5
+        predicted = len(vectors_for_all)
+        assert expected == predicted
+
+        expected = self.test_model.wv['responding']
+        predicted = vectors_for_all['responding']
+        assert np.allclose(expected, predicted)
+
+        smaller_distance = np.linalg.norm(
+            vectors_for_all['an out-of-vocabulary word']
+            - vectors_for_all['another out-of-vocabulary word']
+        )
+        greater_distance = np.linalg.norm(
+            vectors_for_all['an out-of-vocabulary word']
+            - vectors_for_all['responding']
+        )
+        assert greater_distance > smaller_distance
+
+    def test_vectors_for_all_without_inference(self):
+        """Test vectors_for_all does not infer new vectors when prohibited."""
+        words = [
+            'responding',
+            'approached',
+            'chairman',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.test_model.wv.vectors_for_all(words, allow_inference=False)
+
+        expected = 3
+        predicted = len(vectors_for_all)
+        assert expected == predicted
+
+        expected = self.test_model.wv['responding']
+        predicted = vectors_for_all['responding']
+        assert np.allclose(expected, predicted)
+
 
 @pytest.mark.parametrize('shrink_windows', [True, False])
 def test_cbow_hs_training(shrink_windows):

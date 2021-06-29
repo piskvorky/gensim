@@ -359,6 +359,18 @@ class TestDictionary(unittest.TestCase):
         self.assertNotIn((1, 1), d.doc2bow(corpus_with_special_tokens[0]))
         self.assertIn((1, 1), d.doc2bow(corpus_with_special_tokens[1]))
 
+    def test_most_common_with_n(self):
+        texts = [['human', 'human', 'human', 'computer', 'computer', 'interface', 'interface']]
+        d = Dictionary(texts)
+        expected = [('human', 3), ('computer', 2)]
+        assert d.most_common(n=2) == expected
+
+    def test_most_common_without_n(self):
+        texts = [['human', 'human', 'human', 'computer', 'computer', 'interface', 'interface']]
+        d = Dictionary(texts)
+        expected = [('human', 3), ('computer', 2), ('interface', 2)]
+        assert d.most_common(n=None) == expected
+
 
 # endclass TestDictionary
 
