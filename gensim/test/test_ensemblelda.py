@@ -232,9 +232,6 @@ class TestModel(unittest.TestCase):
         self.test_inference(loaded_ensemble)
 
     def test_add_models(self):
-        # same configuration
-        num_models = self.elda.num_models
-
         # make sure countings and sizes after adding are correct
         # create new models and add other models to them.
 
@@ -246,7 +243,7 @@ class TestModel(unittest.TestCase):
         num_new_topics = 3
 
         # 1. memory friendly
-        elda_base = EnsembleLda(
+        elda = EnsembleLda(
             corpus=common_corpus, id2word=common_dictionary,
             num_topics=num_new_topics, passes=1, num_models=num_new_models,
             iterations=1, random_state=0, topic_model_class=LdaMulticore,
@@ -254,47 +251,47 @@ class TestModel(unittest.TestCase):
         )
 
         # 1.1 ttda
-        a = len(elda_base.ttda)
-        b = elda_base.num_models
-        elda_base.add_model(self.elda.ttda)
-        assert len(elda_base.ttda) == a + len(self.elda.ttda)
-        assert elda_base.num_models == b + 1  # defaults to 1 for one ttda matrix
+        num_topics_before_add_model = len(elda.ttda)
+        num_models_before_add_model = elda.num_models
+        elda.add_model(self.elda.ttda)
+        assert len(elda.ttda) == num_topics_before_add_model + len(self.elda.ttda)
+        assert elda.num_models == num_models_before_add_model + 1  # defaults to 1 for one ttda matrix
 
         # 1.2 an ensemble
-        a = len(elda_base.ttda)
-        b = elda_base.num_models
-        elda_base.add_model(self.elda, 5)
-        assert len(elda_base.ttda) == a + len(self.elda.ttda)
-        assert elda_base.num_models == b + 5
+        num_topics_before_add_model = len(elda.ttda)
+        num_models_before_add_model = elda.num_models
+        elda.add_model(self.elda, 5)
+        assert len(elda.ttda) == num_topics_before_add_model + len(self.elda.ttda)
+        assert elda.num_models == num_models_before_add_model + 5
 
         # 1.3 a list of ensembles
-        a = len(elda_base.ttda)
-        b = elda_base.num_models
+        num_topics_before_add_model = len(elda.ttda)
+        num_models_before_add_model = elda.num_models
         # it should be totally legit to add a memory unfriendly object to a memory friendly one
-        elda_base.add_model([self.elda, self.elda_mem_unfriendly])
-        assert len(elda_base.ttda) == a + 2 * len(self.elda.ttda)
-        assert elda_base.num_models == b + 2 * num_models
+        elda.add_model([self.elda, self.elda_mem_unfriendly])
+        assert len(elda.ttda) == num_topics_before_add_model + 2 * len(self.elda.ttda)
+        assert elda.num_models == num_models_before_add_model + 2 * NUM_MODELS
 
         # 1.4 a single gensim model
         model = self.elda.classic_model_representation
 
-        a = len(elda_base.ttda)
-        b = elda_base.num_models
-        elda_base.add_model(model)
-        assert len(elda_base.ttda) == a + len(model.get_topics())
-        assert elda_base.num_models == b + 1
+        num_topics_before_add_model = len(elda.ttda)
+        num_models_before_add_model = elda.num_models
+        elda.add_model(model)
+        assert len(elda.ttda) == num_topics_before_add_model + len(model.get_topics())
+        assert elda.num_models == num_models_before_add_model + 1
 
         # 1.5 a list gensim models
-        a = len(elda_base.ttda)
-        b = elda_base.num_models
-        elda_base.add_model([model, model])
-        assert len(elda_base.ttda) == a + 2 * len(model.get_topics())
-        assert elda_base.num_models == b + 2
+        num_topics_before_add_model = len(elda.ttda)
+        num_models_before_add_model = elda.num_models
+        elda.add_model([model, model])
+        assert len(elda.ttda) == num_topics_before_add_model + 2 * len(model.get_topics())
+        assert elda.num_models == num_models_before_add_model + 2
 
-        self.assert_ttda_is_valid(elda_base)
+        self.assert_ttda_is_valid(elda)
 
         # 2. memory unfriendly
-        elda_base_mem_unfriendly = EnsembleLda(
+        elda_mem_unfriendly = EnsembleLda(
             corpus=common_corpus, id2word=common_dictionary,
             num_topics=num_new_topics, passes=1, num_models=num_new_models,
             iterations=1, random_state=0, topic_model_class=LdaMulticore,
@@ -302,45 +299,45 @@ class TestModel(unittest.TestCase):
         )
 
         # 2.1 a single ensemble
-        a = len(elda_base_mem_unfriendly.tms)
-        b = elda_base_mem_unfriendly.num_models
-        elda_base_mem_unfriendly.add_model(self.elda_mem_unfriendly)
-        assert len(elda_base_mem_unfriendly.tms) == a + num_models
-        assert elda_base_mem_unfriendly.num_models == b + num_models
+        num_topics_before_add_model = len(elda_mem_unfriendly.tms)
+        num_models_before_add_model = elda_mem_unfriendly.num_models
+        elda_mem_unfriendly.add_model(self.elda_mem_unfriendly)
+        assert len(elda_mem_unfriendly.tms) == num_topics_before_add_model + NUM_MODELS
+        assert elda_mem_unfriendly.num_models == num_models_before_add_model + NUM_MODELS
 
         # 2.2 a list of ensembles
-        a = len(elda_base_mem_unfriendly.tms)
-        b = elda_base_mem_unfriendly.num_models
-        elda_base_mem_unfriendly.add_model([self.elda_mem_unfriendly, self.elda_mem_unfriendly])
-        assert len(elda_base_mem_unfriendly.tms) == a + 2 * num_models
-        assert elda_base_mem_unfriendly.num_models == b + 2 * num_models
+        num_topics_before_add_model = len(elda_mem_unfriendly.tms)
+        num_models_before_add_model = elda_mem_unfriendly.num_models
+        elda_mem_unfriendly.add_model([self.elda_mem_unfriendly, self.elda_mem_unfriendly])
+        assert len(elda_mem_unfriendly.tms) == num_topics_before_add_model + 2 * NUM_MODELS
+        assert elda_mem_unfriendly.num_models == num_models_before_add_model + 2 * NUM_MODELS
 
         # 2.3 a single gensim model
-        a = len(elda_base_mem_unfriendly.tms)
-        b = elda_base_mem_unfriendly.num_models
-        elda_base_mem_unfriendly.add_model(self.elda_mem_unfriendly.tms[0])
-        assert len(elda_base_mem_unfriendly.tms) == a + 1
-        assert elda_base_mem_unfriendly.num_models == b + 1
+        num_topics_before_add_model = len(elda_mem_unfriendly.tms)
+        num_models_before_add_model = elda_mem_unfriendly.num_models
+        elda_mem_unfriendly.add_model(self.elda_mem_unfriendly.tms[0])
+        assert len(elda_mem_unfriendly.tms) == num_topics_before_add_model + 1
+        assert elda_mem_unfriendly.num_models == num_models_before_add_model + 1
 
         # 2.4 a list of gensim models
-        a = len(elda_base_mem_unfriendly.tms)
-        b = elda_base_mem_unfriendly.num_models
-        elda_base_mem_unfriendly.add_model(self.elda_mem_unfriendly.tms)
-        assert len(elda_base_mem_unfriendly.tms) == a + num_models
-        assert elda_base_mem_unfriendly.num_models == b + num_models
+        num_topics_before_add_model = len(elda_mem_unfriendly.tms)
+        num_models_before_add_model = elda_mem_unfriendly.num_models
+        elda_mem_unfriendly.add_model(self.elda_mem_unfriendly.tms)
+        assert len(elda_mem_unfriendly.tms) == num_topics_before_add_model + NUM_MODELS
+        assert elda_mem_unfriendly.num_models == num_models_before_add_model + NUM_MODELS
 
         # 2.5 topic term distributions should throw errors, because the
         # actual models are needed for the memory unfriendly ensemble
-        a = len(elda_base_mem_unfriendly.tms)
-        b = elda_base_mem_unfriendly.num_models
+        num_topics_before_add_model = len(elda_mem_unfriendly.tms)
+        num_models_before_add_model = elda_mem_unfriendly.num_models
         with pytest.raises(ValueError):
-            elda_base_mem_unfriendly.add_model(self.elda_mem_unfriendly.tms[0].get_topics())
+            elda_mem_unfriendly.add_model(self.elda_mem_unfriendly.tms[0].get_topics())
         # remains unchanged
-        assert len(elda_base_mem_unfriendly.tms) == a
-        assert elda_base_mem_unfriendly.num_models == b
+        assert len(elda_mem_unfriendly.tms) == num_topics_before_add_model
+        assert elda_mem_unfriendly.num_models == num_models_before_add_model
 
-        assert elda_base_mem_unfriendly.num_models == len(elda_base_mem_unfriendly.tms)
-        self.assert_ttda_is_valid(elda_base_mem_unfriendly)
+        assert elda_mem_unfriendly.num_models == len(elda_mem_unfriendly.tms)
+        self.assert_ttda_is_valid(elda_mem_unfriendly)
 
     def test_add_and_recluster(self):
         # See if after adding a model, the model still makes sense
