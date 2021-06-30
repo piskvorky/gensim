@@ -181,12 +181,13 @@ def _aggregate_topics(grouped_by_labels):
     return clusters
 
 
-def _group_by_labels(results):
+def _group_by_labels(cbdbscan_topics):
     """Group all the learned cores by their label, which was assigned in the cluster_model.
 
     Parameters
     ----------
-    results : {list of {'is_core', 'neighboring_labels', 'label'}}
+    cbdbscan_topics : {list of {'is_core', 'neighboring_labels', 'label'}}
+        A list of topic data resulting from fitting a :class:`~CBDBSCAN` object.
         After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
         member, which can be used as the argument to this function. It's a list of infos gathered during
         the clustering step and each element in the list corresponds to a single topic.
@@ -200,7 +201,7 @@ def _group_by_labels(results):
 
     """
     grouped_by_labels = {}
-    for topic in results:
+    for topic in cbdbscan_topics:
         if topic["is_core"]:
             topic = topic.copy()
 
@@ -1030,9 +1031,9 @@ class EnsembleLda(SaveLoad):
         else:
             logger.info("generating stable topics")
 
-        results = self.cluster_model.results
+        cbdbscan_topics = self.cluster_model.results
 
-        grouped_by_labels = _group_by_labels(results)
+        grouped_by_labels = _group_by_labels(cbdbscan_topics)
 
         clusters = _aggregate_topics(grouped_by_labels)
 
@@ -1066,15 +1067,15 @@ class EnsembleLda(SaveLoad):
                 _remove_from_all_sets(label, sorted_clusters)
 
         # list of all the label numbers that are valid
-        valid_labels = np.array([cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]])
+        valid_labels = {cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]}
 
-        for topic in results:
+        for topic in cbdbscan_topics:
             topic["valid_parents"] = {label for label in topic["neighboring_labels"] if label in valid_labels}
 
         # keeping only VALID cores
-        valid_core_mask = np.vectorize(_is_valid_core)(results)
+        valid_core_mask = np.vectorize(_is_valid_core)(cbdbscan_topics)
         valid_topics = self.ttda[valid_core_mask]
-        topic_labels = np.array([topic["label"] for topic in results])[valid_core_mask]
+        topic_labels = np.array([topic["label"] for topic in cbdbscan_topics])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
 
         num_stable_topics = len(unique_labels)
