@@ -115,15 +115,15 @@ _COSINE_DISTANCE_CALCULATION_THRESHOLD = 0.05
 
 
 def _is_valid_core(topic):
-    """Check if the topic is a valid core.
+    """Check if the topic is a valid core, i.e. no neighboring valid cluster is overlapping with it.
 
     Parameters
     ----------
-    topic : {'is_core', 'valid_parents', 'label'}
+    topic : {'is_core', 'valid_neighboring_labels', 'label'}
         topic to validate
 
     """
-    return topic["is_core"] and (topic["valid_parents"] == {topic["label"]})
+    return topic["is_core"] and (topic["valid_neighboring_labels"] == {topic["label"]})
 
 
 def _remove_from_all_sets(label, clusters):
@@ -201,6 +201,7 @@ def _group_by_labels(cbdbscan_topics):
 
     """
     grouped_by_labels = {}
+
     for topic in cbdbscan_topics:
         if topic["is_core"]:
             topic = topic.copy()
@@ -212,6 +213,7 @@ def _group_by_labels(cbdbscan_topics):
             if label not in grouped_by_labels:
                 grouped_by_labels[label] = []
             grouped_by_labels[label].append(topic)
+
     return grouped_by_labels
 
 
@@ -238,6 +240,19 @@ def _teardown(pipes, processes, i):
         if process.is_alive():
             process.terminate()
         del process
+
+
+def mass_masking(a, threshold):
+    """Original masking method. Returns a new binary mask."""
+    sorted_a = np.sort(a)[::-1]
+    largest_mass = sorted_a.cumsum() < threshold
+    smallest_valid = sorted_a[largest_mass][-1]
+    return a >= smallest_valid
+
+
+def rank_masking(a, threshold):
+    """Faster masking method. Returns a new binary mask."""
+    return a > np.sort(a)[::-1][int(len(a) * threshold)]
 
 
 def _calculate_asymmetric_distance_matrix_chunk(ttda1, ttda2, threshold, start_index, method):
@@ -275,17 +290,6 @@ def _calculate_asymmetric_distance_matrix_chunk(ttda1, ttda2, threshold, start_i
             raise ValueError(f"method {method} unknown")
 
         # select masking method:
-        def mass_masking(a):
-            """Original masking method. Returns a new binary mask."""
-            sorted_a = np.sort(a)[::-1]
-            largest_mass = sorted_a.cumsum() < threshold
-            smallest_valid = sorted_a[largest_mass][-1]
-            return a >= smallest_valid
-
-        def rank_masking(a):
-            """Faster masking method. Returns a new binary mask."""
-            return a > np.sort(a)[::-1][int(len(a) * threshold)]
-
         create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
 
         # some help to find a better threshold by useful log messages
@@ -294,7 +298,7 @@ def _calculate_asymmetric_distance_matrix_chunk(ttda1, ttda2, threshold, start_i
         # now iterate over each topic
         for ttd1_idx, ttd1 in enumerate(ttda1):
             # create mask from ttd1 that removes noise from a and keeps the largest terms
-            mask = create_mask(ttd1)
+            mask = create_mask(ttd1, threshold)
             ttd1_masked = ttd1[mask]
 
             avg_mask_size += mask.sum()
@@ -322,6 +326,40 @@ def _calculate_asymmetric_distance_matrix_chunk(ttda1, ttda2, threshold, start_i
         logger.info(f'the given threshold of {threshold} covered on average {percent}% of tokens')
 
     return distances
+
+
+def _validate_clusters(clusters, min_cores):
+    """Check which clusters from the cbdbscan step are significant enough. is_valid is set accordingly."""
+    # Clusters with noisy invalid neighbors may have a harder time being marked as stable, so start with the
+    # easy ones and potentially already remove some noise by also sorting smaller clusters to the front.
+    # This clears up the clusters a bit before checking the ones with many neighbors.
+    sorted_clusters = sorted(
+        clusters,
+        key=lambda cluster: (
+            cluster["max_num_neighboring_labels"],
+            cluster["num_cores"],
+            cluster["label"],
+        ),
+        reverse=False,
+    )
+
+    for cluster in sorted_clusters:
+        cluster["is_valid"] = None
+        if cluster["num_cores"] < min_cores:
+            cluster["is_valid"] = False
+            _remove_from_all_sets(cluster["label"], sorted_clusters)
+
+    # now that invalid clusters are removed, check which clusters contain enough cores that don't belong to any
+    # other cluster.
+    for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
+        label = cluster["label"]
+        if _contains_isolated_cores(label, cluster, min_cores):
+            cluster["is_valid"] = True
+        else:
+            cluster["is_valid"] = False
+            _remove_from_all_sets(label, sorted_clusters)
+
+    return [cluster for cluster in sorted_clusters if cluster["is_valid"]]
 
 
 class EnsembleLda(SaveLoad):
@@ -1034,43 +1072,15 @@ class EnsembleLda(SaveLoad):
         cbdbscan_topics = self.cluster_model.results
 
         grouped_by_labels = _group_by_labels(cbdbscan_topics)
-
         clusters = _aggregate_topics(grouped_by_labels)
-
-        # Clusters with noisy invalid neighbors may have a harder time being marked as stable, so start with the
-        # easy ones and potentially already remove some noise by also sorting smaller clusters to the front.
-        # This clears up the clusters a bit before checking the ones with many neighbors.
-        sorted_clusters = sorted(
-            clusters,
-            key=lambda cluster: (
-                cluster["max_num_neighboring_labels"],
-                cluster["num_cores"],
-                cluster["label"],
-            ),
-            reverse=False,
-        )
-
-        for cluster in sorted_clusters:
-            cluster["is_valid"] = None
-            if cluster["num_cores"] < min_cores:
-                cluster["is_valid"] = False
-                _remove_from_all_sets(cluster["label"], sorted_clusters)
-
-        # now that invalid clusters are removed, check which clusters contain enough cores that don't belong to any
-        # other cluster.
-        for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
-            label = cluster["label"]
-            if _contains_isolated_cores(label, cluster, min_cores):
-                cluster["is_valid"] = True
-            else:
-                cluster["is_valid"] = False
-                _remove_from_all_sets(label, sorted_clusters)
-
-        # list of all the label numbers that are valid
-        valid_labels = {cluster["label"] for cluster in sorted_clusters if cluster["is_valid"]}
+        valid_clusters = _validate_clusters(clusters, min_cores)
+        valid_cluster_labels = {cluster["label"] for cluster in valid_clusters}
 
         for topic in cbdbscan_topics:
-            topic["valid_parents"] = {label for label in topic["neighboring_labels"] if label in valid_labels}
+            topic["valid_neighboring_labels"] = {
+                label for label in topic["neighboring_labels"]
+                if label in valid_cluster_labels
+            }
 
         # keeping only VALID cores
         valid_core_mask = np.vectorize(_is_valid_core)(cbdbscan_topics)
@@ -1087,7 +1097,7 @@ class EnsembleLda(SaveLoad):
             topics_of_cluster = np.array([topic for t, topic in enumerate(valid_topics) if topic_labels[t] == label])
             stable_topics[l] = topics_of_cluster.mean(axis=0)
 
-        self.sorted_clusters = sorted_clusters
+        self.valid_clusters = valid_clusters
         self.stable_topics = stable_topics
 
         logger.info("found %s stable topics", len(stable_topics))

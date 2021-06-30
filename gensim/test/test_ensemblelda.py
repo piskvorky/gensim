@@ -86,7 +86,7 @@ class TestModel(unittest.TestCase):
 
         reference = EnsembleLda.load(datapath('ensemblelda'))
         cluster_model_results = deepcopy(reference.cluster_model.results)
-        sorted_clusters = deepcopy(reference.sorted_clusters)
+        valid_clusters = deepcopy(reference.valid_clusters)
         stable_topics = deepcopy(reference.get_topics())
 
         # continue training with the distance matrix of the pretrained reference and see if
@@ -95,7 +95,7 @@ class TestModel(unittest.TestCase):
         reference.recluster()
 
         self.assert_cluster_results_equal(reference.cluster_model.results, cluster_model_results)
-        assert reference.sorted_clusters == sorted_clusters
+        assert reference.valid_clusters == valid_clusters
         np.testing.assert_allclose(reference.get_topics(), stable_topics, rtol=RTOL)
 
     def test_not_trained(self):
