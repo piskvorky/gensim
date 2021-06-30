@@ -298,7 +298,7 @@ def _validate_clusters(clusters, min_cores):
 class EnsembleLda(SaveLoad):
     """Ensemble Latent Dirichlet Allocation (eLDA), a method of training a topic model ensemble.
 
-    Extracts stable topics that are consistently learned accross multiple LDA models. eLDA has the added benefit that
+    Extracts stable topics that are consistently learned across multiple LDA models. eLDA has the added benefit that
     the user does not need to know the exact number of topics the topic model should extract ahead of time.
 
     """
@@ -425,7 +425,7 @@ class EnsembleLda(SaveLoad):
         self.sstats_sum = 0
         self.eta = None
         self.tms = []
-        # initialize empty topic term distribution array
+        # initialize empty 2D topic term distribution array (ttda) (number of topics x number of terms)
         self.ttda = np.empty((0, len(gensim_kw_args["id2word"])))
         self.asymmetric_distance_matrix_outdated = True
 
