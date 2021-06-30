@@ -242,90 +242,23 @@ def _teardown(pipes, processes, i):
         del process
 
 
-def mass_masking(a, threshold):
+def mass_masking(a, threshold=None):
     """Original masking method. Returns a new binary mask."""
+    if threshold is None:
+        threshold = 0.95
+
     sorted_a = np.sort(a)[::-1]
     largest_mass = sorted_a.cumsum() < threshold
     smallest_valid = sorted_a[largest_mass][-1]
     return a >= smallest_valid
 
 
-def rank_masking(a, threshold):
+def rank_masking(a, threshold=None):
     """Faster masking method. Returns a new binary mask."""
+    if threshold is None:
+        threshold = 0.11
+
     return a > np.sort(a)[::-1][int(len(a) * threshold)]
-
-
-def _calculate_asymmetric_distance_matrix_chunk(ttda1, ttda2, threshold, start_index, method):
-    """Calculate an (asymmetric) distance from each topic in ``ttda1`` to each topic in ``ttda2``.
-
-    Parameters
-    ----------
-    ttda1 and ttda2: 2D arrays of floats
-        Two ttda matrices that are going to be used for distance calculation. Each row in ttda corresponds to one
-        topic. Each cell in the resulting matrix corresponds to the distance between a topic pair.
-    threshold : float, optional
-        threshold defaults to: ``{"mass": 0.95, "rank": 0.11}``, depending on the selected method
-    start_index : int
-        this function might be used in multiprocessing, so start_index has to be set as ttda1 is a chunk of the
-        complete ttda in that case. start_index would be 0 if ``ttda1 == self.ttda``. When self.ttda is split into
-        two pieces, each 100 ttdas long, then start_index should be be 100. default is 0
-    method : {'mass', 'rank}, optional
-        method can be "mass" for the original masking method or "rank" for a faster masking method that selects
-        by rank of largest elements in the topic term distribution, to determine which tokens are relevant for the
-        topic.
-
-    Returns
-    -------
-    2D numpy.ndarray of floats
-        Asymmetric distance matrix of size ``len(ttda1)`` by ``len(ttda2)``.
-
-    """
-    # initialize the distance matrix. ndarray is faster than zeros
-    distances = np.ndarray((len(ttda1), len(ttda2)))
-
-    if ttda1.shape[0] > 0 and ttda2.shape[0] > 0:
-        # the worker might not have received a ttda because it was chunked up too much
-
-        if method not in ["mass", "rank"]:
-            raise ValueError(f"method {method} unknown")
-
-        # select masking method:
-        create_mask = {"mass": mass_masking, "rank": rank_masking}[method]
-
-        # some help to find a better threshold by useful log messages
-        avg_mask_size = 0
-
-        # now iterate over each topic
-        for ttd1_idx, ttd1 in enumerate(ttda1):
-            # create mask from ttd1 that removes noise from a and keeps the largest terms
-            mask = create_mask(ttd1, threshold)
-            ttd1_masked = ttd1[mask]
-
-            avg_mask_size += mask.sum()
-
-            # now look at every possible pair for topic a:
-            for ttd2_idx, ttd2 in enumerate(ttda2):
-                # distance to itself is 0
-                if ttd1_idx + start_index == ttd2_idx:
-                    distances[ttd1_idx][ttd2_idx] = 0
-                    continue
-
-                # now mask b based on a, which will force the shape of a onto b
-                ttd2_masked = ttd2[mask]
-
-                # Smart distance calculation avoids calculating cosine distance for highly masked topic-term
-                # distributions that will have distance values near 1.
-                if ttd2_masked.sum() <= _COSINE_DISTANCE_CALCULATION_THRESHOLD:
-                    distance = 1
-                else:
-                    distance = cosine(ttd1_masked, ttd2_masked)
-
-                distances[ttd1_idx][ttd2_idx] = distance
-
-        percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
-        logger.info(f'the given threshold of {threshold} covered on average {percent}% of tokens')
-
-    return distances
 
 
 def _validate_clusters(clusters, min_cores):
@@ -374,7 +307,7 @@ class EnsembleLda(SaveLoad):
             self, topic_model_class="ldamulticore", num_models=3,
             min_cores=None,  # default value from _generate_stable_topics()
             epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
-            min_samples=None, masking_method="mass", masking_threshold=None,
+            min_samples=None, masking_method=mass_masking, masking_threshold=None,
             distance_workers=1, random_state=None, **gensim_kw_args,
     ):
         """Create and train a new EnsembleLda model.
@@ -416,8 +349,9 @@ class EnsembleLda(SaveLoad):
             If False, any topic term matrix can be suplied to add_model.
         min_samples : int, optional
             Required int of nearby topics for a topic to be considered as 'core' in the CBDBSCAN clustering.
-        masking_method : str, optional
-            Choose one of "mass" (default) or "rank" (percentile, faster).
+        masking_method : function, optional
+            Choose one of :meth:`~gensim.models.ensemblelda.mass_masking` (default) or
+            :meth:`~gensim.models.ensemblelda.rank_masking` (percentile, faster).
 
             For clustering, distances between topic-term distributions are asymmetric.  In particular, the distance
             (technically a divergence) from distribution A to B is more of a measure of if A is contained in B.  At a
@@ -429,7 +363,6 @@ class EnsembleLda(SaveLoad):
 
             2. rank: forms mask by taking the top ranked terms (by mass) until the 'masking_threshold' is reached.
             For example, a ranking threshold of 0.11 means the top 0.11 terms by weight are used to form a mask.
-
         masking_threshold : float, optional
             Default: None, which uses ``0.95`` for "mass", and ``0.11`` for masking_method "rank".  In general, too
             small a mask threshold leads to inaccurate calculations (no signal) and too big a mask leads to noisy
@@ -750,7 +683,8 @@ class EnsembleLda(SaveLoad):
                 raise ValueError(
                     'ttda arrays cannot be added to ensembles, for which memory_friendly_ttda=False, '
                     'you can call convert_to_memory_friendly, but it will discard the stored gensim '
-                    'models and only keep the relevant topic term distributions from them.')
+                    'models and only keep the relevant topic term distributions from them.'
+                )
 
             # 2. list of ensembles
             elif isinstance(target[0], type(self)):
@@ -783,6 +717,7 @@ class EnsembleLda(SaveLoad):
                 f"target ttda dimensions do not match. Topics must be {self.ttda.shape[-1]} but was {ttda.shape[-1]} "
                 f"elements large"
             )
+
         self.ttda = np.append(self.ttda, ttda, axis=0)
 
         # tell recluster that the distance matrix needs to be regenerated
@@ -927,13 +862,73 @@ class EnsembleLda(SaveLoad):
 
             pipe.close()
 
-    def _asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe, threshold, method):
+    def _calculate_asymmetric_distance_matrix_chunk(self, ttda1, ttda2, start_index):
+        """Calculate an (asymmetric) distance from each topic in ``ttda1`` to each topic in ``ttda2``.
+
+        Parameters
+        ----------
+        ttda1 and ttda2: 2D arrays of floats
+            Two ttda matrices that are going to be used for distance calculation. Each row in ttda corresponds to one
+            topic. Each cell in the resulting matrix corresponds to the distance between a topic pair.
+        start_index : int
+            this function might be used in multiprocessing, so start_index has to be set as ttda1 is a chunk of the
+            complete ttda in that case. start_index would be 0 if ``ttda1 == self.ttda``. When self.ttda is split into
+            two pieces, each 100 ttdas long, then start_index should be be 100. default is 0
+
+        Returns
+        -------
+        2D numpy.ndarray of floats
+            Asymmetric distance matrix of size ``len(ttda1)`` by ``len(ttda2)``.
+
+        """
+        # initialize the distance matrix. ndarray is faster than zeros
+        distances = np.ndarray((len(ttda1), len(ttda2)))
+
+        if ttda1.shape[0] > 0 and ttda2.shape[0] > 0:
+            # the worker might not have received a ttda because it was chunked up too much
+
+            # some help to find a better threshold by useful log messages
+            avg_mask_size = 0
+
+            # now iterate over each topic
+            for ttd1_idx, ttd1 in enumerate(ttda1):
+                # create mask from ttd1 that removes noise from a and keeps the largest terms
+                mask = self.masking_method(ttd1, self.masking_threshold)
+                ttd1_masked = ttd1[mask]
+
+                avg_mask_size += mask.sum()
+
+                # now look at every possible pair for topic a:
+                for ttd2_idx, ttd2 in enumerate(ttda2):
+                    # distance to itself is 0
+                    if ttd1_idx + start_index == ttd2_idx:
+                        distances[ttd1_idx][ttd2_idx] = 0
+                        continue
+
+                    # now mask b based on a, which will force the shape of a onto b
+                    ttd2_masked = ttd2[mask]
+
+                    # Smart distance calculation avoids calculating cosine distance for highly masked topic-term
+                    # distributions that will have distance values near 1.
+                    if ttd2_masked.sum() <= _COSINE_DISTANCE_CALCULATION_THRESHOLD:
+                        distance = 1
+                    else:
+                        distance = cosine(ttd1_masked, ttd2_masked)
+
+                    distances[ttd1_idx][ttd2_idx] = distance
+
+            percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
+            logger.info(f'the given threshold of {self.masking_threshold} covered on average {percent}% of tokens')
+
+        return distances
+
+    def _asymmetric_distance_matrix_worker(self, worker_id, ttdas_sent, n_ttdas, pipe):
         """Worker that computes the distance to all other nodes from a chunk of nodes."""
         logger.info(f"spawned worker to generate {n_ttdas} rows of the asymmetric distance matrix")
         # the chunk of ttda that's going to be calculated:
         ttda1 = self.ttda[ttdas_sent:ttdas_sent + n_ttdas]
-        distance_chunk = _calculate_asymmetric_distance_matrix_chunk(
-            ttda1=ttda1, ttda2=self.ttda, threshold=threshold, start_index=ttdas_sent, method=method,
+        distance_chunk = self._calculate_asymmetric_distance_matrix_chunk(
+            ttda1=ttda1, ttda2=self.ttda, start_index=ttdas_sent
         )
         pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
         pipe.close()
@@ -947,21 +942,16 @@ class EnsembleLda(SaveLoad):
 
         """
         workers = self.distance_workers
-        threshold = self.masking_threshold
-        method = self.masking_method
 
         # matrix is up to date afterwards
         self.asymmetric_distance_matrix_outdated = False
-
-        if threshold is None:
-            threshold = {"mass": 0.95, "rank": 0.11}[method]
 
         logger.info(f"generating a {len(self.ttda)} x {len(self.ttda)} asymmetric distance matrix...")
 
         # singlecore
         if workers is not None and workers <= 1:
-            self.asymmetric_distance_matrix = _calculate_asymmetric_distance_matrix_chunk(
-                ttda1=self.ttda, ttda2=self.ttda, threshold=threshold, start_index=0, method=method,
+            self.asymmetric_distance_matrix = self._calculate_asymmetric_distance_matrix_chunk(
+                ttda1=self.ttda, ttda2=self.ttda, start_index=0,
             )
 
         # else, if workers > 1 use multiprocessing
@@ -989,7 +979,7 @@ class EnsembleLda(SaveLoad):
 
                 process = Process(
                     target=self._asymmetric_distance_matrix_worker,
-                    args=(i, ttdas_sent, n_ttdas, child_conn, threshold, method),
+                    args=(i, ttdas_sent, n_ttdas, child_conn),
                 )
                 ttdas_sent += n_ttdas
 
