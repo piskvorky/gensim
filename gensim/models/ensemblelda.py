@@ -136,7 +136,7 @@ def _remove_from_all_sets(label, clusters):
 
 def _contains_isolated_cores(label, cluster, min_cores):
     """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
-    return sum(map(lambda x: x == {label}, cluster["neighboring_labels"])) >= min_cores
+    return sum(map(lambda neighboring_labels: neighboring_labels == {label}, cluster["neighboring_labels"])) >= min_cores
 
 
 def _aggregate_topics(grouped_by_labels):
@@ -333,15 +333,10 @@ def _validate_clusters(clusters, min_cores):
     # Clusters with noisy invalid neighbors may have a harder time being marked as stable, so start with the
     # easy ones and potentially already remove some noise by also sorting smaller clusters to the front.
     # This clears up the clusters a bit before checking the ones with many neighbors.
-    sorted_clusters = sorted(
-        clusters,
-        key=lambda cluster: (
-            cluster["max_num_neighboring_labels"],
-            cluster["num_cores"],
-            cluster["label"],
-        ),
-        reverse=False,
-    )
+    def _cluster_sort_key(cluster):
+        return (cluster["max_num_neighboring_labels"], cluster["num_cores"], cluster["label"])
+
+    sorted_clusters = sorted(clusters, key=_cluster_sort_key, reverse=False)
 
     for cluster in sorted_clusters:
         cluster["is_valid"] = None
