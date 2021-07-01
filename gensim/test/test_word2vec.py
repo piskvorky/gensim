@@ -843,6 +843,16 @@ class TestWord2VecModel(unittest.TestCase):
         model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
         self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
 
+        # passing indices instead of words in context
+        str_context = ['system', 'human']
+        mixed_context = [model_with_neg.wv.get_index(str_context[0]), str_context[1]]
+        idx_context = [model_with_neg.wv.get_index(w) for w in str_context]
+        prediction_from_str = model_with_neg.predict_output_word(str_context, topn=5)
+        prediction_from_mixed = model_with_neg.predict_output_word(mixed_context, topn=5)
+        prediction_from_idx = model_with_neg.predict_output_word(idx_context, topn=5)
+        self.assertEqual(prediction_from_str, prediction_from_mixed)
+        self.assertEqual(prediction_from_str, prediction_from_idx)
+
     def test_load_old_model(self):
         """Test loading an old word2vec model of indeterminate version"""
 
