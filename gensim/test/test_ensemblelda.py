@@ -224,8 +224,16 @@ class TestEnsembleLda(unittest.TestCase):
             memory_friendly_ttda=False,
         )
 
-        np.testing.assert_allclose(elda.get_topics(), elda_multiprocessing.get_topics(), rtol=RTOL)
-        np.testing.assert_allclose(elda_mem_unfriendly.get_topics(), elda_multiprocessing_mem_unfriendly.get_topics(), rtol=RTOL)
+        np.testing.assert_allclose(
+            elda.get_topics(),
+            elda_multiprocessing.get_topics(),
+            rtol=RTOL
+        )
+        np.testing.assert_allclose(
+            elda_mem_unfriendly.get_topics(),
+            elda_multiprocessing_mem_unfriendly.get_topics(),
+            rtol=RTOL
+        )
 
     def test_add_models_to_empty(self):
         elda = self.get_elda()

@@ -136,7 +136,7 @@ def _remove_from_all_sets(label, clusters):
 
 def _contains_isolated_cores(label, cluster, min_cores):
     """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
-    return sum(map(lambda neighboring_labels: neighboring_labels == {label}, cluster["neighboring_labels"])) >= min_cores
+    return sum([neighboring_labels == {label} for neighboring_labels in cluster["neighboring_labels"]]) >= min_cores
 
 
 def _aggregate_topics(grouped_by_labels):
