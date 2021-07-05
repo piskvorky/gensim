@@ -103,7 +103,7 @@ from typing import Set, Optional, List
 
 import numpy as np
 from scipy.spatial.distance import cosine
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 
 from gensim import utils
 from gensim.models import ldamodel, ldamulticore, basemodel
