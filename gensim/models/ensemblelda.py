@@ -140,7 +140,7 @@ def _is_valid_core(topic):
 
     Parameters
     ----------
-    topic : Topic
+    topic : :class:`Topic`
         topic to validate
 
     """
