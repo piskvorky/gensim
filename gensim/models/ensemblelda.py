@@ -99,13 +99,16 @@ import logging
 import os
 from multiprocessing import Process, Pipe, ProcessError
 import importlib
+from typing import Set, Optional, List
 
 import numpy as np
 from scipy.spatial.distance import cosine
+from dataclasses import dataclass, replace
 
 from gensim import utils
 from gensim.models import ldamodel, ldamulticore, basemodel
 from gensim.utils import SaveLoad
+
 
 logger = logging.getLogger(__name__)
 
@@ -114,29 +117,47 @@ logger = logging.getLogger(__name__)
 _COSINE_DISTANCE_CALCULATION_THRESHOLD = 0.05
 
 
+@dataclass
+class Topic:
+    is_core: bool  # if the topic has enough neighbors
+    neighboring_labels: Set[int]  # which other clusters are close by
+    neighboring_topic_indices: Set[int]  # which other topics are close by
+    label: Optional[int]  # to which cluster this topic belongs
+    num_neighboring_labels: int  # how many different labels a core has as parents
+    valid_neighboring_labels: Set[int]  # A set of labels of close by clusters that are large enough
+
+
+@dataclass
+class Cluster:
+    max_num_neighboring_labels: int  # the max number of parent labels among each topic of a given cluster
+    neighboring_labels: List[Set[int]]  # a concatenated list of the neighboring_labels sets of each topic
+    label: int  # the unique identifier of the cluster
+    num_cores: int  # how many topics in the cluster are cores
+
+
 def _is_valid_core(topic):
     """Check if the topic is a valid core, i.e. no neighboring valid cluster is overlapping with it.
 
     Parameters
     ----------
-    topic : {'is_core', 'valid_neighboring_labels', 'label'}
+    topic : Topic
         topic to validate
 
     """
-    return topic["is_core"] and (topic["valid_neighboring_labels"] == {topic["label"]})
+    return topic.is_core and (topic.valid_neighboring_labels == {topic.label})
 
 
 def _remove_from_all_sets(label, clusters):
     """Remove a label from every set in "neighboring_labels" for each core in ``clusters``."""
     for cluster in clusters:
-        for neighboring_labels_set in cluster["neighboring_labels"]:
+        for neighboring_labels_set in cluster.neighboring_labels:
             if label in neighboring_labels_set:
                 neighboring_labels_set.remove(label)
 
 
 def _contains_isolated_cores(label, cluster, min_cores):
     """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
-    return sum([neighboring_labels == {label} for neighboring_labels in cluster["neighboring_labels"]]) >= min_cores
+    return sum([neighboring_labels == {label} for neighboring_labels in cluster.neighboring_labels]) >= min_cores
 
 
 def _aggregate_topics(grouped_by_labels):
@@ -144,37 +165,34 @@ def _aggregate_topics(grouped_by_labels):
 
     Parameters
     ----------
-    grouped_by_labels : dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
+    grouped_by_labels : dict of (int, list of :class:`Topic`)
         The return value of _group_by_labels. A mapping of the label to a list of each topic which belongs to the
         label.
 
     Returns
     -------
-        list of {'max_num_neighboring_labels', 'neighboring_labels', 'label'}
-        max_num_neighboring_labels is the max number of parent labels among each topic of a given cluster. label
-        refers to the label identifier of the cluster. neighboring_labels is a concatenated list of the
-        neighboring_labels sets of each topic. Its sorted by max_num_neighboring_labels in descending
-        order. There is one single element for each cluster.
+    list of :class:`Cluster`
+        It is sorted by max_num_neighboring_labels in descending order. There is one single element for each cluster.
 
     """
     clusters = []
 
-    for label, group in grouped_by_labels.items():
+    for label, topics in grouped_by_labels.items():
         max_num_neighboring_labels = 0
         neighboring_labels = []  # will be a list of sets
 
-        for topic in group:
-            max_num_neighboring_labels = max(topic["num_neighboring_labels"], max_num_neighboring_labels)
-            neighboring_labels.append(topic["neighboring_labels"])
+        for topic in topics:
+            max_num_neighboring_labels = max(topic.num_neighboring_labels, max_num_neighboring_labels)
+            neighboring_labels.append(topic.neighboring_labels)
 
         neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
 
-        clusters.append({
-            "max_num_neighboring_labels": max_num_neighboring_labels,
-            "neighboring_labels": neighboring_labels,
-            "label": label,
-            "num_cores": len([topic for topic in group if topic["is_core"]]),
-        })
+        clusters.append(Cluster(
+            max_num_neighboring_labels=max_num_neighboring_labels,
+            neighboring_labels=neighboring_labels,
+            label=label,
+            num_cores=len([topic for topic in topics if topic.is_core]),
+        ))
 
     logger.info("found %s clusters", len(clusters))
 
@@ -186,15 +204,15 @@ def _group_by_labels(cbdbscan_topics):
 
     Parameters
     ----------
-    cbdbscan_topics : {list of {'is_core', 'neighboring_labels', 'label'}}
+    cbdbscan_topics : list of :class:`Topic`
         A list of topic data resulting from fitting a :class:`~CBDBSCAN` object.
         After calling .fit on a CBDBSCAN model, the results can be retrieved from it by accessing the .results
-        member, which can be used as the argument to this function. It's a list of infos gathered during
+        member, which can be used as the argument to this function. It is a list of infos gathered during
         the clustering step and each element in the list corresponds to a single topic.
 
     Returns
     -------
-        dict of (int, list of {'is_core', 'num_neighboring_labels', 'neighboring_labels'})
+    dict of (int, list of :class:`Topic`)
         A mapping of the label to a list of topics that belong to that particular label. Also adds
         a new member to each topic called num_neighboring_labels, which is the number of
         neighboring_labels of that topic.
@@ -203,13 +221,10 @@ def _group_by_labels(cbdbscan_topics):
     grouped_by_labels = {}
 
     for topic in cbdbscan_topics:
-        if topic["is_core"]:
-            topic = topic.copy()
+        if topic.is_core:
+            topic.num_neighboring_labels = len(topic.neighboring_labels)
 
-            # counts how many different labels a core has as parents
-            topic["num_neighboring_labels"] = len(topic["neighboring_labels"])
-
-            label = topic["label"]
+            label = topic.label
             if label not in grouped_by_labels:
                 grouped_by_labels[label] = []
             grouped_by_labels[label].append(topic)
@@ -267,27 +282,27 @@ def _validate_clusters(clusters, min_cores):
     # easy ones and potentially already remove some noise by also sorting smaller clusters to the front.
     # This clears up the clusters a bit before checking the ones with many neighbors.
     def _cluster_sort_key(cluster):
-        return (cluster["max_num_neighboring_labels"], cluster["num_cores"], cluster["label"])
+        return cluster.max_num_neighboring_labels, cluster.num_cores, cluster.label
 
     sorted_clusters = sorted(clusters, key=_cluster_sort_key, reverse=False)
 
     for cluster in sorted_clusters:
-        cluster["is_valid"] = None
-        if cluster["num_cores"] < min_cores:
-            cluster["is_valid"] = False
-            _remove_from_all_sets(cluster["label"], sorted_clusters)
+        cluster.is_valid = None
+        if cluster.num_cores < min_cores:
+            cluster.is_valid = False
+            _remove_from_all_sets(cluster.label, sorted_clusters)
 
     # now that invalid clusters are removed, check which clusters contain enough cores that don't belong to any
     # other cluster.
-    for cluster in [cluster for cluster in sorted_clusters if cluster["is_valid"] is None]:
-        label = cluster["label"]
+    for cluster in [cluster for cluster in sorted_clusters if cluster.is_valid is None]:
+        label = cluster.label
         if _contains_isolated_cores(label, cluster, min_cores):
-            cluster["is_valid"] = True
+            cluster.is_valid = True
         else:
-            cluster["is_valid"] = False
+            cluster.is_valid = False
             _remove_from_all_sets(label, sorted_clusters)
 
-    return [cluster for cluster in sorted_clusters if cluster["is_valid"]]
+    return [cluster for cluster in sorted_clusters if cluster.is_valid]
 
 
 class EnsembleLda(SaveLoad):
@@ -631,7 +646,7 @@ class EnsembleLda(SaveLoad):
         # If it has, append.
 
         # Be flexible. Can be a single element or a list of elements
-        # make sure it's a numpy array
+        # make sure it is a numpy array
         if not isinstance(target, (np.ndarray, list)):
             target = np.array([target])
         else:
@@ -1059,18 +1074,18 @@ class EnsembleLda(SaveLoad):
         grouped_by_labels = _group_by_labels(cbdbscan_topics)
         clusters = _aggregate_topics(grouped_by_labels)
         valid_clusters = _validate_clusters(clusters, min_cores)
-        valid_cluster_labels = {cluster["label"] for cluster in valid_clusters}
+        valid_cluster_labels = {cluster.label for cluster in valid_clusters}
 
         for topic in cbdbscan_topics:
-            topic["valid_neighboring_labels"] = {
-                label for label in topic["neighboring_labels"]
+            topic.valid_neighboring_labels = {
+                label for label in topic.neighboring_labels
                 if label in valid_cluster_labels
             }
 
         # keeping only VALID cores
         valid_core_mask = np.vectorize(_is_valid_core)(cbdbscan_topics)
         valid_topics = self.ttda[valid_core_mask]
-        topic_labels = np.array([topic["label"] for topic in cbdbscan_topics])[valid_core_mask]
+        topic_labels = np.array([topic.label for topic in cbdbscan_topics])[valid_core_mask]
         unique_labels = np.unique(topic_labels)
 
         num_stable_topics = len(unique_labels)
@@ -1222,12 +1237,16 @@ class CBDBSCAN:
         """Apply the algorithm to an asymmetric distance matrix."""
         self.next_label = 0
 
-        topic_clustering_results = [{
-            "is_core": False,
-            "neighboring_labels": set(),
-            "neighboring_topic_indices": set(),
-            "label": None,
-        } for _ in range(len(amatrix))]
+        topic_clustering_results = [
+            Topic(
+                is_core=False,
+                neighboring_labels=set(),
+                neighboring_topic_indices=set(),
+                label=None,
+                num_neighboring_labels=0,
+                valid_neighboring_labels=set()
+            ) for i in range(len(amatrix))
+        ]
 
         amatrix_copy = amatrix.copy()
 
@@ -1266,7 +1285,7 @@ class CBDBSCAN:
             # This also takes neighbor indices that already are identified as core in count.
             if num_neighboring_topics >= self.min_samples:
                 # This topic is a core!
-                topic_clustering_results[topic_index]["is_core"] = True
+                topic_clustering_results[topic_index].is_core = True
 
                 # if current_label is none, then this is the first core
                 # of a new cluster (hence next_label is used)
@@ -1287,23 +1306,23 @@ class CBDBSCAN:
                         current_label = self.next_label
                         self.next_label += 1
 
-                topic_clustering_results[topic_index]["label"] = current_label
+                topic_clustering_results[topic_index].label = current_label
 
                 for neighboring_topic_index in neighboring_topic_indices:
-                    if topic_clustering_results[neighboring_topic_index]["label"] is None:
+                    if topic_clustering_results[neighboring_topic_index].label is None:
                         ordered_min_similarity.remove(neighboring_topic_index)
                         # try to extend the cluster into the direction of the neighbor
                         scan_topic(neighboring_topic_index, current_label, neighboring_topic_indices + [topic_index])
 
-                    topic_clustering_results[neighboring_topic_index]["neighboring_topic_indices"].add(topic_index)
-                    topic_clustering_results[neighboring_topic_index]["neighboring_labels"].add(current_label)
+                    topic_clustering_results[neighboring_topic_index].neighboring_topic_indices.add(topic_index)
+                    topic_clustering_results[neighboring_topic_index].neighboring_labels.add(current_label)
 
             else:
                 # this topic is not a core!
                 if current_label is None:
-                    topic_clustering_results[topic_index]["label"] = -1
+                    topic_clustering_results[topic_index].label = -1
                 else:
-                    topic_clustering_results[topic_index]["label"] = current_label
+                    topic_clustering_results[topic_index].label = current_label
 
         # elements are going to be removed from that array in scan_topic, do until it is empty
         while len(ordered_min_similarity) != 0:
