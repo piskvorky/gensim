@@ -450,6 +450,63 @@ class KeyedVectors(utils.SaveLoad):
         """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()."""
         return self.get_vector(*args, **kwargs)
 
+    def get_mean_vector(self, keys, weights=None, pre_normalize=True, ignore_missing=True):
+        """Get the mean vector for a given list of keys.
+
+        Parameters
+        ----------
+
+        keys : list of (str or int)
+            Keys specified by string or int ids.
+        weights : list of int or numpy.ndarray, optional
+            1D array of same size of `keys` specifying the weight for each key.
+        pre_normalize : bool, optional
+            Flag indicating whether to normalize each keyvector before taking mean.
+            If False, individual keyvector will not be normalized.
+        ignore_missing : bool, optional
+            If False, will raise error if a key doesn't exist in vocabulary.
+
+        Returns
+        -------
+
+        numpy.ndarray
+            Mean vector for the list of keys.
+
+        Raises
+        ------
+
+        ValueError
+            If the size of the list of `keys` and `weights` doesn't match.
+        KeyError
+            If any of the key doesn't exist in vocabulary and `ignore_missing` is false.
+
+        """
+        if isinstance(keys, KEY_TYPES):
+            keys = [keys]
+        if isinstance(weights, list):
+            weights = np.array(weights)
+        if weights is None:
+            weights = np.ones(len(keys))
+        if len(keys) != weights.shape[0]:  # weights is a 1-D numpy array
+            raise ValueError(
+                "keys and weights array must have same number of elements"
+            )
+
+        mean = np.zeros(self.vector_size, self.vectors.dtype)
+
+        total_weight = 0
+        for idx, key in enumerate(keys):
+            if(self.__contains__(key)):
+                vec = self.get_vector(key, norm=pre_normalize)
+                mean += weights[idx] * vec
+                total_weight += weights[idx]
+            elif not ignore_missing:
+                raise KeyError(f"Key '{key}' not present in vocabulary")
+
+        if(total_weight > 0):
+            mean = mean / total_weight
+        return mean
+
     def add_vector(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
 
