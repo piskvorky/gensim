@@ -1131,6 +1131,23 @@ class FastTextKeyedVectors(KeyedVectors):
             else:
                 return word_vec / len(ngram_hashes)
 
+    def get_sentence_vector(self, sentence):
+        """Get a single 1-D vector representation for a given `sentence`.
+        This function is workalike of the official fasttext's get_sentence_vector().
+
+        Parameters
+        ----------
+        sentence : list of (str or int)
+            list of words specified by string or int ids.
+
+        Returns
+        -------
+        numpy.ndarray
+            1-D numpy array representation of the `sentence`.
+
+        """
+        return super(FastTextKeyedVectors, self).get_mean_vector(sentence)
+
     def resize_vectors(self, seed=0):
         """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""
 
