@@ -1059,7 +1059,10 @@ class FastTextKeyedVectors(KeyedVectors):
             False
 
         """
-        return True
+        if self.bucket == 0:  # check for the case when char ngrams not used
+            return word in self.key_to_index
+        else:
+            return True
 
     def save(self, *args, **kwargs):
         """Save object.
