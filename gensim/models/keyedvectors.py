@@ -456,8 +456,8 @@ class KeyedVectors(utils.SaveLoad):
         Parameters
         ----------
 
-        keys : list of (str or int)
-            Keys specified by string or int ids.
+        keys : list of (str or int or ndarray)
+            Keys specified by string or int ids or numpy array.
         weights : list of int or numpy.ndarray, optional
             1D array of same size of `keys` specifying the weight for each key.
         pre_normalize : bool, optional
@@ -481,8 +481,8 @@ class KeyedVectors(utils.SaveLoad):
             If any of the key doesn't exist in vocabulary and `ignore_missing` is false.
 
         """
-        if isinstance(keys, KEY_TYPES):
-            keys = [keys]
+        if len(keys) == 0:
+            raise ValueError("cannot compute mean with no input")
         if isinstance(weights, list):
             weights = np.array(weights)
         if weights is None:
@@ -496,10 +496,13 @@ class KeyedVectors(utils.SaveLoad):
 
         total_weight = 0
         for idx, key in enumerate(keys):
-            if(self.__contains__(key)):
+            if isinstance(key, ndarray):
+                mean += weights[idx] * key
+                total_weight += abs(weights[idx])
+            elif self.__contains__(key):
                 vec = self.get_vector(key, norm=pre_normalize)
                 mean += weights[idx] * vec
-                total_weight += weights[idx]
+                total_weight += abs(weights[idx])
             elif not ignore_missing:
                 raise KeyError(f"Key '{key}' not present in vocabulary")
 
