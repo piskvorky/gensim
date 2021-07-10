@@ -815,27 +815,28 @@ class KeyedVectors(utils.SaveLoad):
             clip_end = restrict_vocab
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
-        positive = [
-            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
-            for item in positive
-        ]
-        negative = [
-            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
-            for item in negative
-        ]
+        keys, weight = [], []
+        for item in positive:
+            if isinstance(item, _EXTENDED_KEY_TYPES):
+                keys.append(item)
+                weight.append(1.0)
+            else:
+                keys.append(item[0])
+                weight.append(item[1])
+        for item in negative:
+            if isinstance(item, _EXTENDED_KEY_TYPES):
+                keys.append(item)
+                weight.append(-1.0)
+            else:
+                keys.append(item[0])
+                weight.append(item[1])
 
         # compute the weighted average of all keys
-        all_keys, mean = set(), []
-        for key, weight in positive + negative:
-            if isinstance(key, ndarray):
-                mean.append(weight * key)
-            else:
-                mean.append(weight * self.get_vector(key, norm=True))
-                if self.has_index_for(key):
-                    all_keys.add(self.get_index(key))
-        if not mean:
-            raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+        mean = self.get_mean_vector(keys, weight, pre_normalize=True, ignore_missing=False)
+        mean = matutils.unitvec(mean).astype(REAL)
+        all_keys = [
+            self.get_index(key) for key in keys if isinstance(key, _KEY_TYPES) and self.has_index_for(key)
+        ]
 
         if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
