@@ -174,8 +174,8 @@ from numbers import Integral
 from typing import Iterable
 
 from numpy import (
-    dot, float32 as REAL, double, array, zeros, vstack,
-    ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
+    dot, float32 as REAL, double, zeros, vstack, ndarray,
+    sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
 )
 import numpy as np
 from scipy import stats
@@ -1100,7 +1100,7 @@ class KeyedVectors(utils.SaveLoad):
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
         vectors = vstack([self.get_vector(word, norm=use_norm) for word in used_words]).astype(REAL)
-        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        mean = matutils.unitvec(self.get_mean_vector(vectors)).astype(REAL)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words), reverse=True)
 
@@ -1232,9 +1232,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         if not(len(ws1) and len(ws2)):
             raise ZeroDivisionError('At least one of the passed list is empty.')
-        v1 = [self[key] for key in ws1]
-        v2 = [self[key] for key in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+        mean1 = self.get_mean_vector(ws1, pre_normalize=False)
+        mean2 = self.get_mean_vector(ws2, pre_normalize=False)
+        return dot(matutils.unitvec(mean1), matutils.unitvec(mean2))
 
     @staticmethod
     def _log_evaluate_word_analogies(section):
