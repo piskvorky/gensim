@@ -41,7 +41,7 @@ html:
 	@echo "Build finished. The HTML pages are in ../"
 
 upload:
-	scp -r _build/html/* rr:public_html/gensim_4.0.0/
+	scp -r _build/html/* rr:public_html/gensim/
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
