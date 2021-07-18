@@ -364,7 +364,7 @@ def _generate_topic_models_multiproc(ensemble, num_models, ensemble_workers):
         except ProcessError:
             logger.error(f"could not start process {i}")
             _teardown(pipes, processes)
-            raise ProcessError
+            raise
 
     # aggregate results
     # will also block until workers are finished
@@ -572,7 +572,7 @@ def _calculate_assymetric_distance_matrix_multiproc(
         except ProcessError:
             logger.error(f"could not start process {i}")
             _teardown(pipes, processes)
-            raise ProcessError
+            raise
 
     distances = []
     # note, that the following loop maintains order in how the ttda will be concatenated
