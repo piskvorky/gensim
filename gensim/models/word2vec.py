@@ -1806,8 +1806,9 @@ class Word2Vec(utils.SaveLoad):
 
         Parameters
         ----------
-        context_words_list : list of str
-            List of context words.
+        context_words_list : list of (str and/or int)
+            List of context words, which may be words themselves (str)
+            or their index in `self.wv.vectors` (int).
         topn : int, optional
             Return `topn` words and their probabilities.
 
@@ -1825,8 +1826,8 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self.wv, 'vectors') or not hasattr(self, 'syn1neg'):
             raise RuntimeError("Parameters required for predicting the output words not found.")
-
         word2_indices = [self.wv.get_index(w) for w in context_words_list if w in self.wv]
+
         if not word2_indices:
             logger.warning("All the input context words are out-of-vocabulary for the current model.")
             return None
@@ -1837,7 +1838,7 @@ class Word2Vec(utils.SaveLoad):
 
         # propagate hidden -> output and take softmax to get probabilities
         prob_values = np.exp(np.dot(l1, self.syn1neg.T))
-        prob_values /= sum(prob_values)
+        prob_values /= np.sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
         # returning the most probable output words with their probabilities
         return [(self.wv.index_to_key[index1], prob_values[index1]) for index1 in top_indices]
