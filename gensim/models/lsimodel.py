@@ -230,8 +230,10 @@ class Projection(utils.SaveLoad):
             An empty copy (without corpus) of the current projection.
 
         """
-        return Projection(self.m, self.k, power_iters=self.power_iters,
-                          extra_dims=self.extra_dims, random_seed=self.random_seed)
+        return Projection(
+            self.m, self.k, power_iters=self.power_iters,
+            extra_dims=self.extra_dims, random_seed=self.random_seed,
+        )
 
     def merge(self, other, decay=1.0):
         """Merge current :class:`~gensim.models.lsimodel.Projection` instance with another.
@@ -491,13 +493,15 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
-                update = Projection(self.num_terms, self.num_topics, None,
-                                    dtype=self.dtype, random_seed=self.random_seed)
+                update = Projection(
+                    self.num_terms, self.num_topics, None,
+                    dtype=self.dtype, random_seed=self.random_seed,
+                )
                 update.u, update.s = stochastic_svd(
                     corpus, self.num_topics,
                     num_terms=self.num_terms, chunksize=chunksize,
                     extra_dims=self.extra_samples, power_iters=self.power_iters, dtype=self.dtype,
-                    random_seed=self.random_seed
+                    random_seed=self.random_seed,
                 )
                 self.projection.merge(update, decay=decay)
                 self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else 0
@@ -514,7 +518,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     # definitely avoid materializing it as a dense matrix!
                     logger.debug("converting corpus to csc format")
                     job = matutils.corpus2csc(
-                        chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz, dtype=self.dtype)
+                        chunk, num_docs=len(chunk), num_terms=self.num_terms,
+                        num_nnz=nnz, dtype=self.dtype,
+                    )
                     del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
@@ -528,7 +534,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(
                             self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
-                            power_iters=self.power_iters, dtype=self.dtype, random_seed=self.random_seed
+                            power_iters=self.power_iters, dtype=self.dtype, random_seed=self.random_seed,
                         )
                         del job
                         self.projection.merge(update, decay=decay)
@@ -545,7 +551,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
-                power_iters=self.power_iters, dtype=self.dtype
+                power_iters=self.power_iters, dtype=self.dtype,
             )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
@@ -561,7 +567,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
-            self.num_terms, self.num_topics, self.decay, self.chunksize
+            self.num_terms, self.num_topics, self.decay, self.chunksize,
         )
 
     def __getitem__(self, bow, scaled=False, chunksize=512):
@@ -746,7 +752,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         print_debug(
             self.id2word, self.projection.u, self.projection.s,
             range(min(num_topics, len(self.projection.u.T))),
-            num_words=num_words
+            num_words=num_words,
         )
 
     def save(self, fname, *args, **kwargs):
@@ -951,8 +957,10 @@ def stochastic_svd(
         m, n = corpus.shape
         assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
         o = random_state.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
-        sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
-                                corpus.data, o.ravel(), y.ravel())  # y = corpus * o
+        sparsetools.csc_matvecs(
+            m, n, samples, corpus.indptr, corpus.indices,
+            corpus.data, o.ravel(), y.ravel(),
+        )  # y = corpus * o
         del o
 
         # unlike np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
@@ -985,7 +993,7 @@ def stochastic_svd(
             o = random_state.normal(0.0, 1.0, (n, samples), ).astype(dtype)  # draw a random gaussian matrix
             sparsetools.csc_matvecs(
                 m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
-                chunk.data, o.ravel(), y.ravel()
+                chunk.data, o.ravel(), y.ravel(),
             )
             del chunk, o
         y = [y]
