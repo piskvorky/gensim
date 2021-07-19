@@ -158,7 +158,7 @@ class Doctag:
 class Doc2Vec(Word2Vec):
     def __init__(self, documents=None, corpus_file=None, vector_size=100, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, dv=None, dv_mapfile=None, comment=None, trim_rule=None, callbacks=(),
-                 window=5, epochs=10, **kwargs):
+                 window=5, epochs=10, shrink_windows=True, **kwargs):
         """Class for training, using and evaluating neural networks described in
         `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
 
@@ -248,6 +248,12 @@ class Doc2Vec(Word2Vec):
 
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Some important internal attributes are the following:
 
@@ -294,6 +300,7 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
+            shrink_windows=shrink_windows,
             **kwargs,
         )
 
@@ -581,13 +588,13 @@ class Doc2Vec(Word2Vec):
         """
         return 60 * len(self.dv) + 140 * len(self.dv)
 
-    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
+    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None):
         """Infer a vector for given post-bulk training document.
 
         Notes
         -----
         Subsequent calls to this function may infer different representations for the same document.
-        For a more stable representation, increase the number of steps to assert a stricket convergence.
+        For a more stable representation, increase the number of epochs to assert a stricter convergence.
 
         Parameters
         ----------
@@ -1047,7 +1054,7 @@ class Doc2Vec(Word2Vec):
 
         return total_words, corpus_count
 
-    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, steps=None):
+    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, epochs=None):
         """Compute cosine similarity between two post-bulk out of training documents.
 
         Parameters
@@ -1062,7 +1069,7 @@ class Doc2Vec(Word2Vec):
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
+        epochs : int, optional
             Number of epoch to train the new document.
 
         Returns
@@ -1071,8 +1078,8 @@ class Doc2Vec(Word2Vec):
             The cosine similarity between `doc_words1` and `doc_words2`.
 
         """
-        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
-        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
+        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
         return np.dot(matutils.unitvec(d1), matutils.unitvec(d2))
 
 

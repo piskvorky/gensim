@@ -27,6 +27,7 @@ c_extensions = {
     'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
     'gensim._matutils': 'gensim/_matutils.c',
     'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
+    'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
 }
 
 cpp_extensions = {
@@ -271,14 +272,13 @@ core_testenv = [
     'mock',
     'cython',
     'testfixtures',
-    'Morfessor==2.0.2a4',
+    'Morfessor>=2.0.2a4',
 ]
 
 if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
     core_testenv.extend([
         'pyemd',
         'nmslib',
-        'python-Levenshtein >= 0.10.2',
     ])
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
@@ -315,13 +315,13 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.11.3'
+NUMPY_STR = 'numpy >= 1.17.0'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.21'
+CYTHON_STR = 'Cython==0.29.23'
 
 install_requires = [
     NUMPY_STR,
