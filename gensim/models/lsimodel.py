@@ -23,7 +23,7 @@ combination of which effectively and transparently allows building LSI models fo
 * distributed computing for very large corpora, making use of a cluster of
   machines
 
-Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
+Wall-clock `performance on the English Wikipedia <https://radimrehurek.com/gensim/wiki.html>`_
 (2G corpus positions, 3.2M documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:
 
@@ -162,8 +162,11 @@ class Projection(utils.SaveLoad):
     via  :meth:`~gensim.models.lsimodel.Projection.merge`. This is how incremental training actually happens.
 
     """
-    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
-                 extra_dims=P2_EXTRA_DIMS, dtype=np.float64, random_seed=None):
+
+    def __init__(
+            self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
+            extra_dims=P2_EXTRA_DIMS, dtype=np.float64, random_seed=None,
+    ):
         """Construct the (U, S) projection from a corpus.
 
         Parameters
@@ -359,9 +362,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def __init__(
             self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-            decay=1.0, distributed=False, onepass=True,
-            power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64, random_seed=None,
-        ):
+            decay=1.0, distributed=False, onepass=True, power_iters=P2_EXTRA_ITERS,
+            extra_samples=P2_EXTRA_DIMS, dtype=np.float64, random_seed=None,
+    ):
         """Build an LSI model.
 
         Parameters
@@ -876,8 +879,10 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
         logger.info('topic #%s(%.3f): %s, ..., %s', topic, s[topic], ', '.join(pos), ', '.join(neg))
 
 
-def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
-                   power_iters=0, dtype=np.float64, eps=1e-6, random_seed=None):
+def stochastic_svd(
+        corpus, rank, num_terms, chunksize=20000, extra_dims=None,
+        power_iters=0, dtype=np.float64, eps=1e-6, random_seed=None,
+):
     """Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
     Parameters
