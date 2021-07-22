@@ -425,6 +425,9 @@ def _generate_topic_models(ensemble, num_models, random_states=None):
 
 
 def _generate_topic_models_worker(ensemble, num_models, random_states, pipe):
+    """Wrapper for _generate_topic_models to write the results into a pipe.
+
+    This is intended to be used inside a subprocess."""
     #
     # Same as _generate_topic_models, but runs in a separate subprocess, and
     # sends the updated ensemble state to the parent subprocess via a pipe.
