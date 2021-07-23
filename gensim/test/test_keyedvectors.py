@@ -9,6 +9,7 @@
 Automated tests for checking the poincare module from the models package.
 """
 
+import functools
 import logging
 import unittest
 
@@ -38,6 +39,40 @@ class TestKeyedVectors(unittest.TestCase):
         ]
         predicted = [result[0] for result in self.vectors.most_similar('war', topn=5)]
         self.assertEqual(expected, predicted)
+
+    def test_most_similar_parameter_types(self):
+        """Are the positive/negative parameter types are getting interpreted correctly?"""
+        partial = functools.partial(self.vectors.most_similar, topn=5)
+
+        keyword = partial(positive='war', negative='peace')
+        position = partial('war', 'peace')
+        position_list = partial(['war'], ['peace'])
+        keyword = partial(positive='war', negative='peace')
+        keyword_list = partial(positive=['war'], negative=['peace'])
+
+        #
+        # The above calls should all yield identical results.
+        #
+        assert position == position_list
+        assert position == keyword
+        assert position == keyword_list
+
+    def test_most_similar_cosmul_parameter_types(self):
+        """Are the positive/negative parameter types are getting interpreted correctly?"""
+        partial = functools.partial(self.vectors.most_similar_cosmul, topn=5)
+
+        keyword = partial(positive='war', negative='peace')
+        position = partial('war', 'peace')
+        position_list = partial(['war'], ['peace'])
+        keyword = partial(positive='war', negative='peace')
+        keyword_list = partial(positive=['war'], negative=['peace'])
+
+        #
+        # The above calls should all yield identical results.
+        #
+        assert position == position_list
+        assert position == keyword
+        assert position == keyword_list
 
     def test_most_similar_topn(self):
         """Test most_similar returns correct results when `topn` is specified."""

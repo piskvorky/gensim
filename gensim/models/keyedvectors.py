@@ -754,12 +754,12 @@ class KeyedVectors(utils.SaveLoad):
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
-            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES)
-            else item for item in positive
+            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
+            for item in positive
         ]
         negative = [
-            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES)
-            else item for item in negative
+            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
+            for item in negative
         ]
 
         # compute the weighted average of all keys
