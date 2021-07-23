@@ -44,7 +44,6 @@ class TestKeyedVectors(unittest.TestCase):
         """Are the positive/negative parameter types are getting interpreted correctly?"""
         partial = functools.partial(self.vectors.most_similar, topn=5)
 
-        keyword = partial(positive='war', negative='peace')
         position = partial('war', 'peace')
         position_list = partial(['war'], ['peace'])
         keyword = partial(positive='war', negative='peace')
@@ -61,7 +60,6 @@ class TestKeyedVectors(unittest.TestCase):
         """Are the positive/negative parameter types are getting interpreted correctly?"""
         partial = functools.partial(self.vectors.most_similar_cosmul, topn=5)
 
-        keyword = partial(positive='war', negative='peace')
         position = partial('war', 'peace')
         position_list = partial(['war'], ['peace'])
         keyword = partial(positive='war', negative='peace')
