@@ -24,6 +24,7 @@ Changes
 * [#3163](https://github.com/RaRe-Technologies/gensim/pull/3163): Optimize word mover distance (WMD) computation, by [@flowlight0](https://github.com/flowlight0)
 * [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
 * [#3169](https://github.com/RaRe-Technologies/gensim/pull/3169): Implement `shrink_windows` argument for Word2Vec., by [@M-Demay](https://github.com/M-Demay)
+* [#3000](https://github.com/RaRe-Technologies/gensim/pull/3000): Tidy up KeyedVectors.most_similar() API, by [@simonwiles](https://github.com/simonwiles)
 
 ### :books: Documentation
 
