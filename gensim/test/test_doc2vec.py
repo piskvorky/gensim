@@ -78,7 +78,7 @@ class TestDoc2VecModel(unittest.TestCase):
             model.save(tmpf)
             self.models_equal(model, doc2vec.Doc2Vec.load(tmpf))
 
-    def testPersistenceWord2VecFormat(self):
+    def test_persistence_word2vec_format(self):
         """Test storing the entire model in word2vec format."""
         model = doc2vec.Doc2Vec(DocsLeeCorpus(), min_count=1)
         # test saving both document and word embedding
@@ -201,7 +201,7 @@ class TestDoc2VecModel(unittest.TestCase):
         sims_to_infer = loaded_model.dv.most_similar([doc0_inferred], topn=len(loaded_model.dv))
         self.assertTrue(sims_to_infer)
 
-    def testDoc2vecTrainParameters(self):
+    def test_doc2vec_train_parameters(self):
 
         model = doc2vec.Doc2Vec(vector_size=50)
         model.build_vocab(corpus_iterable=list_corpus)
@@ -589,6 +589,44 @@ class TestDoc2VecModel(unittest.TestCase):
             )
             self.model_sanity(model)
 
+    def test_dmm_fixedwindowsize(self):
+        """Test DMM doc2vec training with fixed window size."""
+        model = doc2vec.Doc2Vec(
+            list_corpus, vector_size=24,
+            dm=1, dm_mean=1, window=4, shrink_windows=False,
+            hs=0, negative=10, alpha=0.05, min_count=2, epochs=20
+        )
+        self.model_sanity(model)
+
+    def test_dmm_fixedwindowsize_fromfile(self):
+        """Test DMM doc2vec training with fixed window size, from file."""
+        with temporary_file(get_tmpfile('gensim_doc2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                corpus_file=corpus_file, vector_size=24,
+                dm=1, dm_mean=1, window=4, shrink_windows=False,
+                hs=0, negative=10, alpha=0.05, min_count=2, epochs=20
+            )
+            self.model_sanity(model)
+
+    def test_dbow_fixedwindowsize(self):
+        """Test DBOW doc2vec training with fixed window size."""
+        model = doc2vec.Doc2Vec(
+            list_corpus, vector_size=16, shrink_windows=False,
+            dm=0, hs=0, negative=5, min_count=2, epochs=20
+        )
+        self.model_sanity(model)
+
+    def test_dbow_fixedwindowsize_fromfile(self):
+        """Test DBOW doc2vec training with fixed window size, from file."""
+        with temporary_file(get_tmpfile('gensim_doc2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                corpus_file=corpus_file, vector_size=16, shrink_windows=False,
+                dm=0, hs=0, negative=5, min_count=2, epochs=20
+            )
+            self.model_sanity(model)
+
     def test_parallel(self):
         """Test doc2vec parallel training with more than default 3 threads."""
         # repeat the ~300 doc (~60000 word) Lee corpus to get 6000 docs (~1.2M words)
@@ -653,7 +691,7 @@ class TestDoc2VecModel(unittest.TestCase):
             vector *= 0
 
     @log_capture()
-    def testBuildVocabWarning(self, loglines):
+    def test_build_vocab_warning(self, loglines):
         """Test if logger warning is raised on non-ideal input to a doc2vec model"""
         raw_sentences = ['human', 'machine']
         sentences = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(raw_sentences)]
@@ -663,7 +701,7 @@ class TestDoc2VecModel(unittest.TestCase):
         self.assertTrue(warning in str(loglines))
 
     @log_capture()
-    def testTrainWarning(self, loglines):
+    def test_train_warning(self, loglines):
         """Test if warning is raised if alpha rises during subsequent calls to train()"""
         raw_sentences = [['human'],
                          ['graph', 'trees']]
@@ -679,7 +717,7 @@ class TestDoc2VecModel(unittest.TestCase):
         warning = "Effective 'alpha' higher than previous training cycles"
         self.assertTrue(warning in str(loglines))
 
-    def testLoadOnClassError(self):
+    def test_load_on_class_error(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
 # endclass TestDoc2VecModel
@@ -718,8 +756,8 @@ class ConcatenatedDoc2Vec:
     def epochs(self):
         return self.models[0].epochs
 
-    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None, steps=None):
-        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs, steps) for model in self.models])
+    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None):
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs) for model in self.models])
 
     def train(self, *ignore_args, **ignore_kwargs):
         pass  # train subcomponents individually

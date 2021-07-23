@@ -138,7 +138,7 @@ from smart_open import open  # for transparently opening remote files
 
 class MyCorpus:
     def __iter__(self):
-        for line in open('https://radimrehurek.com/gensim/mycorpus.txt'):
+        for line in open('https://radimrehurek.com/mycorpus.txt'):
             # assume there's one document per line, tokens separated by whitespace
             yield dictionary.doc2bow(line.lower().split())
 
@@ -154,7 +154,7 @@ class MyCorpus:
 # in RAM at once. You can even create the documents on the fly!
 
 ###############################################################################
-# Download the sample `mycorpus.txt file here <./mycorpus.txt>`_. The assumption that
+# Download the sample `mycorpus.txt file here <https://radimrehurek.com/mycorpus.txt>`_. The assumption that
 # each document occupies one line in a single file is not important; you can mold
 # the `__iter__` function to fit your input format, whatever it is.
 # Walking directories, parsing XML, accessing the network...
@@ -180,7 +180,7 @@ for vector in corpus_memory_friendly:  # load one vector into memory at a time
 # Similarly, to construct the dictionary without loading all texts into memory:
 
 # collect statistics about all tokens
-dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/gensim/mycorpus.txt'))
+dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/mycorpus.txt'))
 # remove stop words and words that appear only once
 stop_ids = [
     dictionary.token2id[stopword]

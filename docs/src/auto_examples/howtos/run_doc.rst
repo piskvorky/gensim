@@ -135,7 +135,7 @@ If the above is not your cup of tea, you can also author your documentation as a
 This is a more flexible approach that enables you to tweak parts of the documentation and re-run them as necessary.
 
 Once you're happy with the notebook, convert it to a script.py.
-There's a helpful `script <https://github.com/mpenkov/gensim/blob/numfocus/docs/src/tools/to_python.py>`__ that will do it for you.
+There's a helpful `script <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/src/tools/to_python.py>`__ that will do it for you.
 To use it::
 
     python to_python.py < notebook.ipynb > script.py
@@ -178,7 +178,7 @@ Finalizing your contribution
 
 First, get Sphinx Gallery to build your documentation::
 
-    make -C docs/src html
+    make --directory docs/src html
 
 This can take a while if your documentation uses a large dataset, or if you've changed many other tutorials or guides.
 Once this completes successfully, open ``docs/auto_examples/index.html`` in your browser.
@@ -199,15 +199,15 @@ Once your documentation script is working correctly, it's time to add it to the 
   Gallery also generates .rst (RST for Sphinx) and .ipynb (Jupyter notebook) files from the script.
   Finally, ``sg_execution_times.rst`` contains the time taken to run each example.
 
-Finally, make a PR on `github <https://github.com/RaRe-Technologies/gensim>`__.
+Finally, open a PR at `github <https://github.com/RaRe-Technologies/gensim>`__.
 One of our friendly maintainers will review it, make suggestions, and eventually merge it.
-Your documentation will then appear in the gallery alongside the rest of the example.
-At that stage, give yourself a pat on the back: you're done!
+Your documentation will then appear in the `gallery <https://radimrehurek.com/gensim/auto_examples/index.html>`__,
+alongside the rest of the examples. Thanks a lot!
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.112 seconds)
+   **Total running time of the script:** ( 0 minutes  0.171 seconds)
 
 **Estimated memory usage:**  6 MB
 

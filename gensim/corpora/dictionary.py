@@ -10,6 +10,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 import logging
 import itertools
+from typing import Optional, List, Tuple
 
 from gensim import utils
 
@@ -77,6 +78,10 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if documents is not None:
             self.add_documents(documents, prune_at=prune_at)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"built {self} from {self.num_docs} documents (total {self.num_pos} corpus positions)",
+            )
 
     def __getitem__(self, tokenid):
         """Get the string token that corresponds to `tokenid`.
@@ -198,10 +203,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             # update Dictionary with the document
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
 
-        logger.info(
-            "built %s from %i documents (total %i corpus positions)",
-            self, self.num_docs, self.num_pos
-        )
+        logger.info("built %s from %i documents (total %i corpus positions)", self, self.num_docs, self.num_pos)
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """Convert `document` into the bag-of-words (BoW) format = list of `(token_id, token_count)` tuples.
@@ -687,6 +689,30 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
+
+    def most_common(self, n: Optional[int] = None) -> List[Tuple[str, int]]:
+        """Return a list of the n most common words and their counts from the most common to the least.
+
+        Words with equal counts are ordered in the increasing order of their ids.
+
+        Parameters
+        ----------
+        n : int or None, optional
+            The number of most common words to be returned. If `None`, all words in the dictionary
+            will be returned. Default is `None`.
+
+        Returns
+        -------
+        most_common : list of (str, int)
+            The n most common words and their counts from the most common to the least.
+
+        """
+        most_common = [
+            (self[word], count)
+            for word, count
+            in sorted(self.cfs.items(), key=lambda x: (-x[1], x[0]))[:n]
+        ]
+        return most_common
 
     @staticmethod
     def from_corpus(corpus, id2word=None):

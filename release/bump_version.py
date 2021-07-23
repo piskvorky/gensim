@@ -1,4 +1,13 @@
-"""Bumps the version of gensim in all the required places."""
+"""
+Bump the version of Gensim in all the required places.
+
+Usage: python3 bump_version.py <OLD_VERSION> <NEW_VERSION>
+
+Example:
+    python3 bump_version.py "4.0.0beta" "4.0.0rc1"
+
+"""
+
 import os.path
 import re
 import sys

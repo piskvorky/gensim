@@ -61,7 +61,7 @@ class BaseTestCases:
             self.corpus = [self.dictionary.doc2bow(text) for text in self.texts]
             self.build_segmented_topics()
 
-        def testPBooleanDocument(self):
+        def test_p_boolean_document(self):
             """Test p_boolean_document()"""
             accumulator = probability_estimation.p_boolean_document(
                 self.corpus, self.segmented_topics)
@@ -74,7 +74,7 @@ class BaseTestCases:
             }
             self.assertEqual(expected, obtained)
 
-        def testPBooleanSlidingWindow(self):
+        def test_p_boolean_sliding_window(self):
             """Test p_boolean_sliding_window()"""
             # Test with window size as 2. window_id is zero indexed.
             accumulator = probability_estimation.p_boolean_sliding_window(

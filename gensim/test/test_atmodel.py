@@ -70,7 +70,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.class_ = atmodel.AuthorTopicModel
         self.model = self.class_(corpus, id2word=dictionary, author2doc=author2doc, num_topics=2, passes=100)
 
-    def testTransform(self):
+    def test_transform(self):
         passed = False
         # sometimes, training gets stuck at a local minimum
         # in that case try re-training the model from scratch, hoping for a
@@ -99,7 +99,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             )
         self.assertTrue(passed)
 
-    def testBasic(self):
+    def test_basic(self):
         # Check that training the model produces a positive topic vector for some author
         # Otherwise, many of the other tests are invalid.
 
@@ -109,7 +109,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         jill_topics = matutils.sparse2full(jill_topics, model.num_topics)
         self.assertTrue(all(jill_topics > 0))
 
-    def testEmptyDocument(self):
+    def test_empty_document(self):
         local_texts = common_texts + [['only_occurs_once_in_corpus_and_alone_in_doc']]
         dictionary = Dictionary(local_texts)
         dictionary.filter_extremes(no_below=2)
@@ -119,7 +119,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         self.class_(corpus, author2doc=a2d, id2word=dictionary, num_topics=2)
 
-    def testAuthor2docMissing(self):
+    def test_author2doc_missing(self):
         # Check that the results are the same if author2doc is constructed automatically from doc2author.
         model = self.class_(
             corpus, author2doc=author2doc, doc2author=doc2author,
@@ -137,7 +137,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
-    def testDoc2authorMissing(self):
+    def test_doc2author_missing(self):
         # Check that the results are the same if doc2author is constructed automatically from author2doc.
         model = self.class_(
             corpus, author2doc=author2doc, doc2author=doc2author,
@@ -155,7 +155,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
-    def testUpdate(self):
+    def test_update(self):
         # Check that calling update after the model already has been trained works.
         model = self.class_(corpus, author2doc=author2doc, id2word=dictionary, num_topics=2)
 
@@ -169,7 +169,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # Did we learn something?
         self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
 
-    def testUpdateNewDataOldAuthor(self):
+    def test_update_new_data_old_author(self):
         # Check that calling update with new documents and/or authors after the model already has
         # been trained works.
         # Test an author that already existed in the old dataset.
@@ -185,7 +185,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # Did we learn more about Jill?
         self.assertFalse(all(np.equal(jill_topics, jill_topics2)))
 
-    def testUpdateNewDataNewAuthor(self):
+    def test_update_new_data_new_author(self):
         # Check that calling update with new documents and/or authors after the model already has
         # been trained works.
         # Test a new author, that didn't exist in the old dataset.
@@ -198,7 +198,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         sally_topics = matutils.sparse2full(sally_topics, model.num_topics)
         self.assertTrue(all(sally_topics > 0))
 
-    def testSerialized(self):
+    def test_serialized(self):
         # Test the model using serialized corpora. Basic tests, plus test of update functionality.
 
         model = self.class_(
@@ -227,7 +227,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # Delete the MmCorpus used for serialization inside the author-topic model.
         remove(datapath('testcorpus_serialization.mm'))
 
-    def testTransformSerialized(self):
+    def test_transform_serialized(self):
         # Same as testTransform, using serialized corpora.
         passed = False
         # sometimes, training gets stuck at a local minimum
@@ -263,7 +263,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             )
         self.assertTrue(passed)
 
-    def testAlphaAuto(self):
+    def test_alpha_auto(self):
         model1 = self.class_(
             corpus, author2doc=author2doc, id2word=dictionary,
             alpha='symmetric', passes=10, num_topics=2
@@ -276,7 +276,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # did we learn something?
         self.assertFalse(all(np.equal(model1.alpha, modelauto.alpha)))
 
-    def testAlpha(self):
+    def test_alpha(self):
         kwargs = dict(
             author2doc=author2doc,
             id2word=dictionary,
@@ -331,7 +331,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         kwargs['alpha'] = "gensim is cool"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-    def testEtaAuto(self):
+    def test_eta_auto(self):
         model1 = self.class_(
             corpus, author2doc=author2doc, id2word=dictionary,
             eta='symmetric', passes=10, num_topics=2
@@ -344,7 +344,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # did we learn something?
         self.assertFalse(all(np.equal(model1.eta, modelauto.eta)))
 
-    def testEta(self):
+    def test_eta(self):
         kwargs = dict(
             author2doc=author2doc,
             id2word=dictionary,
@@ -405,7 +405,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         kwargs['eta'] = "asymmetric"
         self.assertRaises(ValueError, self.class_, **kwargs)
 
-    def testTopTopics(self):
+    def test_top_topics(self):
         top_topics = self.model.top_topics(corpus)
 
         for topic, score in top_topics:
@@ -416,14 +416,14 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, str))
                 self.assertTrue(isinstance(v, float))
 
-    def testGetTopicTerms(self):
+    def test_get_topic_terms(self):
         topic_terms = self.model.get_topic_terms(1)
 
         for k, v in topic_terms:
             self.assertTrue(isinstance(k, numbers.Integral))
             self.assertTrue(isinstance(v, float))
 
-    def testGetAuthorTopics(self):
+    def test_get_author_topics(self):
 
         model = self.class_(
             corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
@@ -440,7 +440,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
                 self.assertTrue(isinstance(k, int))
                 self.assertTrue(isinstance(v, float))
 
-    def testTermTopics(self):
+    def test_term_topics(self):
 
         model = self.class_(
             corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
@@ -459,7 +459,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(topic_no, int))
             self.assertTrue(isinstance(probability, float))
 
-    def testNewAuthorTopics(self):
+    def test_new_author_topics(self):
 
         model = self.class_(
             corpus, author2doc=author2doc, id2word=dictionary, num_topics=2,
@@ -498,7 +498,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertEqual(id2author_len, len(model.id2author))
         self.assertEqual(doc2author_len, len(model.doc2author))
 
-    def testPasses(self):
+    def test_passes(self):
         # long message includes the original error message with a custom one
         self.longMessage = True
         # construct what we expect when passes aren't involved
@@ -526,7 +526,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertEqual(model.state.numdocs, len(corpus) * len(test_rhots))
             self.assertEqual(model.num_updates, len(corpus) * len(test_rhots))
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models_atmodel.tst')
         model = self.model
         model.save(fname)
@@ -535,7 +535,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(model.expElogbeta, model2.expElogbeta))
         self.assertTrue(np.allclose(model.state.gamma, model2.state.gamma))
 
-    def testPersistenceIgnore(self):
+    def test_persistence_ignore(self):
         fname = get_tmpfile('gensim_models_atmodel_testPersistenceIgnore.tst')
         model = atmodel.AuthorTopicModel(corpus, author2doc=author2doc, num_topics=2)
         model.save(fname, ignore='id2word')
@@ -546,7 +546,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         model2 = atmodel.AuthorTopicModel.load(fname)
         self.assertTrue(model2.id2word is None)
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models_atmodel.tst.gz')
         model = self.model
         model.save(fname)
@@ -561,7 +561,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
-    def testLargeMmap(self):
+    def test_large_mmap(self):
         fname = get_tmpfile('gensim_models_atmodel.tst')
         model = self.model
 
@@ -581,7 +581,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         jill_topics2 = matutils.sparse2full(jill_topics2, model.num_topics)
         self.assertTrue(np.allclose(jill_topics, jill_topics2))
 
-    def testLargeMmapCompressed(self):
+    def test_large_mmap_compressed(self):
         fname = get_tmpfile('gensim_models_atmodel.tst.gz')
         model = self.model
 
@@ -591,7 +591,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         # test loading the large model arrays with mmap
         self.assertRaises(IOError, self.class_.load, fname, mmap='r')
 
-    def testDtypeBackwardCompatibility(self):
+    def test_dtype_backward_compatibility(self):
         atmodel_3_0_1_fname = datapath('atmodel_3_0_1_model')
         expected_topics = [(0, 0.068200842977296727), (1, 0.93179915702270333)]
 

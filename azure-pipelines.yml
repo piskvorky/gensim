@@ -12,6 +12,9 @@ strategy:
     py38:
       python.version: '3.8'
       TOXENV: "py38-win"
+    py39:
+      python.version: '3.9'
+      TOXENV: "py39-win"
 
 steps:
 - task: UsePythonVersion@0
@@ -25,5 +28,5 @@ steps:
   displayName: 'Install tox'
 
 - script: |
-    tox -vv
+    tox
   displayName: 'Testing'

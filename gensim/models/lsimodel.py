@@ -61,6 +61,7 @@ Examples
 
 import logging
 import sys
+import time
 
 import numpy as np
 import scipy.linalg
@@ -322,7 +323,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     <https://en.wikipedia.org/wiki/Latent_semantic_analysis#Latent_semantic_indexing>`_.
 
     The decomposition algorithm is described in `"Fast and Faster: A Comparison of Two Streamed
-    Matrix Decomposition Algorithms" <https://nlp.fi.muni.cz/~xrehurek/nips/rehurek_nips.pdf>`_.
+    Matrix Decomposition Algorithms" <https://arxiv.org/pdf/1102.5597.pdf>`_.
 
     Notes
     -----
@@ -333,7 +334,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
     See Also
     --------
     `FAQ about LSI matrices
-    <https://github.com/piskvorky/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi>`_.
+    <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q4-how-do-you-output-the-u-s-vt-matrices-of-lsi>`_.
 
     Examples
     --------
@@ -351,17 +352,17 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     """
 
-    def __init__(self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-                 decay=1.0, distributed=False, onepass=True,
-                 power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64):
-        """Construct an `LsiModel` object.
-
-        Either `corpus` or `id2word` must be supplied in order to train the model.
+    def __init__(
+            self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
+            decay=1.0, distributed=False, onepass=True,
+            power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64
+        ):
+        """Build an LSI model.
 
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
+            Stream of document vectors or a sparse matrix of shape (`num_documents`, `num_terms`).
         num_topics : int, optional
             Number of requested factors (latent dimensions)
         id2word : dict of {int: str}, optional
@@ -440,7 +441,12 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 raise RuntimeError("failed to initialize distributed LSI (%s)" % err)
 
         if corpus is not None:
+            start = time.time()
             self.add_documents(corpus)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"trained {self} in {time.time() - start:.2f}s",
+            )
 
     def add_documents(self, corpus, chunksize=None, decay=None):
         """Update model with new `corpus`.
@@ -664,7 +670,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         c = np.asarray(self.projection.u.T[topicno, :]).flatten()
         norm = np.sqrt(np.sum(np.dot(c, c)))
         most = matutils.argsort(np.abs(c), topn, reverse=True)
-        return [(self.id2word[val], 1.0 * c[val] / norm) for val in most]
+
+        # Output only (word, score) pairs for `val`s that are within `self.id2word`.  See #3090 for details.
+        return [(self.id2word[val], 1.0 * c[val] / norm) for val in most if val in self.id2word]
 
     def show_topics(self, num_topics=-1, num_words=10, log=False, formatted=True):
         """Get the most significant topics.

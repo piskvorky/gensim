@@ -3,7 +3,7 @@ This package contains implementations of pairwise similarity queries.
 """
 
 # bring classes directly into package namespace, to save some typing
-
+from .levenshtein import LevenshteinSimilarityIndex  # noqa:F401
 from .docsim import (  # noqa:F401
     Similarity,
     MatrixSimilarity,
@@ -15,4 +15,3 @@ from .termsim import (  # noqa:F401
     UniformTermSimilarityIndex,
     WordEmbeddingSimilarityIndex,
     SparseTermSimilarityMatrix)
-from .levenshtein import LevenshteinSimilarityIndex  # noqa:F401

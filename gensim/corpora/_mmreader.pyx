@@ -2,18 +2,12 @@
 # cython: embedsignature=True
 
 """Reader for corpus in the Matrix Market format."""
-
-from __future__ import with_statement
-
-from gensim import utils
-
-from six import string_types
-from six.moves import range
 import logging
 
 cimport cython
 from libc.stdio cimport sscanf
 
+from gensim import utils
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +181,7 @@ cdef class MmReader():
 
         if offset == -1:
             return []
-        if isinstance(self.input, string_types):
+        if isinstance(self.input, str):
             fin, close_fin = utils.open(self.input, 'rb'), True
         else:
             fin, close_fin = self.input, False

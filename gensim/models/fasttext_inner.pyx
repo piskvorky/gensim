@@ -601,8 +601,12 @@ def train_batch_any(model, sentences, alpha, _work, _neu1):
     num_words, num_sentences = populate_ft_config(&c, model.wv, model.wv.buckets_word, sentences)
 
     # precompute "reduced window" offsets in a single randint() call
-    for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
-        c.reduced_windows[i] = randint
+    if model.shrink_windows:
+        for i, randint in enumerate(model.random.randint(0, c.window, num_words)):
+            c.reduced_windows[i] = randint
+    else:
+        for i in range(num_words):
+            c.reduced_windows[i] = 0
 
     # release GIL & train on all sentences in the batch
     with nogil:

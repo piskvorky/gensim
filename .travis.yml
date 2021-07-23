@@ -1,53 +1,53 @@
-sudo: false
-
-cache:
-  apt: true
-  directories:
-  - $HOME/.cache/pip
-  - $HOME/.ccache
-  - $HOME/.pip-cache
-dist: trusty
+branches:
+  only:
+    - /release-.+/
+    - travis
 language: python
+arch: arm64-graviton2
+dist: focal
+virt: vm
+group: edge
+services: docker
 env:
-  TOX_PARALLEL_NO_SPINNER: 1
-
+  global:
+      - REPO_DIR=gensim
+      - BUILD_COMMIT=HEAD
+      - UNICODE_WIDTH=32
+      - PLAT=aarch64
+      - MB_ML_VER=2014
+      - SKIP_NETWORK_TESTS=1
+      - DOCKER_TEST_IMAGE=multibuild/xenial_arm64v8
+      - BUILD_DEPENDS="numpy==1.19.2 scipy==1.5.3"
+      - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
 
 matrix:
-  include:
-    - python: '3.6'
-      env: TOXENV="flake8,flake8-docs"
-
-    - python: '3.8'
+    - os: linux
       env:
-        - TOXENV="py38-linux"
-      dist: bionic
-
-    - python: '3.7'
+        - MB_PYTHON_VERSION=3.6
+    - os: linux
       env:
-        - TOXENV="py37-linux"
-      # The following two lines used to be necessary because Travis left files lying around in ~/.aws/,
-      # messing up our tests. Now fixed since https://github.com/travis-ci/travis-ci/issues/7940
-        # - BOTO_CONFIG="/dev/null"
-      #sudo: true
-      dist: xenial
-
-    - python: '3.6'
-      env: TOXENV="py36-linux"
-
-
+        - MB_PYTHON_VERSION=3.7
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.8
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.9
+before_install:
+    - source multibuild/common_utils.sh
+    - source multibuild/travis_steps.sh
+    - before_install
 install:
-  - pip install tox
-  - sudo apt-get install -y gdb
+    - build_wheel $REPO_DIR $PLAT
+script:
+    - install_run $PLAT
+after_script:
+    - ls -laht ${TRAVIS_BUILD_DIR}/wheelhouse/
+    - pip install wheelhouse-uploader
+    - python -m wheelhouse_uploader upload --local-folder ${TRAVIS_BUILD_DIR}/wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
 
-
-before_script:
-  - ulimit -c unlimited -S  # enable core dumps
-
-
-script: tox -vv
-
-
-after_failure:
-  - pwd
-  - COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
-  - if [[ -f "$COREFILE" ]]; then EXECFILE=$(gdb -c "$COREFILE" -batch | grep "Core was generated" | tr -d "\`" | cut -d' ' -f5); file "$COREFILE"; gdb -c "$COREFILE" "$EXECFILE" -x continuous_integration/debug.gdb -batch; fi
+notifications:
+  email:
+    - penkov+gensimwheels@pm.me
+  on_success: always
+  on_failure: always
