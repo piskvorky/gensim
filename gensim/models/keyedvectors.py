@@ -189,7 +189,7 @@ from gensim.utils import deprecated
 logger = logging.getLogger(__name__)
 
 
-KEY_TYPES = (str, int, np.integer)
+_KEY_TYPES = (str, int, np.integer)
 
 _EXTENDED_KEY_TYPES = (str, int, np.integer, np.ndarray)
 
@@ -379,7 +379,7 @@ class KeyedVectors(utils.SaveLoad):
             Vector representation for `key_or_keys` (1D if `key_or_keys` is single key, otherwise - 2D).
 
         """
-        if isinstance(key_or_keys, KEY_TYPES):
+        if isinstance(key_or_keys, _KEY_TYPES):
             return self.get_vector(key_or_keys)
 
         return vstack([self.get_vector(key) for key in key_or_keys])
@@ -493,7 +493,7 @@ class KeyedVectors(utils.SaveLoad):
             if True - replace vectors, otherwise - keep old vectors.
 
         """
-        if isinstance(keys, KEY_TYPES):
+        if isinstance(keys, _KEY_TYPES):
             keys = [keys]
             weights = np.array(weights).reshape(1, -1)
         elif isinstance(weights, list):
@@ -1111,7 +1111,7 @@ class KeyedVectors(utils.SaveLoad):
             If either `word_or_vector` or any word in `other_words` is absent from vocab.
 
         """
-        if isinstance(word_or_vector, KEY_TYPES):
+        if isinstance(word_or_vector, _KEY_TYPES):
             input_vector = self.get_vector(word_or_vector)
         else:
             input_vector = word_or_vector
