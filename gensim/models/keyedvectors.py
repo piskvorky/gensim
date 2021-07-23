@@ -189,6 +189,8 @@ logger = logging.getLogger(__name__)
 
 KEY_TYPES = (str, int, np.integer)
 
+_EXTENDED_KEY_TYPES = (str, int, np.integer, np.ndarray)
+
 
 class KeyedVectors(utils.SaveLoad):
     def __init__(self, vector_size, count=0, dtype=np.float32, mapfile_path=None):
@@ -742,21 +744,21 @@ class KeyedVectors(utils.SaveLoad):
             clip_start = 0
             clip_end = restrict_vocab
 
-        if isinstance(positive, KEY_TYPES + (ndarray,)):
+        if isinstance(positive, _EXTENDED_KEY_TYPES):
             # allow passing a single string-key or vector for the positive argument
             positive = [positive]
 
-        if isinstance(negative, KEY_TYPES + (ndarray,)):
+        if isinstance(negative, _EXTENDED_KEY_TYPES):
             # allow passing a single string-key or vector for the negative argument
             negative = [negative]
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
-            (item, 1.0) if isinstance(item, KEY_TYPES + (ndarray,))
+            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES)
             else item for item in positive
         ]
         negative = [
-            (item, -1.0) if isinstance(item, KEY_TYPES + (ndarray,))
+            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES)
             else item for item in negative
         ]
 
@@ -989,11 +991,11 @@ class KeyedVectors(utils.SaveLoad):
 
         self.fill_norms()
 
-        if isinstance(positive, KEY_TYPES + (ndarray,)):
+        if isinstance(positive, _EXTENDED_KEY_TYPES):
             # allow passing a single string-key or vector for the positive argument
             positive = [positive]
 
-        if isinstance(negative, KEY_TYPES + (ndarray,)):
+        if isinstance(negative, _EXTENDED_KEY_TYPES):
             # allow passing a single string-key or vector for the negative argument
             negative = [negative]
 
