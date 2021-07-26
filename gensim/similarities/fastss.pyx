@@ -15,13 +15,13 @@ import itertools
 from cpython.ref cimport PyObject
 
 
-DEF MAX_WORD_LENGTH = 10000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
+DEF MAX_WORD_LENGTH = 1000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
 
 
 cdef extern from *:
     """
     #define WIDTH int
-    #define MAX_WORD_LENGTH 10000
+    #define MAX_WORD_LENGTH 1000
 
     int ceditdist(PyObject * s1, PyObject * s2, WIDTH maximum) {
         WIDTH row1[MAX_WORD_LENGTH + 1];
