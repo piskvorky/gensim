@@ -3,15 +3,68 @@ Changes
 
 ## Unreleased
 
-Gensim 4.1 bring two major new functionalities:
+Gensim 4.1 brings two major new functionalities:
 
-* [Ensamble LDA](https://radimrehurek.com/gensim/auto_examples/tutorials/run_ensemblelda.html) for robust training, selection and comparison of LDA models.
+* [Ensemble LDA](https://radimrehurek.com/gensim/auto_examples/tutorials/run_ensemblelda.html) for robust training, selection and comparison of LDA models.
 * [FastSS module](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/similarities/fastss.pyx) for super fast Levenshtein "fuzzy search" queries. Used e.g. for ["soft term similarity"](https://github.com/RaRe-Technologies/gensim/pull/3146) calculations.
+
+There are several minor changes that are **not** backwards compatible with previous versions of Gensim.
+The affected functionality is relatively less used, so it is unlikely to affect most users, so we have opted to not require a major version bump.
+Nevertheless, we describe them below.
+
+### Improved parameter edge-case handling in KeyedVectors most_similar and most_similar_cosmul methods
+
+We now handle both ``positive`` and ``negative`` keyword parameters consistently.
+These parameters typically specify 
+They may now be either:
+
+1. A string, in which case the value is reinterpreted as a list of one element (the string value)
+2. A vector, in which case the value is reinterpreted as a list of one element (the vector)
+3. A list of strings
+4. A list of vectors
+
+So you can now simply do:
+
+```python
+    model.most_similar(positive='war', negative='peace')
+```
+    
+instead of the slightly more involved
+
+```python
+model.most_similar(positive=['war'], negative=['peace'])
+```
+
+Both invocations remain correct, so you can use whichever is most convenient.
+If you were somehow expecting gensim to interpret the strings as a list of characters, e.g.
+
+```python
+model.most_similar(positive=['w', 'a', 'r'], negative=['p', 'e', 'a', 'c', 'e'])
+```
+
+then you will need to specify the lists explicitly in gensim 4.1.
+### Deprecated obsolete `step` parameter from doc2vec
+
+With the newer version, do this:
+
+```python
+model.infer_vector(..., epochs=123)
+```
+
+instead of this:
+
+```python
+model.infer_vector(..., steps=123)
+```
+
+### Hidden KEY_TYPES in gensim/models/keyedvectors.py
+
+This "constant" is now internal to the keyedvectors submodule.
+You can still access it, but do so at your own risk.
 
 Plus a large number of smaller improvements and fixes, as usual.
 
 **⚠️ If migrating from old Gensim 3.x, read the [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) first.**
-
 
 ### :+1: New features
 
