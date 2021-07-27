@@ -57,11 +57,6 @@ instead of this:
 model.infer_vector(..., steps=123)
 ```
 
-### Hidden KEY_TYPES in gensim/models/keyedvectors.py
-
-This "constant" is now internal to the keyedvectors submodule.
-You can still access it, but do so at your own risk.
-
 Plus a large number of smaller improvements and fixes, as usual.
 
 **⚠️ If migrating from old Gensim 3.x, read the [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) first.**
