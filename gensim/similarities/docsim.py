@@ -27,6 +27,7 @@ Once the index has been initialized, you can query for document similarity simpl
 
 .. sourcecode:: pycon
 
+    >>> from gensim.similarities import Similarity
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
     >>>
     >>> index_tmpfile = get_tmpfile("index")
