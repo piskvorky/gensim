@@ -100,6 +100,8 @@ Some of them are already built-in
     >>> import gensim.downloader as api
     >>>
     >>> word_vectors = api.load("glove-wiki-gigaword-100")  # load pre-trained word-vectors from gensim-data
+    >>> print(len(word_vectors))
+    >>> print(undefined_var)
     >>>
     >>> # Check the "most similar words", using the default "cosine similarity" measure.
     >>> result = word_vectors.most_similar(positive=['woman', 'king'], negative=['man'])
