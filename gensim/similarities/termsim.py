@@ -102,6 +102,28 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
     Computes cosine similarities between word embeddings and retrieves most
     similar terms for a given term.
 
+    Notes
+    -----
+    By fitting the word embeddings to a vocabulary that you will be using, you
+    can eliminate all out-of-vocabulary (OOV) words that you would otherwise
+    receive from the `most_similar` method. In subword models such as fastText,
+    this procedure will also infer word-vectors for words from your vocabulary
+    that previously had no word-vector.
+
+    >>> from gensim.test.utils import common_texts, datapath
+    >>> from gensim.corpora import Dictionary
+    >>> from gensim.models import FastText
+    >>> from gensim.models.word2vec import LineSentence
+    >>> from gensim.similarities import WordEmbeddingSimilarityIndex
+    >>>
+    >>> model = FastText(common_texts, vector_size=20, min_count=1)  # train word-vectors on a corpus
+    >>> different_corpus = LineSentence(datapath('lee_background.cor'))
+    >>> dictionary = Dictionary(different_corpus)  # construct a vocabulary on a different corpus
+    >>> words = [word for word, count in dictionary.most_common()]
+    >>> word_vectors = model.wv.vectors_for_all(words)  # remove OOV word-vectors and infer word-vectors for new words
+    >>> assert len(dictionary) == len(word_vectors)  # all words from our vocabulary received their word-vectors
+    >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors)
+
     Parameters
     ----------
     keyedvectors : :class:`~gensim.models.keyedvectors.KeyedVectors`
@@ -404,25 +426,29 @@ class SparseTermSimilarityMatrix(SaveLoad):
 
     Examples
     --------
-    >>> from gensim.test.utils import common_texts
+    >>> from gensim.test.utils import common_texts as corpus, datapath
     >>> from gensim.corpora import Dictionary
     >>> from gensim.models import Word2Vec
     >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix, WordEmbeddingSimilarityIndex
     >>> from gensim.similarities.index import AnnoyIndexer
-    >>> from scikits.sparse.cholmod import cholesky
     >>>
-    >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
-    >>> annoy = AnnoyIndexer(model, num_trees=2)  # use annoy for faster word similarity lookups
-    >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv, kwargs={'indexer': annoy})
-    >>> dictionary = Dictionary(common_texts)
-    >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
-    >>> similarity_matrix = SparseTermSimilarityMatrix(termsim_index, dictionary, symmetric=True, dominant=True)
-    >>> docsim_index = SoftCosineSimilarity(bow_corpus, similarity_matrix, num_best=10)
+    >>> model_corpus_file = datapath('lee_background.cor')
+    >>> model = Word2Vec(corpus_file=model_corpus_file, vector_size=20, min_count=1)  # train word-vectors
+    >>>
+    >>> dictionary = Dictionary(corpus)
+    >>> tfidf = TfidfModel(dictionary=dictionary)
+    >>> words = [word for word, count in dictionary.most_common()]
+    >>> word_vectors = model.wv.vectors_for_all(words, allow_inference=False)  # produce vectors for words in corpus
+    >>>
+    >>> indexer = AnnoyIndexer(word_vectors, num_trees=2)  # use Annoy for faster word similarity lookups
+    >>> termsim_index = WordEmbeddingSimilarityIndex(word_vectors, kwargs={'indexer': indexer})
+    >>> similarity_matrix = SparseTermSimilarityMatrix(termsim_index, dictionary, tfidf)  # compute word similarities
+    >>>
+    >>> tfidf_corpus = tfidf[[dictionary.doc2bow(document) for document in common_texts]]
+    >>> docsim_index = SoftCosineSimilarity(tfidf_corpus, similarity_matrix, num_best=10)  # index tfidf_corpus
     >>>
     >>> query = 'graph trees computer'.split()  # make a query
-    >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
-    >>>
-    >>> word_embeddings = cholesky(similarity_matrix.matrix).L()  # obtain word embeddings from similarity matrix
+    >>> sims = docsim_index[dictionary.doc2bow(query)]  # find the ten closest documents from tfidf_corpus
 
     Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_scm.html>`_
     for more examples.

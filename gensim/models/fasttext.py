@@ -276,7 +276,7 @@ class FastText(Word2Vec):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
-                 max_final_vocab=None):
+                 max_final_vocab=None, shrink_windows=True,):
         """Train, use and evaluate word representations learned using the method
         described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
         aka FastText.
@@ -385,6 +385,12 @@ class FastText(Word2Vec):
             ``min_count```.  If the specified ``min_count`` is more than the
             automatically calculated ``min_count``, the former will be used.
             Set to ``None`` if not required.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Examples
         --------
@@ -432,7 +438,8 @@ class FastText(Word2Vec):
             max_vocab_size=max_vocab_size, max_final_vocab=max_final_vocab,
             min_count=min_count, sample=sample, sorted_vocab=sorted_vocab,
             null_word=null_word, ns_exponent=ns_exponent, hashfxn=hashfxn,
-            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean,
+            min_alpha=min_alpha, shrink_windows=shrink_windows)
 
     def _init_post_load(self, hidden_output):
         num_vectors = len(self.wv.vectors)
@@ -489,16 +496,20 @@ class FastText(Word2Vec):
         )
         return report
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, **kwargs):
+    def _do_train_epoch(
+            self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+            total_examples=None, total_words=None, **kwargs,
+        ):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1)
+            examples, tally, raw_tally = train_epoch_sg(
+                self, corpus_file, offset, cython_vocab, cur_epoch, total_examples, total_words, work, neu1,
+            )
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1)
+            examples, tally, raw_tally = train_epoch_cbow(
+                self, corpus_file, offset, cython_vocab, cur_epoch, total_examples, total_words, work, neu1,
+            )
 
         return examples, tally, raw_tally
 

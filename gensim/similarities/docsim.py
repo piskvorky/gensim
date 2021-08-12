@@ -27,6 +27,7 @@ Once the index has been initialized, you can query for document similarity simpl
 
 .. sourcecode:: pycon
 
+    >>> from gensim.similarities import Similarity
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
     >>>
     >>> index_tmpfile = get_tmpfile("index")
@@ -1175,7 +1176,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                        matutils.unitvec(v)) for v in corpus)
             self.index = matutils.corpus2csc(
                 corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                dtype=dtype, printprogress=10000
+                dtype=dtype, printprogress=10000,
             ).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications

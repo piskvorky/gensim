@@ -240,7 +240,7 @@ class Word2Vec(utils.SaveLoad):
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-            comment=None, max_final_vocab=None,
+            comment=None, max_final_vocab=None, shrink_windows=True,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
@@ -345,6 +345,12 @@ class Word2Vec(utils.SaveLoad):
             :meth:`~gensim.models.word2vec.Word2Vec.get_latest_training_loss`.
         callbacks : iterable of :class:`~gensim.models.callbacks.CallbackAny2Vec`, optional
             Sequence of callbacks to be executed at specific stages during training.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Examples
         --------
@@ -377,6 +383,7 @@ class Word2Vec(utils.SaveLoad):
         self.min_alpha = float(min_alpha)
 
         self.window = int(window)
+        self.shrink_windows = bool(shrink_windows)
         self.random = np.random.RandomState(seed)
 
         self.hs = int(hs)
@@ -522,7 +529,7 @@ class Word2Vec(utils.SaveLoad):
         # to be directly the raw vocab
         raw_vocab = word_freq
         logger.info(
-            "collected %i different raw word, with total frequency of %i",
+            "collected %i unique word types, with total frequency of %i",
             len(raw_vocab), sum(raw_vocab.values()),
         )
 
@@ -604,8 +611,8 @@ class Word2Vec(utils.SaveLoad):
         # set effective_min_count to min_count in case max_final_vocab isn't set
         self.effective_min_count = min_count
 
-        # if max_final_vocab is specified instead of min_count
-        # pick a min_count which satisfies max_final_vocab as well as possible
+        # If max_final_vocab is specified instead of min_count,
+        # pick a min_count which satisfies max_final_vocab as well as possible.
         if self.max_final_vocab is not None:
             sorted_vocab = sorted(self.raw_vocab.keys(), key=lambda word: self.raw_vocab[word], reverse=True)
             calc_min_count = 1
@@ -910,12 +917,12 @@ class Word2Vec(utils.SaveLoad):
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1, self.compute_loss,
+                total_examples, total_words, work, neu1, self.compute_loss
             )
         else:
             examples, tally, raw_tally = train_epoch_cbow(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1, self.compute_loss,
+                total_examples, total_words, work, neu1, self.compute_loss
             )
 
         return examples, tally, raw_tally
@@ -1039,7 +1046,7 @@ class Word2Vec(utils.SaveLoad):
             msg=(
                 f"training model with {self.workers} workers on {len(self.wv)} vocabulary and "
                 f"{self.layer1_size} features, using sg={self.sg} hs={self.hs} sample={self.sample} "
-                f"negative={self.negative} window={self.window}"
+                f"negative={self.negative} window={self.window} shrink_windows={self.shrink_windows}"
             ),
         )
 
@@ -1799,8 +1806,9 @@ class Word2Vec(utils.SaveLoad):
 
         Parameters
         ----------
-        context_words_list : list of str
-            List of context words.
+        context_words_list : list of (str and/or int)
+            List of context words, which may be words themselves (str)
+            or their index in `self.wv.vectors` (int).
         topn : int, optional
             Return `topn` words and their probabilities.
 
@@ -1818,8 +1826,8 @@ class Word2Vec(utils.SaveLoad):
 
         if not hasattr(self.wv, 'vectors') or not hasattr(self, 'syn1neg'):
             raise RuntimeError("Parameters required for predicting the output words not found.")
-
         word2_indices = [self.wv.get_index(w) for w in context_words_list if w in self.wv]
+
         if not word2_indices:
             logger.warning("All the input context words are out-of-vocabulary for the current model.")
             return None
@@ -1830,7 +1838,7 @@ class Word2Vec(utils.SaveLoad):
 
         # propagate hidden -> output and take softmax to get probabilities
         prob_values = np.exp(np.dot(l1, self.syn1neg.T))
-        prob_values /= sum(prob_values)
+        prob_values /= np.sum(prob_values)
         top_indices = matutils.argsort(prob_values, topn=topn, reverse=True)
         # returning the most probable output words with their probabilities
         return [(self.wv.index_to_key[index1], prob_values[index1]) for index1 in top_indices]
@@ -1970,6 +1978,8 @@ class Word2Vec(utils.SaveLoad):
                 self.syn1 = self.syn1
                 del self.syn1
             del self.trainables
+        if not hasattr(self, 'shrink_windows'):
+            self.shrink_windows = True
 
     def get_latest_training_loss(self):
         """Get current value of the training loss.

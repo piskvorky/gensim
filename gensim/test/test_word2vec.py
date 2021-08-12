@@ -686,6 +686,38 @@ class TestWord2VecModel(unittest.TestCase):
         )
         self.model_sanity(model, with_corpus_file=True)
 
+    def test_sg_fixedwindowsize(self):
+        """Test skipgram with fixed window size. Use NS."""
+        model = word2vec.Word2Vec(
+            sg=1, window=5, shrink_windows=False, hs=0,
+            negative=15, min_count=5, epochs=10, workers=2
+        )
+        self.model_sanity(model)
+
+    def test_sg_fixedwindowsize_fromfile(self):
+        """Test skipgram with fixed window size. Use HS and train from file."""
+        model = word2vec.Word2Vec(
+            sg=1, window=5, shrink_windows=False, hs=1,
+            negative=0, min_count=5, epochs=10, workers=2
+        )
+        self.model_sanity(model, with_corpus_file=True)
+
+    def test_cbow_fixedwindowsize(self, ranks=None):
+        """Test CBOW with fixed window size. Use HS."""
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.1, window=5, shrink_windows=False,
+            hs=1, negative=0, min_count=5, epochs=10, workers=2
+        )
+        self.model_sanity(model, ranks=ranks)
+
+    def test_cbow_fixedwindowsize_fromfile(self):
+        """Test CBOW with fixed window size. Use NS and train from file."""
+        model = word2vec.Word2Vec(
+            sg=0, cbow_mean=1, alpha=0.1, window=5, shrink_windows=False,
+            hs=0, negative=15, min_count=5, epochs=10, workers=2
+        )
+        self.model_sanity(model, with_corpus_file=True)
+
     def test_cosmul(self):
         model = word2vec.Word2Vec(sentences, vector_size=2, min_count=1, hs=1, negative=0)
         sims = model.wv.most_similar_cosmul('graph', topn=10)
@@ -842,6 +874,16 @@ class TestWord2VecModel(unittest.TestCase):
         # negative sampling scheme not used
         model_without_neg = word2vec.Word2Vec(sentences, min_count=1, negative=0)
         self.assertRaises(RuntimeError, model_without_neg.predict_output_word, ['system', 'human'])
+
+        # passing indices instead of words in context
+        str_context = ['system', 'human']
+        mixed_context = [model_with_neg.wv.get_index(str_context[0]), str_context[1]]
+        idx_context = [model_with_neg.wv.get_index(w) for w in str_context]
+        prediction_from_str = model_with_neg.predict_output_word(str_context, topn=5)
+        prediction_from_mixed = model_with_neg.predict_output_word(mixed_context, topn=5)
+        prediction_from_idx = model_with_neg.predict_output_word(idx_context, topn=5)
+        self.assertEqual(prediction_from_str, prediction_from_mixed)
+        self.assertEqual(prediction_from_str, prediction_from_idx)
 
     def test_load_old_model(self):
         """Test loading an old word2vec model of indeterminate version"""

@@ -119,7 +119,7 @@ def remove_stopword_tokens(tokens, stopwords=None):
 
 
 def strip_punctuation(s):
-    """Replace punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
+    """Replace ASCII punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
 
     Parameters
     ----------
@@ -140,10 +140,8 @@ def strip_punctuation(s):
 
     """
     s = utils.to_unicode(s)
+    # For unicode enhancement options see https://github.com/RaRe-Technologies/gensim/issues/2962
     return RE_PUNCT.sub(" ", s)
-
-
-strip_punctuation2 = strip_punctuation
 
 
 def strip_tags(s):

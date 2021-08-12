@@ -8,11 +8,18 @@ Automated tests for the parsing module.
 import logging
 import unittest
 import numpy as np
-import gensim.parsing.preprocessing as preprocessing
-from gensim.parsing.preprocessing import \
-    remove_stopwords, strip_punctuation2, strip_tags, strip_short, strip_numeric, strip_non_alphanum, \
-    strip_multiple_whitespaces, split_alphanum, stem_text, remove_stopword_tokens, remove_short_tokens, split_on_space
 
+from gensim.parsing.preprocessing import (
+    remove_stopwords,
+    stem_text,
+    split_alphanum,
+    strip_multiple_whitespaces,
+    strip_non_alphanum,
+    strip_numeric,
+    strip_punctuation,
+    strip_short,
+    strip_tags,
+)
 
 # several documents
 doc1 = """C'est un trou de verdure où chante une rivière,
@@ -39,7 +46,7 @@ occurrence of a collection of exact words,
 for many searching purposes, a little fuzziness would help. """
 
 
-dataset = [strip_punctuation2(x.lower()) for x in [doc1, doc2, doc3, doc4]]
+dataset = [strip_punctuation(x.lower()) for x in [doc1, doc2, doc3, doc4]]
 # doc1 and doc2 have class 0, doc3 and doc4 avec class 1
 classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 

@@ -15,13 +15,13 @@ import itertools
 from cpython.ref cimport PyObject
 
 
-DEF MAX_WORD_LENGTH = 10000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
+DEF MAX_WORD_LENGTH = 1000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
 
 
 cdef extern from *:
     """
     #define WIDTH int
-    #define MAX_WORD_LENGTH 10000
+    #define MAX_WORD_LENGTH 1000
 
     int ceditdist(PyObject * s1, PyObject * s2, WIDTH maximum) {
         WIDTH row1[MAX_WORD_LENGTH + 1];
@@ -29,8 +29,8 @@ cdef extern from *:
         WIDTH * CYTHON_RESTRICT pos_new;
         WIDTH * CYTHON_RESTRICT pos_old;
         int row_flip = 1;  /* Does pos_new represent row1 or row2? */
-        int kind = PyUnicode_KIND(s1);  /* How many bytes per unicode codepoint? */
-        if (kind != PyUnicode_KIND(s2)) return -1;
+        int kind1 = PyUnicode_KIND(s1);  /* How many bytes per unicode codepoint? */
+        int kind2 = PyUnicode_KIND(s2);
 
         WIDTH len_s1 = (WIDTH)PyUnicode_GET_LENGTH(s1);
         WIDTH len_s2 = (WIDTH)PyUnicode_GET_LENGTH(s2);
@@ -39,7 +39,7 @@ cdef extern from *:
             const WIDTH tmpi = len_s1; len_s1 = len_s2; len_s2 = tmpi;
         }
         if (len_s2 - len_s1 > maximum) return maximum + 1;
-        if (len_s2 > MAX_WORD_LENGTH) return -2;
+        if (len_s2 > MAX_WORD_LENGTH) return -1;
         void * s1_data = PyUnicode_DATA(s1);
         void * s2_data = PyUnicode_DATA(s2);
 
@@ -47,7 +47,7 @@ cdef extern from *:
 
         for (WIDTH i2 = 0; i2 < len_s2; i2++) {
             int all_bad = i2 >= maximum;
-            const Py_UCS4 ch = PyUnicode_READ(kind, s2_data, i2);
+            const Py_UCS4 ch = PyUnicode_READ(kind2, s2_data, i2);
             row_flip = 1 - row_flip;
             if (row_flip) {
                 pos_new = row2; pos_old = row1;
@@ -58,7 +58,7 @@ cdef extern from *:
 
             for (WIDTH i1 = 0; i1 < len_s1; i1++) {
                 WIDTH val = *(pos_old++);
-                if (ch != PyUnicode_READ(kind, s1_data, i1)) {
+                if (ch != PyUnicode_READ(kind1, s1_data, i1)) {
                     const WIDTH _val1 = *pos_old;
                     const WIDTH _val2 = *pos_new;
                     if (_val1 < val) val = _val1;
@@ -96,8 +96,6 @@ def editdist(s1: str, s2: str, max_dist=None):
     if result >= 0:
         return result
     elif result == -1:
-        raise ValueError("incompatible types of unicode strings")
-    elif result == -2:
         raise ValueError(f"editdist doesn't support strings longer than {MAX_WORD_LENGTH} characters")
     else:
         raise ValueError(f"editdist returned an error: {result}")
