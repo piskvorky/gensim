@@ -11,8 +11,6 @@ import unittest
 import mock
 import numpy as np
 
-
-import gensim.parsing.preprocessing
 from gensim.parsing.preprocessing import (
     remove_short_tokens,
     remove_stopword_tokens,
