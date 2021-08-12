@@ -190,6 +190,27 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s EnsembleLda model">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_ensemblelda_thumb.png
+     :alt: Ensemble LDA
+
+     :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_ensemblelda
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Introduces the Annoy library for similarity queries on top of vectors learned by Word2Vec.">
 
 .. only:: html
