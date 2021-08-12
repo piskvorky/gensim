@@ -7,12 +7,19 @@ Automated tests for the parsing module.
 
 import logging
 import unittest
+
+import mock
 import numpy as np
 
+
+import gensim.parsing.preprocessing
 from gensim.parsing.preprocessing import (
+    remove_short_tokens,
+    remove_stopword_tokens,
     remove_stopwords,
     stem_text,
     split_alphanum,
+    split_on_space,
     strip_multiple_whitespaces,
     strip_non_alphanum,
     strip_numeric,
@@ -76,19 +83,18 @@ class TestPreprocessing(unittest.TestCase):
         self.assertEqual(remove_stopwords("the world is square"), "world square")
 
         # confirm redifining the global `STOPWORDS` working
-        STOPWORDS = preprocessing.STOPWORDS
-        preprocessing.STOPWORDS = frozenset(["the"])
-        self.assertEqual(remove_stopwords("the world is square"), "world is square")
-        preprocessing.STOPWORDS = STOPWORDS
+        with mock.patch('gensim.parsing.preprocessing.STOPWORDS', frozenset(["the"])):
+            self.assertEqual(remove_stopwords("the world is square"), "world is square")
 
     def test_strip_stopword_tokens(self):
         self.assertEqual(remove_stopword_tokens(["the", "world", "is", "sphere"]), ["world", "sphere"])
 
         # confirm redifining the global `STOPWORDS` working
-        STOPWORDS = preprocessing.STOPWORDS
-        preprocessing.STOPWORDS = frozenset(["the"])
-        self.assertEqual(remove_stopword_tokens(["the", "world", "is", "sphere"]), ["world", "is", "sphere"])
-        preprocessing.STOPWORDS = STOPWORDS
+        with mock.patch('gensim.parsing.preprocessing.STOPWORDS', frozenset(["the"])):
+            self.assertEqual(
+                remove_stopword_tokens(["the", "world", "is", "sphere"]),
+                ["world", "is", "sphere"]
+            )
 
     def test_strip_short_tokens(self):
         self.assertEqual(remove_short_tokens(["salut", "les", "amis", "du", "59"], 3), ["salut", "les", "amis"])
