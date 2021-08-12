@@ -40,6 +40,12 @@ class TestKeyedVectors(unittest.TestCase):
         predicted = [result[0] for result in self.vectors.most_similar('war', topn=5)]
         self.assertEqual(expected, predicted)
 
+    def test_most_similar_vector(self):
+        """Can we pass vectors to most_similar directly?"""
+        positive = self.vectors.vectors[0:5]
+        most_similar = self.vectors.most_similar(positive=positive)
+        assert most_similar is not None
+
     def test_most_similar_parameter_types(self):
         """Are the positive/negative parameter types are getting interpreted correctly?"""
         partial = functools.partial(self.vectors.most_similar, topn=5)

@@ -194,6 +194,25 @@ _KEY_TYPES = (str, int, np.integer)
 _EXTENDED_KEY_TYPES = (str, int, np.integer, np.ndarray)
 
 
+def _ensure_list(value):
+    #
+    # Ensure that the specified value is a list.  Sometimes users pass a single
+    # value when they should really pass a list containing value.
+    #
+    # This is here to make invocation of e.g. most_similar method consistent
+    # and convenient, and to guarantee backwards compability with older
+    # versions.  See https://github.com/RaRe-Technologies/gensim/pull/3000
+    # for the background.
+    #
+    if value is None:
+        return []
+
+    if isinstance(value, _KEY_TYPES) or (isinstance(value, ndarray) and len(value.shape) == 1):
+        return [value]
+
+    return value
+
+
 class KeyedVectors(utils.SaveLoad):
 
     def __init__(self, vector_size, count=0, dtype=np.float32, mapfile_path=None):
@@ -731,10 +750,9 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(topn, Integral) and topn < 1:
             return []
 
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
+        # allow passing a single string-key or vector for the positive/negative arguments
+        positive = _ensure_list(positive)
+        negative = _ensure_list(negative)
 
         self.fill_norms()
         clip_end = clip_end or len(self.vectors)
@@ -742,14 +760,6 @@ class KeyedVectors(utils.SaveLoad):
         if restrict_vocab:
             clip_start = 0
             clip_end = restrict_vocab
-
-        if isinstance(positive, _EXTENDED_KEY_TYPES):
-            # allow passing a single string-key or vector for the positive argument
-            positive = [positive]
-
-        if isinstance(negative, _EXTENDED_KEY_TYPES):
-            # allow passing a single string-key or vector for the negative argument
-            negative = [negative]
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
@@ -975,25 +985,16 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(topn, Integral) and topn < 1:
             return []
 
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
+        # allow passing a single string-key or vector for the positive/negative arguments
+        positive = _ensure_list(positive)
+        negative = _ensure_list(negative)
 
         self.fill_norms()
-
-        if isinstance(positive, _EXTENDED_KEY_TYPES):
-            # allow passing a single string-key or vector for the positive argument
-            positive = [positive]
-
-        if isinstance(negative, _EXTENDED_KEY_TYPES):
-            # allow passing a single string-key or vector for the negative argument
-            negative = [negative]
 
         all_words = {
             self.get_index(word) for word in positive + negative
             if not isinstance(word, ndarray) and word in self.key_to_index
-            }
+        }
 
         positive = [
             self.get_vector(word, norm=True) if isinstance(word, str) else word
