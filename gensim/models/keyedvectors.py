@@ -195,15 +195,8 @@ _EXTENDED_KEY_TYPES = (str, int, np.integer, np.ndarray)
 
 
 def _ensure_list(value):
-    #
-    # Ensure that the specified value is a list.  Sometimes users pass a single
-    # value when they should really pass a list containing value.
-    #
-    # This is here to make invocation of e.g. most_similar method consistent
-    # and convenient, and to guarantee backwards compability with older
-    # versions.  See https://github.com/RaRe-Technologies/gensim/pull/3000
-    # for the background.
-    #
+    """Ensure that the specified value is wrapped in a list, for those supported cases
+    where we also accept a single key or vector."""
     if value is None:
         return []
 
