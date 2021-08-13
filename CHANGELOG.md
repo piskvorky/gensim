@@ -15,7 +15,6 @@ Nevertheless, we describe them below.
 ### Improved parameter edge-case handling in KeyedVectors most_similar and most_similar_cosmul methods
 
 We now handle both ``positive`` and ``negative`` keyword parameters consistently.
-These parameters typically specify 
 They may now be either:
 
 1. A string, in which case the value is reinterpreted as a list of one element (the string value)
@@ -28,7 +27,7 @@ So you can now simply do:
 ```python
     model.most_similar(positive='war', negative='peace')
 ```
-    
+
 instead of the slightly more involved
 
 ```python
@@ -73,7 +72,7 @@ Plus a large number of smaller improvements and fixes, as usual.
 * [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091): LsiModel: Only log top words that actually exist in the dictionary, by [@kmurphy4](https://github.com/kmurphy4)
 * [#2980](https://github.com/RaRe-Technologies/gensim/pull/2980): Added EnsembleLda for stable LDA topics, by [@sezanzeb](https://github.com/sezanzeb)
 * [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978): Optimize performance of Author-Topic model, by [@horpto](https://github.com/horpto)
-
+* [#3000](https://github.com/RaRe-Technologies/gensim/pull/3000): Tidy up KeyedVectors.most_similar() API, by [@simonwiles](https://github.com/simonwiles)
 
 ### :books: Tutorials and docs
 
