@@ -364,7 +364,7 @@ s        """
                 }
             elif isinstance(component, tuple):  # 3.8 => 4.0: phrasegram keys are strings, not tuples with bytestrings
                 model.phrasegrams = {
-                    str(model.delimiter.join(component), encoding='utf8'): score
+                    str(model.delimiter.join(key), encoding='utf8'): val
                     for key, val in phrasegrams.items()
                 }
         except StopIteration:
@@ -391,15 +391,13 @@ s        """
                     raise ValueError(f'failed to load {cls.__name__} model, unknown scoring "{model.scoring}"')
 
         # common_terms didn't exist pre-3.?, and was renamed to connector in 4.0.0.
-        if hasattr(model, "common_terms"):
-            model.connector_words = model.common_terms
-            del model.common_terms
-        else:
-            logger.warning(
-                'older version of %s loaded without common_terms attribute, setting connector_words to an empty set',
-                cls.__name__,
-            )
-            model.connector_words = frozenset()
+        if not hasattr(model, "connector_words"):
+            if hasattr(model, "common_terms"):
+                model.connector_words = model.common_terms
+                del model.common_terms
+            else:
+                logger.warning('loaded older version of %s, setting connector_words to an empty set', cls.__name__)
+                model.connector_words = frozenset()
 
         if not hasattr(model, 'corpus_word_count'):
             logger.warning('older version of %s loaded without corpus_word_count', cls.__name__)

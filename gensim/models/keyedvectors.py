@@ -171,6 +171,7 @@ import sys
 import itertools
 import warnings
 from numbers import Integral
+from typing import Iterable
 
 from numpy import (
     dot, float32 as REAL, double, array, zeros, vstack,
@@ -178,6 +179,7 @@ from numpy import (
 )
 import numpy as np
 from scipy import stats
+from scipy.spatial.distance import cdist
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
@@ -187,7 +189,21 @@ from gensim.utils import deprecated
 logger = logging.getLogger(__name__)
 
 
-KEY_TYPES = (str, int, np.integer)
+_KEY_TYPES = (str, int, np.integer)
+
+_EXTENDED_KEY_TYPES = (str, int, np.integer, np.ndarray)
+
+
+def _ensure_list(value):
+    """Ensure that the specified value is wrapped in a list, for those supported cases
+    where we also accept a single key or vector."""
+    if value is None:
+        return []
+
+    if isinstance(value, _KEY_TYPES) or (isinstance(value, ndarray) and len(value.shape) == 1):
+        return [value]
+
+    return value
 
 
 class KeyedVectors(utils.SaveLoad):
@@ -375,7 +391,7 @@ class KeyedVectors(utils.SaveLoad):
             Vector representation for `key_or_keys` (1D if `key_or_keys` is single key, otherwise - 2D).
 
         """
-        if isinstance(key_or_keys, KEY_TYPES):
+        if isinstance(key_or_keys, _KEY_TYPES):
             return self.get_vector(key_or_keys)
 
         return vstack([self.get_vector(key) for key in key_or_keys])
@@ -489,7 +505,7 @@ class KeyedVectors(utils.SaveLoad):
             if True - replace vectors, otherwise - keep old vectors.
 
         """
-        if isinstance(keys, KEY_TYPES):
+        if isinstance(keys, _KEY_TYPES):
             keys = [keys]
             weights = np.array(weights).reshape(1, -1)
         elif isinstance(weights, list):
@@ -727,10 +743,9 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(topn, Integral) and topn < 1:
             return []
 
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
+        # allow passing a single string-key or vector for the positive/negative arguments
+        positive = _ensure_list(positive)
+        negative = _ensure_list(negative)
 
         self.fill_norms()
         clip_end = clip_end or len(self.vectors)
@@ -739,18 +754,14 @@ class KeyedVectors(utils.SaveLoad):
             clip_start = 0
             clip_end = restrict_vocab
 
-        if isinstance(positive, KEY_TYPES) and not negative:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
-            positive = [positive]
-
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
-            (item, 1.0) if isinstance(item, KEY_TYPES + (ndarray,))
-            else item for item in positive
+            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
+            for item in positive
         ]
         negative = [
-            (item, -1.0) if isinstance(item, KEY_TYPES + (ndarray,))
-            else item for item in negative
+            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
+            for item in negative
         ]
 
         # compute the weighted average of all keys
@@ -901,23 +912,16 @@ class KeyedVectors(utils.SaveLoad):
             # Both documents are composed of a single unique token => zero distance.
             return 0.0
 
-        # Sets for faster look-up.
-        docset1 = set(document1)
-        docset2 = set(document2)
+        doclist1 = list(set(document1))
+        doclist2 = list(set(document2))
+        v1 = np.array([self.get_vector(token, norm=norm) for token in doclist1])
+        v2 = np.array([self.get_vector(token, norm=norm) for token in doclist2])
+        doc1_indices = dictionary.doc2idx(doclist1)
+        doc2_indices = dictionary.doc2idx(doclist2)
 
         # Compute distance matrix.
         distance_matrix = zeros((vocab_len, vocab_len), dtype=double)
-        for i, t1 in dictionary.items():
-            if t1 not in docset1:
-                continue
-
-            for j, t2 in dictionary.items():
-                if t2 not in docset2 or distance_matrix[i, j] != 0.0:
-                    continue
-
-                # Compute Euclidean distance between (potentially unit-normed) word vectors.
-                distance_matrix[i, j] = distance_matrix[j, i] = np.sqrt(
-                    np_sum((self.get_vector(t1, norm=norm) - self.get_vector(t2, norm=norm))**2))
+        distance_matrix[np.ix_(doc1_indices, doc2_indices)] = cdist(v1, v2)
 
         if abs(np_sum(distance_matrix)) < 1e-8:
             # `emd` gets stuck if the distance matrix contains only zeros.
@@ -974,21 +978,16 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(topn, Integral) and topn < 1:
             return []
 
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
+        # allow passing a single string-key or vector for the positive/negative arguments
+        positive = _ensure_list(positive)
+        negative = _ensure_list(negative)
 
         self.fill_norms()
-
-        if isinstance(positive, str) and not negative:
-            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
-            positive = [positive]
 
         all_words = {
             self.get_index(word) for word in positive + negative
             if not isinstance(word, ndarray) and word in self.key_to_index
-            }
+        }
 
         positive = [
             self.get_vector(word, norm=True) if isinstance(word, str) else word
@@ -1106,7 +1105,7 @@ class KeyedVectors(utils.SaveLoad):
             If either `word_or_vector` or any word in `other_words` is absent from vocab.
 
         """
-        if isinstance(word_or_vector, KEY_TYPES):
+        if isinstance(word_or_vector, _KEY_TYPES):
             input_vector = self.get_vector(word_or_vector)
         else:
             input_vector = word_or_vector
@@ -1694,6 +1693,70 @@ class KeyedVectors(utils.SaveLoad):
             "intersect_word2vec_format",
             msg=f"merged {overlap_count} vectors into {self.vectors.shape} matrix from {fname}",
         )
+
+    def vectors_for_all(self, keys: Iterable, allow_inference: bool = True,
+                        copy_vecattrs: bool = False) -> 'KeyedVectors':
+        """Produce vectors for all given keys as a new :class:`KeyedVectors` object.
+
+        Notes
+        -----
+        The keys will always be deduplicated. For optimal performance, you should not pass entire
+        corpora to the method. Instead, you should construct a dictionary of unique words in your
+        corpus:
+
+        >>> from collections import Counter
+        >>> import itertools
+        >>>
+        >>> from gensim.models import FastText
+        >>> from gensim.test.utils import datapath, common_texts
+        >>>
+        >>> model_corpus_file = datapath('lee_background.cor')  # train word vectors on some corpus
+        >>> model = FastText(corpus_file=model_corpus_file, vector_size=20, min_count=1)
+        >>> corpus = common_texts  # infer word vectors for words from another corpus
+        >>> word_counts = Counter(itertools.chain.from_iterable(corpus))  # count words in your corpus
+        >>> words_by_freq = (k for k, v in word_counts.most_common())
+        >>> word_vectors = model.wv.vectors_for_all(words_by_freq)  # create word-vectors for words in your corpus
+
+        Parameters
+        ----------
+        keys : iterable
+            The keys that will be vectorized.
+        allow_inference : bool, optional
+            In subclasses such as :class:`~gensim.models.fasttext.FastTextKeyedVectors`,
+            vectors for out-of-vocabulary keys (words) may be inferred. Default is True.
+        copy_vecattrs : bool, optional
+            Additional attributes set via the :meth:`KeyedVectors.set_vecattr` method
+            will be preserved in the produced :class:`KeyedVectors` object. Default is False.
+            To ensure that *all* the produced vectors will have vector attributes assigned,
+            you should set `allow_inference=False`.
+
+        Returns
+        -------
+        keyedvectors : :class:`~gensim.models.keyedvectors.KeyedVectors`
+            Vectors for all the given keys.
+
+        """
+        # Pick only the keys that actually exist & deduplicate them.
+        # We keep the original key order, to improve cache locality, for performance.
+        vocab, seen = [], set()
+        for key in keys:
+            if key not in seen:
+                seen.add(key)
+                if key in (self if allow_inference else self.key_to_index):
+                    vocab.append(key)
+
+        kv = KeyedVectors(self.vector_size, len(vocab), dtype=self.vectors.dtype)
+
+        for key in vocab:  # produce and index vectors for all the given keys
+            weights = self[key]
+            _add_word_to_kv(kv, None, key, weights, len(vocab))
+            if copy_vecattrs:
+                for attr in self.expandos:
+                    try:
+                        kv.set_vecattr(key, attr, self.get_vecattr(key, attr))
+                    except KeyError:
+                        pass
+        return kv
 
     def _upconvert_old_d2vkv(self):
         """Convert a deserialized older Doc2VecKeyedVectors instance to latest generic KeyedVectors"""

@@ -21,7 +21,7 @@ and Phrases and their Compositionality. In Proceedings of NIPS, 2013"
 <https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf>`_.
 
 For a usage example, see the `Doc2vec tutorial
-<https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/doc2vec-lee.ipynb>`_.
+<https://radimrehurek.com/gensim/auto_examples/tutorials/run_doc2vec_lee.html#sphx-glr-auto-examples-tutorials-run-doc2vec-lee-py>`_.
 
 **Make sure you have a C compiler before installing Gensim, to use the optimized doc2vec routines** (70x speedup
 compared to plain NumPy implementation, https://rare-technologies.com/parallelizing-word2vec-in-python/).
@@ -158,7 +158,7 @@ class Doctag:
 class Doc2Vec(Word2Vec):
     def __init__(self, documents=None, corpus_file=None, vector_size=100, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
                  dm_tag_count=1, dv=None, dv_mapfile=None, comment=None, trim_rule=None, callbacks=(),
-                 window=5, epochs=10, **kwargs):
+                 window=5, epochs=10, shrink_windows=True, **kwargs):
         """Class for training, using and evaluating neural networks described in
         `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
 
@@ -248,6 +248,12 @@ class Doc2Vec(Word2Vec):
 
         callbacks : :obj: `list` of :obj: `~gensim.models.callbacks.CallbackAny2Vec`, optional
             List of callbacks that need to be executed/run at specific stages during training.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Some important internal attributes are the following:
 
@@ -265,6 +271,7 @@ class Doc2Vec(Word2Vec):
             .. sourcecode:: pycon
 
                 >>> model.dv['doc003']
+
         """
         corpus_iterable = documents
 
@@ -293,6 +300,7 @@ class Doc2Vec(Word2Vec):
             callbacks=callbacks,
             window=window,
             epochs=epochs,
+            shrink_windows=shrink_windows,
             **kwargs,
         )
 
@@ -357,8 +365,10 @@ class Doc2Vec(Word2Vec):
         self.dv.expandos = other_model.dv.expandos
         self.init_weights()
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs):
+    def _do_train_epoch(
+        self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+        total_examples=None, total_words=None, offsets=None, start_doctags=None, **kwargs
+    ):
         work, neu1 = thread_private_mem
         doctag_vectors = self.dv.vectors
         doctags_lockf = self.dv.vectors_lockf
@@ -425,10 +435,12 @@ class Doc2Vec(Word2Vec):
                 )
         return tally, self._raw_word_count(job)
 
-    def train(self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
-              epochs=None, start_alpha=None, end_alpha=None,
-              word_count=0, queue_factor=2, report_delay=1.0, callbacks=(),
-              **kwargs):
+    def train(
+        self, corpus_iterable=None, corpus_file=None, total_examples=None, total_words=None,
+        epochs=None, start_alpha=None, end_alpha=None,
+        word_count=0, queue_factor=2, report_delay=1.0, callbacks=(),
+        **kwargs,
+    ):
         """Update the model's neural weights.
 
         To support linear learning-rate decay from (initial) `alpha` to `min_alpha`, and accurate
@@ -576,13 +588,13 @@ class Doc2Vec(Word2Vec):
         """
         return 60 * len(self.dv) + 140 * len(self.dv)
 
-    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None, steps=None):
+    def infer_vector(self, doc_words, alpha=None, min_alpha=None, epochs=None):
         """Infer a vector for given post-bulk training document.
 
         Notes
         -----
         Subsequent calls to this function may infer different representations for the same document.
-        For a more stable representation, increase the number of steps to assert a stricket convergence.
+        For a more stable representation, increase the number of epochs to assert a stricter convergence.
 
         Parameters
         ----------
@@ -795,7 +807,7 @@ class Doc2Vec(Word2Vec):
             return super(Doc2Vec, cls).load(*args, rethrow=True, **kwargs)
         except AttributeError as ae:
             logger.error(
-                "Model load error. Was model saved using code from an older Gensim Version? "
+                "Model load error. Was model saved using code from an older Gensim version? "
                 "Try loading older model using gensim-3.8.3, then re-saving, to restore "
                 "compatibility with current code.")
             raise ae
@@ -1042,7 +1054,7 @@ class Doc2Vec(Word2Vec):
 
         return total_words, corpus_count
 
-    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, steps=None):
+    def similarity_unseen_docs(self, doc_words1, doc_words2, alpha=None, min_alpha=None, epochs=None):
         """Compute cosine similarity between two post-bulk out of training documents.
 
         Parameters
@@ -1057,7 +1069,7 @@ class Doc2Vec(Word2Vec):
             The initial learning rate.
         min_alpha : float, optional
             Learning rate will linearly drop to `min_alpha` as training progresses.
-        steps : int, optional
+        epochs : int, optional
             Number of epoch to train the new document.
 
         Returns
@@ -1066,8 +1078,8 @@ class Doc2Vec(Word2Vec):
             The cosine similarity between `doc_words1` and `doc_words2`.
 
         """
-        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, steps=steps)
-        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, steps=steps)
+        d1 = self.infer_vector(doc_words=doc_words1, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
+        d2 = self.infer_vector(doc_words=doc_words2, alpha=alpha, min_alpha=min_alpha, epochs=epochs)
         return np.dot(matutils.unitvec(d1), matutils.unitvec(d2))
 
 

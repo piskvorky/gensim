@@ -23,6 +23,9 @@ The model was introduced by  `Rosen-Zvi and co-authors: "The Author-Topic Model 
 <https://arxiv.org/abs/1207.4169>`_. The model correlates the authorship information with the topics to give a better
 insight on the subject knowledge of an author.
 
+.. _'Online Learning for LDA' by Hoffman et al.: online-lda_
+.. _online-lda: https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf
+
 Example
 -------
 .. sourcecode:: pycon
@@ -185,15 +188,30 @@ class AuthorTopicModel(LdaModel):
         iterations : int, optional
             Maximum number of times the model loops over each document.
         decay : float, optional
-            Controls how old documents are forgotten.
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
-            Controls down-weighting of iterations.
-        alpha : float, optional
-            Hyperparameters for author-topic model.Supports special values of 'asymmetric'
-            and 'auto': the former uses a fixed normalized asymmetric 1.0/topicno prior,
-            the latter learns an asymmetric prior directly from your data.
-        eta : float, optional
-            Hyperparameters for author-topic model.
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
+
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         update_every : int, optional
             Make updates in topic probability for latest mini-batch.
         eval_every : int, optional
@@ -279,22 +297,16 @@ class AuthorTopicModel(LdaModel):
         self.init_empty_corpus()
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
-
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, str):
-            if eta == 'asymmetric':
-                raise ValueError("The 'asymmetric' option cannot be used for eta")
-
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-
-        self.random_state = utils.get_random_state(random_state)
-
         assert (self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms)), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
             (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms)
         )
+
+        self.random_state = utils.get_random_state(random_state)
 
         # VB constants
         self.iterations = iterations
@@ -486,9 +498,12 @@ class AuthorTopicModel(LdaModel):
 
                 # Update gamma.
                 # phi is computed implicitly below,
+                dot = np.dot(cts / phinorm, expElogbetad.T)
                 for ai, a in enumerate(authors_d):
-                    tilde_gamma[ai, :] = self.alpha + len(self.author2doc[self.id2author[a]])\
-                        * expElogthetad[ai, :] * np.dot(cts / phinorm, expElogbetad.T)
+                    tilde_gamma[ai, :] = (
+                        self.alpha
+                        + len(self.author2doc[self.id2author[a]]) * expElogthetad[ai, :] * dot
+                    )
 
                 # Update gamma.
                 # Interpolation between document d's "local" gamma (tilde_gamma),
@@ -612,15 +627,14 @@ class AuthorTopicModel(LdaModel):
 
         Notes
         -----
-        This update also supports updating an already trained model (self)
-        with new documents from `corpus`: the two models are then merged in proportion to the number of old vs. new
-        documents. This feature is still experimental for non-stationary input streams.
+        This update also supports updating an already trained model (`self`) with new documents from `corpus`;
+        the two models are then merged in proportion to the number of old vs. new documents.
+        This feature is still experimental for non-stationary input streams.
 
-        For stationary input (no topic drift in new documents), on the other hand, this equals the online update of
-        `Hoffman et al. Stochastic Variational Inference
-        <http://www.jmlr.org/papers/volume14/hoffman13a/hoffman13a.pdf>`_ and is guaranteed to converge for any `decay`
-        in (0.5, 1.0>. Additionally, for smaller `corpus` sizes, an increasing `offset` may be beneficial (see
-        Table 1 in Hoffman et al.)
+        For stationary input (no topic drift in new documents), on the other hand, this equals the
+        online update of `'Online Learning for LDA' by Hoffman et al.`_
+        and is guaranteed to converge for any `decay` in (0.5, 1]. Additionally, for smaller corpus sizes, an
+        increasing `offset` may be beneficial (see Table 1 in the same paper).
 
         If update is called with authors that already exist in the model, it will resume training on not only new
         documents for that author, but also the previously seen documents. This is necessary for those authors' topic
@@ -647,9 +661,12 @@ class AuthorTopicModel(LdaModel):
         chunksize : int, optional
             Controls the size of the mini-batches.
         decay : float, optional
-            Controls how old documents are forgotten.
+            A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
-            Controls down-weighting of iterations.
+            Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         passes : int, optional
             Number of times the model makes a pass over the entire training data.
         update_every : int, optional
