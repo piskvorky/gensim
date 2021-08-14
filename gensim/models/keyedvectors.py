@@ -450,7 +450,7 @@ class KeyedVectors(utils.SaveLoad):
         """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()."""
         return self.get_vector(*args, **kwargs)
 
-    def get_mean_vector(self, keys, weights=None, pre_normalize=True, ignore_missing=True):
+    def get_mean_vector(self, keys, weights=None, pre_normalize=True, post_normalize=False, ignore_missing=True):
         """Get the mean vector for a given list of keys.
 
         Parameters
@@ -463,6 +463,9 @@ class KeyedVectors(utils.SaveLoad):
         pre_normalize : bool, optional
             Flag indicating whether to normalize each keyvector before taking mean.
             If False, individual keyvector will not be normalized.
+        post_normalize: bool, optional
+            Flag indicating whether to normalize the final mean vector.
+            If True, normalized mean vector will be return.
         ignore_missing : bool, optional
             If False, will raise error if a key doesn't exist in vocabulary.
 
@@ -508,6 +511,8 @@ class KeyedVectors(utils.SaveLoad):
 
         if(total_weight > 0):
             mean = mean / total_weight
+        if post_normalize:
+            mean = matutils.unitvec(mean).astype(REAL)
         return mean
 
     def add_vector(self, key, vector):
@@ -832,8 +837,7 @@ class KeyedVectors(utils.SaveLoad):
                 weight.append(item[1])
 
         # compute the weighted average of all keys
-        mean = self.get_mean_vector(keys, weight, pre_normalize=True, ignore_missing=False)
-        mean = matutils.unitvec(mean).astype(REAL)
+        mean = self.get_mean_vector(keys, weight, pre_normalize=True, post_normalize=True, ignore_missing=False)
         all_keys = [
             self.get_index(key) for key in keys if isinstance(key, _KEY_TYPES) and self.has_index_for(key)
         ]
@@ -1100,7 +1104,7 @@ class KeyedVectors(utils.SaveLoad):
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
         vectors = vstack([self.get_vector(word, norm=use_norm) for word in used_words]).astype(REAL)
-        mean = matutils.unitvec(self.get_mean_vector(vectors)).astype(REAL)
+        mean = self.get_mean_vector(vectors, post_normalize=True)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words), reverse=True)
 
