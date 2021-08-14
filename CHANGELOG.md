@@ -108,7 +108,7 @@ Plus a large number of smaller improvements and fixes, as usual.
 
 * [#3176](https://github.com/RaRe-Technologies/gensim/pull/3176): Eliminate obsolete step parameter from doc2vec infer_vector and similarity_unseen_docs, by [@rock420](https://github.com/rock420)
 * [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
-
+* [#3180](https://github.com/RaRe-Technologies/gensim/pull/3180): Move preprocessing functions from gensim.corpora.textcorpus and gensim.corpora.lowcorpus to gensim.parsing.preprocessing, by [@rock420](https://github.com/rock420)
 
 ### 🔮 Testing, CI, housekeeping
 
