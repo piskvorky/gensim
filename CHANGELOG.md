@@ -3,6 +3,8 @@ Changes
 
 ## Unreleased
 
+## 4.1.0, 2021-08-15
+
 Gensim 4.1 brings two major new functionalities:
 
 * [Ensemble LDA](https://radimrehurek.com/gensim/auto_examples/tutorials/run_ensemblelda.html) for robust training, selection and comparison of LDA models.
