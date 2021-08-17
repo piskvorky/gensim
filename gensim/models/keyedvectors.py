@@ -189,7 +189,21 @@ from gensim.utils import deprecated
 logger = logging.getLogger(__name__)
 
 
-KEY_TYPES = (str, int, np.integer)
+_KEY_TYPES = (str, int, np.integer)
+
+_EXTENDED_KEY_TYPES = (str, int, np.integer, np.ndarray)
+
+
+def _ensure_list(value):
+    """Ensure that the specified value is wrapped in a list, for those supported cases
+    where we also accept a single key or vector."""
+    if value is None:
+        return []
+
+    if isinstance(value, _KEY_TYPES) or (isinstance(value, ndarray) and len(value.shape) == 1):
+        return [value]
+
+    return value
 
 
 class KeyedVectors(utils.SaveLoad):
@@ -377,7 +391,7 @@ class KeyedVectors(utils.SaveLoad):
             Vector representation for `key_or_keys` (1D if `key_or_keys` is single key, otherwise - 2D).
 
         """
-        if isinstance(key_or_keys, KEY_TYPES):
+        if isinstance(key_or_keys, _KEY_TYPES):
             return self.get_vector(key_or_keys)
 
         return vstack([self.get_vector(key) for key in key_or_keys])
@@ -491,7 +505,7 @@ class KeyedVectors(utils.SaveLoad):
             if True - replace vectors, otherwise - keep old vectors.
 
         """
-        if isinstance(keys, KEY_TYPES):
+        if isinstance(keys, _KEY_TYPES):
             keys = [keys]
             weights = np.array(weights).reshape(1, -1)
         elif isinstance(weights, list):
@@ -729,10 +743,9 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(topn, Integral) and topn < 1:
             return []
 
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
+        # allow passing a single string-key or vector for the positive/negative arguments
+        positive = _ensure_list(positive)
+        negative = _ensure_list(negative)
 
         self.fill_norms()
         clip_end = clip_end or len(self.vectors)
@@ -741,18 +754,14 @@ class KeyedVectors(utils.SaveLoad):
             clip_start = 0
             clip_end = restrict_vocab
 
-        if isinstance(positive, KEY_TYPES) and not negative:
-            # allow calls like most_similar('dog'), as a shorthand for most_similar(['dog'])
-            positive = [positive]
-
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
         positive = [
-            (item, 1.0) if isinstance(item, KEY_TYPES + (ndarray,))
-            else item for item in positive
+            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
+            for item in positive
         ]
         negative = [
-            (item, -1.0) if isinstance(item, KEY_TYPES + (ndarray,))
-            else item for item in negative
+            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
+            for item in negative
         ]
 
         # compute the weighted average of all keys
@@ -969,21 +978,16 @@ class KeyedVectors(utils.SaveLoad):
         if isinstance(topn, Integral) and topn < 1:
             return []
 
-        if positive is None:
-            positive = []
-        if negative is None:
-            negative = []
+        # allow passing a single string-key or vector for the positive/negative arguments
+        positive = _ensure_list(positive)
+        negative = _ensure_list(negative)
 
         self.fill_norms()
-
-        if isinstance(positive, str) and not negative:
-            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
-            positive = [positive]
 
         all_words = {
             self.get_index(word) for word in positive + negative
             if not isinstance(word, ndarray) and word in self.key_to_index
-            }
+        }
 
         positive = [
             self.get_vector(word, norm=True) if isinstance(word, str) else word
@@ -1101,7 +1105,7 @@ class KeyedVectors(utils.SaveLoad):
             If either `word_or_vector` or any word in `other_words` is absent from vocab.
 
         """
-        if isinstance(word_or_vector, KEY_TYPES):
+        if isinstance(word_or_vector, _KEY_TYPES):
             input_vector = self.get_vector(word_or_vector)
         else:
             input_vector = word_or_vector
