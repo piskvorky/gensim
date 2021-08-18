@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7.4
+      - image: cimg/python:3.8.11
 
     working_directory: ~/gensim
 
