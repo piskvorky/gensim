@@ -49,6 +49,8 @@ jobs:
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       SKIP_NETWORK_TESTS: ${{ matrix.skip-network-tests }}
       MB_ML_VER: ${{ matrix.manylinux-version }}
+      WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     steps:
     - uses: actions/checkout@v2
