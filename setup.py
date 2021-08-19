@@ -325,7 +325,7 @@ CYTHON_STR = 'Cython==0.29.23'
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
+    'scipy >= 1.5.3',
     'smart_open >= 1.8.1',
     "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
