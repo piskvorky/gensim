@@ -17,19 +17,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
         os: [ubuntu-latest, macos-latest]
         platform: [x64]
         include:
         - os: ubuntu-latest
           python-version: 3.7
           skip-network-tests: 1
+          manylinux-version: 2010
         - os: ubuntu-latest
           python-version: 3.8
           skip-network-tests: 1
+          manylinux-version: 2010
+        - os: ubuntu-latest
+          python-version: 3.9
+          skip-network-tests: 1
+          manylinux-version: 2010
         - os: macos-latest
           travis-os-name: osx  # For multibuild
           skip-network-tests: 1
+          manylinux-version: 1
     env:
       PKG_NAME: gensim
       REPO_DIR: gensim
@@ -41,6 +48,9 @@ jobs:
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       SKIP_NETWORK_TESTS: ${{ matrix.skip-network-tests }}
+      MB_ML_VER: ${{ matrix.manylinux-version }}
+      WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
     steps:
     - uses: actions/checkout@v2
@@ -50,6 +60,7 @@ jobs:
     - name: Print environment variables
       run: |
         echo "PLAT: ${PLAT}"
+        echo "MB_ML_VER: ${MB_ML_VER}"
         echo "DOCKER_TEST_IMAGE: ${DOCKER_TEST_IMAGE}"
         echo "TEST_DEPENDS: ${TEST_DEPENDS}"
         echo "TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"

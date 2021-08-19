@@ -529,7 +529,7 @@ class Word2Vec(utils.SaveLoad):
         # to be directly the raw vocab
         raw_vocab = word_freq
         logger.info(
-            "collected %i different raw word, with total frequency of %i",
+            "collected %i unique word types, with total frequency of %i",
             len(raw_vocab), sum(raw_vocab.values()),
         )
 
@@ -611,8 +611,8 @@ class Word2Vec(utils.SaveLoad):
         # set effective_min_count to min_count in case max_final_vocab isn't set
         self.effective_min_count = min_count
 
-        # if max_final_vocab is specified instead of min_count
-        # pick a min_count which satisfies max_final_vocab as well as possible
+        # If max_final_vocab is specified instead of min_count,
+        # pick a min_count which satisfies max_final_vocab as well as possible.
         if self.max_final_vocab is not None:
             sorted_vocab = sorted(self.raw_vocab.keys(), key=lambda word: self.raw_vocab[word], reverse=True)
             calc_min_count = 1

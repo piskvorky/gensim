@@ -26,9 +26,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     Attributes
     ----------
     token2id : dict of (str, int)
-        token -> tokenId.
-    id2token : dict of (int, str)
-        Reverse mapping for token2id, initialized in a lazy manner to save memory (not created until needed).
+        token -> token_id. I.e. the reverse mapping to `self[token_id]`.
     cfs : dict of (int, int)
         Collection frequencies: token_id -> how many instances of this token are contained in the documents.
     dfs : dict of (int, int)

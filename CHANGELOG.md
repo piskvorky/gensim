@@ -3,37 +3,124 @@ Changes
 
 ## Unreleased
 
+## 4.1.0, 2021-08-15
+
+Gensim 4.1 brings two major new functionalities:
+
+* [Ensemble LDA](https://radimrehurek.com/gensim/auto_examples/tutorials/run_ensemblelda.html) for robust training, selection and comparison of LDA models.
+* [FastSS module](https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/similarities/fastss.pyx) for super fast Levenshtein "fuzzy search" queries. Used e.g. for ["soft term similarity"](https://github.com/RaRe-Technologies/gensim/pull/3146) calculations.
+
+There are several minor changes that are **not** backwards compatible with previous versions of Gensim.
+The affected functionality is relatively less used, so it is unlikely to affect most users, so we have opted to not require a major version bump.
+Nevertheless, we describe them below.
+
+### Improved parameter edge-case handling in KeyedVectors most_similar and most_similar_cosmul methods
+
+We now handle both ``positive`` and ``negative`` keyword parameters consistently.
+They may now be either:
+
+1. A string, in which case the value is reinterpreted as a list of one element (the string value)
+2. A vector, in which case the value is reinterpreted as a list of one element (the vector)
+3. A list of strings
+4. A list of vectors
+
+So you can now simply do:
+
+```python
+    model.most_similar(positive='war', negative='peace')
+```
+
+instead of the slightly more involved
+
+```python
+model.most_similar(positive=['war'], negative=['peace'])
+```
+
+Both invocations remain correct, so you can use whichever is most convenient.
+If you were somehow expecting gensim to interpret the strings as a list of characters, e.g.
+
+```python
+model.most_similar(positive=['w', 'a', 'r'], negative=['p', 'e', 'a', 'c', 'e'])
+```
+
+then you will need to specify the lists explicitly in gensim 4.1.
+### Deprecated obsolete `step` parameter from doc2vec
+
+With the newer version, do this:
+
+```python
+model.infer_vector(..., epochs=123)
+```
+
+instead of this:
+
+```python
+model.infer_vector(..., steps=123)
+```
+
+Plus a large number of smaller improvements and fixes, as usual.
+
+**⚠️ If migrating from old Gensim 3.x, read the [Migration guide](https://github.com/RaRe-Technologies/gensim/wiki/Migrating-from-Gensim-3.x-to-4) first.**
+
+### :+1: New features
+
+* [#3169](https://github.com/RaRe-Technologies/gensim/pull/3169): Implement `shrink_windows` argument for Word2Vec, by [@M-Demay](https://github.com/M-Demay)
+* [#3163](https://github.com/RaRe-Technologies/gensim/pull/3163): Optimize word mover distance (WMD) computation, by [@flowlight0](https://github.com/flowlight0)
+* [#3157](https://github.com/RaRe-Technologies/gensim/pull/3157): New KeyedVectors.vectors_for_all method for vectorizing all words in a dictionary, by [@Witiko](https://github.com/Witiko)
+* [#3153](https://github.com/RaRe-Technologies/gensim/pull/3153): Vectorize word2vec.predict_output_word for speed, by [@M-Demay](https://github.com/M-Demay)
+* [#3146](https://github.com/RaRe-Technologies/gensim/pull/3146): Use FastSS for fast kNN over Levenshtein distance, by [@Witiko](https://github.com/Witiko)
+* [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128): Materialize and copy the corpus passed to SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
+* [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness)
+* [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091): LsiModel: Only log top words that actually exist in the dictionary, by [@kmurphy4](https://github.com/kmurphy4)
+* [#2980](https://github.com/RaRe-Technologies/gensim/pull/2980): Added EnsembleLda for stable LDA topics, by [@sezanzeb](https://github.com/sezanzeb)
+* [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978): Optimize performance of Author-Topic model, by [@horpto](https://github.com/horpto)
+* [#3000](https://github.com/RaRe-Technologies/gensim/pull/3000): Tidy up KeyedVectors.most_similar() API, by [@simonwiles](https://github.com/simonwiles)
+
+### :books: Tutorials and docs
+
+* [#3155](https://github.com/RaRe-Technologies/gensim/pull/3155): Correct parameter name in documentation of fasttext.py, by [@bizzyvinci](https://github.com/bizzyvinci)
+* [#3148](https://github.com/RaRe-Technologies/gensim/pull/3148): Fix broken link to mycorpus.txt in documentation, by [@rohit901](https://github.com/rohit901)
+* [#3142](https://github.com/RaRe-Technologies/gensim/pull/3142): Use more permanent pdf link and update code link, by [@dymil](https://github.com/dymil)
+* [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
+* [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133): Update link to Hoffman paper (online VB LDA), by [@jonaschn](https://github.com/jonaschn)
+* [#3129](https://github.com/RaRe-Technologies/gensim/pull/3129): [MRG] Add bronze sponsor: TechTarget, by [@piskvorky](https://github.com/piskvorky)
+* [#3126](https://github.com/RaRe-Technologies/gensim/pull/3126): Fix typos in make_wiki_online.py and make_wikicorpus.py, by [@nicolasassi](https://github.com/nicolasassi)
+* [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125): Improve & unify docs for dirichlet priors, by [@jonaschn](https://github.com/jonaschn)
+* [#3123](https://github.com/RaRe-Technologies/gensim/pull/3123): Fix hyperlink for doc2vec tutorial, by [@AdityaSoni19031997](https://github.com/AdityaSoni19031997)
+* [#3121](https://github.com/RaRe-Technologies/gensim/pull/3121): [MRG] Add bronze sponsor: eaccidents.com, by [@piskvorky](https://github.com/piskvorky)
+* [#3120](https://github.com/RaRe-Technologies/gensim/pull/3120): Fix URL for ldamodel.py, by [@jonaschn](https://github.com/jonaschn)
+* [#3118](https://github.com/RaRe-Technologies/gensim/pull/3118): Fix URL in doc string, by [@jonaschn](https://github.com/jonaschn)
+* [#3107](https://github.com/RaRe-Technologies/gensim/pull/3107): Draw attention to sponsoring in README, by [@piskvorky](https://github.com/piskvorky)
+* [#3105](https://github.com/RaRe-Technologies/gensim/pull/3105): Fix documentation links: Travis to Github Actions, by [@piskvorky](https://github.com/piskvorky)
+* [#3057](https://github.com/RaRe-Technologies/gensim/pull/3057): Clarify doc comment in LdaModel.inference(), by [@yocen](https://github.com/yocen)
+* [#2964](https://github.com/RaRe-Technologies/gensim/pull/2964): Document that preprocessing.strip_punctuation is limited to ASCII, by [@sciatro](https://github.com/sciatro)
+
+
 ### :red_circle: Bug fixes
 
-* [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116): Fix bug where saved Phrases model did not load its connector_words, by [@aloknayak29](https://github.com/aloknayak29)
-* [#3136](https://github.com/RaRe-Technologies/gensim/pull/3136): Fix indexing error in word2vec_inner.pyx, by [@bluekura](https://github.com/bluekura)
-* [#3174](https://github.com/RaRe-Technologies/gensim/pull/3174): Fix a bug when upgrading phraser from gensim 3.x to 4.0, by [@emgucv](https://github.com/emgucv)
 * [#3178](https://github.com/RaRe-Technologies/gensim/pull/3178): Fix Unicode string incompatibility in gensim.similarities.fastss.editdist, by [@Witiko](https://github.com/Witiko)
-* [#3176](https://github.com/RaRe-Technologies/gensim/pull/3176): Eliminate obsolete step parameter from doc2vec infer_vector and similarity_unseen_docs, by [@rock420](https://github.com/rock420)
+* [#3174](https://github.com/RaRe-Technologies/gensim/pull/3174): Fix loading Phraser models stored in Gensim 3.x into Gensim 4.0, by [@emgucv](https://github.com/emgucv)
+* [#3136](https://github.com/RaRe-Technologies/gensim/pull/3136): Fix indexing error in word2vec_inner.pyx, by [@bluekura](https://github.com/bluekura)
+* [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131): Add missing import to NMF docs and models/__init__.py, by [@properGrammar](https://github.com/properGrammar)
+* [#3116](https://github.com/RaRe-Technologies/gensim/pull/3116): Fix bug where saved Phrases model did not load its connector_words, by [@aloknayak29](https://github.com/aloknayak29)
 * [#2830](https://github.com/RaRe-Technologies/gensim/pull/2830): Fixed KeyError in coherence model, by [@pietrotrope](https://github.com/pietrotrope)
 
-### :+1: Improvements
 
-* [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978): Optimize performance of Author-Topic model, by [@horpto](https://github.com/horpto)
-* [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091): LsiModel: Only log top words that actually exist in the dictionary, by [@kmurphy4](https://github.com/kmurphy4)
-* [#3115](https://github.com/RaRe-Technologies/gensim/pull/3115): Make LSI dispatcher CLI param for number of jobs optional, by [@robguinness](https://github.com/robguinness)
-* [#3128](https://github.com/RaRe-Technologies/gensim/pull/3128): Materialize and copy the corpus passed to SoftCosineSimilarity, by [@Witiko](https://github.com/Witiko)
-* [#3131](https://github.com/RaRe-Technologies/gensim/pull/3131): Added import to Nmf docs, and to models/__init__.py, by [@properGrammar](https://github.com/properGrammar)
-* [#3153](https://github.com/RaRe-Technologies/gensim/pull/3153): Vectorize word2vec.predict_output_word for speed, by [@M-Demay](https://github.com/M-Demay)
-* [#3157](https://github.com/RaRe-Technologies/gensim/pull/3157): New KeyedVectors.vectors_for_all method for vectorizing all words in a dictionary, by [@Witiko](https://github.com/Witiko)
-* [#3163](https://github.com/RaRe-Technologies/gensim/pull/3163): Optimize word mover distance (WMD) computation, by [@flowlight0](https://github.com/flowlight0)
+### :warning: Removed functionality & deprecations
+
+* [#3176](https://github.com/RaRe-Technologies/gensim/pull/3176): Eliminate obsolete step parameter from doc2vec infer_vector and similarity_unseen_docs, by [@rock420](https://github.com/rock420)
 * [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
-* [#3169](https://github.com/RaRe-Technologies/gensim/pull/3169): Implement `shrink_windows` argument for Word2Vec., by [@M-Demay](https://github.com/M-Demay)
+* [#3180](https://github.com/RaRe-Technologies/gensim/pull/3180): Move preprocessing functions from gensim.corpora.textcorpus and gensim.corpora.lowcorpus to gensim.parsing.preprocessing, by [@rock420](https://github.com/rock420)
 
-### :books: Documentation
+### 🔮 Testing, CI, housekeeping
 
-* [#3123](https://github.com/RaRe-Technologies/gensim/pull/3123): Fix hyperlink for doc2vec tutorial, by [@AdityaSoni19031997](https://github.com/AdityaSoni19031997)
-* [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125): Improve & unify docs for dirichlet priors, by [@jonaschn](https://github.com/jonaschn)
-* [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133): Update link to Hoffman paper (online VB LDA), by [@jonaschn](https://github.com/jonaschn)
-* [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
-* [#3148](https://github.com/RaRe-Technologies/gensim/pull/3148): Fix broken link in documentation, by [@rohit901](https://github.com/rohit901)
-* [#3155](https://github.com/RaRe-Technologies/gensim/pull/3155): Correct parameter name in documentation of fasttext.py, by [@bizzyvinci](https://github.com/bizzyvinci)
-* [#2964](https://github.com/RaRe-Technologies/gensim/pull/2964): Document that preprocessing.strip_punctuation is limited to ASCII, by [@sciatro](https://github.com/sciatro)
+* [#3156](https://github.com/RaRe-Technologies/gensim/pull/3156): Update Numpy minimum version to 1.17.0, by [@PrimozGodec](https://github.com/PrimozGodec)
+* [#3143](https://github.com/RaRe-Technologies/gensim/pull/3143): replace _mul function with explicit casts, by [@mpenkov](https://github.com/mpenkov)
+* [#2952](https://github.com/RaRe-Technologies/gensim/pull/2952): Allow newer versions of the Morfessor module for the tests, by [@pabs3](https://github.com/pabs3)
+* [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
+
+
+
 ## 4.0.1, 2021-04-01
 
 Bugfix release to address issues with Wheels on Windows:
