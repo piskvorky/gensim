@@ -86,7 +86,7 @@ dirichlet_expectation_2d = dirichlet_expectation
 
 class TestLdaModelInner(unittest.TestCase):
     def setUp(self):
-        self.random_state = np.random.RandomState()
+        self.random_state = np.random.default_rng()
         self.num_runs = 100  # test functions with *num_runs* random inputs
         self.num_topics = 100
 

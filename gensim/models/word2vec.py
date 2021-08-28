@@ -384,7 +384,7 @@ class Word2Vec(utils.SaveLoad):
 
         self.window = int(window)
         self.shrink_windows = bool(shrink_windows)
-        self.random = np.random.RandomState(seed)
+        self.random = np.random.default_rng(seed)
 
         self.hs = int(hs)
         self.negative = int(negative)

@@ -164,7 +164,7 @@ class PoincareModel(utils.SaveLoad):
         self._burn_in_done = False
         self.dtype = dtype
         self.seed = seed
-        self._np_random = np_random.RandomState(seed)
+        self._np_random = np_random.default_rng(seed)
         self.init_range = init_range
         self._loss_grad = None
         self.build_vocab(train_data)
@@ -264,7 +264,10 @@ class PoincareModel(utils.SaveLoad):
             # this is to avoid floating point errors that result when the number of nodes is very high
             # for reference: https://github.com/RaRe-Technologies/gensim/issues/1917
             max_cumsum_value = self._node_counts_cumsum[-1]
-            uniform_numbers = self._np_random.randint(1, max_cumsum_value + 1, self._negatives_buffer_size)
+            if isinstance(self._np_random, np.random.Generator):
+                uniform_numbers = self._np_random.integers(1, max_cumsum_value + 1, self._negatives_buffer_size)
+            else:
+                uniform_numbers = self._np_random.randint(1, max_cumsum_value + 1, self._negatives_buffer_size)
             cumsum_table_indices = np.searchsorted(self._node_counts_cumsum, uniform_numbers)
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
