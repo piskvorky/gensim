@@ -26,7 +26,7 @@ env:
         #
         # https://github.com/RaRe-Technologies/gensim/issues/3085
         #
-      - BUILD_DEPENDS="oldest-supported-numpy scipy==1.5.3"
+      - BUILD_DEPENDS="oldest-supported-numpy scipy==1.7.0"
         #
         # The contents of this file mirror the linux_testenv list
         # in gensim's setup.py.  I can't think of a better way to include
@@ -39,6 +39,11 @@ matrix:
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.6
+        #
+        # scipy 1.7.0 wheels not available for Py3.6, so we have to build using
+        # an older version.
+        #
+        - BUILD_DEPENDS="oldest-supported-numpy scipy==1.5.3"
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.7
@@ -48,7 +53,6 @@ matrix:
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.9
-        - BUILD_DEPENDS="oldest-supported-numpy scipy==1.7.0"
 
 before_install:
     - source multibuild/common_utils.sh
