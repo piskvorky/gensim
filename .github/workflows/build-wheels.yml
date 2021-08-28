@@ -22,6 +22,10 @@ jobs:
         platform: [x64]
         include:
         - os: ubuntu-latest
+          python-version: 3.6
+          skip-network-tests: 1
+          manylinux-version: 2010
+        - os: ubuntu-latest
           python-version: 3.7
           skip-network-tests: 1
           manylinux-version: 2010
