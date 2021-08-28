@@ -4,6 +4,9 @@ branches:
     - travis
 language: python
 arch: arm64-graviton2
+#
+# https://docs.travis-ci.com/user/reference/focal/
+#
 dist: focal
 virt: vm
 group: edge
@@ -17,7 +20,19 @@ env:
       - MB_ML_VER=2014
       - SKIP_NETWORK_TESTS=1
       - DOCKER_TEST_IMAGE=multibuild/xenial_arm64v8
-      - BUILD_DEPENDS="numpy==1.19.2 scipy==1.5.3"
+        #
+        # Build wheels with the oldest possible numpy version to avoid
+        # the problem encountered by:
+        #
+        # https://github.com/RaRe-Technologies/gensim/issues/3085
+        #
+      - BUILD_DEPENDS="oldest-supported-numpy scipy==1.5.3"
+        #
+        # The contents of this file mirror the linux_testenv list
+        # in gensim's setup.py.  I can't think of a better way to include
+        # them here for now.  They'll get picked up by the multibuild stuff
+        # running in multibuild/common_utils.sh.
+        #
       - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
 
 matrix:
@@ -45,9 +60,3 @@ after_script:
     - ls -laht ${TRAVIS_BUILD_DIR}/wheelhouse/
     - pip install wheelhouse-uploader
     - python -m wheelhouse_uploader upload --local-folder ${TRAVIS_BUILD_DIR}/wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
-
-notifications:
-  email:
-    - penkov+gensimwheels@pm.me
-  on_success: always
-  on_failure: always
