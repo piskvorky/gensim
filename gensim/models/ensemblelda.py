@@ -328,7 +328,10 @@ def _generate_topic_models_multiproc(ensemble, num_models, ensemble_workers):
     # the way random_states is handled needs to prevent getting different results when multiprocessing is on,
     # or getting the same results in every lda children. so it is solved by generating a list of state seeds before
     # multiprocessing is started.
-    random_states = [ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)]
+    if isinstance(ensemble.random_state,np.random.Generator):
+        random_states = [ensemble.random_state.integers(_MAX_RANDOM_STATE) for _ in range(num_models)]
+    else:
+        random_states = [ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)]
 
     # each worker has to work on at least one model.
     # Don't spawn idle workers:
@@ -397,7 +400,10 @@ def _generate_topic_models(ensemble, num_models, random_states=None):
         RandomState if None (default).
     """
     if random_states is None:
-        random_states = [ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)]
+        if isinstance(ensemble.random_state, np.random.Generator):
+            random_states = [ensemble.random_state.integers(_MAX_RANDOM_STATE) for _ in range(num_models)]
+        else:
+            random_states = [ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)]
 
     assert len(random_states) == num_models
 

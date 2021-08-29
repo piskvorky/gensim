@@ -440,7 +440,7 @@ class TestEnsembleLda(unittest.TestCase):
         # topic 0 should be dominant in the inference.
         # the difference between the probabilities should be significant and larger than 0.3
         inferred = elda[[(max_id, 1)]]
-        assert inferred[0][1] - 0.3 > inferred[1][1]
+        assert inferred[0][0] - 0.3 > inferred[0][1]
 
 
 if __name__ == '__main__':
