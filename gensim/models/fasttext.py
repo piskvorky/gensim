@@ -807,6 +807,13 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
     with utils.open(model_file, 'rb') as fin:
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
+    # Here we are checking for unsupported FB FT Modes
+    if m.loss != 1 and m.loss != 2:
+        raise ValueError("Loss paramter value can be either 1 (for Hierarchical Softmax) or 2 (for Negative Sampling)")
+    elif m.model != 1 and m.model != 2:
+        raise ValueError(
+            "Model parameter value can be either 1 (for Continous Bag of Words model) or 2 (for Skip-gram model)")
+
     model = FastText(
         vector_size=m.dim,
         window=m.ws,
