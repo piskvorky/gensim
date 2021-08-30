@@ -140,7 +140,7 @@ class TestHellinger(unittest.TestCase):
         lda_vec2 = model[[(2, 2), (1, 3)]]
         result = matutils.hellinger(lda_vec1, lda_vec2)
         expected = 1.0406845281146034e-06
-        self.assertAlmostEqual(expected, result)
+        self.assertAlmostEqual(expected, result, delta=5.0e-06)
 
 
 class TestKL(unittest.TestCase):

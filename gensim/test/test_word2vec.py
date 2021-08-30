@@ -1052,6 +1052,7 @@ class TestWord2VecModel(unittest.TestCase):
         model.build_vocab(sentences)
         model.train(sentences, compute_loss=True, total_examples=model.corpus_count, epochs=model.epochs)
         training_loss_val = model.get_latest_training_loss()
+        print("training_loss_val", training_loss_val)
         self.assertTrue(training_loss_val > 0.0)
 
 

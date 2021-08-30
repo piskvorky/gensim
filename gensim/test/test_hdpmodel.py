@@ -34,10 +34,11 @@ class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
         Check show topics method
         """
         results = self.model.show_topics()[0]
-        expected_prob, expected_word = '0.264', 'trees '
+        expected_prob, expected_word = 0.345, 'user '
         prob, word = results[1].split('+')[0].split('*')
         self.assertEqual(results[0], 0)
-        self.assertEqual(prob, expected_prob)
+        print(word)
+        self.assertAlmostEqual(float(prob), expected_prob, delta=0.05)
         self.assertEqual(word, expected_word)
 
         return

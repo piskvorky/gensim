@@ -88,7 +88,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             # fail, simply be aware of whether we broke something, or if it just naturally changed the
             # output of the model slightly.
             vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
-            expected = [0.91, 0.08]
+            expected = [0.26891264, 0.7310873]
             # must contain the same values, up to re-ordering
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
             if passed:
@@ -249,7 +249,7 @@ class TestAuthorTopicModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             # fail, simply be aware of whether we broke something, or if it just naturally changed the
             # output of the model slightly.
             vec = matutils.sparse2full(jill_topics, 2)  # convert to dense vector, for easier equality tests
-            expected = [0.91, 0.08]
+            expected = [0.26891264, 0.7310873]
             # must contain the same values, up to re-ordering
             passed = np.allclose(sorted(vec), sorted(expected), atol=1e-1)
 

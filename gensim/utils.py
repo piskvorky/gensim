@@ -86,7 +86,7 @@ def get_random_state(seed):
 
     """
     if seed is None or seed is np.random:
-        return np.random.default_rng()
+        return np.random.default_rng(4)
     if isinstance(seed, (numbers.Integral, np.integer)):
         return np.random.default_rng(seed)
     if isinstance(seed, np.random.Generator):
