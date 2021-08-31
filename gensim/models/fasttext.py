@@ -810,12 +810,12 @@ def _load_fasttext_format(model_file, encoding='utf-8', full_model=True):
         m = gensim.models._fasttext_bin.load(fin, encoding=encoding, full_model=full_model)
 
     # Warnings regarding unsupported FB FT modes
-    loss_names = {0:"Negative_Sampling_Loss", 1:"Hierarchical_Softmax_Loss", 2:"Softmax_Loss", 3:"OneVsAll_Loss"}
-    model_name = {1:"Continuous_Bag_Of_Words", 2: "Skip_Gram", 3: "Supervised"}
+    loss_names = {0 : "Negative_Sampling_Loss", 1 : "Hierarchical_Softmax_Loss", 2 : "Softmax_Loss", 3 : "OneVsAll_Loss"}
+    model_name = {1 : "Continuous_Bag_Of_Words", 2 : "Skip_Gram", 3 : "Supervised"}
     if m.loss == 3 or m.loss == 4:
-        warnings.warn(f'Provided an un-supported Facebook FastText loss mode (i.e. un-supported loss: {loss_names[m.loss]}), it may lead to inconsistent gensim model likely to fail later. Currently Supported loss modes are {loss_names[0]}, {loss_names[1]}')
+        warnings.warn(f'Provided an un-supported Facebook FastText loss mode (i.e. un-supported loss: {loss_names[m.loss]}), \n it may lead to inconsistent gensim model likely to fail later. \n Currently Supported loss modes are {loss_names[0]}, {loss_names[1]}')
     if m.model == 3:
-        warnings.warn(f'Provided an un-supported Facebook FastText model mode (i.e. un-supported loss: {model_name[m.model]}), it may lead to inconsistent gensim model likely to fail later. Currently Supported model modes are {model_name[1]}, {model_name[2]}')
+        warnings.warn(f'Provided an un-supported Facebook FastText model mode (i.e. un-supported loss: {model_name[m.model]}), \n it may lead to inconsistent gensim model likely to fail later. \n Currently Supported model modes are {model_name[1]}, {model_name[2]}')
 
     model = FastText(
         vector_size=m.dim,
