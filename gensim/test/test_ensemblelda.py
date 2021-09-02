@@ -59,18 +59,17 @@ class TestEnsembleLda(unittest.TestCase):
         assert len(elda.ttda) == NUM_MODELS * NUM_TOPICS
         self.assert_ttda_is_valid(elda)
 
-    def test_backwards_compatibility_with_persisted_model(self):
-        elda = self.get_elda()
-
-        # REMOVING THE TEST AS NEW MODELS INITIALIZATIONS WILL BE DIFFERENT FROM PREVIOUS VERSION'S
-        # compare with a pre-trained reference model
-        # loaded_elda = EnsembleLda.load(datapath('ensemblelda'))
-        # np.testing.assert_allclose(elda.ttda, loaded_elda.ttda, rtol=RTOL)
-        # atol = loaded_elda.asymmetric_distance_matrix.max() * 1e-05
-        # np.testing.assert_allclose(
-        #     elda.asymmetric_distance_matrix,
-        #     loaded_elda.asymmetric_distance_matrix, atol=atol,
-        # )
+    # REMOVING THE TEST AS NEW MODELS INITIALIZATIONS WILL BE DIFFERENT FROM PREVIOUS VERSION'S
+    # def test_backwards_compatibility_with_persisted_model(self):
+    #     elda = self.get_elda()
+    #     compare with a pre-trained reference model
+    #     loaded_elda = EnsembleLda.load(datapath('ensemblelda'))
+    #     np.testing.assert_allclose(elda.ttda, loaded_elda.ttda, rtol=RTOL)
+    #     atol = loaded_elda.asymmetric_distance_matrix.max() * 1e-05
+    #     np.testing.assert_allclose(
+    #         elda.asymmetric_distance_matrix,
+    #         loaded_elda.asymmetric_distance_matrix, atol=atol,
+    #     )
 
     def test_recluster(self):
         # the following test is quite specific to the current implementation and not part of any api,
@@ -243,10 +242,9 @@ class TestEnsembleLda(unittest.TestCase):
         ensemble.add_model(elda.ttda[0:1])
         ensemble.add_model(elda.ttda[1:])
         ensemble.recluster()
-        np.testing.assert_allclose(ensemble.get_topics()[0].reshape(1,12), elda.get_topics(), rtol=RTOL)
+        np.testing.assert_allclose(ensemble.get_topics()[0].reshape(1, 12), elda.get_topics(), rtol=RTOL)
 
-
-        #REMOVING THE TEST AS NEW MODELS INITIALIZATIONS WILL BE DIFFERENT FROM PREVIOUS VERSION'S
+        # REMOVING THE TEST AS NEW MODELS INITIALIZATIONS WILL BE DIFFERENT FROM PREVIOUS VERSION'S
         # persisting an ensemble that is entirely built from existing ttdas
         # fname = get_tmpfile('gensim_models_ensemblelda')
         # ensemble.save(fname)
@@ -255,6 +253,7 @@ class TestEnsembleLda(unittest.TestCase):
         # self.test_inference(loaded_ensemble)
 
     def test_add_models(self):
+
         # make sure countings and sizes after adding are correct
         # create new models and add other models to them.
 
