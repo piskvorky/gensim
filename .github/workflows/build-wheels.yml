@@ -77,7 +77,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install virtualenv
     - name: Build and Install Wheels (Multibuild)
-      if: ${{ matrix.os != "windows-latest" }}
+      if: matrix.os != 'windows-latest'
       run: |
         echo ::group::Set up Multibuild
         source multibuild/common_utils.sh
@@ -99,7 +99,7 @@ jobs:
     # https://github.com/RaRe-Technologies/gensim-wheels/commit/084b863390edee05bbe15d4ec05d1ab726e52202
     #
     - name: Build and Install Wheels (Windows)
-      if: ${{ matrix.os == "windows-latest" }}
+      if: matrix.os == 'windows-latest'
       run: |
         echo ::group::Set up dependencies
         python --version
