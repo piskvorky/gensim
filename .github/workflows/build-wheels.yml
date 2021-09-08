@@ -55,6 +55,13 @@ jobs:
       MB_ML_VER: ${{ matrix.manylinux-version }}
       WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
       WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #
+      # Build wheels with the oldest possible numpy version to avoid
+      # the problem encountered by:
+      #
+      # https://github.com/RaRe-Technologies/gensim/issues/3085
+      #
+      BUILD_DEPENDS: oldest-supported-numpy
 
     steps:
     - uses: actions/checkout@v2
@@ -94,8 +101,13 @@ jobs:
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
     - name: Upload wheels to s3://gensim-wheels
-      if: always()
+      #
+      # Only do this if the credentials are set.
+      # This means that PRs will still build wheels, but not upload them.
+      # (PRs do not have access to secrets).
+      #
+      if: ${{ env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
       run: |
-            pip install wheelhouse-uploader
-            ls wheelhouse/*.whl
-            python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
+        pip install wheelhouse-uploader
+        ls wheelhouse/*.whl
+        python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
