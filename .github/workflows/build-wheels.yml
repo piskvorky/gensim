@@ -103,7 +103,7 @@ jobs:
       run: |
         echo ::group::Set up dependencies
         python --version
-        python -c \"import struct; print(struct.calcsize('P') * 8)\"
+        python -c "import struct; print(struct.calcsize('P') * 8)"
 
         python -m pip install -U pip setuptools wheel wheelhouse_uploader ${{ env.BUILD_DEPENDS }}
         echo ::endgroup::
