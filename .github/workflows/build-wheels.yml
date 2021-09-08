@@ -117,6 +117,11 @@ jobs:
         python continuous_integration/install_wheel.py
         echo ::endgroup::
 
+        #
+        # For consistency with the multibuild step.
+        #
+        mv dist wheelhouse
+
     - name: Upload wheels to s3://gensim-wheels
       #
       # Only do this if the credentials are set.
