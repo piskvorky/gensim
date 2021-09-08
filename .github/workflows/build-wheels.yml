@@ -21,24 +21,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
-        #
-        # TODO: we can probably simplify the ubuntu-latest part of the matrix
-        # by rolling it together like for macos-latest
-        #
         - os: ubuntu-latest
-          python-version: 3.6
-          skip-network-tests: 1
-          manylinux-version: 2010
-        - os: ubuntu-latest
-          python-version: 3.7
-          skip-network-tests: 1
-          manylinux-version: 2010
-        - os: ubuntu-latest
-          python-version: 3.8
-          skip-network-tests: 1
-          manylinux-version: 2010
-        - os: ubuntu-latest
-          python-version: 3.9
           skip-network-tests: 1
           manylinux-version: 2010
 
