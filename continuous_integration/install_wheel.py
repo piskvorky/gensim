@@ -6,7 +6,7 @@ import os
 import subprocess
 
 curr_dir = os.path.dirname(__file__)
-dist_path = os.path.join(curr_dir, 'gensim', 'dist')
+dist_path = os.path.join(curr_dir, '..', 'dist')
 wheels = [
     os.path.join(dist_path, f)
     for f in os.listdir(dist_path) if f.endswith('.whl')
