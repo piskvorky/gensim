@@ -52,6 +52,7 @@ jobs:
       # the problem encountered by:
       #
       # https://github.com/RaRe-Technologies/gensim/issues/3085
+      # https://github.com/RaRe-Technologies/gensim/issues/3226
       #
       BUILD_DEPENDS: oldest-supported-numpy
 
