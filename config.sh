@@ -8,7 +8,7 @@ function pre_build {
 
 function pip_opts {
     [ -n "$MANYLINUX_URL" ] && echo "--find-links $MANYLINUX_URL"
-    echo "-vvv"
+    echo "-v"
 }
 
 function build_wheel_cmd {
