@@ -196,7 +196,11 @@ jobs:
       # This means that PRs will still build wheels, but not upload them.
       # (PRs do not have access to secrets).
       #
-      if: ${{ env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
+      # The always() ensures this step runs even if a previous step fails.
+      # We want to upload wheels whenever possible (even if e.g. tests failed)
+      # because we don't want an innocuous test failure from blocking a release.
+      #
+      if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
       run: |
         pip install wheelhouse-uploader
         ls wheelhouse/*.whl
