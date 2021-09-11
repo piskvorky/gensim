@@ -1,0 +1,15 @@
+JSON files can't have comments, so this file is here to explain the rules in BucketLifecycleConfiguration.json.
+
+Our CI puts wheels in a publicly readable, privately writable S3 bucket (s3://gensim-wheels).
+These wheels can be for gensim releases, in which case we fetch them and push them to PyPI when making a release.
+Once the wheels are on PyPI, we don't need to keep our own copy.
+
+These wheels can also be development wheels: we currently build wheels on every push to develop.
+These can be helpful when tracking down a problem, but they can also build up quickly, consume storage space and contribute to AWS costs.
+
+So, we delete all files in the gensim-wheels bucket every 90 days.
+We rarely need to access wheels that are several months old, anyway.
+
+If you modify the JSON configuration, then you can update it using the command:
+
+    aws --profile smart_open s3api put-bucket-lifecycle-configuration --bucket gensim-wheels --lifecycle-configuration file://continuous_integration/BucketLifecycleConfiguration.json
