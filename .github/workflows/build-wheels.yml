@@ -21,18 +21,92 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
+        #
+        # We want the _oldest_ possible manylinux version to ensure our
+        # wheels work on the widest possible range of distros.  Version 1
+        # seems to break for certain Python versions under Linux and Windows,
+        # so we use 2010, which is the next oldest.
+        #
+        # When selecting the numpy version to build against, we need to satisfy
+        # two conditions.  First, we want the wheel to be available for the
+        # version of Python we're building against, because building numpy
+        # wheels on our own is too much work.
+        #
+        # Second, in order to guarantee compatibility with the greatest range
+        # of numpy versions, we want to build against the oldest possible numpy
+        # version, as long as it's 1.17.0 or newer.  Building versions earlier
+        # than 1.17.0 yields wheels that are incompatible with some newer
+        # versions of numpy.  See https://github.com/RaRe-Technologies/gensim/issues/3226
+        # for details.
+        #
+        # The logic for numpy version selection is based on
+        # https://github.com/scipy/oldest-supported-numpy/blob/master/setup.cfg
+        # with the exception that we enforce the minimum version to be 1.17.0.
+        #
         - os: ubuntu-latest
-          skip-network-tests: 1
           manylinux-version: 2010
+          python-version: 3.6
+          build-depends: numpy==1.17.0
+
+        - os: ubuntu-latest
+          manylinux-version: 2010
+          python-version: 3.7
+          build-depends: numpy==1.17.0
+
+        - os: ubuntu-latest
+          manylinux-version: 2010
+          python-version: 3.8
+          build-depends: numpy==1.17.3
+
+        - os: ubuntu-latest
+          manylinux-version: 2010
+          python-version: 3.9
+          build-depends: numpy==1.19.3
 
         - os: macos-latest
-          travis-os-name: osx  # For multibuild
-          skip-network-tests: 1
+          travis-os-name: osx
           manylinux-version: 1
+          python-version: 3.6
+          build_depends: numpy==1.17.0
+
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: 3.7
+          build_depends: numpy==1.17.0
+
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: 3.8
+          build_depends: numpy==1.21.0
+
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: 3.9
+          build_depends: numpy==1.21.0
 
         - os: windows-latest
-          skip-network-tests: 1
           manylinux-version: 2010
+          python-version: 3.6
+          build_depends: numpy==1.17.0
+
+        - os: windows-latest
+          manylinux-version: 2010
+          python-version: 3.7
+          build_depends: numpy==1.17.0
+
+        - os: windows-latest
+          manylinux-version: 2010
+          python-version: 3.8
+          build_depends: numpy==1.17.3
+
+        - os: windows-latest
+          manylinux-version: 2010
+          python-version: 3.9
+          build_depends: numpy==1.19.3
+
     env:
       PKG_NAME: gensim
       REPO_DIR: gensim
@@ -43,18 +117,11 @@ jobs:
       TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest mock cython nmslib pyemd testfixtures scikit-learn pyemd
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
-      SKIP_NETWORK_TESTS: ${{ matrix.skip-network-tests }}
+      SKIP_NETWORK_TESTS: 1
       MB_ML_VER: ${{ matrix.manylinux-version }}
       WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
       WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #
-      # Build wheels with the oldest possible numpy version to avoid
-      # the problem encountered by:
-      #
-      # https://github.com/RaRe-Technologies/gensim/issues/3085
-      # https://github.com/RaRe-Technologies/gensim/issues/3226
-      #
-      BUILD_DEPENDS: oldest-supported-numpy
+      BUILD_DEPENDS: ${{ matrix.build-depends }}
 
     steps:
     - uses: actions/checkout@v2
