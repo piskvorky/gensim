@@ -67,45 +67,45 @@ jobs:
           travis-os-name: osx
           manylinux-version: 1
           python-version: 3.6
-          build_depends: numpy==1.17.0
+          build-depends: numpy==1.17.0
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: 3.7
-          build_depends: numpy==1.17.0
+          build-depends: numpy==1.17.0
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: 3.8
-          build_depends: numpy==1.21.0
+          build-depends: numpy==1.21.0
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: 3.9
-          build_depends: numpy==1.21.0
+          build-depends: numpy==1.21.0
 
         - os: windows-latest
           manylinux-version: 2010
           python-version: 3.6
-          build_depends: numpy==1.17.0
+          build-depends: numpy==1.17.0
 
         - os: windows-latest
           manylinux-version: 2010
           python-version: 3.7
-          build_depends: numpy==1.17.0
+          build-depends: numpy==1.17.0
 
         - os: windows-latest
           manylinux-version: 2010
           python-version: 3.8
-          build_depends: numpy==1.17.3
+          build-depends: numpy==1.17.3
 
         - os: windows-latest
           manylinux-version: 2010
           python-version: 3.9
-          build_depends: numpy==1.19.3
+          build-depends: numpy==1.19.3
 
     env:
       PKG_NAME: gensim
