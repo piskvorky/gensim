@@ -86,6 +86,18 @@ jobs:
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
     #
+    # Guarantee maximum compatibility with older numpy versions and prevent regression of #3226
+    #
+    - name: Build and Install Wheels against oldest-supported-numpy (Multibuild)
+      if: matrix.os != 'windows-latest'
+      env:
+        TEST_DEPENDS: oldest-supported-numpy
+      run: |
+        source multibuild/common_utils.sh
+        source multibuild/travis_steps.sh
+        source config.sh
+        install_run ${{ matrix.PLAT }}
+    #
     # We can't use multibuild on Windows, so we have to roll our own build script.
     # Adapted from
     # https://github.com/RaRe-Technologies/gensim-wheels/commit/084b863390edee05bbe15d4ec05d1ab726e52202
