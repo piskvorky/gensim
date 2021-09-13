@@ -22,19 +22,17 @@ jobs:
         platform: [x64]
         include:
         - os: ubuntu-latest
-          skip-network-tests: 1
           manylinux-version: 2010
 
         - os: macos-latest
           travis-os-name: osx  # For multibuild
-          skip-network-tests: 1
           manylinux-version: 1
 
         - os: windows-latest
-          skip-network-tests: 1
           manylinux-version: 2010
 
     env:
+      SKIP_NETWORK_TESTS: 1
       PKG_NAME: gensim
       REPO_DIR: gensim
       BUILD_COMMIT: HEAD
