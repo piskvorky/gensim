@@ -20,7 +20,6 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
-        numpy-version: [oldest-supported-numpy, numpy]
         include:
         - os: ubuntu-latest
           manylinux-version: 2010
@@ -40,7 +39,7 @@ jobs:
       PLAT: x86_64
       UNICODE_WIDTH: 32
       MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
-      TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest mock cython nmslib pyemd testfixtures scikit-learn pyemd ${{ matrix.numpy-version }}
+      TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest mock cython nmslib pyemd testfixtures scikit-learn pyemd
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       MB_ML_VER: ${{ matrix.manylinux-version }}
