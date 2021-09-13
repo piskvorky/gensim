@@ -21,91 +21,18 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
-        #
-        # We want the _oldest_ possible manylinux version to ensure our
-        # wheels work on the widest possible range of distros.  Version 1
-        # seems to break for certain Python versions under Linux and Windows,
-        # so we use 2010, which is the next oldest.
-        #
-        # When selecting the numpy version to build against, we need to satisfy
-        # two conditions.  First, we want the wheel to be available for the
-        # version of Python we're building against, because building numpy
-        # wheels on our own is too much work.
-        #
-        # Second, in order to guarantee compatibility with the greatest range
-        # of numpy versions, we want to build against the oldest possible numpy
-        # version, as long as it's 1.17.0 or newer.  Building versions earlier
-        # than 1.17.0 yields wheels that are incompatible with some newer
-        # versions of numpy.  See https://github.com/RaRe-Technologies/gensim/issues/3226
-        # for details.
-        #
-        # The logic for numpy version selection is based on
-        # https://github.com/scipy/oldest-supported-numpy/blob/master/setup.cfg
-        # with the exception that we enforce the minimum version to be 1.17.0.
-        #
         - os: ubuntu-latest
+          skip-network-tests: 1
           manylinux-version: 2010
-          python-version: 3.6
-          build-depends: numpy==1.17.0
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
-          python-version: 3.7
-          build-depends: numpy==1.17.0
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
-          python-version: 3.8
-          build-depends: numpy==1.17.3
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
-          python-version: 3.9
-          build-depends: numpy==1.19.3
 
         - os: macos-latest
-          travis-os-name: osx
+          travis-os-name: osx  # For multibuild
+          skip-network-tests: 1
           manylinux-version: 1
-          python-version: 3.6
-          build-depends: numpy==1.17.0
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: 3.7
-          build-depends: numpy==1.17.0
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: 3.8
-          build-depends: numpy==1.21.0
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: 3.9
-          build-depends: numpy==1.21.0
 
         - os: windows-latest
+          skip-network-tests: 1
           manylinux-version: 2010
-          python-version: 3.6
-          build-depends: numpy==1.17.0
-
-        - os: windows-latest
-          manylinux-version: 2010
-          python-version: 3.7
-          build-depends: numpy==1.17.0
-
-        - os: windows-latest
-          manylinux-version: 2010
-          python-version: 3.8
-          build-depends: numpy==1.17.3
-
-        - os: windows-latest
-          manylinux-version: 2010
-          python-version: 3.9
-          build-depends: numpy==1.19.3
 
     env:
       PKG_NAME: gensim
@@ -121,7 +48,7 @@ jobs:
       MB_ML_VER: ${{ matrix.manylinux-version }}
       WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
       WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      BUILD_DEPENDS: ${{ matrix.build-depends }}
+      BUILD_DEPENDS: oldest-supported-numpy
 
     steps:
     - uses: actions/checkout@v2
