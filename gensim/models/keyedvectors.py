@@ -183,7 +183,7 @@ from scipy.spatial.distance import cdist
 
 from gensim import utils, matutils  # utility fnc for pickling, common scipy operations etc
 from gensim.corpora.dictionary import Dictionary
-from gensim.utils import deprecated
+from gensim.utils import deprecated, default_rng
 
 
 logger = logging.getLogger(__name__)
@@ -2018,7 +2018,7 @@ def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
     if prior_vectors.shape == target_shape:
         return prior_vectors
     target_count, vector_size = target_shape
-    rng = np.random.RandomState(seed)
+    rng = default_rng(seed)
     new_vectors = rng.random(target_shape).astype(dtype)  # [0.0, 1.0)
     new_vectors *= 2.0  # [0.0, 2.0)
     new_vectors -= 1.0  # [-1.0, 1.0)

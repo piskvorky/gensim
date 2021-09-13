@@ -57,7 +57,7 @@ NO_CYTHON = RuntimeError(
 )
 """An exception that gensim code raises when Cython extensions are unavailable."""
 
-default_prng = np.random.RandomState(42)
+default_prng = default_rng()
 
 
 def get_random_state(seed):
@@ -91,6 +91,11 @@ def get_random_state(seed):
     if isinstance(seed, np.random.RandomState):
         return seed
     raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
+
+
+def default_rng(seed=42):
+    cls = getattr(np.random, 'default_rng', np.random.RandomState)
+    return cls(seed)
 
 
 def synchronous(tlockname):

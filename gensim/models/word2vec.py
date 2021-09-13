@@ -196,7 +196,7 @@ from queue import Queue, Empty
 from numpy import float32 as REAL
 import numpy as np
 
-from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
+from gensim.utils import keep_vocab_item, call_on_class_only, deprecated, default_rng
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
@@ -384,7 +384,7 @@ class Word2Vec(utils.SaveLoad):
 
         self.window = int(window)
         self.shrink_windows = bool(shrink_windows)
-        self.random = np.random.RandomState(seed)
+        self.random = default_rng(seed)
 
         self.hs = int(hs)
         self.negative = int(negative)
@@ -1956,7 +1956,7 @@ class Word2Vec(utils.SaveLoad):
         if not hasattr(self.wv, 'vectors_lockf') and hasattr(self.wv, 'vectors'):
             self.wv.vectors_lockf = np.ones(1, dtype=REAL)
         if not hasattr(self, 'random'):
-            self.random = np.random.RandomState(self.seed)
+            self.random = default_rng(self.seed)
         if not hasattr(self, 'train_count'):
             self.train_count = 0
             self.total_train_time = 0
