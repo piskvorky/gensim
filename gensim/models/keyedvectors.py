@@ -2018,7 +2018,7 @@ def prep_vectors(target_shape, prior_vectors=None, seed=0, dtype=REAL):
     if prior_vectors.shape == target_shape:
         return prior_vectors
     target_count, vector_size = target_shape
-    rng = np.random.default_rng(seed=seed)  # use new instance of numpy's recommended generator/algorithm
+    rng = np.random.RandomState(seed)
     new_vectors = rng.random(target_shape, dtype=dtype)  # [0.0, 1.0)
     new_vectors *= 2.0  # [0.0, 2.0)
     new_vectors -= 1.0  # [-1.0, 1.0)

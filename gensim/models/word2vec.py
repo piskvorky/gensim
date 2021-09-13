@@ -1956,8 +1956,7 @@ class Word2Vec(utils.SaveLoad):
         if not hasattr(self.wv, 'vectors_lockf') and hasattr(self.wv, 'vectors'):
             self.wv.vectors_lockf = np.ones(1, dtype=REAL)
         if not hasattr(self, 'random'):
-            # use new instance of numpy's recommended generator/algorithm
-            self.random = np.random.default_rng(seed=self.seed)
+            self.random = np.random.RandomState(self.seed)
         if not hasattr(self, 'train_count'):
             self.train_count = 0
             self.total_train_time = 0
