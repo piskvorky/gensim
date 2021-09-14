@@ -58,6 +58,11 @@ NO_CYTHON = RuntimeError(
 """An exception that gensim code raises when Cython extensions are unavailable."""
 
 
+#
+# Numpy versions older than 1.17.0 use an older method for pseudo-random number generation.
+# The older method (RandomState) is available everywhere but has performance issues on some platforms.
+# The newer method (default_rng) is preferable, when it is available.
+#
 def default_rng(seed=42):
     cls = getattr(np.random, 'default_rng', np.random.RandomState)
     return cls(seed)

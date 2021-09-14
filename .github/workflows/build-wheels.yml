@@ -88,7 +88,7 @@ jobs:
     #
     # Guarantee maximum compatibility with older numpy versions and prevent regression of #3226
     #
-    - name: Build and Install Wheels against oldest-supported-numpy (Multibuild)
+    - name: Test wheel against oldest-supported-numpy (Multibuild)
       if: matrix.os != 'windows-latest'
       env:
         TEST_DEPENDS: oldest-supported-numpy

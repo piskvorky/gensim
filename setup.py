@@ -315,6 +315,12 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
+#
+# The numpy version here is especially significant because it affects our ability to build
+# wheels that are backwards-compatible with older numpy versions. If restrict this to
+# e.g. numpy>=1.17.0, then our wheel building process becomes significantly more
+# complicated. Related issue: #3266.
+# 
 NUMPY_STR = 'oldest-supported-numpy'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
