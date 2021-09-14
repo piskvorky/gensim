@@ -3,6 +3,10 @@ Changes
 
 ## Unreleased
 
+## 4.1.1, 2021-09-14
+
+This is a bugfix release that addresses compatibility issues with older versions of numpy.
+
 ## 4.1.0, 2021-08-15
 
 Gensim 4.1 brings two major new functionalities:
