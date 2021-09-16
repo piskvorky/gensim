@@ -3,6 +3,10 @@ Changes
 
 ## Unreleased
 
+## 4.1.2, 2021-09-17
+
+This is a bugfix release that addresses left over compatibility issues with older versions of numpy and MacOS.
+
 ## 4.1.1, 2021-09-14
 
 This is a bugfix release that addresses compatibility issues with older versions of numpy.
