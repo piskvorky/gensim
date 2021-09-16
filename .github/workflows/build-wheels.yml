@@ -79,13 +79,13 @@ jobs:
           travis-os-name: osx
           manylinux-version: 1
           python-version: 3.8
-          build-depends: numpy==1.21.0
+          build-depends: numpy==1.17.3
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: 3.9
-          build-depends: numpy==1.21.0
+          build-depends: numpy==1.19.3
 
         - os: windows-latest
           manylinux-version: 2010
