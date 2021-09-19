@@ -12,5 +12,6 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-Email me@radimrehurek.com and m@penkov.dev.
-We will investigate and get back to you as soon as possible.
+Open a ticket and add the "security" label to it.
+Describe the vulnerability in general.
+We'll reach out to you for specifics.
