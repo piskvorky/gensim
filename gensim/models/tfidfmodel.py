@@ -6,10 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module implements functionality related to the `Term Frequency - Inverse Document Frequency
-<https://en.wikipedia.org/wiki/Tf%E2%80%93idf>` vector space bag-of-words models.
-
-For a more in-depth exposition of TF-IDF and its various SMART variants (normalization, weighting schemes),
-see the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/
+<https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_ class of bag-of-words vector space models.
 
 """
 
@@ -346,11 +343,6 @@ class TfidfModel(interfaces.TransformationABC):
             0.3 for best results. Default is 0.25.
 
             See also the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/.
-
-        See Also
-        --------
-        ~gensim.sklearn_api.tfidf.TfIdfTransformer : Class that also uses the SMART scheme.
-        resolve_weights : Function that also uses the SMART scheme.
 
         References
         ----------
