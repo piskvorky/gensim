@@ -3,6 +3,18 @@ Changes
 
 ## Unreleased
 
+* [#3194](https://github.com/RaRe-Technologies/gensim/pull/3194): Added random_seed parameter to make LsiModel reproducible, by [@parashardhapola](https://github.com/parashardhapola)
+
+## 4.1.2, 2021-09-17
+
+This is a bugfix release that addresses left over compatibility issues with older versions of numpy and MacOS.
+
+## 4.1.1, 2021-09-14
+
+This is a bugfix release that addresses compatibility issues with older versions of numpy.
+
+## 4.1.0, 2021-08-15
+
 Gensim 4.1 brings two major new functionalities:
 
 * [Ensemble LDA](https://radimrehurek.com/gensim/auto_examples/tutorials/run_ensemblelda.html) for robust training, selection and comparison of LDA models.
@@ -72,8 +84,7 @@ Plus a large number of smaller improvements and fixes, as usual.
 * [#3091](https://github.com/RaRe-Technologies/gensim/pull/3091): LsiModel: Only log top words that actually exist in the dictionary, by [@kmurphy4](https://github.com/kmurphy4)
 * [#2980](https://github.com/RaRe-Technologies/gensim/pull/2980): Added EnsembleLda for stable LDA topics, by [@sezanzeb](https://github.com/sezanzeb)
 * [#2978](https://github.com/RaRe-Technologies/gensim/pull/2978): Optimize performance of Author-Topic model, by [@horpto](https://github.com/horpto)
-* [#3194](https://github.com/RaRe-Technologies/gensim/pull/3194): Added random_seed parameter to make LsiModel reproducible, by [@parashardhapola](https://github.com/parashardhapola)
-
+* [#3000](https://github.com/RaRe-Technologies/gensim/pull/3000): Tidy up KeyedVectors.most_similar() API, by [@simonwiles](https://github.com/simonwiles)
 
 ### :books: Tutorials and docs
 
@@ -109,7 +120,7 @@ Plus a large number of smaller improvements and fixes, as usual.
 
 * [#3176](https://github.com/RaRe-Technologies/gensim/pull/3176): Eliminate obsolete step parameter from doc2vec infer_vector and similarity_unseen_docs, by [@rock420](https://github.com/rock420)
 * [#2965](https://github.com/RaRe-Technologies/gensim/pull/2965): Remove strip_punctuation2 alias of strip_punctuation, by [@sciatro](https://github.com/sciatro)
-
+* [#3180](https://github.com/RaRe-Technologies/gensim/pull/3180): Move preprocessing functions from gensim.corpora.textcorpus and gensim.corpora.lowcorpus to gensim.parsing.preprocessing, by [@rock420](https://github.com/rock420)
 
 ### 🔮 Testing, CI, housekeeping
 
