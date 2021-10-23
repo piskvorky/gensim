@@ -388,7 +388,7 @@ class Word2Vec(utils.SaveLoad):
 
         self.hs = int(hs)
         self.negative = int(negative)
-        self.ns_exponent = ns_exponent
+        self.ns_exponent = float(ns_exponent)
         self.cbow_mean = int(cbow_mean)
         self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
@@ -1947,6 +1947,7 @@ class Word2Vec(utils.SaveLoad):
         # for backward compatibility, add/rearrange properties from prior versions
         if not hasattr(self, 'ns_exponent'):
             self.ns_exponent = 0.75
+        self.ns_exponent = float(self.ns_exponent)
         if self.negative and hasattr(self.wv, 'index_to_key'):
             self.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(self, 'corpus_count'):
