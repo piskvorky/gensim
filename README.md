@@ -3,7 +3,7 @@ gensim – Topic Modelling in Python
 
 <!--
 The following image URLs are obfuscated = proxied and cached through
-Google because of Github's proxying issues. See:
+Google because of Github's proxying issues. See: 
 https://github.com/RaRe-Technologies/gensim/issues/2805
 -->
 
