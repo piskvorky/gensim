@@ -25,7 +25,7 @@ community.
 Features
 --------
 
--   All algorithms are **memory-independent** w.r.t. the corpus size
+-   All algorithms are **memory-independent** w.r.t. the corpus size 
     (can process input larger than RAM, streamed, out-of-core),
 -   **Intuitive interfaces**
     -   easy to plug in your own input corpus/datastream (trivial
@@ -43,7 +43,7 @@ Features
 
 If this feature list left you scratching your head, you can first read
 more about the [Vector Space Model] and [unsupervised document analysis]
-on Wikipedia.
+on Wikipedia.    
 
 Installation
 ------------
