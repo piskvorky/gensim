@@ -545,8 +545,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             A human readable string of the current objects parameters.
 
         """
-        return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
-            self.num_terms, self.num_topics, self.decay, self.chunksize
+        return "%s<num_terms=%s, num_topics=%s, decay=%s, chunksize=%s>" % (
+            self.__class__.__name__, self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def __getitem__(self, bow, scaled=False, chunksize=512):

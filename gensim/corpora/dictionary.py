@@ -143,7 +143,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def __str__(self):
         some_keys = list(itertools.islice(self.token2id.keys(), 5))
-        return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
+        return "%s<%i unique tokens: %s%s>" % (
+            self.__class__.__name__, len(self), some_keys, '...' if len(self) > 5 else ''
+        )
 
     @staticmethod
     def from_documents(documents):
