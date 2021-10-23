@@ -268,6 +268,7 @@ visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
 # packages included for build-testing everywhere
 core_testenv = [
     'pytest',
+    'pytest-cov',
 #    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
