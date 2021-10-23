@@ -65,7 +65,7 @@ Install the latest version of gensim:
 ```
 
 Or, if you have instead downloaded and unzipped the [source tar.gz]
-package:
+package: 
 
 ```bash
     python setup.py install
