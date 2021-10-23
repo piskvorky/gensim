@@ -720,6 +720,15 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_load_on_class_error(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
+
+    def test_negative_ns_exp(self):
+        # We expect that model should train, save, load and continue training without any exceptions
+        model = doc2vec.Doc2Vec(sentences, ns_exponent=-1, min_count=1, workers=1)
+        tmpf = get_tmpfile('d2v_negative_exp.tst')
+        model.save(tmpf)
+        loaded_model = doc2vec.Doc2Vec.load(tmpf)
+        loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
+        assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
 # endclass TestDoc2VecModel
 
 
