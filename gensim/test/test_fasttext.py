@@ -771,6 +771,7 @@ class TestFastTextModel(unittest.TestCase):
         loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
         assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
 
+
 @pytest.mark.parametrize('shrink_windows', [True, False])
 def test_cbow_hs_training(shrink_windows):
     model_gensim = FT_gensim(
