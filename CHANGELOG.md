@@ -3,6 +3,8 @@ Changes
 
 ## Unreleased
 
+* [#3194](https://github.com/RaRe-Technologies/gensim/pull/3194): Added random_seed parameter to make LsiModel reproducible, by [@parashardhapola](https://github.com/parashardhapola)
+
 ## 4.1.2, 2021-09-17
 
 This is a bugfix release that addresses left over compatibility issues with older versions of numpy and MacOS.
