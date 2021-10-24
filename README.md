@@ -176,4 +176,3 @@ BibTeX entry:
   [OpenBLAS]: http://xianyi.github.io/OpenBLAS/
   [source tar.gz]: http://pypi.python.org/pypi/gensim
   [documentation]: http://radimrehurek.com/gensim/install.html
-
