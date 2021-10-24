@@ -41,7 +41,7 @@ jobs:
       # https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html
       #
       - name: Update sbt
-        if: ${{ matrix.os }} == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
           echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
@@ -51,7 +51,7 @@ jobs:
       - name: Install tox
         run: pip install tox
       - name: Install GDB & enable core dumps
-        if: ${{ matrix.os }} == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y gdb
@@ -59,7 +59,7 @@ jobs:
       - name: Run tox tests
         run: tox -e ${{ matrix.tox }}
       - name: Collect corefile
-        if: ${{ failure() }} && ${{ matrix.os }} == 'ubuntu-20.04'
+        if: ${{ failure() }} && matrix.os == 'ubuntu-20.04'
         run: |
           pwd
           COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
