@@ -53,6 +53,15 @@ jobs:
         run: ulimit -c unlimited -S  # enable core dumps
       - name: Run tox tests
         run: tox -e ${{ matrix.tox }}
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.8'
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          files: ./coverage.xml
+          verbose: true
+
+
       - name: Collect corefile
         if: ${{ failure() }}
         run: |
