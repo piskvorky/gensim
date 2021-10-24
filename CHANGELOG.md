@@ -4,6 +4,7 @@ Changes
 ## Unreleased
 
 * [#3194](https://github.com/RaRe-Technologies/gensim/pull/3194): Added random_seed parameter to make LsiModel reproducible, by [@parashardhapola](https://github.com/parashardhapola)
+* [#3227](https://github.com/RaRe-Technologies/gensim/pull/3227): Fix FastText doc-comment example for `build_vocab` and `train` to use correct argument names, by [@HLasse](https://github.com/HLasse)
 
 ## 4.1.2, 2021-09-17
 
