@@ -1,0 +1,10 @@
+{
+  "Rules": [
+    {
+      "Expiration": {"Days": 30},
+      "Filter": {"Prefix": ""},
+      "ID": "Delete all files older than 30 days to save storage costs",
+      "Status": "Enabled"
+    }
+  ]
+}
