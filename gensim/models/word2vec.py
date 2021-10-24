@@ -1947,6 +1947,10 @@ class Word2Vec(utils.SaveLoad):
         # for backward compatibility, add/rearrange properties from prior versions
         if not hasattr(self, 'ns_exponent'):
             self.ns_exponent = 0.75
+        #
+        # This duplicates conversion in __init__, but it's required here for older
+        # models that may have erroneously stored ns_exponent as an int.
+        #
         self.ns_exponent = float(self.ns_exponent)
         if self.negative and hasattr(self.wv, 'index_to_key'):
             self.make_cum_table()  # rebuild cum_table from vocabulary

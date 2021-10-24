@@ -763,7 +763,7 @@ class TestFastTextModel(unittest.TestCase):
         assert np.allclose(expected, predicted)
 
     def test_negative_ns_exp(self):
-        # We expect that model should train, save, load and continue training without any exceptions
+        """The model should accept a negative ns_exponent as a valid value."""
         model = FT_gensim(sentences, ns_exponent=-1, min_count=1, workers=1)
         tmpf = get_tmpfile('fasttext_negative_exp.tst')
         model.save(tmpf)
