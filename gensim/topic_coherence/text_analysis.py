@@ -436,7 +436,7 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         self.batch_size = kwargs.get('batch_size', 64)
 
     def __str__(self):
-        return "%s(processes=%s, batch_size=%s)" % (
+        return "%s<processes=%s, batch_size=%s>" % (
             self.__class__.__name__, self.processes, self.batch_size)
 
     def accumulate(self, texts, window_size):

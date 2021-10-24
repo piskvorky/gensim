@@ -1882,7 +1882,7 @@ class Word2Vec(utils.SaveLoad):
             and learning rate.
 
         """
-        return "%s(vocab=%s, vector_size=%s, alpha=%s)" % (
+        return "%s<vocab=%s, vector_size=%s, alpha=%s>" % (
             self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha,
         )
 
