@@ -13,6 +13,7 @@ import unittest
 import os
 import bz2
 import sys
+import tempfile
 
 import numpy as np
 
@@ -1039,6 +1040,13 @@ class TestWord2VecModel(unittest.TestCase):
     def test_load_on_class_error(self):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
+
+    def test_file_should_not_be_compressed(self):
+        """
+        Is corpus_file a compressed file?
+        """
+        with tempfile.NamedTemporaryFile(suffix=".bz2") as fp:
+            self.assertRaises(TypeError, word2vec.Word2Vec, (None, fp.name))
 
     def test_reset_from(self):
         """Test if reset_from() uses pre-built structures from other model"""
