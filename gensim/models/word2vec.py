@@ -1507,7 +1507,10 @@ class Word2Vec(utils.SaveLoad):
             _, corpus_ext = os.path.splitext(corpus_file)
             if corpus_ext.lower() in get_supported_extensions():
                 # logger.warning(f"Corpus file looks like a compressed file ({corpus_ext}), that might yield unexpected result during training")
-                raise TypeError(f"Corpus file looks like a compressed file ({corpus_ext}), that might yield unexpected result during training")
+                raise TypeError(
+                    f"Training from compressed files is not supported with the `corpus_path` argument. "
+                    f"Please decompress {corpus_file} or use `corpus_iterable` instead."
+                )
 
     def _check_training_sanity(self, epochs=0, total_examples=None, total_words=None, **kwargs):
         """Checks whether the training parameters make sense.
