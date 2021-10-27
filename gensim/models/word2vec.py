@@ -388,7 +388,7 @@ class Word2Vec(utils.SaveLoad):
 
         self.hs = int(hs)
         self.negative = int(negative)
-        self.ns_exponent = float(ns_exponent)
+        self.ns_exponent = ns_exponent
         self.cbow_mean = int(cbow_mean)
         self.compute_loss = bool(compute_loss)
         self.running_training_loss = 0
@@ -833,11 +833,11 @@ class Word2Vec(utils.SaveLoad):
         train_words_pow = 0.0
         for word_index in range(vocab_size):
             count = self.wv.get_vecattr(word_index, 'count')
-            train_words_pow += count**self.ns_exponent
+            train_words_pow += count**float(self.ns_exponent)
         cumulative = 0.0
         for word_index in range(vocab_size):
             count = self.wv.get_vecattr(word_index, 'count')
-            cumulative += count**self.ns_exponent
+            cumulative += count**float(self.ns_exponent)
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
@@ -1947,11 +1947,6 @@ class Word2Vec(utils.SaveLoad):
         # for backward compatibility, add/rearrange properties from prior versions
         if not hasattr(self, 'ns_exponent'):
             self.ns_exponent = 0.75
-        #
-        # This duplicates conversion in __init__, but it's required here for older
-        # models that may have erroneously stored ns_exponent as an int.
-        #
-        self.ns_exponent = float(self.ns_exponent)
         if self.negative and hasattr(self.wv, 'index_to_key'):
             self.make_cum_table()  # rebuild cum_table from vocabulary
         if not hasattr(self, 'corpus_count'):
