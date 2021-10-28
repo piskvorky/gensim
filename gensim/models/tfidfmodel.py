@@ -427,7 +427,7 @@ class TfidfModel(interfaces.TransformationABC):
         return model
 
     def __str__(self):
-        return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
+        return "%s<num_docs=%s, num_nnz=%s>" % (self.__class__.__name__, self.num_docs, self.num_nnz)
 
     def initialize(self, corpus):
         """Compute inverse document weights, which will be used to modify term frequencies for documents.
