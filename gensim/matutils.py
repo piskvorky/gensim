@@ -11,7 +11,6 @@ from __future__ import with_statement
 
 import logging
 import math
-from typing import Union, Tuple, List, Iterable
 
 from gensim import utils
 

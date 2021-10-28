@@ -269,7 +269,7 @@ class UnitvecTestCase(unittest.TestCase):
 
 
 class TestSparse2Corpus(unittest.TestCase):
-    def setUp(self) -> None:
+    def setUp(self):
         self.orig_array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
         self.s2c = matutils.Sparse2Corpus(csc_matrix(self.orig_array))
 
