@@ -3,6 +3,10 @@ Changes
 
 ## Unreleased
 
+### Fixed
+
+- [#3250](https://github.com/RaRe-Technologies/gensim/pull/3250): Make negative ns_exponent work correctly, by [@menshikh-iv](https://github.com/menshikh-iv)
+
 ## 4.1.2, 2021-09-17
 
 This is a bugfix release that addresses left over compatibility issues with older versions of numpy and MacOS.
