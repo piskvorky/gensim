@@ -23,7 +23,7 @@ combination of which effectively and transparently allows building LSI models fo
 * distributed computing for very large corpora, making use of a cluster of
   machines
 
-Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_
+Wall-clock `performance on the English Wikipedia <https://radimrehurek.com/gensim/wiki.html>`_
 (2G corpus positions, 3.2M documents, 100K features, 0.5G non-zero entries in the final TF-IDF matrix),
 requesting the top 400 LSI factors:
 
@@ -162,8 +162,11 @@ class Projection(utils.SaveLoad):
     via  :meth:`~gensim.models.lsimodel.Projection.merge`. This is how incremental training actually happens.
 
     """
-    def __init__(self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
-                 extra_dims=P2_EXTRA_DIMS, dtype=np.float64):
+
+    def __init__(
+            self, m, k, docs=None, use_svdlibc=False, power_iters=P2_EXTRA_ITERS,
+            extra_dims=P2_EXTRA_DIMS, dtype=np.float64, random_seed=None,
+    ):
         """Construct the (U, S) projection from a corpus.
 
         Parameters
@@ -183,11 +186,15 @@ class Projection(utils.SaveLoad):
             Extra samples to be used besides the rank `k`. Tune to improve accuracy.
         dtype : numpy.dtype, optional
             Enforces a type for elements of the decomposed matrix.
+        random_seed: {None, int}, optional
+            Random seed used to initialize the pseudo-random number generator,
+            a local instance of numpy.random.RandomState instance.
 
         """
         self.m, self.k = m, k
         self.power_iters = power_iters
         self.extra_dims = extra_dims
+        self.random_seed = random_seed
         if docs is not None:
             # base case decomposition: given a job `docs`, compute its decomposition,
             # *in-core*.
@@ -195,7 +202,7 @@ class Projection(utils.SaveLoad):
                 u, s = stochastic_svd(
                     docs, k, chunksize=sys.maxsize,
                     num_terms=m, power_iters=self.power_iters,
-                    extra_dims=self.extra_dims, dtype=dtype)
+                    extra_dims=self.extra_dims, dtype=dtype, random_seed=self.random_seed)
             else:
                 try:
                     import sparsesvd
@@ -223,7 +230,10 @@ class Projection(utils.SaveLoad):
             An empty copy (without corpus) of the current projection.
 
         """
-        return Projection(self.m, self.k, power_iters=self.power_iters, extra_dims=self.extra_dims)
+        return Projection(
+            self.m, self.k, power_iters=self.power_iters,
+            extra_dims=self.extra_dims, random_seed=self.random_seed,
+        )
 
     def merge(self, other, decay=1.0):
         """Merge current :class:`~gensim.models.lsimodel.Projection` instance with another.
@@ -354,9 +364,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def __init__(
             self, corpus=None, num_topics=200, id2word=None, chunksize=20000,
-            decay=1.0, distributed=False, onepass=True,
-            power_iters=P2_EXTRA_ITERS, extra_samples=P2_EXTRA_DIMS, dtype=np.float64
-        ):
+            decay=1.0, distributed=False, onepass=True, power_iters=P2_EXTRA_ITERS,
+            extra_samples=P2_EXTRA_DIMS, dtype=np.float64, random_seed=None,
+    ):
         """Build an LSI model.
 
         Parameters
@@ -383,6 +393,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Extra samples to be used besides the rank `k`. Can improve accuracy.
         dtype : type, optional
             Enforces a type for elements of the decomposed matrix.
+        random_seed: {None, int}, optional
+            Random seed used to initialize the pseudo-random number generator,
+            a local instance of numpy.random.RandomState instance.
 
         """
         self.id2word = id2word
@@ -396,6 +409,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.onepass = onepass
         self.extra_samples, self.power_iters = extra_samples, power_iters
         self.dtype = dtype
+        self.random_seed = random_seed
 
         if corpus is None and self.id2word is None:
             raise ValueError(
@@ -411,7 +425,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         self.docs_processed = 0
         self.projection = Projection(
-            self.num_terms, self.num_topics, power_iters=self.power_iters, extra_dims=self.extra_samples, dtype=dtype
+            self.num_terms, self.num_topics, power_iters=self.power_iters,
+            extra_dims=self.extra_samples, dtype=dtype, random_seed=self.random_seed
         )
 
         self.numworkers = 1
@@ -478,11 +493,15 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
-                update = Projection(self.num_terms, self.num_topics, None, dtype=self.dtype)
+                update = Projection(
+                    self.num_terms, self.num_topics, None,
+                    dtype=self.dtype, random_seed=self.random_seed,
+                )
                 update.u, update.s = stochastic_svd(
                     corpus, self.num_topics,
                     num_terms=self.num_terms, chunksize=chunksize,
-                    extra_dims=self.extra_samples, power_iters=self.power_iters, dtype=self.dtype
+                    extra_dims=self.extra_samples, power_iters=self.power_iters, dtype=self.dtype,
+                    random_seed=self.random_seed,
                 )
                 self.projection.merge(update, decay=decay)
                 self.docs_processed += len(corpus) if hasattr(corpus, '__len__') else 0
@@ -499,7 +518,9 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                     # definitely avoid materializing it as a dense matrix!
                     logger.debug("converting corpus to csc format")
                     job = matutils.corpus2csc(
-                        chunk, num_docs=len(chunk), num_terms=self.num_terms, num_nnz=nnz, dtype=self.dtype)
+                        chunk, num_docs=len(chunk), num_terms=self.num_terms,
+                        num_nnz=nnz, dtype=self.dtype,
+                    )
                     del chunk
                     doc_no += job.shape[1]
                     if self.dispatcher:
@@ -513,7 +534,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
                         # serial version, there is only one "worker" (myself) => process the job directly
                         update = Projection(
                             self.num_terms, self.num_topics, job, extra_dims=self.extra_samples,
-                            power_iters=self.power_iters, dtype=self.dtype
+                            power_iters=self.power_iters, dtype=self.dtype, random_seed=self.random_seed,
                         )
                         del job
                         self.projection.merge(update, decay=decay)
@@ -530,7 +551,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             assert not self.dispatcher, "must be in serial mode to receive jobs"
             update = Projection(
                 self.num_terms, self.num_topics, corpus.tocsc(), extra_dims=self.extra_samples,
-                power_iters=self.power_iters, dtype=self.dtype
+                power_iters=self.power_iters, dtype=self.dtype,
             )
             self.projection.merge(update, decay=decay)
             logger.info("processed sparse job of %i documents", corpus.shape[1])
@@ -545,8 +566,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             A human readable string of the current objects parameters.
 
         """
-        return "LsiModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
-            self.num_terms, self.num_topics, self.decay, self.chunksize
+        return "%s<num_terms=%s, num_topics=%s, decay=%s, chunksize=%s>" % (
+            self.__class__.__name__, self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def __getitem__(self, bow, scaled=False, chunksize=512):
@@ -731,7 +752,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         print_debug(
             self.id2word, self.projection.u, self.projection.s,
             range(min(num_topics, len(self.projection.u.T))),
-            num_words=num_words
+            num_words=num_words,
         )
 
     def save(self, fname, *args, **kwargs):
@@ -864,8 +885,10 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
         logger.info('topic #%s(%.3f): %s, ..., %s', topic, s[topic], ', '.join(pos), ', '.join(neg))
 
 
-def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
-                   power_iters=0, dtype=np.float64, eps=1e-6):
+def stochastic_svd(
+        corpus, rank, num_terms, chunksize=20000, extra_dims=None,
+        power_iters=0, dtype=np.float64, eps=1e-6, random_seed=None,
+):
     """Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
     Parameters
@@ -888,6 +911,10 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         Enforces a type for elements of the decomposed matrix.
     eps: float, optional
         Percentage of the spectrum's energy to be discarded.
+    random_seed: {None, int}, optional
+        Random seed used to initialize the pseudo-random number generator,
+         a local instance of numpy.random.RandomState instance.
+
 
     Notes
     -----
@@ -924,13 +951,16 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
     # and more memory friendly than processing all documents at once)
     y = np.zeros(dtype=dtype, shape=(num_terms, samples))
     logger.info("1st phase: constructing %s action matrix", str(y.shape))
+    random_state = np.random.RandomState(random_seed)
 
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
         assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
-        o = np.random.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
-        sparsetools.csc_matvecs(m, n, samples, corpus.indptr, corpus.indices,
-                                corpus.data, o.ravel(), y.ravel())  # y = corpus * o
+        o = random_state.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
+        sparsetools.csc_matvecs(
+            m, n, samples, corpus.indptr, corpus.indices,
+            corpus.data, o.ravel(), y.ravel(),
+        )  # y = corpus * o
         del o
 
         # unlike np, scipy.sparse `astype()` copies everything, even if there is no change to dtype!
@@ -960,10 +990,10 @@ def stochastic_svd(corpus, rank, num_terms, chunksize=20000, extra_dims=None,
             assert n <= chunksize  # the very last chunk of A is allowed to be smaller in size
             num_docs += n
             logger.debug("multiplying chunk * gauss")
-            o = np.random.normal(0.0, 1.0, (n, samples)).astype(dtype)  # draw a random gaussian matrix
+            o = random_state.normal(0.0, 1.0, (n, samples), ).astype(dtype)  # draw a random gaussian matrix
             sparsetools.csc_matvecs(
                 m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
-                chunk.data, o.ravel(), y.ravel()
+                chunk.data, o.ravel(), y.ravel(),
             )
             del chunk, o
         y = [y]

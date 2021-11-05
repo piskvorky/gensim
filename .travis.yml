@@ -4,6 +4,9 @@ branches:
     - travis
 language: python
 arch: arm64-graviton2
+#
+# https://docs.travis-ci.com/user/reference/focal/
+#
 dist: focal
 virt: vm
 group: edge
@@ -17,22 +20,45 @@ env:
       - MB_ML_VER=2014
       - SKIP_NETWORK_TESTS=1
       - DOCKER_TEST_IMAGE=multibuild/xenial_arm64v8
-      - BUILD_DEPENDS="numpy==1.19.2 scipy==1.5.3"
+        #
+        # The contents of this file mirror the linux_testenv list
+        # in gensim's setup.py.  I can't think of a better way to include
+        # them here for now.  They'll get picked up by the multibuild stuff
+        # running in multibuild/common_utils.sh.
+        #
       - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
 
 matrix:
+      #
+      # See .github/workflows/build-wheels.yml for a discussion of why we
+      # handle numpy versions explicitly.
+      #
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.6
+        #
+        # scipy 1.7.0 wheels not available for Py3.6, so we have to build using
+        # an older version.
+        #
+        - BUILD_DEPENDS="numpy==1.19.2 scipy==1.5.3"
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.7
+        - BUILD_DEPENDS="numpy==1.19.2 scipy==1.7.0"
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.8
+        - BUILD_DEPENDS="numpy==1.19.2 scipy==1.7.0"
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.9
+        #
+        # oldest-supported-numpy does not seem to handle this particular case
+        # (aarch64, Py3.9) explicitly, but I've double-checked that wheels for
+        # this numpy release are available via PyPI.
+        #
+        - BUILD_DEPENDS="numpy==1.19.3 scipy==1.7.0"
+
 before_install:
     - source multibuild/common_utils.sh
     - source multibuild/travis_steps.sh
@@ -45,9 +71,3 @@ after_script:
     - ls -laht ${TRAVIS_BUILD_DIR}/wheelhouse/
     - pip install wheelhouse-uploader
     - python -m wheelhouse_uploader upload --local-folder ${TRAVIS_BUILD_DIR}/wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
-
-notifications:
-  email:
-    - penkov+gensimwheels@pm.me
-  on_success: always
-  on_failure: always

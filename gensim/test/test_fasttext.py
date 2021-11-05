@@ -762,6 +762,15 @@ class TestFastTextModel(unittest.TestCase):
         predicted = vectors_for_all['responding']
         assert np.allclose(expected, predicted)
 
+    def test_negative_ns_exp(self):
+        """The model should accept a negative ns_exponent as a valid value."""
+        model = FT_gensim(sentences, ns_exponent=-1, min_count=1, workers=1)
+        tmpf = get_tmpfile('fasttext_negative_exp.tst')
+        model.save(tmpf)
+        loaded_model = FT_gensim.load(tmpf)
+        loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
+        assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
+
 
 @pytest.mark.parametrize('shrink_windows', [True, False])
 def test_cbow_hs_training(shrink_windows):

@@ -833,11 +833,11 @@ class Word2Vec(utils.SaveLoad):
         train_words_pow = 0.0
         for word_index in range(vocab_size):
             count = self.wv.get_vecattr(word_index, 'count')
-            train_words_pow += count**self.ns_exponent
+            train_words_pow += count**float(self.ns_exponent)
         cumulative = 0.0
         for word_index in range(vocab_size):
             count = self.wv.get_vecattr(word_index, 'count')
-            cumulative += count**self.ns_exponent
+            cumulative += count**float(self.ns_exponent)
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
@@ -1882,7 +1882,7 @@ class Word2Vec(utils.SaveLoad):
             and learning rate.
 
         """
-        return "%s(vocab=%s, vector_size=%s, alpha=%s)" % (
+        return "%s<vocab=%s, vector_size=%s, alpha=%s>" % (
             self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha,
         )
 

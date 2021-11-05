@@ -61,7 +61,7 @@ class TermSimilarityIndex(SaveLoad):
 
     def __str__(self):
         members = ', '.join('%s=%s' % pair for pair in vars(self).items())
-        return '%s(%s)' % (self.__class__.__name__, members)
+        return '%s<%s>' % (self.__class__.__name__, members)
 
 
 class UniformTermSimilarityIndex(TermSimilarityIndex):

@@ -1054,6 +1054,15 @@ class TestWord2VecModel(unittest.TestCase):
         training_loss_val = model.get_latest_training_loss()
         self.assertTrue(training_loss_val > 0.0)
 
+    def test_negative_ns_exp(self):
+        """The model should accept a negative ns_exponent as a valid value."""
+        model = word2vec.Word2Vec(sentences, ns_exponent=-1, min_count=1, workers=1)
+        tmpf = get_tmpfile('w2v_negative_exp.tst')
+        model.save(tmpf)
+        loaded_model = word2vec.Word2Vec.load(tmpf)
+        loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
+        assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
+
 
 # endclass TestWord2VecModel
 

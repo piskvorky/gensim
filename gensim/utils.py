@@ -827,7 +827,7 @@ class FakeDict:
         self.num_terms = num_terms
 
     def __str__(self):
-        return "FakeDict(num_terms=%s)" % self.num_terms
+        return "%s<num_terms=%s>" % (self.__class__.__name__, self.num_terms)
 
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:

@@ -331,8 +331,8 @@ class AuthorTopicModel(LdaModel):
             String representation of current instance.
 
         """
-        return "AuthorTopicModel(num_terms=%s, num_topics=%s, num_authors=%s, decay=%s, chunksize=%s)" % \
-            (self.num_terms, self.num_topics, self.num_authors, self.decay, self.chunksize)
+        return "%s<num_terms=%s, num_topics=%s, num_authors=%s, decay=%s, chunksize=%s>" % \
+            (self.__class__.__name__, self.num_terms, self.num_topics, self.num_authors, self.decay, self.chunksize)
 
     def init_empty_corpus(self):
         """Initialize an empty corpus.
