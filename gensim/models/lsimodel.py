@@ -70,7 +70,7 @@ from scipy.sparse import sparsetools
 
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
-
+import warnings
 logger = logging.getLogger(__name__)
 
 # accuracy defaults for the multi-pass stochastic algo
@@ -489,7 +489,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             chunksize = self.chunksize
         if decay is None:
             decay = self.decay
-
+        if corpus == []:
+            warnings.warn('LsiModel.add_documents() called but no documents provided, is this intended?')
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
                 # we are allowed multiple passes over the input => use a faster, randomized two-pass algo
@@ -590,7 +591,8 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Latent representation of corpus in BoW format if `bow` is corpus.
 
         """
-        assert self.projection.u is not None, "decomposition not initialized yet"
+        if self.projection.u is None:
+            raise ValueError('No training data provided - LSI model not initialized yet')
 
         # if the input vector is in fact a corpus, return a transformed corpus as a result
         is_corpus, bow = utils.is_corpus(bow)
