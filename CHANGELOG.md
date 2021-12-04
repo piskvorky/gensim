@@ -3,6 +3,8 @@ Changes
 
 ## Unreleased
 
+[#3247](https://github.com/RaRe-Technologies/gensim/pull/3247): Sparse2Corpus: update __getitem__ to work on slices, lists and ellipsis, by [@PrimozGodec](https://github.com/PrimozGodec)
+
 ## 4.1.1, 2021-09-14
 
 This is a bugfix release that addresses compatibility issues with older versions of numpy.
