@@ -200,6 +200,7 @@ from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
+from smart_open.compression import get_supported_extensions
 
 logger = logging.getLogger(__name__)
 
@@ -1501,6 +1502,14 @@ class Word2Vec(utils.SaveLoad):
         if corpus_iterable is not None and isinstance(corpus_iterable, GeneratorType) and passes > 1:
             raise TypeError(
                 f"Using a generator as corpus_iterable can't support {passes} passes. Try a re-iterable sequence.")
+
+        if corpus_iterable is None:
+            _, corpus_ext = os.path.splitext(corpus_file)
+            if corpus_ext.lower() in get_supported_extensions():
+                raise TypeError(
+                    f"Training from compressed files is not supported with the `corpus_path` argument. "
+                    f"Please decompress {corpus_file} or use `corpus_iterable` instead."
+                )
 
     def _check_training_sanity(self, epochs=0, total_examples=None, total_words=None, **kwargs):
         """Checks whether the training parameters make sense.
