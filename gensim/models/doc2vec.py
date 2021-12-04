@@ -494,7 +494,7 @@ class Doc2Vec(Word2Vec):
 
         """
         if corpus_file is None and corpus_iterable is None:
-            raise TypeError("Either one of corpus_file or documents value must be provided")
+            raise TypeError("Either one of corpus_file or corpus_iterable value must be provided")
 
         if corpus_file is not None and corpus_iterable is not None:
             raise TypeError("Both corpus_file and corpus_iterable must not be provided at the same time")
