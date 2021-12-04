@@ -251,7 +251,7 @@ containing the frequency counts of each word in the dictionary.
 For example, assume we have a dictionary containing the words
 ``['coffee', 'milk', 'sugar', 'spoon']``.
 A document consisting of the string ``"coffee milk coffee"`` would then
-be represented by the vector ``[2, 1, 0, 0]`` where the entries of the vector
+be represented by the vector ``[1, 1, 0, 0]`` where the entries of the vector
 are (in order) the occurrences of "coffee", "milk", "sugar" and "spoon" in
 the document. The length of the vector is the number of entries in the
 dictionary. One of the main properties of the bag-of-words model is that it
