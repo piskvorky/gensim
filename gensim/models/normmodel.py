@@ -41,7 +41,9 @@ class NormModel(interfaces.TransformationABC):
             pass
 
     def __str__(self):
-        return "NormModel(num_docs=%s, num_nnz=%s, norm=%s)" % (self.num_docs, self.num_nnz, self.norm)
+        return "%s<num_docs=%s, num_nnz=%s, norm=%s>" % (
+            self.__class__.__name__, self.num_docs, self.num_nnz, self.norm
+        )
 
     def calc_norm(self, corpus):
         """Calculate the norm by calling :func:`~gensim.matutils.unitvec` with the norm parameter.

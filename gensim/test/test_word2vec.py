@@ -13,6 +13,7 @@ import unittest
 import os
 import bz2
 import sys
+import tempfile
 
 import numpy as np
 
@@ -1040,6 +1041,13 @@ class TestWord2VecModel(unittest.TestCase):
         """Test if exception is raised when loading word2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
 
+    def test_file_should_not_be_compressed(self):
+        """
+        Is corpus_file a compressed file?
+        """
+        with tempfile.NamedTemporaryFile(suffix=".bz2") as fp:
+            self.assertRaises(TypeError, word2vec.Word2Vec, (None, fp.name))
+
     def test_reset_from(self):
         """Test if reset_from() uses pre-built structures from other model"""
         model = word2vec.Word2Vec(sentences, min_count=1)
@@ -1053,6 +1061,15 @@ class TestWord2VecModel(unittest.TestCase):
         model.train(sentences, compute_loss=True, total_examples=model.corpus_count, epochs=model.epochs)
         training_loss_val = model.get_latest_training_loss()
         self.assertTrue(training_loss_val > 0.0)
+
+    def test_negative_ns_exp(self):
+        """The model should accept a negative ns_exponent as a valid value."""
+        model = word2vec.Word2Vec(sentences, ns_exponent=-1, min_count=1, workers=1)
+        tmpf = get_tmpfile('w2v_negative_exp.tst')
+        model.save(tmpf)
+        loaded_model = word2vec.Word2Vec.load(tmpf)
+        loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
+        assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
 
 
 # endclass TestWord2VecModel

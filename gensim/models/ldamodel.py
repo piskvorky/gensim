@@ -615,8 +615,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Human readable representation of the most important model parameters.
 
         """
-        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
-            self.num_terms, self.num_topics, self.decay, self.chunksize
+        return "%s<num_terms=%s, num_topics=%s, decay=%s, chunksize=%s>" % (
+            self.__class__.__name__, self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def sync_state(self, current_Elogbeta=None):

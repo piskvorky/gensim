@@ -6,10 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """This module implements functionality related to the `Term Frequency - Inverse Document Frequency
-<https://en.wikipedia.org/wiki/Tf%E2%80%93idf>` vector space bag-of-words models.
-
-For a more in-depth exposition of TF-IDF and its various SMART variants (normalization, weighting schemes),
-see the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/
+<https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_ class of bag-of-words vector space models.
 
 """
 
@@ -347,11 +344,6 @@ class TfidfModel(interfaces.TransformationABC):
 
             See also the blog post at https://rare-technologies.com/pivoted-document-length-normalisation/.
 
-        See Also
-        --------
-        ~gensim.sklearn_api.tfidf.TfIdfTransformer : Class that also uses the SMART scheme.
-        resolve_weights : Function that also uses the SMART scheme.
-
         References
         ----------
         .. [1] Singhal, A., Buckley, C., & Mitra, M. (1996). `Pivoted Document Length
@@ -435,7 +427,7 @@ class TfidfModel(interfaces.TransformationABC):
         return model
 
     def __str__(self):
-        return "TfidfModel(num_docs=%s, num_nnz=%s)" % (self.num_docs, self.num_nnz)
+        return "%s<num_docs=%s, num_nnz=%s>" % (self.__class__.__name__, self.num_docs, self.num_nnz)
 
     def initialize(self, corpus):
         """Compute inverse document weights, which will be used to modify term frequencies for documents.

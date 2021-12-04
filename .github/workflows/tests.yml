@@ -20,6 +20,9 @@ jobs:
           - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'py36-linux'}
           - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'py37-linux'}
           - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux'}
+          - {name: Windows, python: 3.6, os: windows-2019, tox: 'py36-win'}
+          - {name: Windows, python: 3.7, os: windows-2019, tox: 'py37-win'}
+          - {name: Windows, python: 3.8, os: windows-2019, tox: 'py38-win'}
     env:
       TOX_PARALLEL_NO_SPINNER: 1
 
@@ -38,23 +41,34 @@ jobs:
       # https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html
       #
       - name: Update sbt
+        if: matrix.os == 'ubuntu-20.04'
         run: |
           echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
           echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
           curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo apt-key add
           sudo apt-get update -y
           sudo apt-get install -y sbt
-      - name: Install tox, gdb
+      - name: Install tox
+        run: pip install tox
+      - name: Install GDB & enable core dumps
+        if: matrix.os == 'ubuntu-20.04'
         run: |
-          pip install tox
           sudo apt-get update -y
           sudo apt-get install -y gdb
-      - name: Enable core dumps
-        run: ulimit -c unlimited -S  # enable core dumps
+          ulimit -c unlimited -S  # enable core dumps
       - name: Run tox tests
         run: tox -e ${{ matrix.tox }}
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.8'
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          files: ./coverage.xml
+          verbose: true
+
+
       - name: Collect corefile
-        if: ${{ failure() }}
+        if: ${{ failure() }} && matrix.os == 'ubuntu-20.04'
         run: |
           pwd
           COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
