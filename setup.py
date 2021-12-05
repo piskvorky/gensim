@@ -10,15 +10,13 @@ Run with::
     python ./setup.py install
 """
 
-import distutils.cmd
-import distutils.log
 import itertools
 import os
 import platform
 import shutil
 import sys
 
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension, find_packages, setup, distutils
 from setuptools.command.build_ext import build_ext
 
 c_extensions = {
