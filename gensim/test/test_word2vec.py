@@ -834,7 +834,7 @@ class TestWord2VecModel(unittest.TestCase):
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
             # so let's test only for top10
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
-            self.assertLess(neighbor_rank, 20)
+            self.assertLess(neighbor_rank, 2)
 
     def test_r_n_g(self):
         """Test word2vec results identical with identical RNG seed."""
