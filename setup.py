@@ -10,15 +10,13 @@ Run with::
     python ./setup.py install
 """
 
-import distutils.cmd
-import distutils.log
 import itertools
 import os
 import platform
 import shutil
 import sys
 
-from setuptools import Extension, find_packages, setup
+from setuptools import Extension, find_packages, setup, distutils
 from setuptools.command.build_ext import build_ext
 
 c_extensions = {
@@ -268,6 +266,7 @@ visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
 # packages included for build-testing everywhere
 core_testenv = [
     'pytest',
+    'pytest-cov',
 #    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',

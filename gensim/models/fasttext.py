@@ -38,8 +38,8 @@ Initialize and train a model:
     >>> print(len(common_texts))
     9
     >>> model = FastText(vector_size=4, window=3, min_count=1)  # instantiate
-    >>> model.build_vocab(sentences=common_texts)
-    >>> model.train(sentences=common_texts, total_examples=len(common_texts), epochs=10)  # train
+    >>> model.build_vocab(corpus_iterable=common_texts)
+    >>> model.train(corpus_iterable=common_texts, total_examples=len(common_texts), epochs=10)  # train
 
 Once you have a model, you can access its keyed vectors via the `model.wv` attributes.
 The keyed vectors instance is quite powerful: it can perform a wide range of NLP tasks.
@@ -108,9 +108,9 @@ Gensim will take care of the rest:
     >>>
     >>>
     >>> model4 = FastText(vector_size=4, window=3, min_count=1)
-    >>> model4.build_vocab(sentences=MyIter())
+    >>> model4.build_vocab(corpus_iterable=MyIter())
     >>> total_examples = model4.corpus_count
-    >>> model4.train(sentences=MyIter(), total_examples=total_examples, epochs=5)
+    >>> model4.train(corpus_iterable=MyIter(), total_examples=total_examples, epochs=5)
 
 Persist a model to disk with:
 
