@@ -137,6 +137,15 @@ def bytes2set(b):
 
 
 class FastSS:
+    """
+    Fast implementation of FastSS (Fast Similarity Search): https://fastss.csg.uzh.ch/
+
+    FastSS enables fuzzy search of a dynamic query (a word, string) against a static
+    dictionary (a set of words, strings). The "fuziness" is configurable by means
+    of a maximum edit distance (Levenshtein) between the query string and any of the
+    dictionary words.
+
+    """
 
     def __init__(self, words=None, max_dist=2):
         """
