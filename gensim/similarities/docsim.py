@@ -1013,9 +1013,9 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
-        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1).wv  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
-        >>> index = WmdSimilarity(common_texts, model)
+        >>> index = WmdSimilarity(common_texts, model.mv)
         >>> # Make query.
         >>> query = ['trees']
         >>> sims = index[query]
