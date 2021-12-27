@@ -1013,7 +1013,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
-        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1).wv  # train word-vectors
         >>>
         >>> index = WmdSimilarity(common_texts, model)
         >>> # Make query.
@@ -1096,7 +1096,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return result
 
     def __str__(self):
-        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.wv.wv.vectors.shape[1])
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.wv.vectors.shape[1])
 
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
