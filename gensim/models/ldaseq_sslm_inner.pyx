@@ -593,10 +593,7 @@ cdef update_obs(StateSpaceLanguageModelConfig *config, REAL_t *sstats, REAL_t *t
         if counts_norm < OBS_NORM_CUTOFF and norm_cutoff_obs is not NULL:
             obs = config.obs + w * num_time_slices
             norm_cutoff_obs = <REAL_t *> (np.PyArray_DATA(np_norm_cutoff_obs))
-            # norm_cutoff_obs = <REAL_t *> malloc(config[0].num_time_slices * sizeof(REAL_t))
-            if norm_cutoff_obs == NULL:
-                raise
-            memcpy(norm_cutoff_obs, obs, num_time_slices * sizeof(REAL_t))
+            memcpy(obs, norm_cutoff_obs, num_time_slices * sizeof(REAL_t))
 
         else:
             if counts_norm < OBS_NORM_CUTOFF:
