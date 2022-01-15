@@ -13,8 +13,6 @@ TODO: The next steps to take this forward would be:
 
 #. Include DIM mode. Most of the infrastructure for this is in place.
 #. See if LdaPost can be replaced by LdaModel completely without breaking anything.
-#. Heavy lifting going on in the Sslm class - efforts can be made to cythonise mathematical methods, in particular,
-   update_obs and the optimization takes a lot time.
 #. Try and make it distributed, especially around the E and M step.
 #. Remove all C/C++ coding style/syntax.
 
@@ -154,22 +152,15 @@ class LdaSeqModel(utils.SaveLoad):
         # which in turn has information about each topic
         # the sslm class is described below and contains information
         # on topic-word probabilities and doc-topic probabilities.
-        self.topic_chains = []
-        for topic in range(num_topics):
-            sslm_ = sslm(
-                num_time_slices=self.num_time_slices, vocab_len=self.vocab_len, num_topics=self.num_topics,
+        self.topic_chains = [
+            sslm(
+                num_time_slices=self.num_time_slices, vocab_len=self.vocab_len,
                 chain_variance=chain_variance, obs_variance=obs_variance
-            )
-            self.topic_chains.append(sslm_)
-
-        # the following are class variables which are to be integrated during Document Influence Model
-        self.top_doc_phis = None
-        self.influence = None
-        self.renormalized_influence = None
-        self.influence_sum_lgl = None
+            ) for i in range(num_topics)]
 
         # if a corpus and time_slice is provided, depending on the user choice of initializing LDA, we start DTM.
         if corpus is not None and time_slice is not None:
+
             self.max_doc_len = max(len(line) for line in corpus)
 
             if initialize == 'gensim':
@@ -188,7 +179,7 @@ class LdaSeqModel(utils.SaveLoad):
             self.init_ldaseq_ss(chain_variance, obs_variance, self.alphas, self.sstats)
 
             # fit DTM
-            self.fit_lda_seq(corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize)
+            self.fit(corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize)
 
     def init_ldaseq_ss(self, topic_chain_variance, topic_obs_variance, alpha, init_suffstats):
         """Initialize State Space Language Model, topic-wise.
@@ -207,17 +198,14 @@ class LdaSeqModel(utils.SaveLoad):
             Sufficient statistics used for initializing the model, expected shape (`self.vocab_len`, `num_topics`).
 
         """
+        # TODO why do we pass this alpha if it is already attr?
         self.alphas = alpha
         for k, chain in enumerate(self.topic_chains):
+            # а что мы сюда копируем? получается наша chain для каждого топика?
             sstats = init_suffstats[:, k]
             chain.sslm_counts_init(topic_obs_variance, topic_chain_variance, sstats)
 
-            # initialize the below matrices only if running DIM
-            # ldaseq.topic_chains[k].w_phi_l = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
-            # ldaseq.topic_chains[k].w_phi_sum = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
-            # ldaseq.topic_chains[k].w_phi_sq = np.zeros((ldaseq.vocab_len, ldaseq.num_time_slices))
-
-    def fit_lda_seq(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize):
+    def fit(self, corpus, lda_inference_max_iter, em_min_iter, em_max_iter, chunksize):
         """Fit a LDA Sequence model (DTM).
 
         This method will iteratively setup LDA models and perform EM steps until the sufficient statistics convergence,
@@ -250,30 +238,34 @@ class LdaSeqModel(utils.SaveLoad):
         ITER_MULT_LOW = 2
         MAX_ITER = 500
 
-        num_topics = self.num_topics
-        vocab_len = self.vocab_len
-        data_len = self.num_time_slices
-        corpus_len = self.corpus_len
-
         bound = 0
         convergence = LDASQE_EM_THRESHOLD + 1
         iter_ = 0
 
+        # setting up memory buffer which are used on every iteration of a cycle below
+        gammas = np.zeros((self.corpus_len, self.num_topics))
+        lhoods = np.zeros((self.corpus_len, self.num_topics + 1))
+
+        # initiate sufficient statistics buffer
+        topic_suffstats = [np.zeros((self.vocab_len, self.num_time_slices))
+                           for topic in range(self.num_topics)]
+
+        # main optimization cycle
         while iter_ < em_min_iter or ((convergence > LDASQE_EM_THRESHOLD) and iter_ <= em_max_iter):
 
             logger.info(" EM iter %i", iter_)
             logger.info("E Step")
-            # TODO: bound is initialized to 0
+
             old_bound = bound
 
-            # initiate sufficient statistics
-            topic_suffstats = []
-            for topic in range(num_topics):
-                topic_suffstats.append(np.zeros((vocab_len, data_len)))
+            # initiate sufficient statistics (resetting buffers from previous interation)
+            for topic_stat in topic_suffstats:
+                topic_stat[:] = 0.0
 
-            # set up variables
-            gammas = np.zeros((corpus_len, num_topics))
-            lhoods = np.zeros((corpus_len, num_topics + 1))
+            # resetting buffer from previous iteration
+            gammas[:] = 0.0
+            lhoods[:] = 0.0
+
             # compute the likelihood of a sequential corpus under an LDA
             # seq model and find the evidence lower bound. This is the E - Step
             bound, gammas = \
@@ -340,31 +332,22 @@ class LdaSeqModel(utils.SaveLoad):
             the posterior.
 
         """
-        num_topics = self.num_topics
-        vocab_len = self.vocab_len
         bound = 0.0
 
-        lda = ldamodel.LdaModel(num_topics=num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
-        lda.topics = np.zeros((vocab_len, num_topics))
-        ldapost = LdaPost(max_doc_len=self.max_doc_len, num_topics=num_topics, lda=lda)
+        lda = ldamodel.LdaModel(num_topics=self.num_topics, alpha=self.alphas, id2word=self.id2word, dtype=np.float64)
 
-        model = "DTM"
-        if model == "DTM":
-            bound, gammas = self.inferDTMseq(
-                corpus, topic_suffstats, gammas, lhoods, lda,
-                ldapost, iter_, bound, lda_inference_max_iter, chunksize
-            )
-        elif model == "DIM":
-            self.InfluenceTotalFixed(corpus)
-            bound, gammas = self.inferDIMseq(
-                corpus, topic_suffstats, gammas, lhoods, lda,
-                ldapost, iter_, bound, lda_inference_max_iter, chunksize
-            )
+        lda.topics = np.zeros((self.vocab_len, self.num_topics))
+
+        ldapost = LdaPost(max_doc_len=self.max_doc_len, num_topics=self.num_topics, lda=lda)
+        bound, gammas = self.infer_dtm_seq(
+            corpus, topic_suffstats, gammas, lhoods, lda,
+            ldapost, iter_, bound, lda_inference_max_iter, chunksize
+        )
 
         return bound, gammas
 
-    def inferDTMseq(self, corpus, topic_suffstats, gammas, lhoods, lda,
-                    ldapost, iter_, bound, lda_inference_max_iter, chunksize):
+    def infer_dtm_seq(self, corpus, topic_suffstats, gammas, lhoods, lda,
+                      ldapost, iter_, bound, lda_inference_max_iter, chunksize):
         """Compute the likelihood of a sequential corpus under an LDA seq model, and reports the likelihood bound.
 
         Parameters
@@ -699,12 +682,11 @@ class sslm(utils.SaveLoad):
 
     """
 
-    def __init__(self, vocab_len=None, num_time_slices=None, num_topics=None, obs_variance=0.5, chain_variance=0.005):
+    def __init__(self, vocab_len=None, num_time_slices=None, obs_variance=0.5, chain_variance=0.005):
         self.vocab_len = vocab_len
         self.num_time_slices = num_time_slices
         self.obs_variance = obs_variance
         self.chain_variance = chain_variance
-        self.num_topics = num_topics
 
         # setting up matrices
         self.obs = np.zeros((vocab_len, num_time_slices), dtype=np.float64)
@@ -714,17 +696,6 @@ class sslm(utils.SaveLoad):
         self.fwd_variance = np.zeros((vocab_len, num_time_slices + 1), dtype=np.float64)
         self.variance = np.zeros((vocab_len, num_time_slices + 1), dtype=np.float64)
         self.zeta = np.zeros(num_time_slices, dtype=np.float64)
-
-        # the following are class variables which are to be integrated during Document Influence Model
-        self.m_update_coeff = None
-        self.mean_t = None
-        self.variance_t = None
-        self.influence_sum_lgl = None
-        self.w_phi_l = None
-        self.w_phi_sum = None
-        self.w_phi_l_sq = None
-        self.m_update_coeff_g = None
-        self.config_c_address = 0
 
     def sslm_counts_init(self, obs_variance, chain_variance, sstats):
         """Initialize the State Space Language Model with LDA sufficient statistics.
@@ -810,11 +781,6 @@ class LdaPost(utils.SaveLoad):
         if max_doc_len is not None and num_topics is not None:
             self.phi = np.zeros((max_doc_len, num_topics))
             self.log_phi = np.zeros((max_doc_len, num_topics))
-
-        # the following are class variables which are to be integrated during Document Influence Model
-
-        self.doc_weight = None
-        self.renormalized_doc_weight = None
 
     def fit_lda_post(self, doc_number, time, ldaseq, LDA_INFERENCE_CONVERGED=1e-8,
                      lda_inference_max_iter=25, g=None, g3_matrix=None, g4_matrix=None, g5_matrix=None):
