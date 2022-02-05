@@ -993,7 +993,7 @@ class Doc2Vec(Word2Vec):
             logger.warning(
                 "Highest int doctag (%i) larger than count of documents (%i). This means "
                 "at least %i excess, unused slots (%i bytes) will be allocated for vectors.",
-                max_rawint, corpus_count, max_rawint - corpus_count, 
+                max_rawint, corpus_count, max_rawint - corpus_count,
                 (max_rawint - corpus_count) * self.vector_size * dtype(REAL).itemsize,
             )
         if max_rawint > -1:
