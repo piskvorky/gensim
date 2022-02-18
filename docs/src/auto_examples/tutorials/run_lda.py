@@ -219,7 +219,7 @@ print('Number of documents: %d' % len(corpus))
 #
 # I suggest the following way to choose iterations and passes. First, enable
 # logging (as described in many Gensim tutorials), and set ``eval_every = 1``
-# in ``LdaModel``. Then, when training the model, look a line in the log that
+# in ``LdaModel``. Then, when training the model, look for a line in the log that
 # looks something like this::
 #
 #    2016-06-21 15:40:06,753 - gensim.models.ldamodel - DEBUG - 68/1566 documents converged within 400 iterations
