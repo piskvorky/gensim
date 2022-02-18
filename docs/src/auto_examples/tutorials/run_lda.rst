@@ -447,7 +447,8 @@ over each document. It is important to set the number of "passes" and
 "iterations" high enough.
 
 I suggest the following way to choose iterations and passes. First, enable
-logging (as described in many Gensim tutorials), and set ``eval_every = 1``
+logging (``logging.basicConfig(level=logging.INFO, format='PID:%(process)d:%(threadName)s -
+%(asctime)s - %(levelname)s - %(filename)s:%(lineno)s - %(message)s')``), and set ``eval_every = 1``
 in ``LdaModel``. Then, when training the model, look for a line in the log that
 looks something like this::
 
