@@ -1045,7 +1045,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         Note
         ----
-        This method **always** returns True, because of the way FastText works.
+        This method **always** returns True with char ngrams, because of the way FastText works.
 
         If you want to check if a word is an in-vocabulary term, use this instead:
 

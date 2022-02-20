@@ -458,7 +458,7 @@ class KeyedVectors(utils.SaveLoad):
 
         keys : list of (str or int or ndarray)
             Keys specified by string or int ids or numpy array.
-        weights : list of int or numpy.ndarray, optional
+        weights : list of float or numpy.ndarray, optional
             1D array of same size of `keys` specifying the weight for each key.
         pre_normalize : bool, optional
             Flag indicating whether to normalize each keyvector before taking mean.
@@ -779,10 +779,10 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        positive : list of (str or int or ndarray), optional
-            List of keys that contribute positively.
-        negative : list of (str or int or ndarray), optional
-            List of keys that contribute negatively.
+        positive : list of (str or int or ndarray) or list of ((str,float) or (int,float) or (ndarray,float)), optional
+            List of keys that contribute positively. If tuple, second element specifies the weight (default `1.0`)
+        negative : list of (str or int or ndarray) or list of ((str,float) or (int,float) or (ndarray,float)), optional
+            List of keys that contribute negatively. If tuple, second element specifies the weight (default `-1.0`)
         topn : int or None, optional
             Number of top-N similar keys to return, when `topn` is int. When `topn` is None,
             then similarities for all keys are returned.
@@ -820,21 +820,14 @@ class KeyedVectors(utils.SaveLoad):
             clip_end = restrict_vocab
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
-        keys, weight = [], []
-        for item in positive:
+        keys = []
+        weight = np.concatenate((np.ones(len(positive)), -1.0 * np.ones(len(negative))))
+        for idx, item in enumerate(positive + negative):
             if isinstance(item, _EXTENDED_KEY_TYPES):
                 keys.append(item)
-                weight.append(1.0)
             else:
                 keys.append(item[0])
-                weight.append(item[1])
-        for item in negative:
-            if isinstance(item, _EXTENDED_KEY_TYPES):
-                keys.append(item)
-                weight.append(-1.0)
-            else:
-                keys.append(item[0])
-                weight.append(item[1])
+                weight[idx] = item[1]
 
         # compute the weighted average of all keys
         mean = self.get_mean_vector(keys, weight, pre_normalize=True, post_normalize=True, ignore_missing=False)
