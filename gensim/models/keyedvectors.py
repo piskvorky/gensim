@@ -203,6 +203,9 @@ def _ensure_list(value):
     if isinstance(value, _KEY_TYPES) or (isinstance(value, ndarray) and len(value.shape) == 1):
         return [value]
 
+    if isinstance(value, ndarray) and len(value.shape) == 2:
+        return list(value)
+
     return value
 
 
