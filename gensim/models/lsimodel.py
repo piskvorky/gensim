@@ -62,6 +62,7 @@ Examples
 import logging
 import sys
 import time
+import types
 
 import numpy as np
 import scipy.linalg
@@ -482,6 +483,20 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         If the distributed mode is on, each chunk is sent to a different worker/computer.
 
         """
+        def is_empty(corpus):
+            """Is the corpus (an iterable or a scipy.sparse array) empty?"""
+            if scipy.sparse.issparse(corpus):
+                return corpus.shape[1] == 0  # by convention, scipy.sparse documents are columns
+            if isinstance(corpus, types.GeneratorType):
+                return False  # don't try to guess emptiness of generators, may lose elements irretrievably
+            try:
+                first_doc = next(iter(corpus))  # list, numpy array etc
+                return False # first document exists => not empty
+            except StopIteration:
+                return True
+            except Exception:
+                return False
+        
         logger.info("updating model with new documents")
 
         # get computation parameters; if not specified, use the ones from constructor
@@ -489,7 +504,7 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             chunksize = self.chunksize
         if decay is None:
             decay = self.decay
-        if not corpus:
+        if is_empty(corpus):
             logger.warning('LsiModel.add_documents() called but no documents provided, is this intended?')
         if not scipy.sparse.issparse(corpus):
             if not self.onepass:
