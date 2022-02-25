@@ -72,6 +72,7 @@ from scipy.sparse import sparsetools
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
 from gensim.utils import is_empty
+
 logger = logging.getLogger(__name__)
 
 # accuracy defaults for the multi-pass stochastic algo
