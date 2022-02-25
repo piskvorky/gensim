@@ -483,7 +483,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         If the distributed mode is on, each chunk is sent to a different worker/computer.
 
         """
-        
         logger.info("updating model with new documents")
 
         # get computation parameters; if not specified, use the ones from constructor
