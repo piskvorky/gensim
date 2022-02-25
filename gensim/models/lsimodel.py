@@ -71,7 +71,7 @@ from scipy.sparse import sparsetools
 
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
-
+from gensim.utils import is_empty
 logger = logging.getLogger(__name__)
 
 # accuracy defaults for the multi-pass stochastic algo
@@ -483,19 +483,6 @@ class LsiModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         If the distributed mode is on, each chunk is sent to a different worker/computer.
 
         """
-        def is_empty(corpus):
-            """Is the corpus (an iterable or a scipy.sparse array) empty?"""
-            if scipy.sparse.issparse(corpus):
-                return corpus.shape[1] == 0  # by convention, scipy.sparse documents are columns
-            if isinstance(corpus, types.GeneratorType):
-                return False  # don't try to guess emptiness of generators, may lose elements irretrievably
-            try:
-                first_doc = next(iter(corpus))  # list, numpy array etc
-                return False # first document exists => not empty
-            except StopIteration:
-                return True
-            except Exception:
-                return False
         
         logger.info("updating model with new documents")
 
