@@ -16,11 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'flake8,flake8-docs'}
-          - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'py36-linux'}
+          - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'flake8,flake8-docs'}
           - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'py37-linux'}
-          - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux'}
-          - {name: Windows, python: 3.6, os: windows-2019, tox: 'py36-win'}
+          - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux-cov'}
           - {name: Windows, python: 3.7, os: windows-2019, tox: 'py37-win'}
           - {name: Windows, python: 3.8, os: windows-2019, tox: 'py38-win'}
     env:
