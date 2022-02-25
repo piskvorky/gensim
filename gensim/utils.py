@@ -30,6 +30,7 @@ import heapq
 from copy import deepcopy
 from datetime import datetime
 import platform
+import types
 
 import numpy as np
 import scipy.sparse

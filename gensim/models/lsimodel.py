@@ -62,7 +62,6 @@ Examples
 import logging
 import sys
 import time
-import types
 
 import numpy as np
 import scipy.linalg
