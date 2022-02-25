@@ -2093,7 +2093,7 @@ def is_empty(corpus):
         return False  # don't try to guess emptiness of generators, may lose elements irretrievably
     try:
         first_doc = next(iter(corpus))  # list, numpy array etc
-        return False # first document exists => not empty
+        return False  # first document exists => not empty
     except StopIteration:
         return True
     except Exception:
