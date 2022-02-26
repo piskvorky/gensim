@@ -20,11 +20,11 @@ jobs:
           - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'py37-linux'}
           - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux-cov'}
           - {name: Linux, python: 3.9, os: ubuntu-20.04, tox: 'py39-linux'}
-          - {name: Linux, python: 3.10, os: ubuntu-20.04, tox: 'py310-linux'}
+          - {name: Linux, python: '3.10', os: ubuntu-20.04, tox: 'py310-linux'}
           - {name: Windows, python: 3.7, os: windows-2019, tox: 'py37-win'}
           - {name: Windows, python: 3.8, os: windows-2019, tox: 'py38-win'}
           - {name: Windows, python: 3.9, os: windows-2019, tox: 'py39-win'}
-          - {name: Windows, python: 3.10, os: windows-2019, tox: 'py310-win'}
+          - {name: Windows, python: '3.10', os: windows-2019, tox: 'py310-win'}
     env:
       TOX_PARALLEL_NO_SPINNER: 1
 
