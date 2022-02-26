@@ -48,7 +48,8 @@ function run_tests {
 #
 function getpip {
     echo "config.sh: desperately trying to upgrade pip without actually using pip"
-    python -c 'import urllib.request;urllib.request.urlretrieve("https://bootstrap.pypa.io/get-pip.py", "get-pip.py")'
+    python --version
+    python continuous_integration/urlretrieve.py https://bootstrap.pypa.io/get-pip.py get-pip.py
     python get-pip.py
 }
 getpip
