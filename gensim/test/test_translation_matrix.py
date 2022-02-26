@@ -64,7 +64,7 @@ class TestTranslationMatrix(unittest.TestCase):
 
     @pytest.mark.xfail(
         sys.platform == 'darwin',
-        'blinking test, can be related to <https://github.com/RaRe-Technologies/gensim/issues/2977>'
+        reason='blinking test, can be related to <https://github.com/RaRe-Technologies/gensim/issues/2977>'
     )
     def test_translate_gc(self):
         # Test globally corrected neighbour retrieval method
