@@ -34,6 +34,8 @@ function run_tests {
     # Runs tests on installed distribution from an empty directory
     set -x
     python --version
+    echo "config.sh: run_tests"
+    pip install --upgrade pip setuptools
     pip freeze
     pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
     set +x
