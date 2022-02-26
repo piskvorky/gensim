@@ -40,15 +40,3 @@ function run_tests {
     pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
     set +x
 }
-
-function install_run {
-    #
-    # Overrides a function by the same name in multibuild/common_util.sh.
-    # We do it here because we want to upgrade pip before installing the wheel.
-    #
-    pip install --upgrade pip setuptools
-    install_wheel
-    mkdir tmp_for_test
-    (cd tmp_for_test && run_tests)
-    rmdir tmp_for_test  2>/dev/null || echo "Cannot remove tmp_for_test"
-}
