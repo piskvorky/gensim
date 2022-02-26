@@ -114,7 +114,12 @@ jobs:
       PLAT: x86_64
       UNICODE_WIDTH: 32
       MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
-      TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest pytest-cov mock cython nmslib pyemd testfixtures scikit-learn pyemd
+      #
+      # We want to upgrade pip _before_ we install the wheel.
+      # common_utils.sh install_wheel function will install these dependencies
+      # one by one, so pip is first.
+      #
+      TEST_DEPENDS: pip==22.0.3 Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest pytest-cov mock cython nmslib pyemd testfixtures scikit-learn pyemd
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       SKIP_NETWORK_TESTS: 1
