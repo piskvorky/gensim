@@ -3,7 +3,8 @@
 function pre_build {
     # Any stuff that you need to do before you start building the wheels
     # Runs in the root directory of this repository.
-    :
+    echo "config.sh: pre_build"
+    pip install --upgrade pip
 }
 
 function pip_opts {
@@ -21,6 +22,7 @@ function build_wheel_cmd {
     if [ -n "$BUILD_DEPENDS" ]; then
 	pip install $(pip_opts) $BUILD_DEPENDS
     fi
+    echo "config.sh: build_wheel_cmd"
     pip install --upgrade pip
     pip --version
     pip freeze
