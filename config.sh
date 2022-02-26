@@ -21,6 +21,7 @@ function build_wheel_cmd {
     if [ -n "$BUILD_DEPENDS" ]; then
 	pip install $(pip_opts) $BUILD_DEPENDS
     fi
+    pip install --upgrade pip
     pip --version
     pip freeze
     $cmd $wheelhouse
