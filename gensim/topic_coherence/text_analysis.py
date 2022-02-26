@@ -300,10 +300,11 @@ class WindowedTextsAnalyzer(UsesDictionary):
     def _iter_texts(self, texts):
         dtype = np.uint16 if np.iinfo(np.uint16).max >= self._vocab_size else np.uint32
         for text in texts:
-            yield np.fromiter((
-                self.id2contiguous[self.token2id[w]] if w in self.relevant_words
-                else self._none_token
-                for w in text), dtype=dtype, count=len(text))
+            ids = (
+                self.id2contiguous[self.token2id[w]] if w in self.relevant_words else self._none_token
+                for w in text
+            )
+            yield np.fromiter(ids, dtype=dtype, count=len(text))
 
 
 class InvertedIndexAccumulator(WindowedTextsAnalyzer, InvertedIndexBased):
