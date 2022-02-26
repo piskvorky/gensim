@@ -994,11 +994,11 @@ class KeyedVectors(utils.SaveLoad):
 
         self.init_sims()
 
-        if isinstance(positive, string_types):
+        if isinstance(positive, str):
             # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
             positive = [positive]
 
-        if isinstance(negative, string_types):
+        if isinstance(negative, str):
             negative = [negative]
 
         all_words = {
@@ -1020,14 +1020,8 @@ class KeyedVectors(utils.SaveLoad):
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-<<<<<<< HEAD
-        vectors_norm = self.vectors_norm[:restrict_vocab] if restrict_vocab else self.vectors_norm
-        pos_dists = [((1 + dot(vectors_norm, term)) / 2) for term in positive]
-        neg_dists = [((1 + dot(vectors_norm, term)) / 2) for term in negative]
-=======
         pos_dists = [((1 + dot(self.vectors, term) / self.norms) / 2) for term in positive]
         neg_dists = [((1 + dot(self.vectors, term) / self.norms) / 2) for term in negative]
->>>>>>> upstream/develop
         dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
@@ -1310,15 +1304,9 @@ class KeyedVectors(utils.SaveLoad):
                     predicted = None
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
-<<<<<<< HEAD
-                    sims = getattr(self, similarity_function)(
-                        positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab
-                    )
-                    self.vocab = original_vocab
-=======
+
                     sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
                     self.key_to_index = original_key_to_index
->>>>>>> upstream/develop
                     for element in sims:
                         predicted = element[0].upper() if case_insensitive else element[0]
                         if predicted in ok_vocab and predicted not in ignore:
