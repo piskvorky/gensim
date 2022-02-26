@@ -40,3 +40,11 @@ function run_tests {
     pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
     set +x
 }
+
+#
+# We do this here because we want to upgrade pip before the wheel gets installed.
+# docker_test_wrap.sh sources this file before the wheel install.
+# I couldn't work out a better way to get this done.
+#
+echo "config.sh: desperately trying to upgrade pip"
+pip install --upgrade pip
