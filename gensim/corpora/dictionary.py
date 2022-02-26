@@ -6,20 +6,13 @@
 
 """This module implements the concept of a Dictionary -- a mapping between words and their integer ids."""
 
-from __future__ import with_statement
-
-from collections import Mapping, defaultdict
-import sys
+from collections import defaultdict
+from collections.abc import Mapping
 import logging
 import itertools
+from typing import Optional, List, Tuple
 
 from gensim import utils
-
-from six import PY3, iteritems, iterkeys, itervalues, string_types
-from six.moves import zip, range
-
-if sys.version_info[0] >= 3:
-    unicode = str
 
 
 logger = logging.getLogger(__name__)
@@ -33,9 +26,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     Attributes
     ----------
     token2id : dict of (str, int)
-        token -> tokenId.
-    id2token : dict of (int, str)
-        Reverse mapping for token2id, initialized in a lazy manner to save memory (not created until needed).
+        token -> token_id. I.e. the reverse mapping to `self[token_id]`.
     cfs : dict of (int, int)
         Collection frequencies: token_id -> how many instances of this token are contained in the documents.
     dfs : dict of (int, int)
@@ -85,6 +76,10 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if documents is not None:
             self.add_documents(documents, prune_at=prune_at)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"built {self} from {self.num_docs} documents (total {self.num_pos} corpus positions)",
+            )
 
     def __getitem__(self, tokenid):
         """Get the string token that corresponds to `tokenid`.
@@ -115,15 +110,14 @@ class Dictionary(utils.SaveLoad, Mapping):
         """Iterate over all tokens."""
         return iter(self.keys())
 
-    if PY3:
-        # restore Py2-style dict API
-        iterkeys = __iter__
+    # restore Py2-style dict API
+    iterkeys = __iter__
 
-        def iteritems(self):
-            return self.items()
+    def iteritems(self):
+        return self.items()
 
-        def itervalues(self):
-            return self.values()
+    def itervalues(self):
+        return self.values()
 
     def keys(self):
         """Get all stored ids.
@@ -148,8 +142,10 @@ class Dictionary(utils.SaveLoad, Mapping):
         return len(self.token2id)
 
     def __str__(self):
-        some_keys = list(itertools.islice(iterkeys(self.token2id), 5))
-        return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
+        some_keys = list(itertools.islice(self.token2id.keys(), 5))
+        return "%s<%i unique tokens: %s%s>" % (
+            self.__class__.__name__, len(self), some_keys, '...' if len(self) > 5 else ''
+        )
 
     @staticmethod
     def from_documents(documents):
@@ -207,10 +203,7 @@ class Dictionary(utils.SaveLoad, Mapping):
             # update Dictionary with the document
             self.doc2bow(document, allow_update=True)  # ignore the result, here we only care about updating token ids
 
-        logger.info(
-            "built %s from %i documents (total %i corpus positions)",
-            self, self.num_docs, self.num_pos
-        )
+        logger.info("built %s from %i documents (total %i corpus positions)", self, self.num_docs, self.num_pos)
 
     def doc2bow(self, document, allow_update=False, return_missing=False):
         """Convert `document` into the bag-of-words (BoW) format = list of `(token_id, token_count)` tuples.
@@ -244,35 +237,35 @@ class Dictionary(utils.SaveLoad, Mapping):
             ([(2, 1)], {u'this': 1, u'is': 1})
 
         """
-        if isinstance(document, string_types):
+        if isinstance(document, str):
             raise TypeError("doc2bow expects an array of unicode tokens on input, not a single string")
 
         # Construct (word, frequency) mapping.
         counter = defaultdict(int)
         for w in document:
-            counter[w if isinstance(w, unicode) else unicode(w, 'utf-8')] += 1
+            counter[w if isinstance(w, str) else str(w, 'utf-8')] += 1
 
         token2id = self.token2id
         if allow_update or return_missing:
-            missing = sorted(x for x in iteritems(counter) if x[0] not in token2id)
+            missing = sorted(x for x in counter.items() if x[0] not in token2id)
             if allow_update:
                 for w, _ in missing:
                     # new id = number of ids made so far;
                     # NOTE this assumes there are no gaps in the id sequence!
                     token2id[w] = len(token2id)
-        result = {token2id[w]: freq for w, freq in iteritems(counter) if w in token2id}
+        result = {token2id[w]: freq for w, freq in counter.items() if w in token2id}
 
         if allow_update:
             self.num_docs += 1
-            self.num_pos += sum(itervalues(counter))
+            self.num_pos += sum(counter.values())
             self.num_nnz += len(result)
             # keep track of document and collection frequencies
-            for tokenid, freq in iteritems(result):
+            for tokenid, freq in result.items():
                 self.cfs[tokenid] = self.cfs.get(tokenid, 0) + freq
                 self.dfs[tokenid] = self.dfs.get(tokenid, 0) + 1
 
         # return tokenids, in ascending id order
-        result = sorted(iteritems(result))
+        result = sorted(result.items())
         if return_missing:
             return result, dict(missing)
         else:
@@ -306,10 +299,10 @@ class Dictionary(utils.SaveLoad, Mapping):
             [0, 0, 2, -1, 2]
 
         """
-        if isinstance(document, string_types):
+        if isinstance(document, str):
             raise TypeError("doc2idx expects an array of unicode tokens on input, not a single string")
 
-        document = [word if isinstance(word, unicode) else unicode(word, 'utf-8') for word in document]
+        document = [word if isinstance(word, str) else str(word, 'utf-8') for word in document]
         return [self.token2id.get(word, unknown_word_index) for word in document]
 
     def filter_extremes(self, no_below=5, no_above=0.5, keep_n=100000, keep_tokens=None):
@@ -337,7 +330,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         After the pruning, resulting gaps in word ids are shrunk.
         Due to this gap shrinking, **the same word may have a different word id before and after the call
-        to this function!**
+        to this function!** See :class:`gensim.models.VocabTransform` and the
+        `dedicated FAQ entry <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q8-how-can-i-filter-a-saved-corpus-and-its-corresponding-dictionary>`_ on how  # noqa
+        to transform a corpus built with a dictionary before pruning.
 
         Examples
         --------
@@ -360,13 +355,13 @@ class Dictionary(utils.SaveLoad, Mapping):
         if keep_tokens:
             keep_ids = {self.token2id[v] for v in keep_tokens if v in self.token2id}
             good_ids = [
-                v for v in itervalues(self.token2id)
+                v for v in self.token2id.values()
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs or v in keep_ids
             ]
             good_ids.sort(key=lambda x: self.num_docs if x in keep_ids else self.dfs.get(x, 0), reverse=True)
         else:
             good_ids = [
-                v for v in itervalues(self.token2id)
+                v for v in self.token2id.values()
                 if no_below <= self.dfs.get(v, 0) <= no_above_abs
             ]
             good_ids.sort(key=self.dfs.get, reverse=True)
@@ -407,7 +402,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         """
         # determine which tokens to keep
-        most_frequent_ids = (v for v in itervalues(self.token2id))
+        most_frequent_ids = (v for v in self.token2id.values())
         most_frequent_ids = sorted(most_frequent_ids, key=self.dfs.get, reverse=True)
         most_frequent_ids = most_frequent_ids[:remove_n]
         # do the actual filtering, then rebuild dictionary to remove gaps in ids
@@ -451,14 +446,14 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         if bad_ids is not None:
             bad_ids = set(bad_ids)
-            self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid not in bad_ids}
-            self.cfs = {tokenid: freq for tokenid, freq in iteritems(self.cfs) if tokenid not in bad_ids}
-            self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid not in bad_ids}
+            self.token2id = {token: tokenid for token, tokenid in self.token2id.items() if tokenid not in bad_ids}
+            self.cfs = {tokenid: freq for tokenid, freq in self.cfs.items() if tokenid not in bad_ids}
+            self.dfs = {tokenid: freq for tokenid, freq in self.dfs.items() if tokenid not in bad_ids}
         if good_ids is not None:
             good_ids = set(good_ids)
-            self.token2id = {token: tokenid for token, tokenid in iteritems(self.token2id) if tokenid in good_ids}
-            self.cfs = {tokenid: freq for tokenid, freq in iteritems(self.cfs) if tokenid in good_ids}
-            self.dfs = {tokenid: freq for tokenid, freq in iteritems(self.dfs) if tokenid in good_ids}
+            self.token2id = {token: tokenid for token, tokenid in self.token2id.items() if tokenid in good_ids}
+            self.cfs = {tokenid: freq for tokenid, freq in self.cfs.items() if tokenid in good_ids}
+            self.dfs = {tokenid: freq for tokenid, freq in self.dfs.items() if tokenid in good_ids}
         self.compactify()
 
     def compactify(self):
@@ -466,12 +461,13 @@ class Dictionary(utils.SaveLoad, Mapping):
         logger.debug("rebuilding dictionary, shrinking gaps")
 
         # build mapping from old id -> new id
-        idmap = dict(zip(sorted(itervalues(self.token2id)), range(len(self.token2id))))
+        idmap = dict(zip(sorted(self.token2id.values()), range(len(self.token2id))))
 
         # reassign mappings to new ids
-        self.token2id = {token: idmap[tokenid] for token, tokenid in iteritems(self.token2id)}
+        self.token2id = {token: idmap[tokenid] for token, tokenid in self.token2id.items()}
         self.id2token = {}
-        self.dfs = {idmap[tokenid]: freq for tokenid, freq in iteritems(self.dfs)}
+        self.dfs = {idmap[tokenid]: freq for tokenid, freq in self.dfs.items()}
+        self.cfs = {idmap[tokenid]: freq for tokenid, freq in self.cfs.items()}
 
     def save_as_text(self, fname, sort_by_word=True):
         """Save :class:`~gensim.corpora.dictionary.Dictionary` to a text file.
@@ -525,11 +521,11 @@ class Dictionary(utils.SaveLoad, Mapping):
             numdocs_line = "%d\n" % self.num_docs
             fout.write(utils.to_utf8(numdocs_line))
             if sort_by_word:
-                for token, tokenid in sorted(iteritems(self.token2id)):
+                for token, tokenid in sorted(self.token2id.items()):
                     line = "%i\t%s\t%i\n" % (tokenid, token, self.dfs.get(tokenid, 0))
                     fout.write(utils.to_utf8(line))
             else:
-                for tokenid, freq in sorted(iteritems(self.dfs), key=lambda item: -item[1]):
+                for tokenid, freq in sorted(self.dfs.items(), key=lambda item: -item[1]):
                     line = "%i\t%s\t%i\n" % (tokenid, self[tokenid], freq)
                     fout.write(utils.to_utf8(line))
 
@@ -571,7 +567,7 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         """
         old2new = {}
-        for other_id, other_token in iteritems(other):
+        for other_id, other_token in other.items():
             if other_token in self.token2id:
                 new_id = self.token2id[other_token]
             else:
@@ -696,6 +692,30 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.dfs[wordid] = int(docfreq)
         return result
 
+    def most_common(self, n: Optional[int] = None) -> List[Tuple[str, int]]:
+        """Return a list of the n most common words and their counts from the most common to the least.
+
+        Words with equal counts are ordered in the increasing order of their ids.
+
+        Parameters
+        ----------
+        n : int or None, optional
+            The number of most common words to be returned. If `None`, all words in the dictionary
+            will be returned. Default is `None`.
+
+        Returns
+        -------
+        most_common : list of (str, int)
+            The n most common words and their counts from the most common to the least.
+
+        """
+        most_common = [
+            (self[word], count)
+            for word, count
+            in sorted(self.cfs.items(), key=lambda x: (-x[1], x[0]))[:n]
+        ]
+        return most_common
+
     @staticmethod
     def from_corpus(corpus, id2word=None):
         """Create :class:`~gensim.corpora.dictionary.Dictionary` from an existing corpus.
@@ -746,11 +766,11 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         if id2word is None:
             # make sure length(result) == get_max_id(corpus) + 1
-            result.token2id = {unicode(i): i for i in range(max_id + 1)}
+            result.token2id = {str(i): i for i in range(max_id + 1)}
         else:
             # id=>word mapping given: simply copy it
-            result.token2id = {utils.to_unicode(token): idx for idx, token in iteritems(id2word)}
-        for idx in itervalues(result.token2id):
+            result.token2id = {utils.to_unicode(token): idx for idx, token in id2word.items()}
+        for idx in result.token2id.values():
             # make sure all token ids have a valid `dfs` entry
             result.dfs[idx] = result.dfs.get(idx, 0)
 

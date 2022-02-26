@@ -12,11 +12,8 @@ Uses multiprocessing internally to parallelize the work and process the dump mor
 
 Notes
 -----
-If you have the `pattern <https://github.com/clips/pattern>`_ package installed,
-this module will use a fancy lemmatization to get a lemma of each token (instead of plain alphabetic tokenizer).
 
 See :mod:`gensim.scripts.make_wiki` for a canned (example) command-line script based on this module.
-
 """
 
 import bz2
@@ -25,15 +22,14 @@ import multiprocessing
 import re
 import signal
 from pickle import PicklingError
-from xml.etree.cElementTree import \
-    iterparse  # LXML isn't faster, so let's go with the built-in solution
+# LXML isn't faster, so let's go with the built-in solution
+from xml.etree.ElementTree import iterparse
+
 
 from gensim import utils
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
-
-from six import raise_from
 
 
 logger = logging.getLogger(__name__)
@@ -468,9 +464,8 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
 
     Parameters
     ----------
-    args : (str, bool, str, int)
-        Article text, lemmatize flag (if True, :func:`~gensim.utils.lemmatize` will be used), article title,
-        page identificator.
+    args : (str, str, int)
+        Article text, article title, page identificator.
     tokenizer_func : function
         Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
         Needs to have interface:
@@ -488,12 +483,9 @@ def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
         List of tokens from article, title and page id.
 
     """
-    text, lemmatize, title, pageid = args
+    text, title, pageid = args
     text = filter_wiki(text)
-    if lemmatize:
-        result = utils.lemmatize(text)
-    else:
-        result = tokenizer_func(text, token_min_len, token_max_len, lower)
+    result = tokenizer_func(text, token_min_len, token_max_len, lower)
     return result, title, pageid
 
 
@@ -575,7 +567,7 @@ class WikiCorpus(TextCorpus):
         >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
-    def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
+    def __init__(self, fname, processes=None, lemmatize=None, dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
                  token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
         """Initialize the corpus.
@@ -589,9 +581,6 @@ class WikiCorpus(TextCorpus):
             Path to the Wikipedia dump file.
         processes : int, optional
             Number of processes to run, defaults to `max(1, number of cpu - 1)`.
-        lemmatize : bool
-            Use lemmatization instead of simple regexp tokenization.
-            Defaults to `True` if you have the `pattern <https://github.com/clips/pattern>`_ package installed.
         dictionary : :class:`~gensim.corpora.dictionary.Dictionary`, optional
             Dictionary, if not provided,  this scans the corpus once, to determine its vocabulary
             **IMPORTANT: this needs a really long time**.
@@ -619,6 +608,13 @@ class WikiCorpus(TextCorpus):
         Unless a dictionary is provided, this scans the corpus once, to determine its vocabulary.
 
         """
+        if lemmatize is not None:
+            raise NotImplementedError(
+                'The lemmatize parameter is no longer supported. '
+                'If you need to lemmatize, use e.g. <https://github.com/clips/pattern>. '
+                'Perform lemmatization as part of your tokenization function and '
+                'pass it as the tokenizer_func parameter to this initializer.'
+            )
         self.fname = fname
         self.filter_namespaces = filter_namespaces
         self.filter_articles = filter_articles
@@ -626,7 +622,6 @@ class WikiCorpus(TextCorpus):
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
-        self.lemmatize = lemmatize
         self.tokenizer_func = tokenizer_func
         self.article_min_tokens = article_min_tokens
         self.token_min_len = token_min_len
@@ -637,6 +632,10 @@ class WikiCorpus(TextCorpus):
             self.dictionary = Dictionary(self.get_texts())
         else:
             self.dictionary = dictionary
+
+    @property
+    def input(self):
+        return self.fname
 
     def get_texts(self):
         """Iterate over the dump, yielding a list of tokens for each article that passed
@@ -673,10 +672,11 @@ class WikiCorpus(TextCorpus):
         positions, positions_all = 0, 0
 
         tokenization_params = (self.tokenizer_func, self.token_min_len, self.token_max_len, self.lower)
-        texts = \
-            ((text, self.lemmatize, title, pageid, tokenization_params)
-             for title, text, pageid
-             in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles))
+        texts = (
+            (text, title, pageid, tokenization_params)
+            for title, text, pageid
+            in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles)
+        )
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
@@ -698,14 +698,16 @@ class WikiCorpus(TextCorpus):
                         yield tokens
 
         except KeyboardInterrupt:
-            logger.warn(
+            logger.warning(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
                 articles, positions, articles_all, positions_all, self.article_min_tokens
             )
         except PicklingError as exc:
-            raise_from(PicklingError('Can not send filtering function {} to multiprocessing, '
-                'make sure the function can be pickled.'.format(self.filter_articles)), exc)
+            raise PicklingError(
+                f'Can not send filtering function {self.filter_articles} to multiprocessing, '
+                'make sure the function can be pickled.'
+            ) from exc
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "

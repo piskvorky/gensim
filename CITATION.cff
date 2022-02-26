@@ -1,0 +1,31 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Řehůřek"
+  given-names: "Radim"
+title: "Gensim: Topic modelling for humans"
+version: 4.1.0
+url: "https://github.com/RaRe-Technologies/gensim"
+preferred-citation:
+  type: conference-paper
+  authors:
+  - family-names: "Řehůřek"
+    given-names: "Radim"
+  - family-names: "Sojka"
+    given-names: "Petr"
+  publisher:
+    name: "University of Malta"
+  date-published: "2010-05-22"
+  year: 2010
+  month: 5
+  start: 45 # First page number
+  end: 50 # Last page number
+  pages: 5
+  title: "Software Framework for Topic Modelling with Large Corpora"
+  languages: ["eng"]
+  url: "http://is.muni.cz/publication/884893/en"
+  conference:
+    name: "Proceedings of LREC 2010 workshop New Challenges for NLP Frameworks"
+    city: Valetta
+    country: MT
+    location: "University of Malta, Valletta, Malta"

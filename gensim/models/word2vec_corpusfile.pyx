@@ -15,7 +15,6 @@ import cython
 import numpy as np
 
 from gensim.utils import any2utf8
-from six import iteritems
 
 cimport numpy as np
 
@@ -41,15 +40,19 @@ cdef class CythonVocab:
     def __init__(self, wv, hs=0, fasttext=0):
         cdef VocabItem word
 
-        for py_token, vocab_item in iteritems(wv.vocab):
+        vocab_sample_ints = wv.expandos['sample_int']
+        if hs:
+            vocab_codes = wv.expandos['code']
+            vocab_points = wv.expandos['point']
+        for py_token in wv.key_to_index.keys():
             token = any2utf8(py_token)
-            word.index = vocab_item.index
-            word.sample_int = vocab_item.sample_int
+            word.index = wv.get_index(py_token)
+            word.sample_int = vocab_sample_ints[word.index]
 
             if hs:
-                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_item.code)
-                word.code_len = <int>len(vocab_item.code)
-                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_item.point)
+                word.code = <np.uint8_t *>np.PyArray_DATA(vocab_codes[word.index])
+                word.code_len = <int>len(vocab_codes[word.index])
+                word.point = <np.uint32_t *>np.PyArray_DATA(vocab_points[word.index])
 
             # subwords information, used only in FastText model
             if fasttext:
@@ -183,7 +186,9 @@ cdef void prepare_c_structures_for_batch(
         vector[vector[string]] &sentences, int sample, int hs, int window, long long *total_words,
         int *effective_words, int *effective_sentences, unsigned long long *next_random,
         cvocab_t *vocab, int *sentence_idx, np.uint32_t *indexes, int *codelens,
-        np.uint8_t **codes, np.uint32_t **points, np.uint32_t *reduced_windows) nogil:
+        np.uint8_t **codes, np.uint32_t **points, np.uint32_t *reduced_windows,
+        int shrink_windows,
+    ) nogil:
     cdef VocabItem word
     cdef string token
     cdef vector[string] sent
@@ -221,8 +226,12 @@ cdef void prepare_c_structures_for_batch(
             break  # TODO: log warning, tally overflow?
 
     # precompute "reduced window" offsets in a single randint() call
-    for i in range(effective_words[0]):
-        reduced_windows[i] = random_int32(next_random) % window
+    if shrink_windows:
+        for i in range(effective_words[0]):
+            reduced_windows[i] = random_int32(next_random) % window
+    else:
+        for i in range(effective_words[0]):
+            reduced_windows[i] = 0
 
 
 cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:
@@ -230,8 +239,8 @@ cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epo
 
 
 cdef REAL_t get_next_alpha(
-        REAL_t start_alpha, REAL_t end_alpha, int total_examples, long long total_words,
-        int expected_examples, long long expected_words, int cur_epoch, int num_epochs) nogil:
+        REAL_t start_alpha, REAL_t end_alpha, long long total_examples, long long total_words,
+        long long expected_examples, long long expected_words, int cur_epoch, int num_epochs) nogil:
     cdef REAL_t epoch_progress
 
     if expected_examples != -1:
@@ -247,7 +256,7 @@ cdef REAL_t get_next_alpha(
 
 
 def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                   _neu1, compute_loss):
+                   _neu1, compute_loss,):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -256,8 +265,8 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
     ----------
     model : :class:`~gensim.models.word2vec.Word2Vec`
         The Word2Vec model instance to train.
-    input_stream : iterable of list of str
-        The corpus used to train the model.
+    corpus_file : str
+        Path to corpus file.
     _cur_epoch : int
         Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
@@ -278,7 +287,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
     # For learning rate updates
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
-    cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
+    cdef long long expected_examples = (-1 if _expected_examples is None else _expected_examples)
     cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
     cdef REAL_t end_alpha = model.min_alpha
@@ -289,9 +298,10 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
-    cdef int total_sentences = 0
+    cdef long long total_sentences = 0
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int shrink_windows = int(model.shrink_windows)
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work)
 
@@ -308,7 +318,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
             prepare_c_structures_for_batch(
                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words, &effective_sentences,
                 &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx, c.indexes,
-                c.codelens, c.codes, c.points, c.reduced_windows)
+                c.codelens, c.codes, c.points, c.reduced_windows, shrink_windows)
 
             for sent_idx in range(effective_sentences):
                 idx_start = c.sentence_idx[sent_idx]
@@ -326,11 +336,13 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
                         if c.hs:
                             w2v_fast_sentence_sg_hs(
                                 c.points[i], c.codes[i], c.codelens[i], c.syn0, c.syn1, c.size, c.indexes[j],
-                                c.alpha, c.work, c.word_locks, c.compute_loss, &c.running_training_loss)
+                                c.alpha, c.work, c.words_lockf, c.words_lockf_len, c.compute_loss,
+                                &c.running_training_loss)
                         if c.negative:
                             c.next_random = w2v_fast_sentence_sg_neg(
                                 c.negative, c.cum_table, c.cum_table_len, c.syn0, c.syn1neg, c.size,
-                                c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random, c.word_locks,
+                                c.indexes[i], c.indexes[j], c.alpha, c.work, c.next_random,
+                                c.words_lockf, c.words_lockf_len,
                                 c.compute_loss, &c.running_training_loss)
 
             total_sentences += sentences.size()
@@ -345,7 +357,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
 
 def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                     _neu1, compute_loss):
+                     _neu1, compute_loss,):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -354,8 +366,8 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     ----------
     model : :class:`~gensim.models.word2vec.Word2Vec`
         The Word2Vec model instance to train.
-    input_stream : iterable of list of str
-        The corpus used to train the model.
+    corpus_file : str
+        Path to corpus file.
     _cur_epoch : int
         Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
@@ -376,7 +388,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     # For learning rate updates
     cdef int cur_epoch = _cur_epoch
     cdef int num_epochs = model.epochs
-    cdef int expected_examples = (-1 if _expected_examples is None else _expected_examples)
+    cdef long long expected_examples = (-1 if _expected_examples is None else _expected_examples)
     cdef long long expected_words = (-1 if _expected_words is None else _expected_words)
     cdef REAL_t start_alpha = model.alpha
     cdef REAL_t end_alpha = model.min_alpha
@@ -387,9 +399,10 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     cdef int i, j, k
     cdef int effective_words = 0, effective_sentences = 0
-    cdef int total_sentences = 0
+    cdef long long total_sentences = 0
     cdef long long total_effective_words = 0, total_words = 0
     cdef int sent_idx, idx_start, idx_end
+    cdef int shrink_windows = int(model.shrink_windows)
 
     init_w2v_config(&c, model, _alpha, compute_loss, _work, _neu1)
 
@@ -406,7 +419,7 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
             prepare_c_structures_for_batch(
                 sentences, c.sample, c.hs, c.window, &total_words, &effective_words,
                 &effective_sentences, &c.next_random, vocab.get_vocab_ptr(), c.sentence_idx,
-                c.indexes, c.codelens, c.codes, c.points, c.reduced_windows)
+                c.indexes, c.codelens, c.codes, c.points, c.reduced_windows, shrink_windows)
 
             for sent_idx in range(effective_sentences):
                 idx_start = c.sentence_idx[sent_idx]
@@ -421,13 +434,15 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
                     if c.hs:
                         w2v_fast_sentence_cbow_hs(
                             c.points[i], c.codes[i], c.codelens, c.neu1, c.syn0, c.syn1, c.size, c.indexes, c.alpha,
-                            c.work, i, j, k, c.cbow_mean, c.word_locks, c.compute_loss, &c.running_training_loss)
+                            c.work, i, j, k, c.cbow_mean, c.words_lockf, c.words_lockf_len, c.compute_loss,
+                            &c.running_training_loss)
 
                     if c.negative:
                         c.next_random = w2v_fast_sentence_cbow_neg(
                             c.negative, c.cum_table, c.cum_table_len, c.codelens, c.neu1, c.syn0,
                             c.syn1neg, c.size, c.indexes, c.alpha, c.work, i, j, k, c.cbow_mean,
-                            c.next_random, c.word_locks, c.compute_loss, &c.running_training_loss)
+                            c.next_random, c.words_lockf, c.words_lockf_len, c.compute_loss,
+                            &c.running_training_loss)
 
             total_sentences += sentences.size()
             total_effective_words += effective_words

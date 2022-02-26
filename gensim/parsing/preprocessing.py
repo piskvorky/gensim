@@ -3,35 +3,19 @@
 #
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""This module contains methods for parsing and preprocessing strings. Let's consider the most noticeable:
-
-* :func:`~gensim.parsing.preprocessing.remove_stopwords` - remove all stopwords from string
-* :func:`~gensim.parsing.preprocessing.preprocess_string` -  preprocess string (in default NLP meaning)
+"""This module contains methods for parsing and preprocessing strings.
 
 Examples
----------
+--------
+
 .. sourcecode:: pycon
 
-    >>> from gensim.parsing.preprocessing import remove_stopwords
+    >>> from gensim.parsing.preprocessing import remove_stopwords, preprocess_string
     >>> remove_stopwords("Better late than never, but better never late.")
     u'Better late never, better late.'
     >>>
     >>> preprocess_string("<i>Hel 9lo</i> <b>Wo9 rld</b>! Th3     weather_is really g00d today, isn't it?")
     [u'hel', u'rld', u'weather', u'todai', u'isn']
-
-
-Data:
------
-
-.. data:: STOPWORDS - Set of stopwords from Stone, Denis, Kwantes (2010).
-.. data:: RE_PUNCT - Regexp for search an punctuation.
-.. data:: RE_TAGS - Regexp for search an tags.
-.. data:: RE_NUMERIC - Regexp for search an numbers.
-.. data:: RE_NONALPHA - Regexp for search an non-alphabetic character.
-.. data:: RE_AL_NUM - Regexp for search a position between letters and digits.
-.. data:: RE_NUM_AL - Regexp for search a position between digits and letters .
-.. data:: RE_WHITESPACE - Regexp for search space characters.
-.. data:: DEFAULT_FILTERS - List of function for string preprocessing.
 
 """
 
@@ -84,17 +68,20 @@ RE_NUM_AL = re.compile(r"([0-9]+)([a-z]+)", flags=re.UNICODE)
 RE_WHITESPACE = re.compile(r"(\s)+", re.UNICODE)
 
 
-def remove_stopwords(s):
+def remove_stopwords(s, stopwords=None):
     """Remove :const:`~gensim.parsing.preprocessing.STOPWORDS` from `s`.
 
     Parameters
     ----------
     s : str
+    stopwords : iterable of str, optional
+        Sequence of stopwords
+        If None - using :const:`~gensim.parsing.preprocessing.STOPWORDS`
 
     Returns
     -------
     str
-        Unicode string without :const:`~gensim.parsing.preprocessing.STOPWORDS`.
+        Unicode string without `stopwords`.
 
     Examples
     --------
@@ -106,11 +93,33 @@ def remove_stopwords(s):
 
     """
     s = utils.to_unicode(s)
-    return " ".join(w for w in s.split() if w not in STOPWORDS)
+    return " ".join(remove_stopword_tokens(s.split(), stopwords))
+
+
+def remove_stopword_tokens(tokens, stopwords=None):
+    """Remove stopword tokens using list `stopwords`.
+
+    Parameters
+    ----------
+    tokens : iterable of str
+        Sequence of tokens.
+    stopwords : iterable of str, optional
+        Sequence of stopwords
+        If None - using :const:`~gensim.parsing.preprocessing.STOPWORDS`
+
+    Returns
+    -------
+    list of str
+        List of tokens without `stopwords`.
+
+    """
+    if stopwords is None:
+        stopwords = STOPWORDS
+    return [token for token in tokens if token not in stopwords]
 
 
 def strip_punctuation(s):
-    """Replace punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
+    """Replace ASCII punctuation characters with spaces in `s` using :const:`~gensim.parsing.preprocessing.RE_PUNCT`.
 
     Parameters
     ----------
@@ -131,10 +140,8 @@ def strip_punctuation(s):
 
     """
     s = utils.to_unicode(s)
+    # For unicode enhancement options see https://github.com/RaRe-Technologies/gensim/issues/2962
     return RE_PUNCT.sub(" ", s)
-
-
-strip_punctuation2 = strip_punctuation
 
 
 def strip_tags(s):
@@ -188,7 +195,26 @@ def strip_short(s, minsize=3):
 
     """
     s = utils.to_unicode(s)
-    return " ".join(e for e in s.split() if len(e) >= minsize)
+    return " ".join(remove_short_tokens(s.split(), minsize))
+
+
+def remove_short_tokens(tokens, minsize=3):
+    """Remove tokens shorter than `minsize` chars.
+
+    Parameters
+    ----------
+    tokens : iterable of str
+        Sequence of tokens.
+    minsize : int, optimal
+        Minimal length of token (include).
+
+    Returns
+    -------
+    list of str
+        List of tokens without short tokens.
+    """
+
+    return [token for token in tokens if len(token) >= minsize]
 
 
 def strip_numeric(s):
@@ -324,6 +350,49 @@ def stem_text(text):
 
 
 stem = stem_text
+
+
+def lower_to_unicode(text, encoding='utf8', errors='strict'):
+    """Lowercase `text` and convert to unicode, using :func:`gensim.utils.any2unicode`.
+
+    Parameters
+    ----------
+    text : str
+        Input text.
+    encoding : str, optional
+        Encoding that will be used for conversion.
+    errors : str, optional
+        Error handling behaviour, used as parameter for `unicode` function (python2 only).
+
+    Returns
+    -------
+    str
+        Unicode version of `text`.
+
+    See Also
+    --------
+    :func:`gensim.utils.any2unicode`
+        Convert any string to unicode-string.
+
+    """
+    return utils.to_unicode(text.lower(), encoding, errors)
+
+
+def split_on_space(s):
+    """Split line by spaces, used in :class:`gensim.corpora.lowcorpus.LowCorpus`.
+
+    Parameters
+    ----------
+    s : str
+        Some line.
+
+    Returns
+    -------
+    list of str
+        List of tokens from `s`.
+
+    """
+    return [word for word in utils.to_unicode(s).strip().split(' ') if word]
 
 
 DEFAULT_FILTERS = [

@@ -38,8 +38,13 @@ This module allows both LDA model estimation from a training corpus and inferenc
 unseen documents. The model can also be updated with new documents for online training.
 
 The core estimation code is based on the `onlineldavb.py script
-<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by
+Matthew D. Hoffman, David M. Blei, Francis Bach:
+`'Online Learning for Latent Dirichlet Allocation', NIPS 2010`_.
+
+.. _'Online Learning for Latent Dirichlet Allocation', NIPS 2010: online-lda_
+.. _'Online Learning for LDA' by Hoffman et al.: online-lda_
+.. _online-lda: https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf
 
 Usage examples
 --------------
@@ -84,15 +89,14 @@ Query, or update the model using new, unseen documents
 """
 
 import logging
+import queue
+from multiprocessing import Pool, Queue, cpu_count
 
 import numpy as np
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
 
-import six
-from six.moves import queue, range
-from multiprocessing import Pool, Queue, cpu_count
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +116,7 @@ class LdaMulticore(LdaModel):
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -129,28 +133,30 @@ class LdaMulticore(LdaModel):
             Number of documents to be used in each training chunk.
         passes : int, optional
             Number of passes through the corpus during training.
-        alpha : {np.ndarray, str}, optional
-            Can be set to an 1D array of length equal to the number of expected topics that expresses
-            our a-priori belief for the each topics' probability.
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
+
             Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`.
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
 
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
-        eta : {float, np.array, str}, optional
-            A-priori belief on word probability, this can be:
-
-                * scalar for a symmetric prior over topic/word probability,
-                * vector of length num_words to denote an asymmetric user defined probability for each word,
-                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
-                * the string 'auto' to learn the asymmetric prior from the data.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from
-            `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
         iterations : int, optional
@@ -161,6 +167,7 @@ class LdaMulticore(LdaModel):
             Topics with a probability lower than this threshold will be filtered out.
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
+            Note that results can still vary due to non-determinism in OS scheduling of the worker processes.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
         per_word_topics : bool
@@ -173,15 +180,15 @@ class LdaMulticore(LdaModel):
         self.workers = max(1, cpu_count() - 1) if workers is None else workers
         self.batch = batch
 
-        if isinstance(alpha, six.string_types) and alpha == 'auto':
-            raise NotImplementedError("auto-tuning alpha not implemented in multicore LDA; use plain LdaModel.")
+        if isinstance(alpha, str) and alpha == 'auto':
+            raise NotImplementedError("auto-tuning alpha not implemented in LdaMulticore; use plain LdaModel.")
 
         super(LdaMulticore, self).__init__(
             corpus=corpus, num_topics=num_topics,
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype,
         )
 
     def update(self, corpus, chunks_as_numpy=False):
@@ -194,19 +201,18 @@ class LdaMulticore(LdaModel):
 
         Notes
         -----
-        This update also supports updating an already trained model (`self`)
-        with new documents from `corpus`; the two models are then merged in
-        proportion to the number of old vs. new documents. This feature is still
-        experimental for non-stationary input streams.
+        This update also supports updating an already trained model (`self`) with new documents from `corpus`;
+        the two models are then merged in proportion to the number of old vs. new documents.
+        This feature is still experimental for non-stationary input streams.
 
         For stationary input (no topic drift in new documents), on the other hand,
-        this equals the online update of Hoffman et al. and is guaranteed to
-        converge for any `decay` in (0.5, 1.0>.
+        this equals the online update of `'Online Learning for LDA' by Hoffman et al.`_
+        and is guaranteed to converge for any `decay` in (0.5, 1].
 
         Parameters
         ----------
         corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunks_as_numpy : bool
             Whether each chunk passed to the inference step should be a np.ndarray or not. Numpy can in some settings
@@ -277,7 +283,7 @@ class LdaMulticore(LdaModel):
                     self.log_perplexity(chunk, total_docs=lencorpus)
 
         logger.info("training LDA model using %i processes", self.workers)
-        pool = Pool(self.workers, worker_e_step, (job_queue, result_queue,))
+        pool = Pool(self.workers, worker_e_step, (job_queue, result_queue, self))
         for pass_ in range(self.passes):
             queue_size, reallen = [0], 0
             other = LdaState(self.eta, self.state.sstats.shape)
@@ -289,7 +295,7 @@ class LdaMulticore(LdaModel):
                 # put the chunk into the workers' input job queue
                 while True:
                     try:
-                        job_queue.put((chunk_no, chunk, self), block=False)
+                        job_queue.put((chunk_no, chunk, self.state), block=False)
                         queue_size[0] += 1
                         logger.info(
                             "PROGRESS: pass %i, dispatched chunk #%i = documents up to #%i/%i, "
@@ -316,7 +322,7 @@ class LdaMulticore(LdaModel):
         pool.terminate()
 
 
-def worker_e_step(input_queue, result_queue):
+def worker_e_step(input_queue, result_queue, worker_lda):
     """Perform E-step for each job.
 
     Parameters
@@ -326,17 +332,20 @@ def worker_e_step(input_queue, result_queue):
         responsible for processing it.
     result_queue : queue of :class:`~gensim.models.ldamodel.LdaState`
         After the worker finished the job, the state of the resulting (trained) worker model is appended to this queue.
-
+    worker_lda : :class:`~gensim.models.ldamulticore.LdaMulticore`
+        LDA instance which performed e step
     """
     logger.debug("worker process entering E-step loop")
     while True:
         logger.debug("getting a new job")
-        chunk_no, chunk, worker_lda = input_queue.get()
+        chunk_no, chunk, w_state = input_queue.get()
         logger.debug("processing chunk #%i of %i documents", chunk_no, len(chunk))
+        worker_lda.state = w_state
+        worker_lda.sync_state()
         worker_lda.state.reset()
         worker_lda.do_estep(chunk)  # TODO: auto-tune alpha?
         del chunk
         logger.debug("processed chunk, queuing the result")
         result_queue.put(worker_lda.state)
-        del worker_lda  # free up some memory
+        worker_lda.state = None
         logger.debug("result put")

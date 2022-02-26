@@ -4,7 +4,7 @@
 """Module contains common utilities used in automated code tests for Gensim modules.
 
 Attributes:
------------
+
 module_path : str
     Full path to this module directory.
 
@@ -19,7 +19,7 @@ common_corpus : list of list of (int, int)
 
 
 Examples:
----------
+
 It's easy to keep objects in temporary folder and reuse'em if needed:
 
 .. sourcecode:: pycon
@@ -73,6 +73,7 @@ import os
 import shutil
 
 from gensim.corpora import Dictionary
+from gensim.utils import simple_preprocess
 
 module_path = os.path.dirname(__file__)  # needed because sample data files are located in the same folder
 
@@ -141,7 +142,7 @@ def get_tmpfile(suffix):
         >>> loaded_model = LsiModel.load(tmp_f)
 
     """
-    return os.path.join(tempfile.gettempdir(), suffix)
+    return os.path.join(tempfile.mkdtemp(), suffix)
 
 
 @contextlib.contextmanager
@@ -205,3 +206,13 @@ common_texts = [
 
 common_dictionary = Dictionary(common_texts)
 common_corpus = [common_dictionary.doc2bow(text) for text in common_texts]
+
+
+class LeeCorpus:
+    def __iter__(self):
+        with open(datapath('lee_background.cor')) as f:
+            for line in f:
+                yield simple_preprocess(line)
+
+
+lee_corpus_list = list(LeeCorpus())

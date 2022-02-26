@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7.4
+      - image: cimg/python:3.8.11
 
     working_directory: ~/gensim
 
@@ -18,12 +18,12 @@ jobs:
             sudo apt-get -yq update
             sudo apt-get -yq remove texlive-binaries --purge
             sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
-            sudo apt-get -yq install build-essential python3.7-dev
+            sudo apt-get -yq install build-essential python3.8-dev
 
       - run:
           name: Basic installation (tox)
           command: |
-            python3.7 -m virtualenv venv
+            python3.8 -m virtualenv venv
             source venv/bin/activate
             pip install tox --progress-bar off
 

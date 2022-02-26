@@ -28,8 +28,6 @@ include gensim/models/fasttext_inner.pxd
 include gensim/models/fasttext_corpusfile.cpp
 include gensim/models/fasttext_corpusfile.pyx
 
-include gensim/models/_utils_any2vec.c
-include gensim/models/_utils_any2vec.pyx
 include gensim/corpora/_mmreader.c
 include gensim/corpora/_mmreader.pyx
 include gensim/_matutils.c

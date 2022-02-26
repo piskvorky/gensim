@@ -4,7 +4,7 @@
 # Copyright (C) 2011 Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-"""Optimized `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>` in Python.
+"""Optimized `Latent Dirichlet Allocation (LDA) <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_ in Python.
 
 For a faster implementation of LDA (parallelized for multicore machines), see also :mod:`gensim.models.ldamulticore`.
 
@@ -13,8 +13,13 @@ distribution on new, unseen documents. The model can also be updated with new do
 for online training.
 
 The core estimation code is based on the `onlineldavb.py script
-<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by `Hoffman, Blei, Bach:
-Online Learning for Latent Dirichlet Allocation, NIPS 2010 <http://www.cs.princeton.edu/~mdhoffma>`_.
+<https://github.com/blei-lab/onlineldavb/blob/master/onlineldavb.py>`_, by
+Matthew D. Hoffman, David M. Blei, Francis Bach:
+`'Online Learning for Latent Dirichlet Allocation', NIPS 2010`_.
+
+.. _'Online Learning for Latent Dirichlet Allocation', NIPS 2010: online-lda_
+.. _'Online Learning for LDA' by Hoffman et al.: online-lda_
+.. _online-lda: https://papers.neurips.cc/paper/2010/file/71f6278d140af599e06ad9bf1ba03cb0-Paper.pdf
 
 The algorithm:
 
@@ -87,18 +92,17 @@ A lot of parameters can be tuned to optimize training for your specific case
 import logging
 import numbers
 import os
+import time
+from collections import defaultdict
 
 import numpy as np
-import six
 from scipy.special import gammaln, psi  # gamma function utils
 from scipy.special import polygamma
-from six.moves import range
-from collections import defaultdict
 
 from gensim import interfaces, utils, matutils
 from gensim.matutils import (
     kullback_leibler, hellinger, jaccard_distance, jensen_shannon,
-    dirichlet_expectation, logsumexp, mean_absolute_difference
+    dirichlet_expectation, logsumexp, mean_absolute_difference,
 )
 from gensim.models import basemodel, CoherenceModel
 from gensim.models.callbacks import Callback
@@ -198,8 +202,7 @@ class LdaState(utils.SaveLoad):
 
         The number of documents is stretched in both state objects, so that they are of comparable magnitude.
         This procedure corresponds to the stochastic gradient update from
-        `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation"
-        <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_, see equations (5) and (9).
+        `'Online Learning for LDA' by Hoffman et al.`_, see equations (5) and (9).
 
         Parameters
         ----------
@@ -311,8 +314,7 @@ class LdaState(utils.SaveLoad):
 
 
 class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """Train and use Online Latent Dirichlet Allocation (OLDA) models as presented in
-    `Hoffman et al. :"Online Learning for Latent Dirichlet Allocation" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+    """Train and use Online Latent Dirichlet Allocation model as presented in `'Online Learning for LDA' by Hoffman et al.`_
 
     Examples
     -------
@@ -354,8 +356,10 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`).
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`).
+            If you have a CSC in-memory matrix, you can convert it to a
+            streamed corpus with the help of gensim.matutils.Sparse2Corpus.
             If not given, the model is left untrained (presumably because you want to call
             :meth:`~gensim.models.ldamodel.LdaModel.update` manually).
         num_topics : int, optional
@@ -372,29 +376,31 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         update_every : int, optional
             Number of documents to be iterated through for each update.
             Set to 0 for batch learning, > 1 for online iterative learning.
-        alpha : {numpy.ndarray, str}, optional
-            Can be set to an 1D array of length equal to the number of expected topics that expresses
-            our a-priori belief for the each topics' probability.
+        alpha : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on document-topic distribution, this can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
+
             Alternatively default prior selecting strategies can be employed by supplying a string:
-
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
                 * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
-        eta : {float, np.array, str}, optional
-            A-priori belief on word probability, this can be:
+        eta : {float, numpy.ndarray of float, list of float, str}, optional
+            A-priori belief on topic-word distribution, this can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
 
-                * scalar for a symmetric prior over topic/word probability,
-                * vector of length num_words to denote an asymmetric user defined probability for each word,
-                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
-                * the string 'auto' to learn the asymmetric prior from the data.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'auto': Learns an asymmetric prior from the corpus.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from
-            `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            when each new document is examined.
+            Corresponds to :math:`\\kappa` from `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         eval_every : int, optional
             Log perplexity is estimated every that many updates. Setting this to one slows down training by ~2x.
         iterations : int, optional
@@ -406,7 +412,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         random_state : {np.random.RandomState, int}, optional
             Either a randomState object or a seed to generate one. Useful for reproducibility.
         ns_conf : dict of (str, object), optional
-            Key word parameters propagated to :func:`gensim.utils.getNS` to get a Pyro4 Nameserved.
+            Key word parameters propagated to :func:`gensim.utils.getNS` to get a Pyro4 nameserver.
             Only used if `distributed` is set to True.
         minimum_phi_value : float, optional
             if `per_word_topics` is True, this represents a lower bound on the term probabilities.
@@ -456,21 +462,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.callbacks = callbacks
 
         self.alpha, self.optimize_alpha = self.init_dir_prior(alpha, 'alpha')
-
         assert self.alpha.shape == (self.num_topics,), \
             "Invalid alpha shape. Got shape %s, but expected (%d, )" % (str(self.alpha.shape), self.num_topics)
 
-        if isinstance(eta, six.string_types):
-            if eta == 'asymmetric':
-                raise ValueError("The 'asymmetric' option cannot be used for eta")
-
         self.eta, self.optimize_eta = self.init_dir_prior(eta, 'eta')
-
-        self.random_state = utils.get_random_state(random_state)
-
         assert self.eta.shape == (self.num_terms,) or self.eta.shape == (self.num_topics, self.num_terms), (
             "Invalid eta shape. Got shape %s, but expected (%d, 1) or (%d, %d)" %
             (str(self.eta.shape), self.num_terms, self.num_topics, self.num_terms))
+
+        self.random_state = utils.get_random_state(random_state)
 
         # VB constants
         self.iterations = iterations
@@ -516,29 +516,48 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # if a training corpus was provided, start estimating the model right away
         if corpus is not None:
             use_numpy = self.dispatcher is not None
+            start = time.time()
             self.update(corpus, chunks_as_numpy=use_numpy)
+            self.add_lifecycle_event(
+                "created",
+                msg=f"trained {self} in {time.time() - start:.2f}s",
+            )
 
     def init_dir_prior(self, prior, name):
         """Initialize priors for the Dirichlet distribution.
 
         Parameters
         ----------
-        prior : {str, list of float, numpy.ndarray of float, float}
-            A-priori belief on word probability. If `name` == 'eta' then the prior can be:
+        prior : {float, numpy.ndarray of float, list of float, str}
+            A-priori belief on document-topic distribution. If `name` == 'alpha', then the prior can be:
+                * scalar for a symmetric prior over document-topic distribution,
+                * 1D array of length equal to num_topics to denote an asymmetric user defined prior for each topic.
 
-                * scalar for a symmetric prior over topic/word probability,
-                * vector of length num_words to denote an asymmetric user defined probability for each word,
-                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination,
-                * the string 'auto' to learn the asymmetric prior from the data.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
+                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / (topic_index + sqrt(num_topics))`,
+                * 'auto': Learns an asymmetric prior from the corpus (not available if `distributed==True`).
 
-            If `name` == 'alpha', then the prior can be:
+            A-priori belief on topic-word distribution. If `name` == 'eta' then the prior can be:
+                * scalar for a symmetric prior over topic-word distribution,
+                * 1D array of length equal to num_words to denote an asymmetric user defined prior for each word,
+                * matrix of shape (num_topics, num_words) to assign a probability for each word-topic combination.
 
-                * an 1D array of length equal to the number of expected topics,
-                * 'asymmetric': Uses a fixed normalized asymmetric prior of `1.0 / topicno`.
+            Alternatively default prior selecting strategies can be employed by supplying a string:
+                * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         name : {'alpha', 'eta'}
             Whether the `prior` is parameterized by the alpha vector (1 parameter per topic)
             or by the eta (1 parameter per unique term in the vocabulary).
+
+        Returns
+        -------
+        init_prior: numpy.ndarray
+            Initialized Dirichlet prior:
+            If 'alpha' was provided as `name` the shape is (self.num_topics, ).
+            If 'eta' was provided as `name` the shape is (len(self.id2word), ).
+        is_auto: bool
+            Flag that shows if hyperparameter optimization should be used or not.
         """
         if prior is None:
             prior = 'symmetric'
@@ -552,14 +571,20 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         is_auto = False
 
-        if isinstance(prior, six.string_types):
+        if isinstance(prior, str):
             if prior == 'symmetric':
                 logger.info("using symmetric %s at %s", name, 1.0 / self.num_topics)
-                init_prior = np.fromiter((1.0 / self.num_topics for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                init_prior = np.fromiter(
+                    (1.0 / self.num_topics for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
             elif prior == 'asymmetric':
-                init_prior = np.fromiter((1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
-                    dtype=self.dtype, count=prior_shape)
+                if name == 'eta':
+                    raise ValueError("The 'asymmetric' option cannot be used for eta")
+                init_prior = np.fromiter(
+                    (1.0 / (i + np.sqrt(prior_shape)) for i in range(prior_shape)),
+                    dtype=self.dtype, count=prior_shape,
+                )
                 init_prior /= init_prior.sum()
                 logger.info("using asymmetric %s %s", name, list(init_prior))
             elif prior == 'auto':
@@ -590,8 +615,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             Human readable representation of the most important model parameters.
 
         """
-        return "LdaModel(num_terms=%s, num_topics=%s, decay=%s, chunksize=%s)" % (
-            self.num_terms, self.num_topics, self.decay, self.chunksize
+        return "%s<num_terms=%s, num_topics=%s, decay=%s, chunksize=%s>" % (
+            self.__class__.__name__, self.num_terms, self.num_topics, self.decay, self.chunksize
         )
 
     def sync_state(self, current_Elogbeta=None):
@@ -602,8 +627,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         current_Elogbeta: numpy.ndarray
             Posterior probabilities for each topic, optional.
             If omitted, it will get Elogbeta from state.
-        """
 
+        """
         if current_Elogbeta is None:
             current_Elogbeta = self.state.get_Elogbeta()
         self.expElogbeta = np.exp(current_Elogbeta)
@@ -618,7 +643,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         """Given a chunk of sparse document vectors, estimate gamma (parameters controlling the topic weights)
         for each document in the chunk.
 
-        This function does not modify the model The whole input chunk of document is assumed to fit in RAM;
+        This function does not modify the model. The whole input chunk of document is assumed to fit in RAM;
         chunking of a large corpus must be done earlier in the pipeline. Avoids computing the `phi` variational
         parameter directly using the optimization presented in
         `Lee, Seung: Algorithms for non-negative matrix factorization"
@@ -626,7 +651,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         collect_sstats : bool, optional
             If set to True, also collect (and return) sufficient statistics needed to update the model's topic-word
@@ -665,7 +690,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # Inference code copied from Hoffman's `onlineldavb.py` (esp. the
         # Lee&Seung trick which speeds things up by an order of magnitude, compared
         # to Blei's original LDA-C code, cool!).
-        integer_types = six.integer_types + (np.integer,)
+        integer_types = (int, np.integer,)
         epsilon = np.finfo(self.dtype).eps
         for d, doc in enumerate(chunk):
             if len(doc) > 0 and not isinstance(doc[0][0], integer_types):
@@ -679,7 +704,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             expElogthetad = expElogtheta[d, :]
             expElogbetad = self.expElogbeta[:, ids]
 
-            # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_w.
+            # The optimal phi_{dwk} is proportional to expElogthetad_k * expElogbetad_kw.
             # phinorm is the normalizer.
             # TODO treat zeros explicitly, instead of adding epsilon?
             phinorm = np.dot(expElogthetad, expElogbetad) + epsilon
@@ -725,7 +750,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         state : :class:`~gensim.models.ldamodel.LdaState`, optional
             The state to be updated with the newly accumulated sufficient statistics. If none, the models
@@ -803,7 +828,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        chunk : {list of list of (int, float), scipy.sparse.csc}
+        chunk : list of list of (int, float)
             The corpus chunk on which the inference step will be performed.
         total_docs : int, optional
             Number of docs used for evaluation of the perplexity.
@@ -835,30 +860,30 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Notes
         -----
-        This update also supports updating an already trained model with new documents; the two models are then merged
-        in proportion to the number of old vs. new documents. This feature is still experimental for non-stationary
-        input streams. For stationary input (no topic drift in new documents), on the other hand, this equals the
-        online update of `Matthew D. Hoffman, David M. Blei, Francis Bach:
-        "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
-        and is guaranteed to converge for any `decay` in (0.5, 1.0). Additionally, for smaller corpus sizes, an
-        increasing `offset` may be beneficial (see Table 1 in the same paper).
+        This update also supports updating an already trained model (`self`) with new documents from `corpus`;
+        the two models are then merged in proportion to the number of old vs. new documents.
+        This feature is still experimental for non-stationary input streams.
+
+        For stationary input (no topic drift in new documents), on the other hand,
+        this equals the online update of `'Online Learning for LDA' by Hoffman et al.`_
+        and is guaranteed to converge for any `decay` in (0.5, 1].
+        Additionally, for smaller corpus sizes,
+        an increasing `offset` may be beneficial (see Table 1 in the same paper).
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to update the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to update the
             model.
         chunksize :  int, optional
             Number of documents to be used in each training chunk.
         decay : float, optional
             A number between (0.5, 1] to weight what percentage of the previous lambda value is forgotten
-            when each new document is examined. Corresponds to Kappa from
-            `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            when each new document is examined. Corresponds to :math:`\\kappa` from
+            `'Online Learning for LDA' by Hoffman et al.`_
         offset : float, optional
             Hyper-parameter that controls how much we will slow down the first steps the first few iterations.
-            Corresponds to Tau_0 from `Matthew D. Hoffman, David M. Blei, Francis Bach:
-            "Online Learning for Latent Dirichlet Allocation NIPS'10" <https://www.di.ens.fr/~fbach/mdhnips2010.pdf>`_.
+            Corresponds to :math:`\\tau_0` from `'Online Learning for LDA' by Hoffman et al.`_
         passes : int, optional
             Number of passes through the corpus during training.
         update_every : int, optional
@@ -1060,8 +1085,8 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Parameters
         ----------
-        corpus : {iterable of list of (int, float), scipy.sparse.csc}, optional
-            Stream of document vectors or sparse matrix of shape (`num_terms`, `num_documents`) used to estimate the
+        corpus : iterable of list of (int, float), optional
+            Stream of document vectors or sparse matrix of shape (`num_documents`, `num_terms`) used to estimate the
             variational bounds.
         gamma : numpy.ndarray, optional
             Topic weight variational parameters for each document. If not supplied, it will be inferred from the model.
@@ -1193,7 +1218,6 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
     def get_topics(self):
         """Get the term-topic matrix learned during inference.
-
 
         Returns
         -------
@@ -1576,7 +1600,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         # make sure 'state', 'id2word' and 'dispatcher' are ignored from the pickled object, even if
         # someone sets the ignore list themselves
         if ignore is not None and ignore:
-            if isinstance(ignore, six.string_types):
+            if isinstance(ignore, str):
                 ignore = [ignore]
             ignore = [e for e in ignore if e]  # make sure None and '' are not in the list
             ignore = list({'state', 'dispatcher', 'id2word'} | set(ignore))
@@ -1588,15 +1612,15 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         separately_explicit = ['expElogbeta', 'sstats']
         # Also add 'alpha' and 'eta' to separately list if they are set 'auto' or some
         # array manually.
-        if (isinstance(self.alpha, six.string_types) and self.alpha == 'auto') or \
+        if (isinstance(self.alpha, str) and self.alpha == 'auto') or \
                 (isinstance(self.alpha, np.ndarray) and len(self.alpha.shape) != 1):
             separately_explicit.append('alpha')
-        if (isinstance(self.eta, six.string_types) and self.eta == 'auto') or \
+        if (isinstance(self.eta, str) and self.eta == 'auto') or \
                 (isinstance(self.eta, np.ndarray) and len(self.eta.shape) != 1):
             separately_explicit.append('eta')
         # Merge separately_explicit with separately.
         if separately:
-            if isinstance(separately, six.string_types):
+            if isinstance(separately, str):
                 separately = [separately]
             separately = [e for e in separately if e]  # make sure None and '' are not in the list
             separately = list(set(separately_explicit) | set(separately))

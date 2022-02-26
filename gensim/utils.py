@@ -8,19 +8,12 @@
 
 from __future__ import with_statement
 from contextlib import contextmanager
-import collections
+import collections.abc
 import logging
 import warnings
-
-try:
-    from html.entities import name2codepoint as n2cp
-except ImportError:
-    from htmlentitydefs import name2codepoint as n2cp
-try:
-    import cPickle as _pickle
-except ImportError:
-    import pickle as _pickle
-
+import numbers
+from html.entities import name2codepoint as n2cp
+import pickle as _pickle
 import re
 import unicodedata
 import os
@@ -34,35 +27,38 @@ import sys
 import subprocess
 import inspect
 import heapq
+from copy import deepcopy
+from datetime import datetime
+import platform
 
 import numpy as np
-import numbers
 import scipy.sparse
-
-from six import iterkeys, iteritems, itervalues, u, string_types, unichr
-from six.moves import range
-
 from smart_open import open
 
-from multiprocessing import cpu_count
-
-if sys.version_info[0] >= 3:
-    unicode = str
+from gensim import __version__ as gensim_version
 
 logger = logging.getLogger(__name__)
 
+# When pickling objects for persistence, use this protocol by default.
+# Note that users won't be able to load models saved with high protocols on older environments that do
+# not support that protocol (e.g. Python 2).
+# In the rare cases where this matters, users can explicitly pass `model.save(pickle_protocol=2)`.
+# See also https://github.com/RaRe-Technologies/gensim/pull/3065
+PICKLE_PROTOCOL = 4
 
 PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
 RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
 
 NO_CYTHON = RuntimeError(
-    "Cython extensions are unavailable. "
-    "Without them, this gensim functionality is disabled. "
-    "If you've installed from a package, ask the package maintainer to include Cython extensions. "
-    "If you're building gensim from source yourself, run `python setup.py build_ext --inplace` "
-    "and retry. "
+    "Compiled extensions are unavailable. "
+    "If you've installed from a package, ask the package maintainer to include compiled extensions. "
+    "If you're building Gensim from source yourself, install Cython and a C compiler, and then "
+    "run `python setup.py build_ext --inplace` to retry. "
 )
 """An exception that gensim code raises when Cython extensions are unavailable."""
+
+#: A default, shared numpy-Generator-based PRNG for any/all uses that don't require seeding
+default_prng = np.random.default_rng()
 
 
 def get_random_state(seed):
@@ -135,7 +131,7 @@ def file_or_filename(input):
         An open file, positioned at the beginning.
 
     """
-    if isinstance(input, string_types):
+    if isinstance(input, str):
         # input was a filename: open as file
         return open(input, 'rb')
     else:
@@ -166,11 +162,11 @@ def open_file(input):
     except Exception:
         # Handling any unhandled exceptions from the code nested in 'with' statement.
         exc = True
-        if not isinstance(input, string_types) or not mgr.__exit__(*sys.exc_info()):
+        if not isinstance(input, str) or not mgr.__exit__(*sys.exc_info()):
             raise
         # Try to introspect and silence errors.
     finally:
-        if not exc and isinstance(input, string_types):
+        if not exc and isinstance(input, str):
             mgr.__exit__(None, None, None)
 
 
@@ -196,11 +192,11 @@ def deaccent(text):
         u'Sef chomutovskych komunistu dostal postou bily prasek'
 
     """
-    if not isinstance(text, unicode):
+    if not isinstance(text, str):
         # assume utf8 for byte strings, use default (strict) error handling
         text = text.decode('utf8')
     norm = unicodedata.normalize("NFD", text)
-    result = u('').join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
+    result = ''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
     return unicodedata.normalize("NFC", result)
 
 
@@ -336,10 +332,10 @@ def any2utf8(text, errors='strict', encoding='utf8'):
 
     """
 
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return text.encode('utf8')
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
-    return unicode(text, encoding, errors=errors).encode('utf8')
+    return str(text, encoding, errors=errors).encode('utf8')
 
 
 to_utf8 = any2utf8
@@ -363,9 +359,9 @@ def any2unicode(text, encoding='utf8', errors='strict'):
         Unicode version of `text`.
 
     """
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return text
-    return unicode(text, encoding, errors=errors)
+    return str(text, encoding, errors=errors)
 
 
 to_unicode = any2unicode
@@ -390,8 +386,8 @@ def call_on_class_only(*args, **kwargs):
     raise AttributeError('This method should be called on a class object.')
 
 
-class SaveLoad(object):
-    """Serialize/deserialize object from disk, by equipping objects with the save()/load() methods.
+class SaveLoad:
+    """Serialize/deserialize objects from disk, by equipping them with the `save()` / `load()` methods.
 
     Warnings
     --------
@@ -399,6 +395,60 @@ class SaveLoad(object):
     such as lambda functions etc.
 
     """
+    def add_lifecycle_event(self, event_name, log_level=logging.INFO, **event):
+        """
+        Append an event into the `lifecycle_events` attribute of this object, and also
+        optionally log the event at `log_level`.
+
+        Events are important moments during the object's life, such as "model created",
+        "model saved", "model loaded", etc.
+
+        The `lifecycle_events` attribute is persisted across object's :meth:`~gensim.utils.SaveLoad.save`
+        and :meth:`~gensim.utils.SaveLoad.load` operations. It has no impact on the use of the model,
+        but is useful during debugging and support.
+
+        Set `self.lifecycle_events = None` to disable this behaviour. Calls to `add_lifecycle_event()`
+        will not record events into `self.lifecycle_events` then.
+
+        Parameters
+        ----------
+        event_name : str
+            Name of the event. Can be any label, e.g. "created", "stored" etc.
+        event : dict
+            Key-value mapping to append to `self.lifecycle_events`. Should be JSON-serializable, so keep it simple.
+            Can be empty.
+
+            This method will automatically add the following key-values to `event`, so you don't have to specify them:
+
+            - `datetime`: the current date & time
+            - `gensim`: the current Gensim version
+            - `python`: the current Python version
+            - `platform`: the current platform
+            - `event`: the name of this event
+        log_level : int
+            Also log the complete event dict, at the specified log level. Set to False to not log at all.
+
+        """
+        # See also https://github.com/RaRe-Technologies/gensim/issues/2863
+
+        event_dict = deepcopy(event)
+        event_dict['datetime'] = datetime.now().isoformat()
+        event_dict['gensim'] = gensim_version
+        event_dict['python'] = sys.version
+        event_dict['platform'] = platform.platform()
+        event_dict['event'] = event_name
+
+        if not hasattr(self, 'lifecycle_events'):
+            # Avoid calling str(self), the object may not be fully initialized yet at this point.
+            logger.debug("starting a new internal lifecycle event log for %s", self.__class__.__name__)
+            self.lifecycle_events = []
+
+        if log_level:
+            logger.log(log_level, "%s lifecycle event %s", self.__class__.__name__, event_dict)
+
+        if self.lifecycle_events is not None:
+            self.lifecycle_events.append(event_dict)
+
     @classmethod
     def load(cls, fname, mmap=None):
         """Load an object previously saved using :meth:`~gensim.utils.SaveLoad.save` from a file.
@@ -434,7 +484,7 @@ class SaveLoad(object):
 
         obj = unpickle(fname)
         obj._load_specials(fname, mmap, compress, subname)
-        logger.info("loaded %s", fname)
+        obj.add_lifecycle_event("loaded", fname=fname)
         return obj
 
     def _load_specials(self, fname, mmap, compress, subname):
@@ -522,7 +572,10 @@ class SaveLoad(object):
         compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
         return compress, lambda *args: '.'.join(args + (suffix,))
 
-    def _smart_save(self, fname, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
+    def _smart_save(
+            self, fname,
+            separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL,
+        ):
         """Save the object to a file. Used internally by :meth:`gensim.utils.SaveLoad.save()`.
 
         Parameters
@@ -548,18 +601,17 @@ class SaveLoad(object):
         in separate files. The automatic check is not performed in this case.
 
         """
-        logger.info("saving %s object under %s, separately %s", self.__class__.__name__, fname, separately)
-
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
-        restores = self._save_specials(fname, separately, sep_limit, ignore, pickle_protocol,
-                                       compress, subname)
+        restores = self._save_specials(
+            fname, separately, sep_limit, ignore, pickle_protocol, compress, subname,
+        )
         try:
             pickle(self, fname, protocol=pickle_protocol)
         finally:
             # restore attribs handled specially
             for obj, asides in restores:
-                for attrib, val in iteritems(asides):
+                for attrib, val in asides.items():
                     with ignore_deprecation_warning():
                         setattr(obj, attrib, val)
         logger.info("saved %s", fname)
@@ -596,7 +648,7 @@ class SaveLoad(object):
         sparse_matrices = (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)
         if separately is None:
             separately = []
-            for attrib, val in iteritems(self.__dict__):
+            for attrib, val in self.__dict__.items():
                 if isinstance(val, np.ndarray) and val.size >= sep_limit:
                     separately.append(attrib)
                 elif isinstance(val, sparse_matrices) and val.nnz >= sep_limit:
@@ -611,7 +663,7 @@ class SaveLoad(object):
 
         recursive_saveloads = []
         restores = []
-        for attrib, val in iteritems(self.__dict__):
+        for attrib, val in self.__dict__.items():
             if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
                 cfname = '.'.join((fname, attrib))
@@ -619,7 +671,7 @@ class SaveLoad(object):
 
         try:
             numpys, scipys, ignoreds = [], [], []
-            for attrib, val in iteritems(asides):
+            for attrib, val in asides.items():
                 if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
                     logger.info("storing np array '%s' to %s", attrib, subname(fname, attrib))
@@ -663,12 +715,15 @@ class SaveLoad(object):
             self.__dict__['__recursive_saveloads'] = recursive_saveloads
         except Exception:
             # restore the attributes if exception-interrupted
-            for attrib, val in iteritems(asides):
+            for attrib, val in asides.items():
                 setattr(self, attrib, val)
             raise
         return restores + [(self, asides)]
 
-    def save(self, fname_or_handle, separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=2):
+    def save(
+            self, fname_or_handle,
+            separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL,
+        ):
         """Save the object to a file.
 
         Parameters
@@ -697,6 +752,13 @@ class SaveLoad(object):
             Load object from file.
 
         """
+        self.add_lifecycle_event(
+            "saving",
+            fname_or_handle=str(fname_or_handle),
+            separately=str(separately),
+            sep_limit=sep_limit,
+            ignore=ignore,
+        )
         try:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
@@ -746,7 +808,7 @@ def get_max_id(corpus):
     return maxid
 
 
-class FakeDict(object):
+class FakeDict:
     """Objects of this class act as dictionaries that map integer->str(integer), for a specified
     range of integers <0, num_terms).
 
@@ -765,16 +827,18 @@ class FakeDict(object):
         self.num_terms = num_terms
 
     def __str__(self):
-        return "FakeDict(num_terms=%s)" % self.num_terms
+        return "%s<num_terms=%s>" % (self.__class__.__name__, self.num_terms)
 
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:
             return str(val)
         raise ValueError("internal id out of bounds (%s, expected <0..%s))" % (val, self.num_terms))
 
+    def __contains__(self, val):
+        return 0 <= val < self.num_terms
+
     def iteritems(self):
         """Iterate over all keys and values.
-
 
         Yields
         ------
@@ -1084,9 +1148,9 @@ def safe_unichr(intval):
 
     """
     try:
-        return unichr(intval)
+        return chr(intval)
     except ValueError:
-        # ValueError: unichr() arg not in range(0x10000) (narrow Python build)
+        # ValueError: chr() arg not in range(0x10000) (narrow Python build)
         s = "\\U%08x" % intval
         # return UTF16 surrogate pair
         return s.decode('unicode-escape')
@@ -1238,7 +1302,11 @@ class InputQueue(multiprocessing.Process):
             self.q.put(wrapped_chunk.pop(), block=True)
 
 
-if os.name == 'nt':
+# Multiprocessing on Windows (and on OSX with python3.8+) uses "spawn" mode, which
+# causes issues with pickling.
+# So for these two platforms, use simpler serial processing in `chunkize`.
+# See https://github.com/RaRe-Technologies/gensim/pull/2800#discussion_r410890171
+if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
@@ -1251,7 +1319,7 @@ if os.name == 'nt':
         maxsize : int, optional
             Ignored. For interface compatibility only.
         as_numpy : bool, optional
-            Yield chunks as `np.ndarray`s instead of lists?
+            Yield chunks as `np.ndarray` s instead of lists?
 
         Yields
         ------
@@ -1260,7 +1328,8 @@ if os.name == 'nt':
 
         """
         if maxsize > 0:
-            warnings.warn("detected Windows; aliasing chunkize to chunkize_serial")
+            entity = "Windows" if os.name == 'nt' else "OSX with python3.8+"
+            warnings.warn("detected %s; aliasing chunkize to chunkize_serial" % entity)
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
 else:
@@ -1356,7 +1425,7 @@ def smart_extension(fname, ext):
     return fname
 
 
-def pickle(obj, fname, protocol=2):
+def pickle(obj, fname, protocol=PICKLE_PROTOCOL):
     """Pickle object `obj` to file `fname`, using smart_open so that `fname` can be on S3, HDFS, compressed etc.
 
     Parameters
@@ -1366,7 +1435,7 @@ def pickle(obj, fname, protocol=2):
     fname : str
         Path to pickle file.
     protocol : int, optional
-        Pickle protocol number. Default is 2 in order to support compatibility across python 2.x and 3.x.
+        Pickle protocol number.
 
     """
     with open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
@@ -1388,11 +1457,7 @@ def unpickle(fname):
 
     """
     with open(fname, 'rb') as f:
-        # Because of loading from S3 load can't be used (missing readline in smart_open)
-        if sys.version_info > (3, 0):
-            return _pickle.load(f, encoding='latin1')
-        else:
-            return _pickle.loads(f.read())
+        return _pickle.load(f, encoding='latin1')  # needed because loading from S3 doesn't support readline()
 
 
 def revdict(d):
@@ -1422,7 +1487,7 @@ def revdict(d):
         {2: 1, 4: 3}
 
     """
-    return {v: k for (k, v) in iteritems(dict(d))}
+    return {v: k for (k, v) in dict(d).items()}
 
 
 def deprecated(reason):
@@ -1442,7 +1507,7 @@ def deprecated(reason):
         Decorated function
 
     """
-    if isinstance(reason, string_types):
+    if isinstance(reason, str):
         def decorator(func):
             fmt = "Call to deprecated `{name}` ({reason})."
 
@@ -1535,7 +1600,7 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
 
     Notes
     -----
-    Use this function to train or index large collections -- avoid sending the
+    Use this function to train or index large collections.abc -- avoid sending the
     entire corpus over the wire as a single Pyro in-memory object. The documents
     will be sent in smaller chunks, of `chunksize` documents each.
 
@@ -1608,105 +1673,6 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
             ns.register(name, uri)
             logger.info("%s registered with nameserver (URI '%s')", name, uri)
             daemon.requestLoop()
-
-
-def has_pattern():
-    """Check whether the `pattern <https://github.com/clips/pattern>`_ package is installed.
-
-    Returns
-    -------
-    bool
-        Is `pattern` installed?
-
-    """
-    try:
-        from pattern.en import parse  # noqa:F401
-        return True
-    except ImportError:
-        return False
-
-
-def lemmatize(content, allowed_tags=re.compile(r'(NN|VB|JJ|RB)'), light=False,
-              stopwords=frozenset(), min_length=2, max_length=15):
-    """Use the English lemmatizer from `pattern <https://github.com/clips/pattern>`_ to extract UTF8-encoded tokens in
-    their base form aka lemma, e.g. "are, is, being" becomes "be" etc.
-
-    This is a smarter version of stemming, taking word context into account.
-
-    Parameters
-    ----------
-    content : str
-        Input string
-    allowed_tags : :class:`_sre.SRE_Pattern`, optional
-        Compiled regexp to select POS that will be used.
-        Only considers nouns, verbs, adjectives and adverbs by default (=all other lemmas are discarded).
-    light : bool, optional
-        DEPRECATED FLAG, DOESN'T SUPPORT BY `pattern`.
-    stopwords : frozenset, optional
-        Set of words that will be removed from output.
-    min_length : int, optional
-        Minimal token length in output (inclusive).
-    max_length : int, optional
-        Maximal token length in output (inclusive).
-
-    Returns
-    -------
-    list of str
-        List with tokens with POS tags.
-
-    Warnings
-    --------
-    This function is only available when the optional `pattern <https://github.com/clips/pattern>`_ is installed.
-
-    Raises
-    ------
-    ImportError
-        If `pattern <https://github.com/clips/pattern>`_ not installed.
-
-    Examples
-    --------
-    .. sourcecode:: pycon
-
-        >>> from gensim.utils import lemmatize
-        >>> lemmatize('Hello World! How is it going?! Nonexistentword, 21')
-        ['world/NN', 'be/VB', 'go/VB', 'nonexistentword/NN']
-
-    Note the context-dependent part-of-speech tags between these two examples:
-
-    .. sourcecode:: pycon
-
-        >>> lemmatize('The study ranks high.')
-        ['study/NN', 'rank/VB', 'high/JJ']
-
-        >>> lemmatize('The ranks study hard.')
-        ['rank/NN', 'study/VB', 'hard/RB']
-
-    """
-    if not has_pattern():
-        raise ImportError(
-            "Pattern library is not installed. Pattern library is needed in order to use lemmatize function"
-        )
-    from pattern.en import parse
-
-    if light:
-        import warnings
-        warnings.warn("The light flag is no longer supported by pattern.")
-
-    # tokenization in `pattern` is weird; it gets thrown off by non-letters,
-    # producing '==relate/VBN' or '**/NN'... try to preprocess the text a little
-    # FIXME this throws away all fancy parsing cues, including sentence structure,
-    # abbreviations etc.
-    content = u(' ').join(tokenize(content, lower=True, errors='ignore'))
-
-    parsed = parse(content, lemmata=True, collapse=False)
-    result = []
-    for sentence in parsed:
-        for token, tag, _, _, lemma in sentence:
-            if min_length <= len(lemma) <= max_length and not lemma.startswith('_') and lemma not in stopwords:
-                if allowed_tags.match(tag):
-                    lemma += "/" + tag[:2]
-                    result.append(lemma.encode('utf8'))
-    return result
 
 
 def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1806,7 +1772,7 @@ def trim_vocab_by_freq(vocab, topk, trim_rule=None):
     if topk >= len(vocab):
         return
 
-    min_count = heapq.nlargest(topk, itervalues(vocab))[-1]
+    min_count = heapq.nlargest(topk, vocab.values())[-1]
     prune_vocab(vocab, min_count, trim_rule=trim_rule)
 
 
@@ -1823,7 +1789,7 @@ def merge_counts(dict1, dict2):
     result : dict
         Merged dictionary with sum of frequencies as values.
     """
-    for word, freq in iteritems(dict2):
+    for word, freq in dict2.items():
         if word in dict1:
             dict1[word] += freq
         else:
@@ -1949,7 +1915,7 @@ def sample_dict(d, n=10, use_random=True):
         Selected items from dictionary, as a list.
 
     """
-    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(iterkeys(d), n)
+    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(d.keys(), n)
     return [(key, d[key]) for key in selected_keys]
 
 
@@ -2050,7 +2016,7 @@ def flatten(nested_list):
     Returns
     -------
     list
-        Flattened version of `nested_list` where any elements that are an iterable (`collections.Iterable`)
+        Flattened version of `nested_list` where any elements that are an iterable (`collections.abc.Iterable`)
         have been unpacked into the top-level list, in a recursive fashion.
 
     """
@@ -2072,7 +2038,7 @@ def lazy_flatten(nested_list):
 
     """
     for el in nested_list:
-        if isinstance(el, collections.Iterable) and not isinstance(el, string_types):
+        if isinstance(el, collections.abc.Iterable) and not isinstance(el, str):
             for sub in flatten(el):
                 yield sub
         else:
@@ -2116,5 +2082,5 @@ def effective_n_jobs(n_jobs):
     elif n_jobs is None:
         return 1
     elif n_jobs < 0:
-        n_jobs = max(cpu_count() + 1 + n_jobs, 1)
+        n_jobs = max(multiprocessing.cpu_count() + 1 + n_jobs, 1)
     return n_jobs

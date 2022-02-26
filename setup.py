@@ -10,26 +10,22 @@ Run with::
     python ./setup.py install
 """
 
-import distutils.cmd
-import distutils.log
 import itertools
-import os.path
+import os
 import platform
 import shutil
 import sys
-from setuptools import setup, find_packages, Extension
-from setuptools.command.build_ext import build_ext
 
-if sys.version_info[:2] < (3, 5):
-    raise Exception('This version of gensim needs 3.5 or later.')
+from setuptools import Extension, find_packages, setup, distutils
+from setuptools.command.build_ext import build_ext
 
 c_extensions = {
     'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
     'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
     'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
-    'gensim.models._utils_any2vec': 'gensim/models/_utils_any2vec.c',
     'gensim._matutils': 'gensim/_matutils.c',
     'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
+    'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
 }
 
 cpp_extensions = {
@@ -44,7 +40,9 @@ def need_cython():
     """Return True if we need Cython to translate any of the extensions.
 
     If the extensions have already been translated to C/C++, then we don't need
-    to install Cython and perform the translation."""
+    to install Cython and perform the translation.
+
+    """
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
     return any([not os.path.isfile(f) for f in expected])
 
@@ -53,7 +51,14 @@ def make_c_ext(use_cython=False):
     for module, source in c_extensions.items():
         if use_cython:
             source = source.replace('.c', '.pyx')
-        yield Extension(module, sources=[source], language='c')
+        extra_args = []
+#        extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
+        yield Extension(
+            module,
+            sources=[source],
+            language='c',
+            extra_compile_args=extra_args,
+        )
 
 
 def make_cpp_ext(use_cython=False):
@@ -64,7 +69,7 @@ def make_cpp_ext(use_cython=False):
         extra_args.append('-std=c++11')
     elif system == 'Darwin':
         extra_args.extend(['-stdlib=libc++', '-std=c++11'])
-
+#    extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
     for module, source in cpp_extensions.items():
         if use_cython:
             source = source.replace('.cpp', '.pyx')
@@ -149,13 +154,13 @@ LONG_DESCRIPTION = u"""
 gensim -- Topic Modelling in Python
 ==============================================
 
-|Travis|_
+|GA|_
 |Wheel|_
 
-.. |Travis| image:: https://img.shields.io/travis/RaRe-Technologies/gensim/develop.svg
+.. |GA| image:: https://github.com/RaRe-Technologies/gensim/actions/workflows/tests.yml/badge.svg?branch=develop
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
-.. _Travis: https://travis-ci.org/RaRe-Technologies/gensim
+.. _GA: https://github.com/RaRe-Technologies/gensim/actions
 .. _Downloads: https://pypi.python.org/pypi/gensim
 .. _License: http://radimrehurek.com/gensim/about.html
 .. _Wheel: https://pypi.python.org/pypi/gensim
@@ -166,14 +171,14 @@ Target audience is the *natural language processing* (NLP) and *information retr
 Features
 ---------
 
-* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core),
+* All algorithms are **memory-independent** w.r.t. the corpus size (can process input larger than RAM, streamed, out-of-core)
 * **Intuitive interfaces**
 
-  * easy to plug in your own input corpus/datastream (trivial streaming API)
-  * easy to extend with other Vector Space algorithms (trivial transformation API)
+  * easy to plug in your own input corpus/datastream (simple streaming API)
+  * easy to extend with other Vector Space algorithms (simple transformation API)
 
 * Efficient multicore implementations of popular algorithms, such as online **Latent Semantic Analysis (LSA/LSI/SVD)**,
-  **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)**  or **word2vec deep learning**.
+  **Latent Dirichlet Allocation (LDA)**, **Random Projections (RP)**, **Hierarchical Dirichlet Process (HDP)** or **word2vec deep learning**.
 * **Distributed computing**: can run *Latent Semantic Analysis* and *Latent Dirichlet Allocation* on a cluster of computers.
 * Extensive `documentation and Jupyter Notebook tutorials <https://github.com/RaRe-Technologies/gensim/#documentation>`_.
 
@@ -188,23 +193,22 @@ Installation
 This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OS X, NumPy picks up the BLAS that comes with it automatically, so you don't need to do anything special.
+It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
 
-The simple way to install `gensim` is::
+Install the latest version of gensim::
 
-    pip install -U gensim
+    pip install --upgrade gensim
 
-Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package,
-you'd run::
+Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package::
 
-    python setup.py test
     python setup.py install
 
 
-For alternative modes of installation (without root privileges, development
-installation, optional install features), see the `install documentation <http://radimrehurek.com/gensim/install.html>`_.
+For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/#install>`_.
 
-This version has been tested under Python 2.7, 3.5 and 3.6. Support for Python 2.6, 3.3 and 3.4 was dropped in gensim 1.0.0. Install gensim 0.13.4 if you *must* use Python 2.6, 3.3 or 3.4. Support for Python 2.5 was dropped in gensim 0.10.0; install gensim 0.9.1 if you *must* use Python 2.5). Gensim's github repo is hooked against `Travis CI for automated testing <https://travis-ci.org/RaRe-Technologies/gensim>`_ on every commit push and pull request.
+Gensim is being `continuously tested <http://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
+Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
+
 
 How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't Python slow and greedy?
 --------------------------------------------------------------------------------------------------------
@@ -257,21 +261,32 @@ Copyright (c) 2009-now Radim Rehurek
 
 distributed_env = ['Pyro4 >= 4.27']
 
-win_testenv = [
+visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
+
+# packages included for build-testing everywhere
+core_testenv = [
     'pytest',
-    'pytest-rerunfailures',
+    'pytest-cov',
+#    'pytest-rerunfailures',  # disabled 2020-08-28 for <https://github.com/pytest-dev/pytest-rerunfailures/issues/128>
     'mock',
     'cython',
-    # temporarily remove pyemd to work around appveyor issues
-    # 'pyemd',
     'testfixtures',
-    'Morfessor==2.0.2a4',
-    'python-Levenshtein >= 0.10.2',
-    'visdom >= 0.1.8, != 0.1.8.7',
-    'scikit-learn',
+    'Morfessor>=2.0.2a4',
 ]
 
-linux_testenv = win_testenv[:]
+if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
+    core_testenv.extend([
+        'pyemd',
+        'nmslib',
+    ])
+
+# Add additional requirements for testing on Linux that are skipped on Windows.
+linux_testenv = core_testenv[:] + visdom_req
+
+# Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
+# We still test them in Linux via Travis, see linux_testenv above.
+# See https://github.com/RaRe-Technologies/gensim/pull/2814
+win_testenv = core_testenv[:]
 
 #
 # This list partially duplicates requirements_docs.txt.
@@ -283,51 +298,35 @@ linux_testenv = win_testenv[:]
 #
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
-docs_testenv = linux_testenv + distributed_env + [
+
+docs_testenv = core_testenv + distributed_env + visdom_req + [
     'sphinx',
-    'sphinxcontrib-napoleon',
-    'plotly',
-    #
-    # Pattern is a PITA to install, it requires mysqlclient, which in turn
-    # requires MySQL dev tools be installed.  We don't need it for building
-    # documentation.
-    #
-    # 'Pattern==3.6',  # Need 3.6 or later for Py3 support
-    'sphinxcontrib.programoutput',
     'sphinx-gallery',
+    'sphinxcontrib.programoutput',
+    'sphinxcontrib-napoleon',
+    'matplotlib',  # expected by sphinx-gallery
     'memory_profiler',
     'annoy',
     'Pyro4',
-    'scikit-learn',
     'nltk',
     'testfixtures',
     'statsmodels',
-    'pyemd',
     'pandas',
 ]
 
-if sys.version_info < (3, 7):
-    linux_testenv.extend([
-        'tensorflow <= 1.3.0',
-        'keras >= 2.0.4, <= 2.1.4',
-    ])
-
-if (3, 0) < sys.version_info < (3, 7):
-    linux_testenv.extend(['nmslib'])
-
-NUMPY_STR = 'numpy >= 1.11.3'
+NUMPY_STR = 'numpy >= 1.17.0'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.3'
+CYTHON_STR = 'Cython==0.29.23'
 
 install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
-    'six >= 1.5.0',
     'smart_open >= 1.8.1',
+    "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
 
 setup_requires = [NUMPY_STR]
@@ -338,7 +337,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='3.8.1',
+    version='4.1.3.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -352,7 +351,7 @@ setup(
     url='http://radimrehurek.com/gensim',
     download_url='http://pypi.python.org/pypi/gensim',
 
-    license='LGPLv2.1',
+    license='LGPL-2.1-only',
 
     keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
         'LSA, LSI, Latent Dirichlet Allocation, LDA, '
@@ -367,18 +366,18 @@ setup(
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3 :: Only',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Text Processing :: Linguistic',
     ],
 
     test_suite="gensim.test",
+    python_requires='>=3.6',
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,

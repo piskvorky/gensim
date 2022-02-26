@@ -20,7 +20,7 @@ import dictionary  # for constructing word->id mappings
 logger = logging.getLogger('gensim.corpora.dmlcorpus')
 
 
-class DmlConfig(object):
+class DmlConfig:
     """
     DmlConfig contains parameters necessary for the abstraction of a 'corpus of
     articles' (see the `DmlCorpus` class).
@@ -59,8 +59,9 @@ class DmlConfig(object):
         self.sources[sourceId] = source
 
     def __str__(self):
-        return ("DmlConfig(id=%s, sources=[%s], acceptLangs=[%s])" %
-                (self.configId, ', '.join(self.sources.iterkeys()), ', '.join(self.acceptLangs)))
+        return "%s<id=%s, sources=[%s], acceptLangs=[%s]>" % (
+            self.__class__.__name__, self.configId, ', '.join(self.sources.iterkeys()), ', '.join(self.acceptLangs)
+        )
 # endclass DmlConfig
 
 

@@ -7,7 +7,9 @@
 import logging
 import unittest
 import numpy as np
+from numpy.testing import assert_array_equal
 from scipy import sparse
+from scipy.sparse import csc_matrix
 from scipy.special import psi  # gamma function utils
 
 import gensim.matutils as matutils
@@ -90,7 +92,7 @@ class TestLdaModelInner(unittest.TestCase):
         self.num_runs = 100  # test functions with *num_runs* random inputs
         self.num_topics = 100
 
-    def testLogSumExp(self):
+    def test_log_sum_exp(self):
         # test logsumexp
         rs = self.random_state
 
@@ -104,7 +106,7 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "logsumexp failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
-    def testMeanAbsoluteDifference(self):
+    def test_mean_absolute_difference(self):
         # test mean_absolute_difference
         rs = self.random_state
 
@@ -119,7 +121,7 @@ class TestLdaModelInner(unittest.TestCase):
                 msg = "mean_absolute_difference failed for dtype={}".format(dtype)
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
-    def testDirichletExpectation(self):
+    def test_dirichlet_expectation(self):
         # test dirichlet_expectation
         rs = self.random_state
 
@@ -144,7 +146,7 @@ class TestLdaModelInner(unittest.TestCase):
 
 def manual_unitvec(vec):
     # manual unit vector calculation for UnitvecTestCase
-    vec = vec.astype(np.float)
+    vec = vec.astype(float)
     if sparse.issparse(vec):
         vec_sum_of_squares = vec.multiply(vec)
         unit = 1. / np.sqrt(vec_sum_of_squares.sum())
@@ -264,6 +266,44 @@ class UnitvecTestCase(unittest.TestCase):
         norm = return_value[1]
         self.assertTrue(isinstance(norm, float))
         self.assertEqual(norm, 1.0)
+
+
+class TestSparse2Corpus(unittest.TestCase):
+    def setUp(self):
+        self.orig_array = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        self.s2c = matutils.Sparse2Corpus(csc_matrix(self.orig_array))
+
+    def test_getitem_slice(self):
+        assert_array_equal(self.s2c[:2].sparse.toarray(), self.orig_array[:, :2])
+        assert_array_equal(self.s2c[1:3].sparse.toarray(), self.orig_array[:, 1:3])
+
+    def test_getitem_index(self):
+        self.assertListEqual(self.s2c[1], [(0, 2), (1, 5), (2, 8)])
+
+    def test_getitem_list_of_indices(self):
+        assert_array_equal(
+            self.s2c[[1, 2]].sparse.toarray(), self.orig_array[:, [1, 2]]
+        )
+        assert_array_equal(self.s2c[[1]].sparse.toarray(), self.orig_array[:, [1]])
+
+    def test_getitem_ndarray(self):
+        assert_array_equal(
+            self.s2c[np.array([1, 2])].sparse.toarray(), self.orig_array[:, [1, 2]]
+        )
+        assert_array_equal(
+            self.s2c[np.array([1])].sparse.toarray(), self.orig_array[:, [1]]
+        )
+
+    def test_getitem_range(self):
+        assert_array_equal(
+            self.s2c[range(1, 3)].sparse.toarray(), self.orig_array[:, [1, 2]]
+        )
+        assert_array_equal(
+            self.s2c[range(1, 2)].sparse.toarray(), self.orig_array[:, [1]]
+        )
+
+    def test_getitem_ellipsis(self):
+        assert_array_equal(self.s2c[...].sparse.toarray(), self.orig_array)
 
 
 if __name__ == '__main__':

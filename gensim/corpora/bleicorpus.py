@@ -14,7 +14,6 @@ import logging
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-from six.moves import range
 
 
 logger = logging.getLogger(__name__)

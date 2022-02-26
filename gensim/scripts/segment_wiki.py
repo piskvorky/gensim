@@ -61,7 +61,7 @@ import logging
 import multiprocessing
 import re
 import sys
-from xml.etree import cElementTree
+from xml.etree import ElementTree
 from functools import partial
 
 from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
@@ -183,7 +183,7 @@ def extract_page_xmls(f):
         XML strings for page tags.
 
     """
-    elems = (elem for _, elem in cElementTree.iterparse(f, events=("end",)))
+    elems = (elem for _, elem in ElementTree.iterparse(f, events=("end",)))
 
     elem = next(elems)
     namespace = get_namespace(elem.tag)
@@ -192,7 +192,7 @@ def extract_page_xmls(f):
 
     for elem in elems:
         if elem.tag == page_tag:
-            yield cElementTree.tostring(elem)
+            yield ElementTree.tostring(elem)
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
             # except that we don't need to prune backlinks from the parent
@@ -221,7 +221,7 @@ def segment(page_xml, include_interlinks=False):
         (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
-    elem = cElementTree.fromstring(page_xml)
+    elem = ElementTree.fromstring(page_xml)
     filter_namespaces = ('0',)
     namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
@@ -268,7 +268,7 @@ class _WikiSectionsCorpus(WikiCorpus):
     """
 
     def __init__(self, fileobj, min_article_character=200, processes=None,
-                 lemmatize=utils.has_pattern(), filter_namespaces=('0',), include_interlinks=False):
+                 lemmatize=None, filter_namespaces=('0',), include_interlinks=False):
         """
         Parameters
         ----------
@@ -278,22 +278,25 @@ class _WikiSectionsCorpus(WikiCorpus):
             Minimal number of character for article (except titles and leading gaps).
         processes : int, optional
             Number of processes, max(1, multiprocessing.cpu_count() - 1) if None.
-        lemmatize : bool, optional
-            If `pattern` package is installed, use fancier shallow parsing to get token lemmas.
-            Otherwise, use simple regexp tokenization.
         filter_namespaces : tuple of int, optional
             Enumeration of namespaces that will be ignored.
         include_interlinks: bool
             Whether or not interlinks should be included in the output
 
         """
+        if lemmatize is not None:
+            raise NotImplementedError(
+                'The lemmatize parameter is no longer supported since Gensim 4.0.0. '
+                'If you need to lemmatize, use e.g. https://github.com/clips/pattern '
+                'to preprocess your corpus before submitting it to Gensim.'
+            )
+
         self.fileobj = fileobj
         self.filter_namespaces = filter_namespaces
         self.metadata = False
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
-        self.lemmatize = lemmatize
         self.min_article_character = min_article_character
         self.include_interlinks = include_interlinks
 
@@ -376,6 +379,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-m', '--min-article-character',
         help="Ignore articles with fewer characters than this (article stubs). Default: %(default)s.",
+        type=int,
         default=200
     )
     parser.add_argument(

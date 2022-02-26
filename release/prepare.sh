@@ -53,6 +53,4 @@ set +e
 git commit "$root/CHANGELOG.md" -m "updated CHANGELOG.md for version $RELEASE"
 set -e
 
-bash cython.sh "$RELEASE"
-
 echo "Have a look at the current branch, and if all looks good, run merge.sh"

@@ -19,11 +19,25 @@ from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestLogEntropyModel(unittest.TestCase):
+    TEST_CORPUS = [[(1, 1.0)], [], [(0, 0.5), (2, 1.0)], []]
+
     def setUp(self):
         self.corpus_small = MmCorpus(datapath('test_corpus_small.mm'))
         self.corpus_ok = MmCorpus(datapath('test_corpus_ok.mm'))
+        self.corpus_empty = []
 
-    def testTransform(self):
+    def test_generator_fail(self):
+        """Test creating a model using a generator as input; should fail."""
+        def get_generator(test_corpus=TestLogEntropyModel.TEST_CORPUS):
+            for test_doc in test_corpus:
+                yield test_doc
+        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, corpus=get_generator())
+
+    def test_empty_fail(self):
+        """Test creating a model using an empty input; should fail."""
+        self.assertRaises(ValueError, logentropy_model.LogEntropyModel, corpus=self.corpus_empty)
+
+    def test_transform(self):
         # create the transformation model
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=False)
 
@@ -38,7 +52,7 @@ class TestLogEntropyModel(unittest.TestCase):
         ]
         self.assertTrue(np.allclose(transformed, expected))
 
-    def testPersistence(self):
+    def test_persistence(self):
         fname = get_tmpfile('gensim_models_logentry.tst')
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
         model.save(fname)
@@ -47,7 +61,7 @@ class TestLogEntropyModel(unittest.TestCase):
         tstvec = []
         self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))
 
-    def testPersistenceCompressed(self):
+    def test_persistence_compressed(self):
         fname = get_tmpfile('gensim_models_logentry.tst.gz')
         model = logentropy_model.LogEntropyModel(self.corpus_ok, normalize=True)
         model.save(fname)

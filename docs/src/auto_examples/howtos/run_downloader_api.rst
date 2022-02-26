@@ -1,16 +1,19 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_downloader_api.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_howtos_run_downloader_api.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_downloader_api.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_howtos_run_downloader_api.py:
 
 
 How to download pre-trained models and corpora
 ==============================================
 
-Demonstrates simple and quick access to common corpora, models, and other data.
+Demonstrates simple and quick access to common corpora and pretrained models.
+
 
 .. code-block:: default
 
@@ -24,14 +27,17 @@ Demonstrates simple and quick access to common corpora, models, and other data.
 
 
 
-One of Gensim's features is simple and easy access to some common data.
-The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a variety of corpora, models and other data.
+
+One of Gensim's features is simple and easy access to common data.
+The `gensim-data <https://github.com/RaRe-Technologies/gensim-data>`_ project stores a
+variety of corpora and pretrained models.
 Gensim has a :py:mod:`gensim.downloader` module for programmatically accessing this data.
-The module leverages a local cache that ensures data is downloaded at most once.
+This module leverages a local cache (in user's home folder, by default) that
+ensures data is downloaded at most once.
 
 This tutorial:
 
-* Retrieves the text8 corpus, unless it is already on your local machine
+* Downloads the text8 corpus, unless it is already on your local machine
 * Trains a Word2Vec model from the corpus (see :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py` for a detailed tutorial)
 * Leverages the model to calculate word similarity
 * Demonstrates using the API to load other models and corpora
@@ -50,7 +56,9 @@ Let's start by importing the api module.
 
 
 
-Now, lets download the text8 corpus and load it to memory (automatically)
+
+Now, let's download the text8 corpus and load it as a Python object
+that supports streamed access.
 
 
 
@@ -64,7 +72,8 @@ Now, lets download the text8 corpus and load it to memory (automatically)
 
 
 
-In this case, corpus is an iterable.
+
+In this case, our corpus is an iterable.
 If you look under the covers, it has the following definition:
 
 
@@ -94,6 +103,9 @@ If you look under the covers, it has the following definition:
                 yield doc
 
 
+
+
+
 For more details, look inside the file that defines the Dataset class for your particular resource.
 
 
@@ -113,10 +125,12 @@ For more details, look inside the file that defines the Dataset class for your p
 
  .. code-block:: none
 
-    /home/misha/gensim-data/text8/__init__.py
+    /Users/kofola3/gensim-data/text8/__init__.py
 
 
-As the corpus has been downloaded and loaded, let's create a word2vec model of our corpus.
+
+
+With the corpus has been downloaded and loaded, let's use it to train a word2vec model.
 
 
 
@@ -132,7 +146,8 @@ As the corpus has been downloaded and loaded, let's create a word2vec model of o
 
 
 
-Now that we have our word2vec model, let's find words that are similar to 'tree'
+
+Now that we have our word2vec model, let's find words that are similar to 'tree'.
 
 
 
@@ -140,7 +155,7 @@ Now that we have our word2vec model, let's find words that are similar to 'tree'
 
 
 
-    print(model.most_similar('tree'))
+    print(model.wv.most_similar('tree'))
 
 
 
@@ -152,10 +167,13 @@ Now that we have our word2vec model, let's find words that are similar to 'tree'
 
  .. code-block:: none
 
-    [('bark', 0.7127753496170044), ('trees', 0.69541335105896), ('leaf', 0.6816115975379944), ('avl', 0.639778733253479), ('flower', 0.6367247700691223), ('bird', 0.6323200464248657), ('cave', 0.6053059101104736), ('vine', 0.6044675707817078), ('fruit', 0.6023350954055786), ('cactus', 0.5895279049873352)]
+    [('trees', 0.7091131806373596), ('bark', 0.673214316368103), ('leaf', 0.6706242561340332), ('flower', 0.6195512413978577), ('bird', 0.6081331372261047), ('nest', 0.602649450302124), ('avl', 0.5914573669433594), ('garden', 0.5712863206863403), ('egg', 0.5702848434448242), ('beetle', 0.5701731443405151)]
 
 
-You can use the API to download many corpora and models. You can get the list of all the models and corpora that are provided, by using the code below:
+
+
+You can use the API to download several different corpora and pretrained models.
+Here's how to list all resources available in gensim-data:
 
 
 
@@ -645,7 +663,9 @@ You can use the API to download many corpora and models. You can get the list of
     }
 
 
-There are two types of data: corpora and models.
+
+
+There are two types of data resources: corpora and models.
 
 
 .. code-block:: default
@@ -663,6 +683,8 @@ There are two types of data: corpora and models.
  .. code-block:: none
 
     dict_keys(['corpora', 'models'])
+
+
 
 
 Let's have a look at the available corpora:
@@ -699,6 +721,8 @@ Let's have a look at the available corpora:
     semeval-2016-2017-task3-subtaskBC (-1 records): SemEval 2016 / 2017 Task 3 Subtask B and...
     text8 (1701 records): First 100,000,000 bytes of plain text fr...
     wiki-english-20171001 (4924894 records): Extracted Wikipedia dump from October 20...
+
+
 
 
 ... and the same for models:
@@ -740,7 +764,9 @@ Let's have a look at the available corpora:
     word2vec-ruscorpora-300 (184973 records): Word2vec Continuous Skipgram vectors tra...
 
 
-If you want to get detailed information about the model/corpus, use:
+
+
+If you want to get detailed information about a model/corpus, use:
 
 
 
@@ -799,7 +825,10 @@ If you want to get detailed information about the model/corpus, use:
     }
 
 
-Sometimes, you do not want to load the model to memory. You would just want to get the path to the model. For that, use :
+
+
+Sometimes, you do not want to load a model into memory. Instead, you can request
+just the filesystem path to the model. For that, use:
 
 
 
@@ -819,7 +848,9 @@ Sometimes, you do not want to load the model to memory. You would just want to g
 
  .. code-block:: none
 
-    /home/misha/gensim-data/glove-wiki-gigaword-50/glove-wiki-gigaword-50.gz
+    /Users/kofola3/gensim-data/glove-wiki-gigaword-50/glove-wiki-gigaword-50.gz
+
+
 
 
 If you want to load the model to memory, then:
@@ -837,17 +868,27 @@ If you want to load the model to memory, then:
 
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
 
 
-In corpora, the corpus is never loaded to memory, all corpuses wrapped to special class ``Dataset`` and provide ``__iter__`` method
+    [('plastic', 0.79425048828125), ('metal', 0.7708716988563538), ('walls', 0.7700635194778442), ('marble', 0.7638523578643799), ('wood', 0.7624280452728271), ('ceramic', 0.7602593302726746), ('pieces', 0.7589112520217896), ('stained', 0.7528817653656006), ('tile', 0.748193621635437), ('furniture', 0.7463858723640442)]
+
+
+
+For corpora, the corpus is never loaded to memory, all corpora are iterables wrapped in
+a special class ``Dataset``, with an ``__iter__`` method.
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  20.333 seconds)
+   **Total running time of the script:** ( 1 minutes  39.422 seconds)
 
-**Estimated memory usage:**  392 MB
+**Estimated memory usage:**  297 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_downloader_api.py:
@@ -860,13 +901,13 @@ In corpora, the corpus is never loaded to memory, all corpuses wrapped to specia
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_downloader_api.py <run_downloader_api.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_downloader_api.ipynb <run_downloader_api.ipynb>`
 
@@ -875,4 +916,4 @@ In corpora, the corpus is never loaded to memory, all corpuses wrapped to specia
 
  .. rst-class:: sphx-glr-signature
 
-    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.readthedocs.io>`_
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

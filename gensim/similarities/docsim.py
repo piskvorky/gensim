@@ -27,6 +27,7 @@ Once the index has been initialized, you can query for document similarity simpl
 
 .. sourcecode:: pycon
 
+    >>> from gensim.similarities import Similarity
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
     >>>
     >>> index_tmpfile = get_tmpfile("index")
@@ -77,8 +78,6 @@ import numpy
 import scipy.sparse
 
 from gensim import interfaces, utils, matutils
-from .termsim import SparseTermSimilarityMatrix
-from six.moves import map, range, zip
 
 
 logger = logging.getLogger(__name__)
@@ -148,7 +147,7 @@ class Shard(utils.SaveLoad):
         return result
 
     def __str__(self):
-        return "%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname())
+        return "%s<%i documents in %s>" % (self.cls.__name__, len(self), self.fullname())
 
     def get_index(self):
         """Load & get index.
@@ -231,6 +230,30 @@ def query_shard(args):
     result = shard[query]
     logger.debug("finished querying shard %s in process %s", shard, os.getpid())
     return result
+
+
+def _nlargest(n, iterable):
+    """Helper for extracting n documents with maximum similarity.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements to be extracted
+    iterable : iterable of list of (int, float)
+        Iterable containing documents with computed similarities
+
+    Returns
+    -------
+    :class:`list`
+        List with the n largest elements from the dataset defined by iterable.
+
+    Notes
+    -----
+    Elements are compared by the absolute value of similarity, because negative value of similarity
+    does not mean some form of dissimilarity.
+
+    """
+    return heapq.nlargest(n, itertools.chain(*iterable), key=lambda item: abs(item[1]))
 
 
 class Similarity(interfaces.SimilarityABC):
@@ -336,8 +359,8 @@ class Similarity(interfaces.SimilarityABC):
         return len(self.fresh_docs) + sum(len(shard) for shard in self.shards)
 
     def __str__(self):
-        return "Similarity index with %i documents in %i shards (stored under %s)" % (
-            len(self), len(self.shards), self.output_prefix
+        return "%s<%i documents in %i shards stored under %s>" % (
+            self.__class__.__name__, len(self), len(self.shards), self.output_prefix
         )
 
     def add_documents(self, corpus):
@@ -539,7 +562,7 @@ class Similarity(interfaces.SimilarityABC):
             if not is_corpus:
                 # user asked for num_best most similar and query is a single doc
                 results = (convert(shard_no, result) for shard_no, result in enumerate(shard_results))
-                result = heapq.nlargest(self.num_best, itertools.chain(*results), key=lambda item: item[1])
+                result = _nlargest(self.num_best, results)
             else:
                 # the trickiest combination: returning num_best results when query was a corpus
                 results = []
@@ -548,7 +571,7 @@ class Similarity(interfaces.SimilarityABC):
                     results.append(shard_result)
                 result = []
                 for parts in zip(*results):
-                    merged = heapq.nlargest(self.num_best, itertools.chain(*parts), key=lambda item: item[1])
+                    merged = _nlargest(self.num_best, parts)
                     result.append(merged)
         if pool:
             # gc doesn't seem to collect the Pools, eventually leading to
@@ -865,10 +888,11 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 
         >>> from gensim.test.utils import common_texts
         >>> from gensim.corpora import Dictionary
-        >>> from gensim.models import Word2Vec, WordEmbeddingSimilarityIndex
+        >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import SoftCosineSimilarity, SparseTermSimilarityMatrix
+        >>> from gensim.similarities import WordEmbeddingSimilarityIndex
         >>>
-        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>> termsim_index = WordEmbeddingSimilarityIndex(model.wv)
         >>> dictionary = Dictionary(common_texts)
         >>> bow_corpus = [dictionary.doc2bow(document) for document in common_texts]
@@ -878,12 +902,11 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         >>> query = 'graph trees computer'.split()  # make a query
         >>> sims = docsim_index[dictionary.doc2bow(query)]  # calculate similarity of query to each doc from bow_corpus
 
-    Check out `Tutorial Notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/soft_cosine_tutorial.ipynb>`_
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_scm.html>`__
     for more examples.
 
     """
-    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256):
+    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256, normalized=(True, True)):
         """
 
         Parameters
@@ -896,28 +919,29 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
         chunksize: int, optional
             Size of one corpus chunk.
+        normalized : tuple of {True, False, 'maintain'}, optional
+            First/second value specifies whether the query/document vectors in the inner product
+            will be L2-normalized (True; corresponds to the soft cosine similarity measure; default),
+            maintain their L2-norm during change of basis ('maintain'; corresponds to query
+            expansion with partial membership), or kept as-is (False;
+            corresponds to query expansion).
 
         See Also
         --------
-        :class:`gensim.similarities.SparseTermSimilarityMatrix`
-            A sparse term similarity matrix build using a term similarity index.
-        :class:`gensim.similarities.LevenshteinSimilarityIndex`
+        :class:`~gensim.similarities.termsim.SparseTermSimilarityMatrix`
+            A sparse term similarity matrix built using a term similarity index.
+        :class:`~gensim.similarities.termsim.LevenshteinSimilarityIndex`
             A term similarity index that computes Levenshtein similarities between terms.
-        :class:`gensim.models.WordEmbeddingSimilarityIndex`
+        :class:`~gensim.similarities.termsim.WordEmbeddingSimilarityIndex`
             A term similarity index that computes cosine similarities between word embeddings.
 
         """
-        if scipy.sparse.issparse(similarity_matrix):
-            logger.warn(
-                "Support for passing an unencapsulated sparse matrix will be removed in 4.0.0, pass "
-                "a SparseTermSimilarityMatrix instance instead")
-            self.similarity_matrix = SparseTermSimilarityMatrix(similarity_matrix)
-        else:
-            self.similarity_matrix = similarity_matrix
+        self.similarity_matrix = similarity_matrix
 
-        self.corpus = corpus
+        self.corpus = list(corpus)
         self.num_best = num_best
         self.chunksize = chunksize
+        self.normalized = normalized
 
         # Normalization of features is undesirable, since soft cosine similarity requires special
         # normalization using the similarity matrix. Therefore, we would just be normalizing twice,
@@ -954,7 +978,7 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         is_corpus, query = utils.is_corpus(query)
         if not is_corpus and isinstance(query, numpy.ndarray):
             query = [self.corpus[i] for i in query]  # convert document indexes to actual documents
-        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=True)
+        result = self.similarity_matrix.inner_product(query, self.corpus, normalized=self.normalized)
 
         if scipy.sparse.issparse(result):
             return numpy.asarray(result.todense())
@@ -969,9 +993,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
 class WmdSimilarity(interfaces.SimilarityABC):
     """Compute negative WMD similarity against a corpus of documents.
 
-    See :class:`~gensim.models.keyedvectors.WordEmbeddingsKeyedVectors` for more information.
-    Also, tutorial `notebook
-    <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/WMD_tutorial.ipynb>`_ for more examples.
+    Check out `the Gallery <https://radimrehurek.com/gensim/auto_examples/tutorials/run_wmd.html>`__
+    for more examples.
 
     When using this code, please consider citing the following papers:
 
@@ -990,7 +1013,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> from gensim.models import Word2Vec
         >>> from gensim.similarities import WmdSimilarity
         >>>
-        >>> model = Word2Vec(common_texts, size=20, min_count=1)  # train word-vectors
+        >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
         >>> index = WmdSimilarity(common_texts, model)
         >>> # Make query.
@@ -998,25 +1021,23 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>> sims = index[query]
 
     """
-    def __init__(self, corpus, w2v_model, num_best=None, normalize_w2v_and_replace=True, chunksize=256):
+    def __init__(self, corpus, kv_model, num_best=None, chunksize=256):
         """
 
         Parameters
         ----------
         corpus: iterable of list of str
             A list of documents, each of which is a list of tokens.
-        w2v_model: :class:`~gensim.models.word2vec.Word2VecTrainables`
-            A trained word2vec model.
+        kv_model: :class:`~gensim.models.keyedvectors.KeyedVectors`
+            A set of KeyedVectors
         num_best: int, optional
             Number of results to retrieve.
-        normalize_w2v_and_replace: bool, optional
-            Whether or not to normalize the word2vec vectors to length 1.
         chunksize : int, optional
             Size of chunk.
 
         """
         self.corpus = corpus
-        self.w2v_model = w2v_model
+        self.wv = kv_model
         self.num_best = num_best
         self.chunksize = chunksize
 
@@ -1025,10 +1046,6 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
         # index is simply an array from 0 to size of corpus.
         self.index = numpy.arange(len(corpus))
-
-        if normalize_w2v_and_replace:
-            # Normalize vectors in word2vec class to length 1.
-            w2v_model.init_sims(replace=True)
 
     def __len__(self):
         """Get size of corpus."""
@@ -1063,7 +1080,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         result = []
         for qidx in range(n_queries):
             # Compute similarity for each query.
-            qresult = [self.w2v_model.wv.wmdistance(document, query[qidx]) for document in self.corpus]
+            qresult = [self.wv.wmdistance(document, query[qidx]) for document in self.corpus]
             qresult = numpy.array(qresult)
             qresult = 1. / (1. + qresult)  # Similarity is the negative of the distance.
 
@@ -1159,7 +1176,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                        matutils.unitvec(v)) for v in corpus)
             self.index = matutils.corpus2csc(
                 corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                dtype=dtype, printprogress=10000
+                dtype=dtype, printprogress=10000,
             ).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications

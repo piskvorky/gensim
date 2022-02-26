@@ -76,7 +76,7 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.initialize(corpus)
 
     def __str__(self):
-        return "LogEntropyModel(n_docs=%s, n_words=%s)" % (self.n_docs, self.n_words)
+        return "%s<n_docs=%s, n_words=%s>" % (self.__class__.__name__, self.n_docs, self.n_words)
 
     def initialize(self, corpus):
         """Calculates the global weighting for all terms in a given corpus and transforms the simple
@@ -108,6 +108,9 @@ class LogEntropyModel(interfaces.TransformationABC):
             self.n_docs, len(glob_freq), self.n_words
         )
         logger.debug('iterating over corpus')
+
+        # initialize doc_no2 index in case corpus is empty
+        doc_no2 = 0
         for doc_no2, bow in enumerate(corpus):
             for key, freq in bow:
                 p = (float(freq) / glob_freq[key]) * math.log(float(freq) / glob_freq[key])

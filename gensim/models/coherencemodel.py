@@ -25,6 +25,7 @@ See Also
     Internal functions for pipelines.
 
 """
+
 import logging
 import multiprocessing as mp
 from collections import namedtuple
@@ -33,9 +34,11 @@ import numpy as np
 
 from gensim import interfaces, matutils
 from gensim import utils
-from gensim.topic_coherence import (segmentation, probability_estimation,
-                                    direct_confirmation_measure, indirect_confirmation_measure,
-                                    aggregation)
+from gensim.topic_coherence import (
+    segmentation, probability_estimation,
+    direct_confirmation_measure, indirect_confirmation_measure,
+    aggregation,
+)
 from gensim.topic_coherence.probability_estimation import unique_ids_from_segments
 
 logger = logging.getLogger(__name__)
@@ -441,11 +444,14 @@ class CoherenceModel(interfaces.TransformationABC):
         self._topics = new_topics
 
     def _ensure_elements_are_ids(self, topic):
-        try:
-            return np.array([self.dictionary.token2id[token] for token in topic])
-        except KeyError:  # might be a list of token ids already, but let's verify all in dict
-            topic = (self.dictionary.id2token[_id] for _id in topic)
-            return np.array([self.dictionary.token2id[token] for token in topic])
+        ids_from_tokens = [self.dictionary.token2id[t] for t in topic if t in self.dictionary.token2id]
+        ids_from_ids = [i for i in topic if i in self.dictionary]
+        if len(ids_from_tokens) > len(ids_from_ids):
+            return np.array(ids_from_tokens)
+        elif len(ids_from_ids) > len(ids_from_tokens):
+            return np.array(ids_from_ids)
+        else:
+            raise ValueError('unable to interpret topic as either a list of tokens or a list of ids')
 
     def _update_accumulator(self, new_topics):
         if self._relevant_ids_will_differ(new_topics):

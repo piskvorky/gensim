@@ -21,13 +21,13 @@ class TestHashDictionary(unittest.TestCase):
     def setUp(self):
         self.texts = common_texts
 
-    def testDocFreqOneDoc(self):
+    def test_doc_freq_one_doc(self):
         texts = [['human', 'interface', 'computer']]
         d = HashDictionary(texts, myhash=zlib.adler32)
         expected = {10608: 1, 12466: 1, 31002: 1}
         self.assertEqual(d.dfs, expected)
 
-    def testDocFreqAndToken2IdForSeveralDocsWithOneWord(self):
+    def test_doc_freq_and_token2id_for_several_docs_with_one_word(self):
         # two docs
         texts = [['human'], ['human']]
         d = HashDictionary(texts, myhash=zlib.adler32)
@@ -58,7 +58,7 @@ class TestHashDictionary(unittest.TestCase):
         self.assertEqual(d.token2id['human'], expected['human'])
         self.assertEqual(d.token2id.keys(), expected.keys())
 
-    def testDocFreqForOneDocWithSeveralWord(self):
+    def test_doc_freq_for_one_doc_with_several_word(self):
         # two words
         texts = [['human', 'cat']]
         d = HashDictionary(texts, myhash=zlib.adler32)
@@ -71,7 +71,7 @@ class TestHashDictionary(unittest.TestCase):
         expected = {9273: 1, 15001: 1, 31002: 1}
         self.assertEqual(d.dfs, expected)
 
-    def testDebugMode(self):
+    def test_debug_mode(self):
         # two words
         texts = [['human', 'cat']]
         d = HashDictionary(texts, debug=True, myhash=zlib.adler32)
@@ -84,7 +84,7 @@ class TestHashDictionary(unittest.TestCase):
         expected = {}
         self.assertEqual(d.id2token, expected)
 
-    def testRange(self):
+    def test_range(self):
         # all words map to the same id
         d = HashDictionary(self.texts, id_range=1, debug=True)
         dfs = {0: 9}
@@ -118,7 +118,7 @@ class TestHashDictionary(unittest.TestCase):
         self.assertEqual(d.id2token, id2token)
         self.assertEqual(d.token2id, token2id)
 
-    def testBuild(self):
+    def test_build(self):
         d = HashDictionary(self.texts, myhash=zlib.adler32)
         expected = {
             5232: 2, 5798: 3, 10608: 2, 12466: 2, 12736: 3, 15001: 2,
@@ -135,7 +135,7 @@ class TestHashDictionary(unittest.TestCase):
         for ex in expected:
             self.assertEqual(d.token2id[ex], expected[ex])
 
-    def testFilter(self):
+    def test_filter(self):
         d = HashDictionary(self.texts, myhash=zlib.adler32)
         d.filter_extremes()
         expected = {}
