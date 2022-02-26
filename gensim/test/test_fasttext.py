@@ -8,6 +8,7 @@ import io
 import logging
 import unittest
 import os
+import shutil
 import subprocess
 import struct
 import sys
@@ -44,7 +45,8 @@ MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
 BUCKET = 10000
 
 FT_HOME = os.environ.get("FT_HOME")
-FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
+FT_CMD = shutil.which("fasttext", path=FT_HOME) or \
+         shutil.which("fasttext")
 
 
 new_sentences = [
@@ -1661,7 +1663,7 @@ def _save_test_model(out_base_fname, model_params):
     subprocess.check_call(cmd)
 
 
-@unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
+@unittest.skipIf(not FT_CMD, "fasttext not in FT_HOME or PATH, skipping test")
 class SaveFacebookByteIdentityTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
@@ -1708,7 +1710,7 @@ def _read_wordvectors_using_fasttext(fasttext_fname, words):
     return np.array([line_to_array(line) for line in out.splitlines()], dtype=np.float32)
 
 
-@unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
+@unittest.skipIf(not FT_CMD, "fasttext not in FT_HOME or PATH, skipping test")
 class SaveFacebookFormatReadingTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
