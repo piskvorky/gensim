@@ -45,11 +45,6 @@ jobs:
         #
         - os: ubuntu-latest
           manylinux-version: 2010
-          python-version: 3.6
-          build-depends: numpy==1.17.0
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
           python-version: 3.7
           build-depends: numpy==1.17.0
 
@@ -62,12 +57,6 @@ jobs:
           manylinux-version: 2010
           python-version: 3.9
           build-depends: numpy==1.19.3
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: 3.6
-          build-depends: numpy==1.17.0
 
         - os: macos-latest
           travis-os-name: osx
@@ -86,11 +75,6 @@ jobs:
           manylinux-version: 1
           python-version: 3.9
           build-depends: numpy==1.19.3
-
-        - os: windows-latest
-          manylinux-version: 2010
-          python-version: 3.6
-          build-depends: numpy==1.17.0
 
         - os: windows-latest
           manylinux-version: 2010
