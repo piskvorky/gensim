@@ -59,7 +59,7 @@ jobs:
       #   build-depends: numpy==1.19.3
 
         - os: ubuntu-latest
-          manylinux-version: 2010
+          manylinux-version: 2014
           python-version: "3.10"
           build-depends: numpy==1.22.2 scipy==1.8.0
 
