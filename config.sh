@@ -58,7 +58,7 @@ function getpip {
     python continuous_integration/urlretrieve.py https://bootstrap.pypa.io/get-pip.py get-pip.py
     if [ -f "get-pip.py" ]; then
         python get-pip.py
-        python -m pip install --upgrade setuptools
+        python -m pip install --upgrade setuptools importlib_metadata
     fi
 }
 getpip

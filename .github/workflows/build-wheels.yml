@@ -17,7 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        # python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: ['3.10']
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
@@ -145,9 +146,16 @@ jobs:
         before_install
         echo ::endgroup::
         echo ::group::Build wheel
+        find . -type f -name "*.egg" -exec rm -v {} \;
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
         echo ::group::Install run
+        #
+        # FIXME: Why are these eggs here?
+        #
+        # These eggs prevent the wheel from building and running on Py3.10
+        #
+        find . -type f -name "*.egg" -exec rm -v {} \;
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
     #
