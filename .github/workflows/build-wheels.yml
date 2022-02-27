@@ -61,7 +61,7 @@ jobs:
         - os: ubuntu-latest
           manylinux-version: 2010
           python-version: "3.10"
-          build-depends: numpy==1.22.2
+          build-depends: numpy==1.22.2 scipy==1.8.0
 
       # - os: macos-latest
       #   travis-os-name: osx
@@ -85,7 +85,7 @@ jobs:
           travis-os-name: osx
           manylinux-version: 1
           python-version: "3.10"
-          build-depends: numpy==1.22.2
+          build-depends: numpy==1.22.2 scipy==1.8.0
 
       #  - os: windows-latest
       #    manylinux-version: 2010
@@ -105,7 +105,7 @@ jobs:
         - os: windows-latest
           manylinux-version: 2010
           python-version: "3.10"
-          build-depends: numpy==1.22.2
+          build-depends: numpy==1.22.2 scipy==1.8.0
 
     env:
       PKG_NAME: gensim
@@ -114,11 +114,6 @@ jobs:
       PLAT: x86_64
       UNICODE_WIDTH: 32
       MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
-      #
-      # We want to upgrade pip _before_ we install the wheel.
-      # common_utils.sh install_wheel function will install these dependencies
-      # one by one, so pip is first.
-      #
       TEST_DEPENDS: pytest mock testfixtures
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}

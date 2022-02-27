@@ -21,8 +21,6 @@ function build_wheel_cmd {
     if [ -n "$BUILD_DEPENDS" ]; then
 	pip install $(pip_opts) $BUILD_DEPENDS
     fi
-    echo "config.sh: build_wheel_cmd"
-    pip install --upgrade pip setuptools
     pip --version
     pip freeze
     $cmd $wheelhouse
@@ -33,9 +31,6 @@ function build_wheel_cmd {
 function run_tests {
     # Runs tests on installed distribution from an empty directory
     set -x
-    python --version
-    echo "config.sh: run_tests"
-    pip install --upgrade pip setuptools
     pip freeze
     pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
     set +x
@@ -52,13 +47,4 @@ function run_tests {
 # with the default pip on the Python 3.10 multibuild image.  This is really
 # dodgy, but I couldn't work out a better way to get this done.
 #
-function getpip {
-    echo "config.sh: desperately trying to upgrade pip without actually using pip"
-    python --version
-    python continuous_integration/urlretrieve.py https://bootstrap.pypa.io/get-pip.py get-pip.py
-    if [ -f "get-pip.py" ]; then
-        python get-pip.py
-        python -m pip install --upgrade setuptools importlib_metadata
-    fi
-}
-getpip
+python continuous_integration/upgrade_pip_py310.py
