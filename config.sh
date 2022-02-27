@@ -43,13 +43,21 @@ function run_tests {
 
 #
 # We do this here because we want to upgrade pip before the wheel gets installed.
-# docker_test_wrap.sh sources this file before the wheel install.
-# I couldn't work out a better way to get this done.
+# docker_test_wrap.sh sources this file before the wheel install.  The sourcing
+# happens from multiple places, and some of the Python versions can be really
+# ancient (e.g. when working outside a virtual environment, using the default
+# Python install).
+#
+# We don't use pip to do the actual upgrade because something appears broken
+# with the default pip on the Python 3.10 multibuild image.  This is really
+# dodgy, but I couldn't work out a better way to get this done.
 #
 function getpip {
     echo "config.sh: desperately trying to upgrade pip without actually using pip"
     python --version
     python continuous_integration/urlretrieve.py https://bootstrap.pypa.io/get-pip.py get-pip.py
-    python get-pip.py
+    if [ -f "get-pip.py" ]; then
+        python get-pip.py
+    fi
 }
 getpip

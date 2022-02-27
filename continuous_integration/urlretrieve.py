@@ -1,7 +1,8 @@
-# This script needs to run under both Python 2 and 3
+# This script needs to be able run under both Python 2 and 3 without crashing
+# It only achieves the desired effect under Py3.7 and above.
 import sys
-try:
-    from urllib.request import urlretrieve
-except ImportError:
-    from urllib import urlretrieve
+if sys.version_info[:2] < (3, 7):
+    print(f"this script is a no-op for python version {sys.version}")
+    sys.exit(0)
+from urllib.request import urlretrieve
 urlretrieve(sys.argv[1], sys.argv[2])
