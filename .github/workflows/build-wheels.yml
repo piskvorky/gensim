@@ -119,7 +119,7 @@ jobs:
       # common_utils.sh install_wheel function will install these dependencies
       # one by one, so pip is first.
       #
-      TEST_DEPENDS: pip==22.0.3 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest pytest-cov mock cython nmslib pyemd testfixtures scikit-learn pyemd
+      TEST_DEPENDS: pytest mock testfixtures
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       SKIP_NETWORK_TESTS: 1
