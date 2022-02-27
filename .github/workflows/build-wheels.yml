@@ -148,6 +148,7 @@ jobs:
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
         echo ::group::Install run
+        find . -type f -name "*.egg" -exec rm -v {} \;
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
     #
