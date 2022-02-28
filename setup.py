@@ -348,6 +348,9 @@ setup(
     author_email='me@radimrehurek.com',
 
     url='http://radimrehurek.com/gensim',
+    project_urls={
+        'Source': 'https://github.com/RaRe-Technologies/gensim',
+    },
     download_url='http://pypi.python.org/pypi/gensim',
 
     license='LGPL-2.1-only',
