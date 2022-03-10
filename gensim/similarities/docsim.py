@@ -1015,7 +1015,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>>
         >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
-        >>> index = WmdSimilarity(common_texts, model.mv)
+        >>> index = WmdSimilarity(common_texts, model.wv)
         >>> # Make query.
         >>> query = ['trees']
         >>> sims = index[query]
