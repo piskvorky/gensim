@@ -211,7 +211,7 @@ jobs:
     # I'm skipping the testing step for Py3.10 so that it does not cause the
     # the entire workflow to fail.
     #
-	- name: Install and Test Wheel
+    - name: Install and Test Wheel
       if: matrix.os != 'windows-latest' && matrix.python-version != '3.10'
       run: |
         #
