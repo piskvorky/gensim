@@ -160,17 +160,6 @@ jobs:
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
 
-    - name: Test Wheels (Multibuild)
-      run: |
-        echo ::group::Set up Multibuild
-        source multibuild/common_utils.sh
-        source multibuild/travis_steps.sh
-        source config.sh
-        echo ::endgroup::
-        echo ::group::Install run
-        install_run ${{ matrix.PLAT }}
-        echo ::endgroup::
-
     #
     # We can't use multibuild on Windows, so we have to roll our own build script.
     # Adapted from
