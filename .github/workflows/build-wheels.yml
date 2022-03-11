@@ -212,6 +212,7 @@ jobs:
         python -m venv test_environment
         . test_environment/bin/activate
         pip install pytest testfixtures mock
+        pip install wheelhouse/*.whl
         cd test_environment
         #
         # This part relies on the wheel containing tests and required data.
