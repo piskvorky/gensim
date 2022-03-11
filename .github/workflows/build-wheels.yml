@@ -159,6 +159,21 @@ jobs:
         find . -type f -name "*.egg" -exec rm -v {} \;
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
+
+    - name: Test Wheels (Multibuild)
+      #
+      # The wheel tests segfault under Github Actions for Py3.10.
+      # I've tried to reproduce this locally, but without success.
+      # I'm skipping the testing step for Py3.10 so that it does not cause the
+      # the entire workflow to fail.
+      #
+      if: matrix.os != 'windows-latest' && matrix.python-version != "3.10"
+      run: |
+        echo ::group::Set up Multibuild
+        source multibuild/common_utils.sh
+        source multibuild/travis_steps.sh
+        source config.sh
+        echo ::endgroup::
         echo ::group::Install run
         #
         # FIXME: Why are these eggs here?
@@ -168,6 +183,7 @@ jobs:
         find . -type f -name "*.egg" -exec rm -v {} \;
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
+
     #
     # We can't use multibuild on Windows, so we have to roll our own build script.
     # Adapted from
@@ -196,6 +212,10 @@ jobs:
         # For consistency with the multibuild step.
         #
         mv dist wheelhouse
+
+        #
+        # FIXME: shouldn't we be testing the wheels here too, like we do for Linux?
+        #
 
     - name: Upload wheels to s3://gensim-wheels
       #
