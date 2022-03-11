@@ -144,7 +144,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install virtualenv
-    - name: Build and Install Wheels (Multibuild)
+    - name: Build Wheel (Multibuild)
       if: matrix.os != 'windows-latest'
       run: |
         echo ::group::Set up Multibuild
@@ -161,13 +161,6 @@ jobs:
         echo ::endgroup::
 
     - name: Test Wheels (Multibuild)
-      #
-      # The wheel tests segfault under Github Actions for Py3.10.
-      # I've tried to reproduce this locally, but without success.
-      # I'm skipping the testing step for Py3.10 so that it does not cause the
-      # the entire workflow to fail.
-      #
-      if: matrix.os != 'windows-latest' && matrix.python-version != '3.10'
       run: |
         echo ::group::Set up Multibuild
         source multibuild/common_utils.sh
@@ -175,12 +168,6 @@ jobs:
         source config.sh
         echo ::endgroup::
         echo ::group::Install run
-        #
-        # FIXME: Why are these eggs here?
-        #
-        # These eggs prevent the wheel from building and running on Py3.10
-        #
-        find . -type f -name "*.egg" -exec rm -v {} \;
         install_run ${{ matrix.PLAT }}
         echo ::endgroup::
 
@@ -189,7 +176,7 @@ jobs:
     # Adapted from
     # https://github.com/RaRe-Technologies/gensim-wheels/commit/084b863390edee05bbe15d4ec05d1ab726e52202
     #
-    - name: Build and Install Wheels (Windows)
+    - name: Build Wheel (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         echo ::group::Set up dependencies
@@ -213,9 +200,36 @@ jobs:
         #
         mv dist wheelhouse
 
+      #
+      # Multibuild has a test step but it essentially just installs the wheel
+      # and runs the test, and requires a lot of magic to get it working.
+      # It also does not work under Windows.
+      # So, we create our own simple test step here.
+      #
+      # The wheel tests segfault under Github Actions for Py3.10.
+      # I've tried to reproduce this locally, but without success.
+      # I'm skipping the testing step for Py3.10 so that it does not cause the
+      # the entire workflow to fail.
+      #
+      #
+	- name: Install and Test Wheel
+      if: matrix.os != 'windows-latest' && matrix.python-version != '3.10'
+      run: |
         #
-        # FIXME: shouldn't we be testing the wheels here too, like we do for Linux?
+        # FIXME: Why are these eggs here?
         #
+        # These eggs prevent the wheel from building and running on Py3.10
+        #
+        find . -type f -name "*.egg" -exec rm -v {} \;
+        python -m venv test_environment
+        . test_environment/bin/activate
+        pip install pytest testfixtures mock
+        cd venv_test_environment
+        #
+        # This part relies on the wheel containing tests and required data.
+        # If we remove that from the wheel, we'll need to rewrite this step.
+        #
+        pytest gensim
 
     - name: Upload wheels to s3://gensim-wheels
       #
