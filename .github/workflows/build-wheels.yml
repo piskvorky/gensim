@@ -218,7 +218,7 @@ jobs:
         # This part relies on the wheel containing tests and required data.
         # If we remove that from the wheel, we'll need to rewrite this step.
         #
-        pytest gensim
+        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
 
     - name: Upload wheels to s3://gensim-wheels
       #
