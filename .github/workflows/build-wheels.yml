@@ -200,18 +200,17 @@ jobs:
         #
         mv dist wheelhouse
 
-      #
-      # Multibuild has a test step but it essentially just installs the wheel
-      # and runs the test, and requires a lot of magic to get it working.
-      # It also does not work under Windows.
-      # So, we create our own simple test step here.
-      #
-      # The wheel tests segfault under Github Actions for Py3.10.
-      # I've tried to reproduce this locally, but without success.
-      # I'm skipping the testing step for Py3.10 so that it does not cause the
-      # the entire workflow to fail.
-      #
-      #
+    #
+    # Multibuild has a test step but it essentially just installs the wheel
+    # and runs the test, and requires a lot of magic to get it working.
+    # It also does not work under Windows.
+    # So, we create our own simple test step here.
+    #
+    # The wheel tests segfault under Github Actions for Py3.10.
+    # I've tried to reproduce this locally, but without success.
+    # I'm skipping the testing step for Py3.10 so that it does not cause the
+    # the entire workflow to fail.
+    #
 	- name: Install and Test Wheel
       if: matrix.os != 'windows-latest' && matrix.python-version != '3.10'
       run: |
