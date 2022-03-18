@@ -661,7 +661,7 @@ class Word2Vec(utils.SaveLoad):
                 "prepare_vocab",
                 msg=(
                     f"effective_min_count={self.effective_min_count} retains {len(retain_words)} unique "
-                    f"words ({retain_unique_pct}%% of original {original_unique_total}, drops {drop_unique})"
+                    f"words ({retain_unique_pct:.2f}% of original {original_unique_total}, drops {drop_unique})"
                 ),
             )
 
@@ -671,7 +671,7 @@ class Word2Vec(utils.SaveLoad):
                 "prepare_vocab",
                 msg=(
                     f"effective_min_count={self.effective_min_count} leaves {retain_total} word corpus "
-                    f"({retain_pct}%% of original {original_total}, drops {drop_total})"
+                    f"({retain_pct:.2f}% of original {original_total}, drops {drop_total})"
                 ),
             )
         else:
@@ -706,9 +706,9 @@ class Word2Vec(utils.SaveLoad):
             self.add_lifecycle_event(
                 "prepare_vocab",
                 msg=(
-                    f"added {len(new_words)} new unique words ({new_unique_pct}%% of original "
+                    f"added {len(new_words)} new unique words ({new_unique_pct:.2f}% of original "
                     f"{original_unique_total}) and increased the count of {len(pre_exist_words)} "
-                    f"pre-existing words ({pre_exist_unique_pct}%% of original {original_unique_total})"
+                    f"pre-existing words ({pre_exist_unique_pct:.2f}% of original {original_unique_total})"
                 ),
             )
             retain_words = new_words + pre_exist_words

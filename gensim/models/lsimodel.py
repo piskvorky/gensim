@@ -888,7 +888,7 @@ def print_debug(id2token, u, s, topics, num_words=10, num_neg=None):
 def stochastic_svd(
         corpus, rank, num_terms, chunksize=20000, extra_dims=None,
         power_iters=0, dtype=np.float64, eps=1e-6, random_seed=None,
-):
+    ):
     """Run truncated Singular Value Decomposition (SVD) on a sparse input.
 
     Parameters
@@ -955,7 +955,7 @@ def stochastic_svd(
 
     if scipy.sparse.issparse(corpus):
         m, n = corpus.shape
-        assert num_terms == m, "mismatch in number of features: %i in sparse matrix vs. %i parameter" % (m, num_terms)
+        assert num_terms == m, f"mismatch in number of features: {m} in sparse matrix vs. {num_terms} parameter"
         o = random_state.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
         sparsetools.csc_matvecs(
             m, n, samples, corpus.indptr, corpus.indices,

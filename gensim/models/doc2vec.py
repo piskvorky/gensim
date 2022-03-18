@@ -156,9 +156,11 @@ class Doctag:
 
 
 class Doc2Vec(Word2Vec):
-    def __init__(self, documents=None, corpus_file=None, vector_size=100, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
-                 dm_tag_count=1, dv=None, dv_mapfile=None, comment=None, trim_rule=None, callbacks=(),
-                 window=5, epochs=10, shrink_windows=True, **kwargs):
+    def __init__(
+            self, documents=None, corpus_file=None, vector_size=100, dm_mean=None, dm=1, dbow_words=0, dm_concat=0,
+            dm_tag_count=1, dv=None, dv_mapfile=None, comment=None, trim_rule=None, callbacks=(),
+            window=5, epochs=10, shrink_windows=True, **kwargs,
+        ):
         """Class for training, using and evaluating neural networks described in
         `Distributed Representations of Sentences and Documents <http://arxiv.org/abs/1405.4053v2>`_.
 
@@ -655,7 +657,7 @@ class Doc2Vec(Word2Vec):
         return doctag_vectors[0]
 
     def __getitem__(self, tag):
-        """Get the vector representation of (possible multi-term) tag.
+        """Get the vector representation of (possibly multi-term) tag.
 
         Parameters
         ----------
@@ -836,8 +838,10 @@ class Doc2Vec(Word2Vec):
         report['doctag_syn0'] = len(self.dv) * self.vector_size * dtype(REAL).itemsize
         return super(Doc2Vec, self).estimate_memory(vocab_size, report=report)
 
-    def build_vocab(self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
-                    keep_raw_vocab=False, trim_rule=None, **kwargs):
+    def build_vocab(
+            self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
+            keep_raw_vocab=False, trim_rule=None, **kwargs,
+        ):
         """Build vocabulary from a sequence of documents (can be a once-only generator stream).
 
         Parameters
@@ -877,7 +881,7 @@ class Doc2Vec(Word2Vec):
         """
         total_words, corpus_count = self.scan_vocab(
             corpus_iterable=corpus_iterable, corpus_file=corpus_file,
-            progress_per=progress_per, trim_rule=trim_rule
+            progress_per=progress_per, trim_rule=trim_rule,
         )
         self.corpus_count = corpus_count
         self.corpus_total_words = total_words
@@ -959,7 +963,7 @@ class Doc2Vec(Word2Vec):
             if document_no % progress_per == 0:
                 interval_rate = (total_words - interval_count) / (default_timer() - interval_start)
                 logger.info(
-                    "PROGRESS: at example #%i, processed %i words (%i/s), %i word types, %i tags",
+                    "PROGRESS: at example #%i, processed %i words (%i words/s), %i word types, %i tags",
                     document_no, total_words, interval_rate, len(vocab), len(doctags_list)
                 )
                 interval_start = default_timer()
@@ -1008,8 +1012,8 @@ class Doc2Vec(Word2Vec):
         self.raw_vocab = vocab
         return total_words, corpus_count
 
-    def scan_vocab(self, corpus_iterable=None, corpus_file=None, progress_per=10000, trim_rule=None):
-        """Create the models Vocabulary: A mapping from unique words in the corpus to their frequency count.
+    def scan_vocab(self, corpus_iterable=None, corpus_file=None, progress_per=100000, trim_rule=None):
+        """Create the model's vocabulary: a mapping from unique words in the corpus to their frequency count.
 
         Parameters
         ----------
@@ -1038,7 +1042,7 @@ class Doc2Vec(Word2Vec):
         Returns
         -------
         (int, int)
-            Tuple of (Total words in the corpus, number of documents)
+            Tuple of `(total words in the corpus, number of documents)`.
 
         """
         logger.info("collecting all words and their counts")
@@ -1049,7 +1053,7 @@ class Doc2Vec(Word2Vec):
 
         logger.info(
             "collected %i word types and %i unique tags from a corpus of %i examples and %i words",
-            len(self.raw_vocab), len(self.dv), corpus_count, total_words
+            len(self.raw_vocab), len(self.dv), corpus_count, total_words,
         )
 
         return total_words, corpus_count
