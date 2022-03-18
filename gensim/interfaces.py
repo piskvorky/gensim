@@ -29,19 +29,19 @@ class CorpusABC(utils.SaveLoad):
 
     .. sourcecode:: pycon
 
-        >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+        >>> from gensim.corpora import MmCorpus  # inherits from the CorpusABC class
         >>> from gensim.test.utils import datapath
         >>>
         >>> corpus = MmCorpus(datapath("testcorpus.mm"))
         >>> for doc in corpus:
         ...     pass  # do something with the doc...
 
-    A document represented in bag-of-word (BoW) format, i.e. list of (attr_id, attr_value),
+    A document represented in the bag-of-word (BoW) format, i.e. list of (attr_id, attr_value),
     like ``[(1, 0.2), (4, 0.6), ...]``.
 
     .. sourcecode:: pycon
 
-        >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+        >>> from gensim.corpora import MmCorpus  # inherits from the CorpusABC class
         >>> from gensim.test.utils import datapath
         >>>
         >>> corpus = MmCorpus(datapath("testcorpus.mm"))
@@ -49,28 +49,28 @@ class CorpusABC(utils.SaveLoad):
         >>> print(doc)
         [(0, 1.0), (1, 1.0), (2, 1.0)]
 
-    Remember, that save/load methods save only corpus class (not corpus as data itself),
-    for save/load functionality, please use this pattern :
+    Remember that the save/load methods only pickle the corpus object, not
+    the (streamed) corpus data itself!
+    To save the corpus data, please use this pattern :
 
     .. sourcecode:: pycon
 
-        >>> from gensim.corpora import MmCorpus  # this is inheritor of CorpusABC class
+        >>> from gensim.corpora import MmCorpus  # MmCorpus inherits from CorpusABC
         >>> from gensim.test.utils import datapath, get_tmpfile
         >>>
         >>> corpus = MmCorpus(datapath("testcorpus.mm"))
         >>> tmp_path = get_tmpfile("temp_corpus.mm")
         >>>
-        >>> MmCorpus.serialize(tmp_path, corpus)  # serialize corpus to disk in MmCorpus format
-        >>> # MmCorpus.save_corpus(tmp_path, corpus)  # this variant also possible, but if serialize availbe - call it.
+        >>> MmCorpus.serialize(tmp_path, corpus)  # serialize corpus to disk in the MmCorpus format
         >>> loaded_corpus = MmCorpus(tmp_path)  # load corpus through constructor
         >>> for (doc_1, doc_2) in zip(corpus, loaded_corpus):
-        ...     assert doc_1 == doc_2  # check that corpuses exactly same
+        ...     assert doc_1 == doc_2  # no change between the original and loaded corpus
 
 
     See Also
     --------
     :mod:`gensim.corpora`
-        Corpuses in different formats
+        Corpora in different formats.
 
     """
     def __iter__(self):
@@ -78,14 +78,14 @@ class CorpusABC(utils.SaveLoad):
         raise NotImplementedError('cannot instantiate abstract base class')
 
     def save(self, *args, **kwargs):
-        """Saves corpus in-memory state.
+        """Saves the in-memory state of the corpus (pickles the object).
 
         Warnings
         --------
-        This save only the "state" of a corpus class, not the corpus data!
+        This saves only the "internal state" of the corpus object, not the corpus data!
 
-        For saving data use the `serialize` method of the output format you'd like to use
-        (e.g. :meth:`gensim.corpora.mmcorpus.MmCorpus.serialize`).
+        To save the corpus data, use the `serialize` method of your desired output format
+        instead, e.g. :meth:`gensim.corpora.mmcorpus.MmCorpus.serialize`.
 
         """
         import warnings
