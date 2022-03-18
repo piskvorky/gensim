@@ -270,7 +270,6 @@ core_testenv = [
     'mock',
     'cython',
     'testfixtures',
-    'Morfessor>=2.0.2a4',
 ]
 
 if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
@@ -319,13 +318,12 @@ NUMPY_STR = 'numpy >= 1.17.0'
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.23'
+CYTHON_STR = 'Cython==0.29.28'
 
 install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
     'smart_open >= 1.8.1',
-    "dataclasses; python_version < '3.7'",  # pre-py3.7 needs `dataclasses` backport for use of `dataclass` in doc2vec.py
 ]
 
 setup_requires = [NUMPY_STR]
