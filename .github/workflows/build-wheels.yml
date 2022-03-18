@@ -217,8 +217,12 @@ jobs:
         # This part relies on the wheel containing tests and required data.
         # If we remove that from the wheel, we'll need to rewrite this step.
         #
-        # pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
+        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
 
+    #
+    # We need a separate testing step for windows because the command for
+    # activating the virtual environment is slightly different
+    #
     - name: Install and Test Wheel (Windows)
       if: matrix.os == 'windows-latest'
       run: |
@@ -227,7 +231,7 @@ jobs:
         pip install wheelhouse/*.whl
         cd test_environment
         python -c 'import gensim;print(gensim.__version__)'
-        # pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
+        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
 
     - name: Upload wheels to s3://gensim-wheels
       #
