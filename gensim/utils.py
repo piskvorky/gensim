@@ -2093,7 +2093,8 @@ def is_empty(corpus):
     if isinstance(corpus, types.GeneratorType):
         return False  # don't try to guess emptiness of generators, may lose elements irretrievably
     try:
-        first_doc = next(iter(corpus))  # list, numpy array etc
+        # list, numpy array etc
+        first_doc = next(iter(corpus))  # noqa: F841 (ignore unused variable)
         return False  # first document exists => not empty
     except StopIteration:
         return True
