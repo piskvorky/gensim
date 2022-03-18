@@ -274,6 +274,9 @@ class KeyedVectors(utils.SaveLoad):
         # fixup rename of vocab into map
         if 'key_to_index' not in self.__dict__:
             self._upconvert_old_vocab()
+        # ensure older instances have next_index
+        if not hasattr(self, 'next_index'):
+            self.next_index = len(self)
 
     def _upconvert_old_vocab(self):
         """Convert a loaded, pre-gensim-4.0.0 version instance that had a 'vocab' dict of data objects."""
