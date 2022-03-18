@@ -1286,7 +1286,7 @@ class Word2Vec(utils.SaveLoad):
             report = progress_queue.get()  # blocks if workers too slow
             if report is None:  # a thread reporting that it finished
                 unfinished_worker_count -= 1
-                logger.info("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
+                logger.debug("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
                 continue
             examples, trained_words, raw_words = report
             job_tally += 1
