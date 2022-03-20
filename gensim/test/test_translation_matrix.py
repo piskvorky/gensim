@@ -63,7 +63,7 @@ class TestTranslationMatrix(unittest.TestCase):
             self.assertTrue(item[1] in translated_words[item[0]])
 
     @pytest.mark.xfail(
-        sys.platform == 'darwin',
+        True,
         reason='blinking test, can be related to <https://github.com/RaRe-Technologies/gensim/issues/2977>'
     )
     def test_translate_gc(self):
