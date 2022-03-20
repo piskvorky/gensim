@@ -1836,7 +1836,7 @@ def _add_word_to_kv(kv, counts, word, weights, vocab_size):
     kv.set_vecattr(word, 'count', word_count)
 
 
-def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
+def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors, encoding):
     start = 0
     processed_words = 0
     bytes_per_vector = vector_size * dtype(REAL).itemsize
@@ -1849,7 +1849,7 @@ def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unico
         if i_space == -1 or (len(chunk) - i_vector) < bytes_per_vector:
             break
 
-        word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
+        word = chunk[start:i_space].decode(encoding, errors=unicode_errors)
         # Some binary files are reported to have obsolete new line in the beginning of word, remove it
         word = word.lstrip('\n')
         vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
@@ -1860,7 +1860,7 @@ def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unico
     return processed_words, chunk[start:]
 
 
-def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size):
+def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size, encoding="utf-8"):
     chunk = b''
     tot_processed_words = 0
 
@@ -1868,7 +1868,7 @@ def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, un
         new_chunk = fin.read(binary_chunk_size)
         chunk += new_chunk
         processed_words, chunk = _add_bytes_to_kv(
-            kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
+            kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors, encoding)
         tot_processed_words += processed_words
         if len(new_chunk) < binary_chunk_size:
             break
@@ -1973,7 +1973,7 @@ def _load_word2vec_format(
 
         if binary:
             _word2vec_read_binary(
-                fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+                fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size, encoding
             )
         else:
             _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)
