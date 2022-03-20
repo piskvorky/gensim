@@ -221,7 +221,7 @@ class Doc2Vec(Word2Vec):
             More recently, in https://arxiv.org/abs/1804.04212, Caselles-Dupré, Lesaint, & Royo-Letelier suggest that
             other values may perform better for recommendation applications.
         dm_mean : {1,0}, optional
-            If 0 , use the sum of the context word vectors. If 1, use the mean.
+            If 0, use the sum of the context word vectors. If 1, use the mean.
             Only applies when `dm` is used in non-concatenative mode.
         dm_concat : {1,0}, optional
             If 1, use concatenation of context vectors rather than sum/average;
