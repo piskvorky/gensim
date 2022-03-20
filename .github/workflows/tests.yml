@@ -61,7 +61,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Update pip
-        run: python -m pip install -U pip
+        run: python -m pip install -U pip pytest
 
       #
       # Work-around mysterious build problem
