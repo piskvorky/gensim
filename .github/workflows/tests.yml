@@ -34,12 +34,8 @@ jobs:
       - name: Update pip
         run: python -m pip install -U pip
 
-      # Pinned to 3.7.9 because >3.8.0 triggers "AttributeError: 'Namespace' object has no attribute 'output_file'"
-      # in flake8-rst. Apparently some bug in flake8-rst:
-      # https://gitlab.com/pycqa/flake8/-/issues/641
-      # https://github.com/kataev/flake8-rst/pull/23/files
       - name: Install dependencies
-        run: python -m pip install flake8==3.7.9 flake-rst==0.7.2
+        run: python -m pip install flake8 flake-rst
 
       #
       # Work-around mysterious build problem
