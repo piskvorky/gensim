@@ -35,7 +35,7 @@ jobs:
         run: python -m pip install -U pip
 
       - name: Install dependencies
-        run: python -m pip install flake8 flake-rst
+        run: python -m pip install flake8 flake8-rst
 
       #
       # Work-around mysterious build problem
