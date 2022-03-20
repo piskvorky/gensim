@@ -6,6 +6,28 @@ on:
     branches: [ develop ]
 
 jobs:
+  linters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Update pip
+        run: python -m pip install -U pip
+
+      - name: Install dependencies
+        run: python -m pip install flake8 flake8-rst
+
+      - name: Run flake8 linter (source)
+        run: flake8 --ignore E12,W503 --max-line-length 120 --show-source gensim
+
+      - name: Run flake8 linter (documentation)
+        run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
+
   tests:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
@@ -25,6 +47,13 @@ jobs:
           # - {name: Windows, python: 3.9, os: windows-2019}
           - {name: Windows, python: '3.10', os: windows-2019}
 
+    #
+    # Don't run this job unless the linters have succeeded.
+    # It's wasteful to test code that failed to lint, because it'll get
+    # re-tested once the lint errors are fixed.
+    #
+    needs: [linters]
+
     steps:
       - uses: actions/checkout@v2
       - name: Setup up Python ${{ matrix.python }}
@@ -33,9 +62,6 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Update pip
         run: python -m pip install -U pip
-
-      - name: Install dependencies
-        run: python -m pip install flake8 flake8-rst
 
       #
       # Work-around mysterious build problem
@@ -57,12 +83,6 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
-
-      - name: Run flake8 linter (source)
-        run: flake8 --ignore E12,W503 --max-line-length 120 --show-source gensim
-
-      - name: Run flake8 linter (documentation)
-        run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
 
       - name: Build
         run: |
