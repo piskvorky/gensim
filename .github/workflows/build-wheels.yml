@@ -9,6 +9,7 @@ on:
     - cron: '0 0 * * sun,wed'
 
 jobs:
+  if: false
   build:
     runs-on: ${{ matrix.os }}
     defaults:

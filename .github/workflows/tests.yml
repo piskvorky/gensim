@@ -16,17 +16,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'flake8,flake8-docs'}
-          - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'py37-linux'}
-          - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux-cov'}
-          - {name: Linux, python: 3.9, os: ubuntu-20.04, tox: 'py39-linux'}
-          - {name: Linux, python: '3.10', os: ubuntu-20.04, tox: 'py310-linux'}
-          - {name: Windows, python: 3.7, os: windows-2019, tox: 'py37-win'}
-          - {name: Windows, python: 3.8, os: windows-2019, tox: 'py38-win'}
-          - {name: Windows, python: 3.9, os: windows-2019, tox: 'py39-win'}
-          - {name: Windows, python: '3.10', os: windows-2019, tox: 'py310-win'}
-    env:
-      TOX_PARALLEL_NO_SPINNER: 1
+          # - {name: Linux, python: 3.7, os: ubuntu-20.04}
+          # - {name: Linux, python: 3.8, os: ubuntu-20.04}
+          - {name: Linux, python: 3.9, os: ubuntu-20.04}
+          - {name: Linux, python: '3.10', os: ubuntu-20.04, coverage: true}
+          # - {name: Windows, python: 3.7, os: windows-2019}
+          # - {name: Windows, python: 3.8, os: windows-2019}
+          # - {name: Windows, python: 3.9, os: windows-2019}
+          - {name: Windows, python: '3.10', os: windows-2019}
 
     steps:
       - uses: actions/checkout@v2
@@ -36,6 +33,13 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Update pip
         run: python -m pip install -U pip
+
+      # Pinned to 3.7.9 because >3.8.0 triggers "AttributeError: 'Namespace' object has no attribute 'output_file'"
+      # in flake8-rst. Apparently some bug in flake8-rst:
+      # https://gitlab.com/pycqa/flake8/-/issues/641
+      # https://github.com/kataev/flake8-rst/pull/23/files
+      - name: Install dependencies
+        run: python -m pip install flake8==3.7.9 flake-rst==0.7.2
 
       #
       # Work-around mysterious build problem
@@ -50,24 +54,41 @@ jobs:
           curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo apt-key add
           sudo apt-get update -y
           sudo apt-get install -y sbt
-      - name: Install tox
-        run: pip install tox
+
       - name: Install GDB & enable core dumps
         if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
-      - name: Run tox tests
-        run: tox -e ${{ matrix.tox }}
+
+      - name: Run flake8 linter (source)
+        run: flake8 --ignore E12,W503 --max-line-length 120 --show-source gensim
+
+      - name: Run flake8 linter (documentation)
+        run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
+
+      - name: Build
+        run: |
+          python --version
+          pip --version
+          python setup.py build_ext --inplace
+
+      - name: Run tests (without coverage)
+        if: matrix.coverage != true
+        run: pytest gensim/test
+
+      - name: Run tests (with coverage)
+        if: matrix.coverage == true
+        run: pytest gensim/test --cov=gensim/ --cov-report=xml
+
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.8'
+        if: matrix.coverage == true
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
           files: ./coverage.xml
           verbose: true
-
 
       - name: Collect corefile
         if: ${{ failure() }} && matrix.os == 'ubuntu-20.04'
