@@ -45,8 +45,7 @@ MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
 BUCKET = 10000
 
 FT_HOME = os.environ.get("FT_HOME")
-FT_CMD = shutil.which("fasttext", path=FT_HOME) or \
-         shutil.which("fasttext")
+FT_CMD = shutil.which("fasttext", path=FT_HOME) or shutil.which("fasttext")
 
 
 new_sentences = [
