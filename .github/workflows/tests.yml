@@ -63,9 +63,6 @@ jobs:
       - name: Update pip
         run: python -m pip install -U pip
 
-      - name: Install requirements
-        run: python -m pip install -r .github/workflows/requirements.txt
-
       #
       # Work-around mysterious build problem
       # https://github.com/RaRe-Technologies/gensim/pull/3078/checks?check_run_id=2117914443
@@ -86,6 +83,14 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
+
+      - name: Install gensim and its dependencies
+        if: matrix.os != 'windows'
+        run: pip install -e .[test]
+
+      - name: Install gensim and its dependencies (Windows)
+        if: matrix.os == 'windows'
+        run: pip install -e .[test-win]
 
       - name: Build
         run: |
