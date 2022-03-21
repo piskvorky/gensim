@@ -29,7 +29,7 @@ jobs:
       #   run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
 
   tests:
-    name: test ${{ matrix.name }} python ${{ matrix.python }}
+    name: test ${{ matrix.os }} python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
