@@ -29,7 +29,7 @@ jobs:
       #   run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
 
   tests:
-    name: ${{ matrix.name }}
+    name: test ${{ matrix.name }} python ${{ matrix.python }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -38,14 +38,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - {name: Linux, python: 3.7, os: ubuntu-20.04}
-          # - {name: Linux, python: 3.8, os: ubuntu-20.04}
-          - {name: Linux, python: 3.9, os: ubuntu-20.04}
-          - {name: Linux, python: '3.10', os: ubuntu-20.04, coverage: true}
-          # - {name: Windows, python: 3.7, os: windows-2019}
-          # - {name: Windows, python: 3.8, os: windows-2019}
-          # - {name: Windows, python: 3.9, os: windows-2019}
-          - {name: Windows, python: '3.10', os: windows-2019}
+          - {python: 3.7, os: ubuntu-20.04}
+          - {python: 3.8, os: ubuntu-20.04}
+          - {python: 3.9, os: ubuntu-20.04}
+          - {python: '3.10', os: ubuntu-20.04, coverage: true}
+
+          - {python: 3.7, os: windows-2019}
+          - {python: 3.8, os: windows-2019}
+          - {python: 3.9, os: windows-2019}
+          - {python: '3.10', os: windows-2019}
 
     #
     # Don't run this job unless the linters have succeeded.
