@@ -30,6 +30,7 @@ jobs:
 
   tests:
     name: test ${{ matrix.os }} python ${{ matrix.python }}
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -99,8 +100,17 @@ jobs:
           pip --version
           python setup.py build_ext --inplace
 
-      - name: Run tests
-        run: pytest gensim/test --cov=gensim/ --cov-report=xml
+      #
+      # Some of our tests are hanging.
+      # Limit the use of the coverage plugin for pytest to rule it out as a factor.
+      #
+      - name: Run tests (without coverage)
+        if: matrix.coverage != true
+        run: pytest -v gensim/test
+
+      - name: Run tests (with coverage)
+        if: matrix.coverage == true
+        run: pytest -v gensim/test --cov=gensim/ --cov-report=xml
 
       - name: Upload coverage to Codecov
         if: matrix.coverage == true
