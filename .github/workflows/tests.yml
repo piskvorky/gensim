@@ -98,12 +98,7 @@ jobs:
           pip --version
           python setup.py build_ext --inplace
 
-      - name: Run tests (without coverage)
-        if: matrix.coverage != true
-        run: pytest gensim/test
-
-      - name: Run tests (with coverage)
-        if: matrix.coverage == true
+      - name: Run tests
         run: pytest gensim/test --cov=gensim/ --cov-report=xml
 
       - name: Upload coverage to Codecov
