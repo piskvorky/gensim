@@ -61,7 +61,10 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Update pip
-        run: python -m pip install -U pip pytest
+        run: python -m pip install -U pip
+
+      - name: Install requirements
+        run: python -m pip install -r .github/workflows/requirements.txt
 
       #
       # Work-around mysterious build problem
