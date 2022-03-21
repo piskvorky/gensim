@@ -28,6 +28,54 @@ jobs:
       # - name: Run flake8 linter (documentation)
       #   run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
 
+  docs:
+    name: build documentation
+    timeout-minutes: 10
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+
+    #
+    # Don't run this job unless the linters have succeeded.
+    # It's wasteful to test code that failed to lint, because it'll get
+    # re-tested once the lint errors are fixed.
+    #
+    needs: [linters]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          #
+          # We use Py3.8 here for historical reasons.
+          #
+          python-version: "3.8"
+
+      - name: Update pip
+        run: python -m pip install -U pip
+
+      - name: Install apt packages for LaTeX rendering
+        run: |
+          sudo apt-get -yq update
+          sudo apt-get -yq remove texlive-binaries --purge
+          sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+          sudo apt-get -yq install build-essential python3.8-dev
+
+      - name: Install gensim and its dependencies
+        run: pip install -e .[docs]
+
+      - name: Build documentation
+        run: |
+          python setup.py build_ext --inplace
+          make -C docs/src clean html
+
+      #
+      # FIXME: do we want to store the built documentation somewhere, or is
+      # knowing that the docs built successfully enough?
+      #
+
   tests:
     name: test ${{ matrix.os }} python ${{ matrix.python }}
     timeout-minutes: 30
