@@ -174,8 +174,8 @@ from numbers import Integral
 from typing import Iterable
 
 from numpy import (
-    dot, float32 as REAL, double, array, zeros, vstack,
-    ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
+    dot, float32 as REAL, double, zeros, vstack, ndarray,
+    sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
 )
 import numpy as np
 from scipy import stats
@@ -202,6 +202,9 @@ def _ensure_list(value):
 
     if isinstance(value, _KEY_TYPES) or (isinstance(value, ndarray) and len(value.shape) == 1):
         return [value]
+
+    if isinstance(value, ndarray) and len(value.shape) == 2:
+        return list(value)
 
     return value
 
@@ -452,6 +455,71 @@ class KeyedVectors(utils.SaveLoad):
     def word_vec(self, *args, **kwargs):
         """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()."""
         return self.get_vector(*args, **kwargs)
+
+    def get_mean_vector(self, keys, weights=None, pre_normalize=True, post_normalize=False, ignore_missing=True):
+        """Get the mean vector for a given list of keys.
+
+        Parameters
+        ----------
+
+        keys : list of (str or int or ndarray)
+            Keys specified by string or int ids or numpy array.
+        weights : list of float or numpy.ndarray, optional
+            1D array of same size of `keys` specifying the weight for each key.
+        pre_normalize : bool, optional
+            Flag indicating whether to normalize each keyvector before taking mean.
+            If False, individual keyvector will not be normalized.
+        post_normalize: bool, optional
+            Flag indicating whether to normalize the final mean vector.
+            If True, normalized mean vector will be return.
+        ignore_missing : bool, optional
+            If False, will raise error if a key doesn't exist in vocabulary.
+
+        Returns
+        -------
+
+        numpy.ndarray
+            Mean vector for the list of keys.
+
+        Raises
+        ------
+
+        ValueError
+            If the size of the list of `keys` and `weights` doesn't match.
+        KeyError
+            If any of the key doesn't exist in vocabulary and `ignore_missing` is false.
+
+        """
+        if len(keys) == 0:
+            raise ValueError("cannot compute mean with no input")
+        if isinstance(weights, list):
+            weights = np.array(weights)
+        if weights is None:
+            weights = np.ones(len(keys))
+        if len(keys) != weights.shape[0]:  # weights is a 1-D numpy array
+            raise ValueError(
+                "keys and weights array must have same number of elements"
+            )
+
+        mean = np.zeros(self.vector_size, self.vectors.dtype)
+
+        total_weight = 0
+        for idx, key in enumerate(keys):
+            if isinstance(key, ndarray):
+                mean += weights[idx] * key
+                total_weight += abs(weights[idx])
+            elif self.__contains__(key):
+                vec = self.get_vector(key, norm=pre_normalize)
+                mean += weights[idx] * vec
+                total_weight += abs(weights[idx])
+            elif not ignore_missing:
+                raise KeyError(f"Key '{key}' not present in vocabulary")
+
+        if(total_weight > 0):
+            mean = mean / total_weight
+        if post_normalize:
+            mean = matutils.unitvec(mean).astype(REAL)
+        return mean
 
     def add_vector(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
@@ -717,10 +785,10 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        positive : list of (str or int or ndarray), optional
-            List of keys that contribute positively.
-        negative : list of (str or int or ndarray), optional
-            List of keys that contribute negatively.
+        positive : list of (str or int or ndarray) or list of ((str,float) or (int,float) or (ndarray,float)), optional
+            List of keys that contribute positively. If tuple, second element specifies the weight (default `1.0`)
+        negative : list of (str or int or ndarray) or list of ((str,float) or (int,float) or (ndarray,float)), optional
+            List of keys that contribute negatively. If tuple, second element specifies the weight (default `-1.0`)
         topn : int or None, optional
             Number of top-N similar keys to return, when `topn` is int. When `topn` is None,
             then similarities for all keys are returned.
@@ -758,27 +826,20 @@ class KeyedVectors(utils.SaveLoad):
             clip_end = restrict_vocab
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
-        positive = [
-            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
-            for item in positive
-        ]
-        negative = [
-            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
-            for item in negative
-        ]
+        keys = []
+        weight = np.concatenate((np.ones(len(positive)), -1.0 * np.ones(len(negative))))
+        for idx, item in enumerate(positive + negative):
+            if isinstance(item, _EXTENDED_KEY_TYPES):
+                keys.append(item)
+            else:
+                keys.append(item[0])
+                weight[idx] = item[1]
 
         # compute the weighted average of all keys
-        all_keys, mean = set(), []
-        for key, weight in positive + negative:
-            if isinstance(key, ndarray):
-                mean.append(weight * key)
-            else:
-                mean.append(weight * self.get_vector(key, norm=True))
-                if self.has_index_for(key):
-                    all_keys.add(self.get_index(key))
-        if not mean:
-            raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+        mean = self.get_mean_vector(keys, weight, pre_normalize=True, post_normalize=True, ignore_missing=False)
+        all_keys = [
+            self.get_index(key) for key in keys if isinstance(key, _KEY_TYPES) and self.has_index_for(key)
+        ]
 
         if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
@@ -1059,7 +1120,7 @@ class KeyedVectors(utils.SaveLoad):
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
         vectors = vstack([self.get_vector(word, norm=use_norm) for word in used_words]).astype(REAL)
-        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        mean = self.get_mean_vector(vectors, post_normalize=True)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words), reverse=True)
 
@@ -1191,9 +1252,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         if not(len(ws1) and len(ws2)):
             raise ZeroDivisionError('At least one of the passed list is empty.')
-        v1 = [self[key] for key in ws1]
-        v2 = [self[key] for key in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+        mean1 = self.get_mean_vector(ws1, pre_normalize=False)
+        mean2 = self.get_mean_vector(ws2, pre_normalize=False)
+        return dot(matutils.unitvec(mean1), matutils.unitvec(mean2))
 
     @staticmethod
     def _log_evaluate_word_analogies(section):
