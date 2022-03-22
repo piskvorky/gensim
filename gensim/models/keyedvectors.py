@@ -946,7 +946,9 @@ class KeyedVectors(utils.SaveLoad):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
+    def most_similar_cosmul(
+            self, positive=None, negative=None, topn=10, restrict_vocab=None
+        ):
         """Find the top-N most similar words, using the multiplicative combination objective,
         proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
         <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
@@ -959,6 +961,9 @@ class KeyedVectors(utils.SaveLoad):
         With a single positive example, rankings will be the same as in the default
         :meth:`~gensim.models.keyedvectors.KeyedVectors.most_similar`.
 
+        Allows calls like most_similar_cosmul('dog', 'cat'), as a shorthand for
+        most_similar_cosmul(['dog'], ['cat']) where 'dog' is positive and 'cat' negative
+
         Parameters
         ----------
         positive : list of str, optional
@@ -968,6 +973,11 @@ class KeyedVectors(utils.SaveLoad):
         topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
+        restrict_vocab : int or None, optional
+            Optional integer which limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
+            This may be meaningful if vocabulary is sorted by descending frequency.
+
 
         Returns
         -------
@@ -985,7 +995,14 @@ class KeyedVectors(utils.SaveLoad):
         positive = _ensure_list(positive)
         negative = _ensure_list(negative)
 
-        self.fill_norms()
+        self.init_sims()
+
+        if isinstance(positive, str):
+            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
+            positive = [positive]
+
+        if isinstance(negative, str):
+            negative = [negative]
 
         all_words = {
             self.get_index(word) for word in positive + negative
@@ -1205,7 +1222,9 @@ class KeyedVectors(utils.SaveLoad):
         logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * score, correct, correct + incorrect)
         return score
 
-    def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_analogies(
+            self, analogies, restrict_vocab=300000, case_insensitive=True,
+            dummy4unknown=False, similarity_function='most_similar'):
         """Compute performance of the model on an analogy test set.
 
         The accuracy is reported (printed to log and returned as a score) for each section separately,
@@ -1231,6 +1250,8 @@ class KeyedVectors(utils.SaveLoad):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
+        similarity_function : str, optional
+            Function name used for similarity calculation.
 
         Returns
         -------
@@ -1286,6 +1307,7 @@ class KeyedVectors(utils.SaveLoad):
                     predicted = None
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
+
                     sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
                     self.key_to_index = original_key_to_index
                     for element in sims:
