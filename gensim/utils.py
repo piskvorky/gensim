@@ -2086,6 +2086,7 @@ def effective_n_jobs(n_jobs):
         n_jobs = max(multiprocessing.cpu_count() + 1 + n_jobs, 1)
     return n_jobs
 
+
 def is_empty(corpus):
     """Is the corpus (an iterable or a scipy.sparse array) empty?"""
     if scipy.sparse.issparse(corpus):
