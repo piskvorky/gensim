@@ -10,6 +10,7 @@ Changes
 * [#3250](https://github.com/RaRe-Technologies/gensim/pull/3250): Make negative ns_exponent work correctly, by [@menshikh-iv](https://github.com/menshikh-iv)
 * [#3258](https://github.com/RaRe-Technologies/gensim/pull/3258): Adding another check to _check_corpus_sanity for compressed files, adding test, by [@dchaplinsky](https://github.com/dchaplinsky)
 * [#3274](https://github.com/RaRe-Technologies/gensim/pull/3274): Migrate setup.py from distutils to setuptools, by [@geojacobm6](https://github.com/geojacobm6)
+* [#3286](https://github.com/RaRe-Technologies/gensim/pull/3286): Fixes 'not enough arguments for format string' error, by [@gilbertfrancois](https://github.com/gilbertfrancois)
 
 ## 4.1.2, 2021-09-17
 

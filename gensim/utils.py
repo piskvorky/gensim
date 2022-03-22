@@ -30,6 +30,7 @@ import heapq
 from copy import deepcopy
 from datetime import datetime
 import platform
+import types
 
 import numpy as np
 import scipy.sparse
@@ -2084,3 +2085,19 @@ def effective_n_jobs(n_jobs):
     elif n_jobs < 0:
         n_jobs = max(multiprocessing.cpu_count() + 1 + n_jobs, 1)
     return n_jobs
+
+
+def is_empty(corpus):
+    """Is the corpus (an iterable or a scipy.sparse array) empty?"""
+    if scipy.sparse.issparse(corpus):
+        return corpus.shape[1] == 0  # by convention, scipy.sparse documents are columns
+    if isinstance(corpus, types.GeneratorType):
+        return False  # don't try to guess emptiness of generators, may lose elements irretrievably
+    try:
+        # list, numpy array etc
+        first_doc = next(iter(corpus))  # noqa: F841 (ignore unused variable)
+        return False  # first document exists => not empty
+    except StopIteration:
+        return True
+    except Exception:
+        return False

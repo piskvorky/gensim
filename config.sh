@@ -31,8 +31,20 @@ function build_wheel_cmd {
 function run_tests {
     # Runs tests on installed distribution from an empty directory
     set -x
-    python --version
     pip freeze
     pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
     set +x
 }
+
+#
+# We do this here because we want to upgrade pip before the wheel gets installed.
+# docker_test_wrap.sh sources this file before the wheel install.  The sourcing
+# happens from multiple places, and some of the Python versions can be really
+# ancient (e.g. when working outside a virtual environment, using the default
+# Python install).
+#
+# We don't use pip to do the actual upgrade because something appears broken
+# with the default pip on the Python 3.10 multibuild image.  This is really
+# dodgy, but I couldn't work out a better way to get this done.
+#
+python continuous_integration/upgrade_pip_py310.py

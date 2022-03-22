@@ -555,6 +555,12 @@ class TestWord2VecModel(unittest.TestCase):
         """Test that evaluating analogies on KeyedVectors give sane results"""
         model = word2vec.Word2Vec(LeeCorpus())
         score, sections = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+        score_cosmul, sections_cosmul = model.wv.evaluate_word_analogies(
+            datapath('questions-words.txt'),
+            similarity_function='most_similar_cosmul'
+        )
+        self.assertEqual(score, score_cosmul)
+        self.assertEqual(sections, sections_cosmul)
         self.assertGreaterEqual(score, 0.0)
         self.assertLessEqual(score, 1.0)
         self.assertGreater(len(sections), 0)

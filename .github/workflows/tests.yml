@@ -6,8 +6,79 @@ on:
     branches: [ develop ]
 
 jobs:
+  linters:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Update pip
+        run: python -m pip install -U pip
+
+      - name: Install dependencies
+        run: python -m pip install flake8 flake8-rst
+
+      - name: Run flake8 linter (source)
+        run: flake8 --ignore E12,W503 --max-line-length 120 --show-source gensim
+
+      # - name: Run flake8 linter (documentation)
+      #   run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
+
+  docs:
+    name: build documentation
+    timeout-minutes: 10
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+
+    #
+    # Don't run this job unless the linters have succeeded.
+    # It's wasteful to test code that failed to lint, because it'll get
+    # re-tested once the lint errors are fixed.
+    #
+    needs: [linters]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v2
+        with:
+          #
+          # We use Py3.8 here for historical reasons.
+          #
+          python-version: "3.8"
+
+      - name: Update pip
+        run: python -m pip install -U pip
+
+      - name: Install apt packages for LaTeX rendering
+        run: |
+          sudo apt-get -yq update
+          sudo apt-get -yq remove texlive-binaries --purge
+          sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+          sudo apt-get -yq install build-essential python3.8-dev
+
+      - name: Install gensim and its dependencies
+        run: pip install -e .[docs]
+
+      - name: Build documentation
+        run: |
+          python setup.py build_ext --inplace
+          make -C docs/src clean html
+
+      #
+      # FIXME: do we want to store the built documentation somewhere, or is
+      # knowing that the docs built successfully enough?
+      #
+
   tests:
-    name: ${{ matrix.name }}
+    name: test ${{ matrix.os }} python ${{ matrix.python }}
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -16,15 +87,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'flake8,flake8-docs'}
-          - {name: Linux, python: 3.6, os: ubuntu-20.04, tox: 'py36-linux'}
-          - {name: Linux, python: 3.7, os: ubuntu-20.04, tox: 'py37-linux'}
-          - {name: Linux, python: 3.8, os: ubuntu-20.04, tox: 'py38-linux'}
-          - {name: Windows, python: 3.6, os: windows-2019, tox: 'py36-win'}
-          - {name: Windows, python: 3.7, os: windows-2019, tox: 'py37-win'}
-          - {name: Windows, python: 3.8, os: windows-2019, tox: 'py38-win'}
-    env:
-      TOX_PARALLEL_NO_SPINNER: 1
+          - {python: 3.7, os: ubuntu-20.04}
+          - {python: 3.8, os: ubuntu-20.04}
+          - {python: 3.9, os: ubuntu-20.04}
+          - {python: '3.10', os: ubuntu-20.04, coverage: true}
+
+          - {python: 3.7, os: windows-2019}
+          - {python: 3.8, os: windows-2019}
+          - {python: 3.9, os: windows-2019}
+          - {python: '3.10', os: windows-2019}
+
+    #
+    # Don't run this job unless the linters have succeeded.
+    # It's wasteful to test code that failed to lint, because it'll get
+    # re-tested once the lint errors are fixed.
+    #
+    needs: [linters]
 
     steps:
       - uses: actions/checkout@v2
@@ -48,24 +126,47 @@ jobs:
           curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo apt-key add
           sudo apt-get update -y
           sudo apt-get install -y sbt
-      - name: Install tox
-        run: pip install tox
+
       - name: Install GDB & enable core dumps
         if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
-      - name: Run tox tests
-        run: tox -e ${{ matrix.tox }}
+
+      - name: Install gensim and its dependencies
+        if: matrix.os != 'windows'
+        run: pip install -e .[test]
+
+      - name: Install gensim and its dependencies (Windows)
+        if: matrix.os == 'windows'
+        run: pip install -e .[test-win]
+
+      - name: Build
+        run: |
+          python --version
+          pip --version
+          python setup.py build_ext --inplace
+
+      #
+      # Some of our tests are hanging.
+      # Limit the use of the coverage plugin for pytest to rule it out as a factor.
+      #
+      - name: Run tests (without coverage)
+        if: matrix.coverage != true
+        run: pytest -v gensim/test
+
+      - name: Run tests (with coverage)
+        if: matrix.coverage == true
+        run: pytest -v gensim/test --cov=gensim/ --cov-report=xml
+
       - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-20.04' && matrix.python == '3.8'
+        if: matrix.coverage == true
         uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
           files: ./coverage.xml
           verbose: true
-
 
       - name: Collect corefile
         if: ${{ failure() }} && matrix.os == 'ubuntu-20.04'
