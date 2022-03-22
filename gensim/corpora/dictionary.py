@@ -330,7 +330,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         After the pruning, resulting gaps in word ids are shrunk.
         Due to this gap shrinking, **the same word may have a different word id before and after the call
-        to this function!**
+        to this function!** See :class:`gensim.models.VocabTransform` and the
+        `dedicated FAQ entry <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q8-how-can-i-filter-a-saved-corpus-and-its-corresponding-dictionary>`_ on how  # noqa
+        to transform a corpus built with a dictionary before pruning.
 
         Examples
         --------

@@ -494,7 +494,7 @@ class Doc2Vec(Word2Vec):
 
         """
         if corpus_file is None and corpus_iterable is None:
-            raise TypeError("Either one of corpus_file or documents value must be provided")
+            raise TypeError("Either one of corpus_file or corpus_iterable value must be provided")
 
         if corpus_file is not None and corpus_iterable is not None:
             raise TypeError("Both corpus_file and corpus_iterable must not be provided at the same time")
@@ -993,7 +993,9 @@ class Doc2Vec(Word2Vec):
             logger.warning(
                 "Highest int doctag (%i) larger than count of documents (%i). This means "
                 "at least %i excess, unused slots (%i bytes) will be allocated for vectors.",
-                max_rawint, corpus_count, ((max_rawint - corpus_count) * self.vector_size * 4))
+                max_rawint, corpus_count, max_rawint - corpus_count,
+                (max_rawint - corpus_count) * self.vector_size * dtype(REAL).itemsize,
+            )
         if max_rawint > -1:
             # adjust indexes/list to account for range of pure-int keyed doctags
             for key in doctags_list:

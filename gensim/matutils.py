@@ -597,23 +597,30 @@ class Sparse2Corpus:
     def __len__(self):
         return self.sparse.shape[1]
 
-    def __getitem__(self, document_index):
-        """Retrieve a document vector from the corpus by its index.
+    def __getitem__(self, key):
+        """
+        Retrieve a document vector or subset from the corpus by key.
 
         Parameters
         ----------
-        document_index : int
-            Index of document
+        key: int, ellipsis, slice, iterable object
+            Index of the document retrieve.
+            Less commonly, the key can also be a slice, ellipsis, or an iterable
+            to retrieve multiple documents.
 
         Returns
         -------
-        list of (int, number)
-            Document in BoW format.
-
+        list of (int, number), Sparse2Corpus
+            Document in BoW format when `key` is an integer. Otherwise :class:`~gensim.matutils.Sparse2Corpus`.
         """
-        indprev = self.sparse.indptr[document_index]
-        indnow = self.sparse.indptr[document_index + 1]
-        return list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
+        sparse = self.sparse
+        if isinstance(key, int):
+            iprev = self.sparse.indptr[key]
+            inow = self.sparse.indptr[key + 1]
+            return list(zip(sparse.indices[iprev:inow], sparse.data[iprev:inow]))
+
+        sparse = self.sparse.__getitem__((slice(None, None, None), key))
+        return Sparse2Corpus(sparse)
 
 
 def veclen(vec):
