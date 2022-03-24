@@ -1423,7 +1423,8 @@ class KeyedVectors(utils.SaveLoad):
             self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
         ):
         """Compute correlation of the model with human annotated or taxonomy‐based semantic similarity measures.
-        More information on the evaluation of word embeddings through gold benchmark similarity data can be found at * https://link.springer.com/article/10.1007/s12559-021-09987-7.
+        More information on the evaluation of word embeddings through gold benchmark similarity data 
+        can be found at * https://link.springer.com/article/10.1007/s12559-021-09987-7.
 
         Notes
         -----
@@ -1440,9 +1441,16 @@ class KeyedVectors(utils.SaveLoad):
             What you should use and why:
             -- human similarity judgments:
                 - why: they are the most used benchmarks in word embedding evaluation.
-                - why not: (i) they suffer from word sense ambiguity faced by the human testers, (ii) the small size of these datasets, (iii) in some cases they mistake semantic similarity of words with relatedness.
+                - why not: 
+                    (i) they suffer from word sense ambiguity faced by the human testers;
+                    (ii) the small size of these datasets;
+                    (iii) in some cases they mistake semantic similarity of words with relatedness.
             -- taxonomy‐based semantic similarity measures:
-                - why: they are based on the similarity between elements of a taxonomy, which (i) is not subject to sense ambiguity of words and (ii) can be computed directly by the user with their desired pairs of words and their taxonomy of choice. Moreover (iii) the benchmark HSS4570 has more pairs than the human similarity judgments benchmarks.
+                - why: they are based on the similarity between elements of a taxonomy, which:
+                    (i) is not subject to sense ambiguity of words;
+                    (ii) can be computed directly by the user with their desired pairs of words and their taxonomy of choice. 
+                  Moreover:
+                    (iii) the benchmark HSS4570 has more pairs than the human similarity judgments benchmarks.
                 - why not: (i) they are less used in the community.
         delimiter : str, optional
             Separator in `pairs` file.
