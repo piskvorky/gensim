@@ -1015,7 +1015,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>>
         >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
-        >>> index = WmdSimilarity(common_texts, model)
+        >>> index = WmdSimilarity(common_texts, model.wv)
         >>> # Make query.
         >>> query = ['trees']
         >>> sims = index[query]
@@ -1096,7 +1096,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return result
 
     def __str__(self):
-        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.wv.syn0.shape[1])
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.wv.vectors.shape[1])
 
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
