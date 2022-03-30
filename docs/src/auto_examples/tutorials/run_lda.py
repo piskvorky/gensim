@@ -58,8 +58,6 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #     careful before applying the code to a large dataset.
 #
 
-import io
-import os.path
 import re
 import tarfile
 
@@ -122,7 +120,7 @@ docs = [[token for token in doc if len(token) > 1] for doc in docs]
 
 ###############################################################################
 # We use the WordNet lemmatizer from NLTK. A lemmatizer is preferred over a
-# stemmer in this case because it produces more readable words. Output that is
+# stemmer in this case because it produces more readable words. An output that is
 # easy to read is very desirable in topic modelling.
 #
 
@@ -151,7 +149,7 @@ docs = [[lemmatizer.lemmatize(token) for token in doc] for doc in docs]
 # Compute bigrams.
 from gensim.models import Phrases
 
-# Add bigrams and trigrams to docs (only ones that appear 20 times or more).
+# Add bigrams to docs (only ones that appear 20 times or more).
 bigram = Phrases(docs, min_count=20)
 for idx in range(len(docs)):
     for token in bigram[docs[idx]]:
@@ -197,19 +195,20 @@ print('Number of documents: %d' % len(corpus))
 # We are ready to train the LDA model. We will first discuss how to set some of
 # the training parameters.
 #
-# First of all, the elephant in the room: how many topics do I need? There is
-# really no easy answer for this, it will depend on both your data and your
-# application. I have used 10 topics here because I wanted to have a few topics
-# that I could interpret and "label", and because that turned out to give me
-# reasonably good results. You might not need to interpret all your topics, so
-# you could use a large number of topics, for example 100.
+# First of all, the elephant in the room: how many topics do I need?
+# There is really no easy answer for this. It will depend on both your
+# data and your application. I have used 10 topics here because I wanted
+# to have a few topics that I could interpret and "label", and because that
+# turned out to give me reasonably good results. On the other hand, you might
+# not need to interpret all your topics, so you could use many topics,
+# for example, 100.
 #
 # ``chunksize`` controls how many documents are processed at a time in the
 # training algorithm. Increasing chunksize will speed up training, at least as
 # long as the chunk of documents easily fit into memory. I've set ``chunksize =
-# 2000``, which is more than the amount of documents, so I process all the
-# data in one go. Chunksize can however influence the quality of the model, as
-# discussed in Hoffman and co-authors [2], but the difference was not
+# 2000``, which is more than the number of documents, so I process all the
+# data in one go. However, chunksize can influence the quality of the model, as
+# discussed in Hoffman and al. [2], but the difference was not
 # substantial in this case.
 #
 # ``passes`` controls how often we train the model on the entire corpus.
@@ -219,8 +218,9 @@ print('Number of documents: %d' % len(corpus))
 # "iterations" high enough.
 #
 # I suggest the following way to choose iterations and passes. First, enable
-# logging (as described in many Gensim tutorials), and set ``eval_every = 1``
-# in ``LdaModel``. When training the model look for a line in the log that
+# logging (``logging.basicConfig(level=logging.INFO, format='PID:%(process)d:%(threadName)s -
+# %(asctime)s - %(levelname)s - %(filename)s:%(lineno)s - %(message)s')``), and set ``eval_every = 1``
+# in ``LdaModel``. Then, when training the model, look for a line in the log that
 # looks something like this::
 #
 #    2016-06-21 15:40:06,753 - gensim.models.ldamodel - DEBUG - 68/1566 documents converged within 400 iterations
@@ -245,7 +245,7 @@ passes = 20
 iterations = 400
 eval_every = None  # Don't evaluate model perplexity, takes too much time.
 
-# Make a index to word dictionary.
+# Make an index to word dictionary.
 temp = dictionary[0]  # This is only to "load" the dictionary.
 id2word = dictionary.id2token
 
@@ -278,7 +278,7 @@ model = LdaModel(
 # methods on the blog at http://rare-technologies.com/lda-training-tips/ !
 #
 
-top_topics = model.top_topics(corpus) #, num_words=20)
+top_topics = model.top_topics(corpus)
 
 # Average topic coherence is the sum of topic coherences of all topics, divided by the number of topics.
 avg_topic_coherence = sum([t[1] for t in top_topics]) / num_topics

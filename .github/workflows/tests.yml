@@ -90,7 +90,7 @@ jobs:
           - {python: 3.7, os: ubuntu-20.04}
           - {python: 3.8, os: ubuntu-20.04}
           - {python: 3.9, os: ubuntu-20.04}
-          - {python: '3.10', os: ubuntu-20.04, coverage: true}
+          - {python: '3.10', os: ubuntu-20.04}
 
           - {python: 3.7, os: windows-2019}
           - {python: 3.8, os: windows-2019}
@@ -149,8 +149,7 @@ jobs:
           python setup.py build_ext --inplace
 
       #
-      # Some of our tests are hanging.
-      # Limit the use of the coverage plugin for pytest to rule it out as a factor.
+      # Some of our tests are hanging, and I strongly suspect it's because of the coverage plugin.
       #
       - name: Run tests (without coverage)
         if: matrix.coverage != true
