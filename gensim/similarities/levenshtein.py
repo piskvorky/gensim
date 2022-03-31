@@ -29,7 +29,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     "Levenshtein similarity" is a modification of the Levenshtein (edit) distance,
     defined in [charletetal17]_.
 
-    This implementation uses the FastSS neighbourhood algorithm
+    This implementation uses the :class:`~gensim.similarities.fastss.FastSS` algorithm
     for fast kNN nearest-neighbor retrieval.
 
     Parameters

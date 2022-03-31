@@ -38,8 +38,8 @@ Initialize and train a model:
     >>> print(len(common_texts))
     9
     >>> model = FastText(vector_size=4, window=3, min_count=1)  # instantiate
-    >>> model.build_vocab(sentences=common_texts)
-    >>> model.train(sentences=common_texts, total_examples=len(common_texts), epochs=10)  # train
+    >>> model.build_vocab(corpus_iterable=common_texts)
+    >>> model.train(corpus_iterable=common_texts, total_examples=len(common_texts), epochs=10)  # train
 
 Once you have a model, you can access its keyed vectors via the `model.wv` attributes.
 The keyed vectors instance is quite powerful: it can perform a wide range of NLP tasks.
@@ -108,9 +108,9 @@ Gensim will take care of the rest:
     >>>
     >>>
     >>> model4 = FastText(vector_size=4, window=3, min_count=1)
-    >>> model4.build_vocab(sentences=MyIter())
+    >>> model4.build_vocab(corpus_iterable=MyIter())
     >>> total_examples = model4.corpus_count
-    >>> model4.train(sentences=MyIter(), total_examples=total_examples, epochs=5)
+    >>> model4.train(corpus_iterable=MyIter(), total_examples=total_examples, epochs=5)
 
 Persist a model to disk with:
 
@@ -1052,7 +1052,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         Note
         ----
-        This method **always** returns True, because of the way FastText works.
+        This method **always** returns True with char ngrams, because of the way FastText works.
 
         If you want to check if a word is an in-vocabulary term, use this instead:
 
@@ -1066,7 +1066,10 @@ class FastTextKeyedVectors(KeyedVectors):
             False
 
         """
-        return True
+        if self.bucket == 0:  # check for the case when char ngrams not used
+            return word in self.key_to_index
+        else:
+            return True
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -1137,6 +1140,23 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec / np.linalg.norm(word_vec)
             else:
                 return word_vec / len(ngram_hashes)
+
+    def get_sentence_vector(self, sentence):
+        """Get a single 1-D vector representation for a given `sentence`.
+        This function is workalike of the official fasttext's get_sentence_vector().
+
+        Parameters
+        ----------
+        sentence : list of (str or int)
+            list of words specified by string or int ids.
+
+        Returns
+        -------
+        numpy.ndarray
+            1-D numpy array representation of the `sentence`.
+
+        """
+        return super(FastTextKeyedVectors, self).get_mean_vector(sentence)
 
     def resize_vectors(self, seed=0):
         """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""
