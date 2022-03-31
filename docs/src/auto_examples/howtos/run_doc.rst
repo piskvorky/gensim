@@ -1,10 +1,12 @@
-.. note::
-    :class: sphx-glr-download-link-note
+.. only:: html
 
-    Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_doc.py>` to download the full example code
-.. rst-class:: sphx-glr-example-title
+    .. note::
+        :class: sphx-glr-download-link-note
 
-.. _sphx_glr_auto_examples_howtos_run_doc.py:
+        Click :ref:`here <sphx_glr_download_auto_examples_howtos_run_doc.py>`     to download the full example code
+    .. rst-class:: sphx-glr-example-title
+
+    .. _sphx_glr_auto_examples_howtos_run_doc.py:
 
 
 How to Author Gensim Documentation
@@ -77,6 +79,15 @@ At the very top, you need a docstring describing what your script does.
 
 
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+    '\nTitle\n=====\n\nBrief description.\n'
 
 
 
@@ -167,7 +178,7 @@ Finalizing your contribution
 
 First, get Sphinx Gallery to build your documentation::
 
-    make -C docs/src html
+    make --directory docs/src html
 
 This can take a while if your documentation uses a large dataset, or if you've changed many other tutorials or guides.
 Once this completes successfully, open ``docs/auto_examples/index.html`` in your browser.
@@ -188,17 +199,17 @@ Once your documentation script is working correctly, it's time to add it to the 
   Gallery also generates .rst (RST for Sphinx) and .ipynb (Jupyter notebook) files from the script.
   Finally, ``sg_execution_times.rst`` contains the time taken to run each example.
 
-Finally, make a PR on `github <https://github.com/RaRe-Technologies/gensim>`__.
+Finally, open a PR at `github <https://github.com/RaRe-Technologies/gensim>`__.
 One of our friendly maintainers will review it, make suggestions, and eventually merge it.
-Your documentation will then appear in the gallery alongside the rest of the example.
-At that stage, give yourself a pat on the back: you're done!
+Your documentation will then appear in the `gallery <https://radimrehurek.com/gensim/auto_examples/index.html>`__,
+alongside the rest of the examples. Thanks a lot!
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.226 seconds)
+   **Total running time of the script:** ( 0 minutes  0.171 seconds)
 
-**Estimated memory usage:**  9 MB
+**Estimated memory usage:**  6 MB
 
 
 .. _sphx_glr_download_auto_examples_howtos_run_doc.py:
@@ -211,13 +222,13 @@ At that stage, give yourself a pat on the back: you're done!
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-python
 
      :download:`Download Python source code: run_doc.py <run_doc.py>`
 
 
 
-  .. container:: sphx-glr-download
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
 
      :download:`Download Jupyter notebook: run_doc.ipynb <run_doc.ipynb>`
 

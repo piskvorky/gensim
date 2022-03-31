@@ -38,8 +38,8 @@ Initialize and train a model:
     >>> print(len(common_texts))
     9
     >>> model = FastText(vector_size=4, window=3, min_count=1)  # instantiate
-    >>> model.build_vocab(sentences=common_texts)
-    >>> model.train(sentences=common_texts, total_examples=len(common_texts), epochs=10)  # train
+    >>> model.build_vocab(corpus_iterable=common_texts)
+    >>> model.train(corpus_iterable=common_texts, total_examples=len(common_texts), epochs=10)  # train
 
 Once you have a model, you can access its keyed vectors via the `model.wv` attributes.
 The keyed vectors instance is quite powerful: it can perform a wide range of NLP tasks.
@@ -108,9 +108,9 @@ Gensim will take care of the rest:
     >>>
     >>>
     >>> model4 = FastText(vector_size=4, window=3, min_count=1)
-    >>> model4.build_vocab(sentences=MyIter())
+    >>> model4.build_vocab(corpus_iterable=MyIter())
     >>> total_examples = model4.corpus_count
-    >>> model4.train(sentences=MyIter(), total_examples=total_examples, epochs=5)
+    >>> model4.train(corpus_iterable=MyIter(), total_examples=total_examples, epochs=5)
 
 Persist a model to disk with:
 
@@ -276,7 +276,7 @@ class FastText(Word2Vec):
                  max_vocab_size=None, word_ngrams=1, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
                  negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0, min_n=3, max_n=6,
                  sorted_vocab=1, bucket=2000000, trim_rule=None, batch_words=MAX_WORDS_IN_BATCH, callbacks=(),
-                 max_final_vocab=None):
+                 max_final_vocab=None, shrink_windows=True,):
         """Train, use and evaluate word representations learned using the method
         described in `Enriching Word Vectors with Subword Information <https://arxiv.org/abs/1607.04606>`_,
         aka FastText.
@@ -385,6 +385,12 @@ class FastText(Word2Vec):
             ``min_count```.  If the specified ``min_count`` is more than the
             automatically calculated ``min_count``, the former will be used.
             Set to ``None`` if not required.
+        shrink_windows : bool, optional
+            New in 4.1. Experimental.
+            If True, the effective window size is uniformly sampled from  [1, `window`]
+            for each target word during training, to match the original word2vec algorithm's
+            approximate weighting of context words by distance. Otherwise, the effective
+            window size is always fixed to `window` words to either side.
 
         Examples
         --------
@@ -432,7 +438,8 @@ class FastText(Word2Vec):
             max_vocab_size=max_vocab_size, max_final_vocab=max_final_vocab,
             min_count=min_count, sample=sample, sorted_vocab=sorted_vocab,
             null_word=null_word, ns_exponent=ns_exponent, hashfxn=hashfxn,
-            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean, min_alpha=min_alpha)
+            seed=seed, hs=hs, negative=negative, cbow_mean=cbow_mean,
+            min_alpha=min_alpha, shrink_windows=shrink_windows)
 
     def _init_post_load(self, hidden_output):
         num_vectors = len(self.wv.vectors)
@@ -489,16 +496,20 @@ class FastText(Word2Vec):
         )
         return report
 
-    def _do_train_epoch(self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-                        total_examples=None, total_words=None, **kwargs):
+    def _do_train_epoch(
+            self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
+            total_examples=None, total_words=None, **kwargs,
+        ):
         work, neu1 = thread_private_mem
 
         if self.sg:
-            examples, tally, raw_tally = train_epoch_sg(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                        total_examples, total_words, work, neu1)
+            examples, tally, raw_tally = train_epoch_sg(
+                self, corpus_file, offset, cython_vocab, cur_epoch, total_examples, total_words, work, neu1,
+            )
         else:
-            examples, tally, raw_tally = train_epoch_cbow(self, corpus_file, offset, cython_vocab, cur_epoch,
-                                                          total_examples, total_words, work, neu1)
+            examples, tally, raw_tally = train_epoch_cbow(
+                self, corpus_file, offset, cython_vocab, cur_epoch, total_examples, total_words, work, neu1,
+            )
 
         return examples, tally, raw_tally
 
@@ -1034,7 +1045,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         Note
         ----
-        This method **always** returns True, because of the way FastText works.
+        This method **always** returns True with char ngrams, because of the way FastText works.
 
         If you want to check if a word is an in-vocabulary term, use this instead:
 
@@ -1048,7 +1059,10 @@ class FastTextKeyedVectors(KeyedVectors):
             False
 
         """
-        return True
+        if self.bucket == 0:  # check for the case when char ngrams not used
+            return word in self.key_to_index
+        else:
+            return True
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -1119,6 +1133,23 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec / np.linalg.norm(word_vec)
             else:
                 return word_vec / len(ngram_hashes)
+
+    def get_sentence_vector(self, sentence):
+        """Get a single 1-D vector representation for a given `sentence`.
+        This function is workalike of the official fasttext's get_sentence_vector().
+
+        Parameters
+        ----------
+        sentence : list of (str or int)
+            list of words specified by string or int ids.
+
+        Returns
+        -------
+        numpy.ndarray
+            1-D numpy array representation of the `sentence`.
+
+        """
+        return super(FastTextKeyedVectors, self).get_mean_vector(sentence)
 
     def resize_vectors(self, seed=0):
         """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""

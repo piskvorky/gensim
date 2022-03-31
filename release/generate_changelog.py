@@ -8,7 +8,7 @@
 """Generate changelog entries for all PRs merged since the last release."""
 import re
 import requests
-
+import time
 
 #
 # The releases get sorted in reverse chronological order, so the first release
@@ -37,6 +37,8 @@ def iter_merged_prs(since=release_timestamp):
                 yield pr
 
         page += 1
+        # Avoid Github API throttling; see https://github.com/RaRe-Technologies/gensim/pull/3203#issuecomment-887453109
+        time.sleep(1)
 
 
 def iter_closed_issues(since=release_timestamp):
@@ -58,6 +60,8 @@ def iter_closed_issues(since=release_timestamp):
             if 'pull_request' not in issue and issue['closed_at'] > since:
                 yield issue
         page += 1
+        # Avoid Github API throttling; see https://github.com/RaRe-Technologies/gensim/pull/3203#issuecomment-887453109
+        time.sleep(1)
 
 
 fixed_issue_numbers = set()

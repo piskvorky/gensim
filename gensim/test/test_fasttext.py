@@ -8,11 +8,13 @@ import io
 import logging
 import unittest
 import os
+import shutil
 import subprocess
 import struct
 import sys
 
 import numpy as np
+import pytest
 
 from gensim import utils
 from gensim.models.word2vec import LineSentence
@@ -43,7 +45,7 @@ MAX_WORDVEC_COMPONENT_DIFFERENCE = 1.0e-10
 BUCKET = 10000
 
 FT_HOME = os.environ.get("FT_HOME")
-FT_CMD = os.path.join(FT_HOME, "fasttext") if FT_HOME else None
+FT_CMD = shutil.which("fasttext", path=FT_HOME) or shutil.which("fasttext")
 
 
 new_sentences = [
@@ -371,6 +373,9 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(
             self.test_model.wv.most_similar_cosmul('nights'),
             self.test_model.wv.most_similar_cosmul(positive=['nights']))
+        self.assertEqual(
+            self.test_model.wv.most_similar_cosmul('the', 'and'),
+            self.test_model.wv.most_similar_cosmul(positive=['the'], negative=['and']))
 
     def test_lookup(self):
         # In vocab, sanity check
@@ -397,144 +402,7 @@ class TestFastTextModel(unittest.TestCase):
         dist = self.test_model.wv.wmdistance(doc, oov_doc)
         self.assertNotEqual(float('inf'), dist)
 
-    def test_cbow_hs_training(self):
-
-        model_gensim = FT_gensim(
-            vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
-
-        lee_data = LineSentence(datapath('lee_background.cor'))
-        model_gensim.build_vocab(lee_data)
-        orig0 = np.copy(model_gensim.wv.vectors[0])
-        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
-        self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
-
-        sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
-        expected_sims_words = [
-            u'night,',
-            u'night.',
-            u'rights',
-            u'kilometres',
-            u'in',
-            u'eight',
-            u'according',
-            u'flights',
-            u'during',
-            u'comes']
-        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
-        overlap_count = len(overlaps)
-        self.assertGreaterEqual(
-            overlap_count, 2,
-            "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
-
-    def test_cbow_hs_training_fromfile(self):
-        with temporary_file('gensim_fasttext.tst') as corpus_file:
-            model_gensim = FT_gensim(
-                vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
-                min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4)
-
-            lee_data = LineSentence(datapath('lee_background.cor'))
-            utils.save_as_line_sentence(lee_data, corpus_file)
-
-            model_gensim.build_vocab(corpus_file=corpus_file)
-            orig0 = np.copy(model_gensim.wv.vectors[0])
-            model_gensim.train(corpus_file=corpus_file,
-                               total_words=model_gensim.corpus_total_words,
-                               epochs=model_gensim.epochs)
-            self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
-
-            sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-            sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
-            expected_sims_words = [
-                u'night,',
-                u'night.',
-                u'rights',
-                u'kilometres',
-                u'in',
-                u'eight',
-                u'according',
-                u'flights',
-                u'during',
-                u'comes']
-            overlaps = set(sims_gensim_words).intersection(expected_sims_words)
-            overlap_count = len(overlaps)
-            self.assertGreaterEqual(
-                overlap_count, 2,
-                "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
-
-    def test_sg_hs_training(self):
-
-        model_gensim = FT_gensim(
-            vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
-            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
-
-        lee_data = LineSentence(datapath('lee_background.cor'))
-        model_gensim.build_vocab(lee_data)
-        orig0 = np.copy(model_gensim.wv.vectors[0])
-        model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
-        self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
-
-        sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
-        expected_sims_words = [
-            u'night,',
-            u'night.',
-            u'eight',
-            u'nine',
-            u'overnight',
-            u'crew',
-            u'overnight.',
-            u'manslaughter',
-            u'north',
-            u'flight']
-        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
-        overlap_count = len(overlaps)
-        self.assertGreaterEqual(
-            overlap_count, 2,
-            "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
-
-    def test_sg_hs_training_fromfile(self):
-        with temporary_file('gensim_fasttext.tst') as corpus_file:
-            model_gensim = FT_gensim(
-                vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
-                min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
-                sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET)
-
-            lee_data = LineSentence(datapath('lee_background.cor'))
-            utils.save_as_line_sentence(lee_data, corpus_file)
-
-            model_gensim.build_vocab(corpus_file=corpus_file)
-            orig0 = np.copy(model_gensim.wv.vectors[0])
-            model_gensim.train(corpus_file=corpus_file,
-                               total_words=model_gensim.corpus_total_words,
-                               epochs=model_gensim.epochs)
-            self.assertFalse((orig0 == model_gensim.wv.vectors[0]).all())  # vector should vary after training
-
-            sims_gensim = model_gensim.wv.most_similar('night', topn=10)
-            sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
-            expected_sims_words = [
-                u'night,',
-                u'night.',
-                u'eight',
-                u'nine',
-                u'overnight',
-                u'crew',
-                u'overnight.',
-                u'manslaughter',
-                u'north',
-                u'flight']
-            overlaps = set(sims_gensim_words).intersection(expected_sims_words)
-            overlap_count = len(overlaps)
-            self.assertGreaterEqual(
-                overlap_count, 2,
-                "only %i overlap in expected %s & actual %s" % (overlap_count, expected_sims_words, sims_gensim_words))
-
     def test_cbow_neg_training(self):
-
         model_gensim = FT_gensim(
             vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=0, negative=5,
             min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
@@ -849,6 +717,203 @@ class TestFastTextModel(unittest.TestCase):
 
         self.assertEqual(model.wv.vectors_vocab.shape, (12, 100))
         self.assertEqual(model.wv.vectors_ngrams.shape, (2000000, 100))
+
+    def test_vectors_for_all_with_inference(self):
+        """Test vectors_for_all can infer new vectors."""
+        words = [
+            'responding',
+            'approached',
+            'chairman',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.test_model.wv.vectors_for_all(words)
+
+        expected = 5
+        predicted = len(vectors_for_all)
+        assert expected == predicted
+
+        expected = self.test_model.wv['responding']
+        predicted = vectors_for_all['responding']
+        assert np.allclose(expected, predicted)
+
+        smaller_distance = np.linalg.norm(
+            vectors_for_all['an out-of-vocabulary word']
+            - vectors_for_all['another out-of-vocabulary word']
+        )
+        greater_distance = np.linalg.norm(
+            vectors_for_all['an out-of-vocabulary word']
+            - vectors_for_all['responding']
+        )
+        assert greater_distance > smaller_distance
+
+    def test_vectors_for_all_without_inference(self):
+        """Test vectors_for_all does not infer new vectors when prohibited."""
+        words = [
+            'responding',
+            'approached',
+            'chairman',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.test_model.wv.vectors_for_all(words, allow_inference=False)
+
+        expected = 3
+        predicted = len(vectors_for_all)
+        assert expected == predicted
+
+        expected = self.test_model.wv['responding']
+        predicted = vectors_for_all['responding']
+        assert np.allclose(expected, predicted)
+
+    def test_negative_ns_exp(self):
+        """The model should accept a negative ns_exponent as a valid value."""
+        model = FT_gensim(sentences, ns_exponent=-1, min_count=1, workers=1)
+        tmpf = get_tmpfile('fasttext_negative_exp.tst')
+        model.save(tmpf)
+        loaded_model = FT_gensim.load(tmpf)
+        loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
+        assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
+
+
+@pytest.mark.parametrize('shrink_windows', [True, False])
+def test_cbow_hs_training(shrink_windows):
+    model_gensim = FT_gensim(
+        vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+        min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+        sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET, shrink_windows=shrink_windows)
+
+    lee_data = LineSentence(datapath('lee_background.cor'))
+    model_gensim.build_vocab(lee_data)
+    orig0 = np.copy(model_gensim.wv.vectors[0])
+    model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
+    assert not (orig0 == model_gensim.wv.vectors[0]).all()  # vector should vary after training
+
+    sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+    sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+    expected_sims_words = [
+        u'night,',
+        u'night.',
+        u'rights',
+        u'kilometres',
+        u'in',
+        u'eight',
+        u'according',
+        u'flights',
+        u'during',
+        u'comes']
+    overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+    overlap_count = len(overlaps)
+
+    message = f"only {overlap_count} overlap in expected {expected_sims_words} & actual {sims_gensim_words}"
+    assert overlap_count >= 2, message
+
+
+@pytest.mark.parametrize('shrink_windows', [True, False])
+def test_cbow_hs_training_fromfile(shrink_windows):
+    with temporary_file('gensim_fasttext.tst') as corpus_file:
+        model_gensim = FT_gensim(
+            vector_size=48, sg=0, cbow_mean=1, alpha=0.05, window=5, hs=1, negative=0,
+            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET * 4, shrink_windows=shrink_windows)
+
+        lee_data = LineSentence(datapath('lee_background.cor'))
+        utils.save_as_line_sentence(lee_data, corpus_file)
+
+        model_gensim.build_vocab(corpus_file=corpus_file)
+        orig0 = np.copy(model_gensim.wv.vectors[0])
+        model_gensim.train(corpus_file=corpus_file,
+                           total_words=model_gensim.corpus_total_words,
+                           epochs=model_gensim.epochs)
+        assert not (orig0 == model_gensim.wv.vectors[0]).all()  # vector should vary after training
+
+        sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+        expected_sims_words = [
+            u'night,',
+            u'night.',
+            u'rights',
+            u'kilometres',
+            u'in',
+            u'eight',
+            u'according',
+            u'flights',
+            u'during',
+            u'comes']
+        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+        overlap_count = len(overlaps)
+        message = f"only {overlap_count} overlap in expected {expected_sims_words} & actual {sims_gensim_words}"
+        assert overlap_count >= 2, message
+
+
+@pytest.mark.parametrize('shrink_windows', [True, False])
+def test_sg_hs_training(shrink_windows):
+    model_gensim = FT_gensim(
+        vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
+        min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+        sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET, shrink_windows=shrink_windows)
+
+    lee_data = LineSentence(datapath('lee_background.cor'))
+    model_gensim.build_vocab(lee_data)
+    orig0 = np.copy(model_gensim.wv.vectors[0])
+    model_gensim.train(lee_data, total_examples=model_gensim.corpus_count, epochs=model_gensim.epochs)
+    assert not (orig0 == model_gensim.wv.vectors[0]).all()  # vector should vary after training
+
+    sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+    sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+    expected_sims_words = [
+        u'night,',
+        u'night.',
+        u'eight',
+        u'nine',
+        u'overnight',
+        u'crew',
+        u'overnight.',
+        u'manslaughter',
+        u'north',
+        u'flight']
+    overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+    overlap_count = len(overlaps)
+
+    message = f"only {overlap_count} overlap in expected {expected_sims_words} & actual {sims_gensim_words}"
+    assert overlap_count >= 2, message
+
+
+@pytest.mark.parametrize('shrink_windows', [True, False])
+def test_sg_hs_training_fromfile(shrink_windows):
+    with temporary_file('gensim_fasttext.tst') as corpus_file:
+        model_gensim = FT_gensim(
+            vector_size=48, sg=1, cbow_mean=1, alpha=0.025, window=5, hs=1, negative=0,
+            min_count=5, epochs=10, batch_words=1000, word_ngrams=1, sample=1e-3, min_n=3, max_n=6,
+            sorted_vocab=1, workers=1, min_alpha=0.0, bucket=BUCKET, shrink_windows=shrink_windows)
+
+        lee_data = LineSentence(datapath('lee_background.cor'))
+        utils.save_as_line_sentence(lee_data, corpus_file)
+
+        model_gensim.build_vocab(corpus_file=corpus_file)
+        orig0 = np.copy(model_gensim.wv.vectors[0])
+        model_gensim.train(corpus_file=corpus_file,
+                           total_words=model_gensim.corpus_total_words,
+                           epochs=model_gensim.epochs)
+        assert not (orig0 == model_gensim.wv.vectors[0]).all()  # vector should vary after training
+
+        sims_gensim = model_gensim.wv.most_similar('night', topn=10)
+        sims_gensim_words = [word for (word, distance) in sims_gensim]  # get similar words
+        expected_sims_words = [
+            u'night,',
+            u'night.',
+            u'eight',
+            u'nine',
+            u'overnight',
+            u'crew',
+            u'overnight.',
+            u'manslaughter',
+            u'north',
+            u'flight']
+        overlaps = set(sims_gensim_words).intersection(expected_sims_words)
+        overlap_count = len(overlaps)
+        message = f"only {overlap_count} overlap in expected {expected_sims_words} & actual {sims_gensim_words}"
+        assert overlap_count >= 2, message
 
 
 with open(datapath('toy-data.txt')) as fin:
@@ -1600,7 +1665,7 @@ def _save_test_model(out_base_fname, model_params):
     subprocess.check_call(cmd)
 
 
-@unittest.skipIf(not FT_HOME, "FT_HOME env variable not set, skipping test")
+@unittest.skipIf(not FT_CMD, "fasttext not in FT_HOME or PATH, skipping test")
 class SaveFacebookByteIdentityTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:
@@ -1647,7 +1712,7 @@ def _read_wordvectors_using_fasttext(fasttext_fname, words):
     return np.array([line_to_array(line) for line in out.splitlines()], dtype=np.float32)
 
 
-@unittest.skipIf(not os.environ.get("FT_HOME", None), "FT_HOME env variable not set, skipping test")
+@unittest.skipIf(not FT_CMD, "fasttext not in FT_HOME or PATH, skipping test")
 class SaveFacebookFormatReadingTest(unittest.TestCase):
     """
     This class containts tests that check the following scenario:

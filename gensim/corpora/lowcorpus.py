@@ -11,26 +11,9 @@ from collections import Counter
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-
+from gensim.parsing.preprocessing import split_on_space
 
 logger = logging.getLogger(__name__)
-
-
-def split_on_space(s):
-    """Split line by spaces, used in :class:`gensim.corpora.lowcorpus.LowCorpus`.
-
-    Parameters
-    ----------
-    s : str
-        Some line.
-
-    Returns
-    -------
-    list of str
-        List of tokens from `s`.
-
-    """
-    return [word for word in utils.to_unicode(s).strip().split(' ') if word]
 
 
 class LowCorpus(IndexedCorpus):
@@ -86,7 +69,7 @@ class LowCorpus(IndexedCorpus):
             If not provided, the mapping is constructed directly from `fname`.
         line2words : callable, optional
             Function which converts lines(str) into tokens(list of str),
-            using :func:`~gensim.corpora.lowcorpus.split_on_space` as default.
+            using :func:`~gensim.parsing.preprocessing.split_on_space` as default.
 
         """
         IndexedCorpus.__init__(self, fname)

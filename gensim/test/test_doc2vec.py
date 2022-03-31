@@ -589,6 +589,44 @@ class TestDoc2VecModel(unittest.TestCase):
             )
             self.model_sanity(model)
 
+    def test_dmm_fixedwindowsize(self):
+        """Test DMM doc2vec training with fixed window size."""
+        model = doc2vec.Doc2Vec(
+            list_corpus, vector_size=24,
+            dm=1, dm_mean=1, window=4, shrink_windows=False,
+            hs=0, negative=10, alpha=0.05, min_count=2, epochs=20
+        )
+        self.model_sanity(model)
+
+    def test_dmm_fixedwindowsize_fromfile(self):
+        """Test DMM doc2vec training with fixed window size, from file."""
+        with temporary_file(get_tmpfile('gensim_doc2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                corpus_file=corpus_file, vector_size=24,
+                dm=1, dm_mean=1, window=4, shrink_windows=False,
+                hs=0, negative=10, alpha=0.05, min_count=2, epochs=20
+            )
+            self.model_sanity(model)
+
+    def test_dbow_fixedwindowsize(self):
+        """Test DBOW doc2vec training with fixed window size."""
+        model = doc2vec.Doc2Vec(
+            list_corpus, vector_size=16, shrink_windows=False,
+            dm=0, hs=0, negative=5, min_count=2, epochs=20
+        )
+        self.model_sanity(model)
+
+    def test_dbow_fixedwindowsize_fromfile(self):
+        """Test DBOW doc2vec training with fixed window size, from file."""
+        with temporary_file(get_tmpfile('gensim_doc2vec.tst')) as corpus_file:
+            save_lee_corpus_as_line_sentence(corpus_file)
+            model = doc2vec.Doc2Vec(
+                corpus_file=corpus_file, vector_size=16, shrink_windows=False,
+                dm=0, hs=0, negative=5, min_count=2, epochs=20
+            )
+            self.model_sanity(model)
+
     def test_parallel(self):
         """Test doc2vec parallel training with more than default 3 threads."""
         # repeat the ~300 doc (~60000 word) Lee corpus to get 6000 docs (~1.2M words)
@@ -682,6 +720,15 @@ class TestDoc2VecModel(unittest.TestCase):
     def test_load_on_class_error(self):
         """Test if exception is raised when loading doc2vec model on instance"""
         self.assertRaises(AttributeError, load_on_instance)
+
+    def test_negative_ns_exp(self):
+        """The model should accept a negative ns_exponent as a valid value."""
+        model = doc2vec.Doc2Vec(sentences, ns_exponent=-1, min_count=1, workers=1)
+        tmpf = get_tmpfile('d2v_negative_exp.tst')
+        model.save(tmpf)
+        loaded_model = doc2vec.Doc2Vec.load(tmpf)
+        loaded_model.train(sentences, total_examples=model.corpus_count, epochs=1)
+        assert loaded_model.ns_exponent == -1, loaded_model.ns_exponent
 # endclass TestDoc2VecModel
 
 
@@ -718,8 +765,8 @@ class ConcatenatedDoc2Vec:
     def epochs(self):
         return self.models[0].epochs
 
-    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None, steps=None):
-        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs, steps) for model in self.models])
+    def infer_vector(self, document, alpha=None, min_alpha=None, epochs=None):
+        return np.concatenate([model.infer_vector(document, alpha, min_alpha, epochs) for model in self.models])
 
     def train(self, *ignore_args, **ignore_kwargs):
         pass  # train subcomponents individually

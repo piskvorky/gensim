@@ -9,6 +9,7 @@
 Automated tests for checking the poincare module from the models package.
 """
 
+import functools
 import logging
 import unittest
 
@@ -38,6 +39,81 @@ class TestKeyedVectors(unittest.TestCase):
         ]
         predicted = [result[0] for result in self.vectors.most_similar('war', topn=5)]
         self.assertEqual(expected, predicted)
+
+    def test_most_similar_vector(self):
+        """Can we pass vectors to most_similar directly?"""
+        positive = self.vectors.vectors[0:5]
+        most_similar = self.vectors.most_similar(positive=positive)
+        assert most_similar is not None
+
+    def test_most_similar_parameter_types(self):
+        """Are the positive/negative parameter types are getting interpreted correctly?"""
+        partial = functools.partial(self.vectors.most_similar, topn=5)
+
+        position = partial('war', 'peace')
+        position_list = partial(['war'], ['peace'])
+        keyword = partial(positive='war', negative='peace')
+        keyword_list = partial(positive=['war'], negative=['peace'])
+
+        #
+        # The above calls should all yield identical results.
+        #
+        assert position == position_list
+        assert position == keyword
+        assert position == keyword_list
+
+    def test_most_similar_cosmul_parameter_types(self):
+        """Are the positive/negative parameter types are getting interpreted correctly?"""
+        partial = functools.partial(self.vectors.most_similar_cosmul, topn=5)
+
+        position = partial('war', 'peace')
+        position_list = partial(['war'], ['peace'])
+        keyword = partial(positive='war', negative='peace')
+        keyword_list = partial(positive=['war'], negative=['peace'])
+
+        #
+        # The above calls should all yield identical results.
+        #
+        assert position == position_list
+        assert position == keyword
+        assert position == keyword_list
+
+    def test_vectors_for_all_list(self):
+        """Test vectors_for_all returns expected results with a list of keys."""
+        words = [
+            'conflict',
+            'administration',
+            'terrorism',
+            'an out-of-vocabulary word',
+            'another out-of-vocabulary word',
+        ]
+        vectors_for_all = self.vectors.vectors_for_all(words)
+
+        expected = 3
+        predicted = len(vectors_for_all)
+        assert expected == predicted
+
+        expected = self.vectors['conflict']
+        predicted = vectors_for_all['conflict']
+        assert np.allclose(expected, predicted)
+
+    def test_vectors_for_all_with_copy_vecattrs(self):
+        """Test vectors_for_all returns can copy vector attributes."""
+        words = ['conflict']
+        vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=True)
+
+        expected = self.vectors.get_vecattr('conflict', 'count')
+        predicted = vectors_for_all.get_vecattr('conflict', 'count')
+        assert expected == predicted
+
+    def test_vectors_for_all_without_copy_vecattrs(self):
+        """Test vectors_for_all returns can copy vector attributes."""
+        words = ['conflict']
+        vectors_for_all = self.vectors.vectors_for_all(words, copy_vecattrs=False)
+
+        not_expected = self.vectors.get_vecattr('conflict', 'count')
+        predicted = vectors_for_all.get_vecattr('conflict', 'count')
+        assert not_expected != predicted
 
     def test_most_similar_topn(self):
         """Test most_similar returns correct results when `topn` is specified."""
@@ -289,6 +365,35 @@ class TestKeyedVectors(unittest.TestCase):
         reloadtxtkv = KeyedVectors.load_word2vec_format(tmpfiletxt, binary=False, no_header=True)
         self.assertEqual(randkv.index_to_key, reloadtxtkv.index_to_key)
         self.assertTrue((randkv.vectors == reloadtxtkv.vectors).all())
+
+    def test_get_mean_vector(self):
+        """Test get_mean_vector returns expected results."""
+        keys = [
+            'conflict',
+            'administration',
+            'terrorism',
+            'call',
+            'an out-of-vocabulary word',
+        ]
+        weights = [1, 2, 3, 1, 2]
+        expected_result_1 = np.array([
+            0.02000151, -0.12685453, 0.09196121, 0.25514853, 0.25740655,
+            -0.11134843, -0.0502661, -0.19278568, -0.83346179, -0.12068878,
+            ], dtype=np.float32)
+        expected_result_2 = np.array([
+            -0.0145228, -0.11530358, 0.1169825, 0.22537769, 0.29353586,
+            -0.10458107, -0.05272481, -0.17547795, -0.84245106, -0.10356515,
+            ], dtype=np.float32)
+        expected_result_3 = np.array([
+            0.01343237, -0.47651053, 0.45645328, 0.98304356, 1.1840123,
+            -0.51647933, -0.25308795, -0.77931081, -3.55954733, -0.55429711,
+            ], dtype=np.float32)
+
+        self.assertTrue(np.allclose(self.vectors.get_mean_vector(keys), expected_result_1))
+        self.assertTrue(np.allclose(self.vectors.get_mean_vector(keys, weights), expected_result_2))
+        self.assertTrue(np.allclose(
+            self.vectors.get_mean_vector(keys, pre_normalize=False), expected_result_3)
+        )
 
 
 class Gensim320Test(unittest.TestCase):

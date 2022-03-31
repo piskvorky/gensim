@@ -44,91 +44,13 @@ import sys
 
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
-from gensim.parsing.preprocessing import STOPWORDS, RE_WHITESPACE
+from gensim.parsing.preprocessing import (
+    remove_stopword_tokens, remove_short_tokens,
+    lower_to_unicode, strip_multiple_whitespaces,
+)
 from gensim.utils import deaccent, simple_tokenize
 
 logger = logging.getLogger(__name__)
-
-
-def remove_stopwords(tokens, stopwords=STOPWORDS):
-    """Remove stopwords using list from `gensim.parsing.preprocessing.STOPWORDS`.
-
-    Parameters
-    ----------
-    tokens : iterable of str
-        Sequence of tokens.
-    stopwords : iterable of str, optional
-        Sequence of stopwords
-
-    Returns
-    -------
-    list of str
-        List of tokens without `stopwords`.
-
-    """
-    return [token for token in tokens if token not in stopwords]
-
-
-def remove_short(tokens, minsize=3):
-    """Remove tokens shorter than `minsize` chars.
-
-    Parameters
-    ----------
-    tokens : iterable of str
-        Sequence of tokens.
-    minsize : int, optimal
-        Minimal length of token (include).
-
-    Returns
-    -------
-    list of str
-        List of tokens without short tokens.
-
-    """
-    return [token for token in tokens if len(token) >= minsize]
-
-
-def lower_to_unicode(text, encoding='utf8', errors='strict'):
-    """Lowercase `text` and convert to unicode, using :func:`gensim.utils.any2unicode`.
-
-    Parameters
-    ----------
-    text : str
-        Input text.
-    encoding : str, optional
-        Encoding that will be used for conversion.
-    errors : str, optional
-        Error handling behaviour, used as parameter for `unicode` function (python2 only).
-
-    Returns
-    -------
-    str
-        Unicode version of `text`.
-
-    See Also
-    --------
-    :func:`gensim.utils.any2unicode`
-        Convert any string to unicode-string.
-
-    """
-    return utils.to_unicode(text.lower(), encoding, errors)
-
-
-def strip_multiple_whitespaces(s):
-    """Collapse multiple whitespace characters into a single space.
-
-    Parameters
-    ----------
-    s : str
-        Input string
-
-    Returns
-    -------
-    str
-        String with collapsed whitespaces.
-
-    """
-    return RE_WHITESPACE.sub(" ", s)
 
 
 class TextCorpus(interfaces.CorpusABC):
@@ -177,12 +99,12 @@ class TextCorpus(interfaces.CorpusABC):
 
     The default preprocessing consists of:
 
-    #. :func:`~gensim.corpora.textcorpus.lower_to_unicode` - lowercase and convert to unicode (assumes utf8 encoding)
+    #. :func:`~gensim.parsing.preprocessing.lower_to_unicode` - lowercase and convert to unicode (assumes utf8 encoding)
     #. :func:`~gensim.utils.deaccent`- deaccent (asciifolding)
-    #. :func:`~gensim.corpora.textcorpus.strip_multiple_whitespaces` - collapse multiple whitespaces into a single one
+    #. :func:`~gensim.parsing.preprocessing.strip_multiple_whitespaces` - collapse multiple whitespaces into one
     #. :func:`~gensim.utils.simple_tokenize` - tokenize by splitting on whitespace
-    #. :func:`~gensim.corpora.textcorpus.remove_short` - remove words less than 3 characters long
-    #. :func:`~gensim.corpora.textcorpus.remove_stopwords` - remove stopwords
+    #. :func:`~gensim.parsing.preprocessing.remove_short_tokens` - remove words less than 3 characters long
+    #. :func:`~gensim.parsing.preprocessing.remove_stopword_tokens` - remove stopwords
 
     """
 
@@ -204,15 +126,15 @@ class TextCorpus(interfaces.CorpusABC):
             Each will be applied to the text of each document in order, and should return a single string with
             the modified text. For Python 2, the original text will not be unicode, so it may be useful to
             convert to unicode as the first character filter.
-            If None - using :func:`~gensim.corpora.textcorpus.lower_to_unicode`,
-            :func:`~gensim.utils.deaccent` and :func:`~gensim.corpora.textcorpus.strip_multiple_whitespaces`.
+            If None - using :func:`~gensim.parsing.preprocessing.lower_to_unicode`,
+            :func:`~gensim.utils.deaccent` and :func:`~gensim.parsing.preprocessing.strip_multiple_whitespaces`.
         tokenizer : callable, optional
             Tokenizer for document, if None - using :func:`~gensim.utils.simple_tokenize`.
         token_filters : iterable of callable, optional
             Each will be applied to the iterable of tokens in order, and should return another iterable of tokens.
             These filters can add, remove, or replace tokens, or do nothing at all.
-            If None - using :func:`~gensim.corpora.textcorpus.remove_short` and
-            :func:`~gensim.corpora.textcorpus.remove_stopwords`.
+            If None - using :func:`~gensim.parsing.preprocessing.remove_short_tokens` and
+            :func:`~gensim.parsing.preprocessing.remove_stopword_tokens`.
 
         Examples
         --------
@@ -254,7 +176,7 @@ class TextCorpus(interfaces.CorpusABC):
 
         self.token_filters = token_filters
         if self.token_filters is None:
-            self.token_filters = [remove_short, remove_stopwords]
+            self.token_filters = [remove_short_tokens, remove_stopword_tokens]
 
         self.length = None
         self.dictionary = None

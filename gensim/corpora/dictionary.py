@@ -10,6 +10,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 import logging
 import itertools
+from typing import Optional, List, Tuple
 
 from gensim import utils
 
@@ -25,9 +26,7 @@ class Dictionary(utils.SaveLoad, Mapping):
     Attributes
     ----------
     token2id : dict of (str, int)
-        token -> tokenId.
-    id2token : dict of (int, str)
-        Reverse mapping for token2id, initialized in a lazy manner to save memory (not created until needed).
+        token -> token_id. I.e. the reverse mapping to `self[token_id]`.
     cfs : dict of (int, int)
         Collection frequencies: token_id -> how many instances of this token are contained in the documents.
     dfs : dict of (int, int)
@@ -144,7 +143,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def __str__(self):
         some_keys = list(itertools.islice(self.token2id.keys(), 5))
-        return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
+        return "%s<%i unique tokens: %s%s>" % (
+            self.__class__.__name__, len(self), some_keys, '...' if len(self) > 5 else ''
+        )
 
     @staticmethod
     def from_documents(documents):
@@ -329,7 +330,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         After the pruning, resulting gaps in word ids are shrunk.
         Due to this gap shrinking, **the same word may have a different word id before and after the call
-        to this function!**
+        to this function!** See :class:`gensim.models.VocabTransform` and the
+        `dedicated FAQ entry <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q8-how-can-i-filter-a-saved-corpus-and-its-corresponding-dictionary>`_ on how  # noqa
+        to transform a corpus built with a dictionary before pruning.
 
         Examples
         --------
@@ -688,6 +691,30 @@ class Dictionary(utils.SaveLoad, Mapping):
                 result.token2id[word] = wordid
                 result.dfs[wordid] = int(docfreq)
         return result
+
+    def most_common(self, n: Optional[int] = None) -> List[Tuple[str, int]]:
+        """Return a list of the n most common words and their counts from the most common to the least.
+
+        Words with equal counts are ordered in the increasing order of their ids.
+
+        Parameters
+        ----------
+        n : int or None, optional
+            The number of most common words to be returned. If `None`, all words in the dictionary
+            will be returned. Default is `None`.
+
+        Returns
+        -------
+        most_common : list of (str, int)
+            The n most common words and their counts from the most common to the least.
+
+        """
+        most_common = [
+            (self[word], count)
+            for word, count
+            in sorted(self.cfs.items(), key=lambda x: (-x[1], x[0]))[:n]
+        ]
+        return most_common
 
     @staticmethod
     def from_corpus(corpus, id2word=None):
