@@ -130,7 +130,7 @@ class TaggedDocument(namedtuple('TaggedDocument', 'words tags')):
            Human readable representation of the object's state (words and tags).
 
         """
-        return '%s(%s, %s)' % (self.__class__.__name__, self.words, self.tags)
+        return '%s<%s, %s>' % (self.__class__.__name__, self.words, self.tags)
 
 
 @dataclass
@@ -494,7 +494,7 @@ class Doc2Vec(Word2Vec):
 
         """
         if corpus_file is None and corpus_iterable is None:
-            raise TypeError("Either one of corpus_file or documents value must be provided")
+            raise TypeError("Either one of corpus_file or corpus_iterable value must be provided")
 
         if corpus_file is not None and corpus_iterable is not None:
             raise TypeError("Both corpus_file and corpus_iterable must not be provided at the same time")
@@ -713,7 +713,7 @@ class Doc2Vec(Word2Vec):
             segments.append('s%g' % self.sample)
         if self.workers > 1:
             segments.append('t%d' % self.workers)
-        return '%s(%s)' % (self.__class__.__name__, ','.join(segments))
+        return '%s<%s>' % (self.__class__.__name__, ','.join(segments))
 
     def save_word2vec_format(self, fname, doctag_vec=False, word_vec=True, prefix='*dt_', fvocab=None, binary=False):
         """Store the input-hidden weight matrix in the same format used by the original C word2vec-tool.
@@ -993,7 +993,9 @@ class Doc2Vec(Word2Vec):
             logger.warning(
                 "Highest int doctag (%i) larger than count of documents (%i). This means "
                 "at least %i excess, unused slots (%i bytes) will be allocated for vectors.",
-                max_rawint, corpus_count, ((max_rawint - corpus_count) * self.vector_size * 4))
+                max_rawint, corpus_count, max_rawint - corpus_count,
+                (max_rawint - corpus_count) * self.vector_size * dtype(REAL).itemsize,
+            )
         if max_rawint > -1:
             # adjust indexes/list to account for range of pure-int keyed doctags
             for key in doctags_list:

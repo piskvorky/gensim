@@ -143,7 +143,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
     def __str__(self):
         some_keys = list(itertools.islice(self.token2id.keys(), 5))
-        return "Dictionary(%i unique tokens: %s%s)" % (len(self), some_keys, '...' if len(self) > 5 else '')
+        return "%s<%i unique tokens: %s%s>" % (
+            self.__class__.__name__, len(self), some_keys, '...' if len(self) > 5 else ''
+        )
 
     @staticmethod
     def from_documents(documents):
@@ -328,7 +330,9 @@ class Dictionary(utils.SaveLoad, Mapping):
 
         After the pruning, resulting gaps in word ids are shrunk.
         Due to this gap shrinking, **the same word may have a different word id before and after the call
-        to this function!**
+        to this function!** See :class:`gensim.models.VocabTransform` and the
+        `dedicated FAQ entry <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ#q8-how-can-i-filter-a-saved-corpus-and-its-corresponding-dictionary>`_ on how  # noqa
+        to transform a corpus built with a dictionary before pruning.
 
         Examples
         --------

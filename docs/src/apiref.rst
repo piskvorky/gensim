@@ -60,6 +60,8 @@ Modules:
     similarities/termsim
     similarities/annoy
     similarities/nmslib
+    similarities/levenshtein
+    similarities/fastss
     test/utils
     topic_coherence/aggregation
     topic_coherence/direct_confirmation_measure

@@ -200,6 +200,7 @@ from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
+from smart_open.compression import get_supported_extensions
 
 logger = logging.getLogger(__name__)
 
@@ -833,11 +834,11 @@ class Word2Vec(utils.SaveLoad):
         train_words_pow = 0.0
         for word_index in range(vocab_size):
             count = self.wv.get_vecattr(word_index, 'count')
-            train_words_pow += count**self.ns_exponent
+            train_words_pow += count**float(self.ns_exponent)
         cumulative = 0.0
         for word_index in range(vocab_size):
             count = self.wv.get_vecattr(word_index, 'count')
-            cumulative += count**self.ns_exponent
+            cumulative += count**float(self.ns_exponent)
             self.cum_table[word_index] = round(cumulative / train_words_pow * domain)
         if len(self.cum_table) > 0:
             assert self.cum_table[-1] == domain
@@ -1502,6 +1503,14 @@ class Word2Vec(utils.SaveLoad):
             raise TypeError(
                 f"Using a generator as corpus_iterable can't support {passes} passes. Try a re-iterable sequence.")
 
+        if corpus_iterable is None:
+            _, corpus_ext = os.path.splitext(corpus_file)
+            if corpus_ext.lower() in get_supported_extensions():
+                raise TypeError(
+                    f"Training from compressed files is not supported with the `corpus_path` argument. "
+                    f"Please decompress {corpus_file} or use `corpus_iterable` instead."
+                )
+
     def _check_training_sanity(self, epochs=0, total_examples=None, total_words=None, **kwargs):
         """Checks whether the training parameters make sense.
 
@@ -1882,7 +1891,7 @@ class Word2Vec(utils.SaveLoad):
             and learning rate.
 
         """
-        return "%s(vocab=%s, vector_size=%s, alpha=%s)" % (
+        return "%s<vocab=%s, vector_size=%s, alpha=%s>" % (
             self.__class__.__name__, len(self.wv.index_to_key), self.wv.vector_size, self.alpha,
         )
 

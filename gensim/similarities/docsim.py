@@ -147,7 +147,7 @@ class Shard(utils.SaveLoad):
         return result
 
     def __str__(self):
-        return "%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname())
+        return "%s<%i documents in %s>" % (self.cls.__name__, len(self), self.fullname())
 
     def get_index(self):
         """Load & get index.
@@ -359,8 +359,8 @@ class Similarity(interfaces.SimilarityABC):
         return len(self.fresh_docs) + sum(len(shard) for shard in self.shards)
 
     def __str__(self):
-        return "Similarity index with %i documents in %i shards (stored under %s)" % (
-            len(self), len(self.shards), self.output_prefix
+        return "%s<%i documents in %i shards stored under %s>" % (
+            self.__class__.__name__, len(self), len(self.shards), self.output_prefix
         )
 
     def add_documents(self, corpus):

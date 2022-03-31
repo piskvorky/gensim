@@ -24,7 +24,7 @@ from gensim import matutils, utils
 from gensim.test import basetmtests
 from gensim.test.utils import datapath, get_tmpfile, common_texts
 
-AZURE = bool(os.environ.get('PIPELINE_WORKSPACE'))
+GITHUB_ACTIONS_WINDOWS = os.environ.get('RUNNER_OS') == 'Windows'
 
 dictionary = Dictionary(common_texts)
 corpus = [dictionary.doc2bow(text) for text in common_texts]
@@ -232,7 +232,7 @@ class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(isinstance(k, numbers.Integral))
             self.assertTrue(np.issubdtype(v, np.floating))
 
-    @unittest.skipIf(AZURE, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
     def test_get_document_topics(self):
 
         model = self.class_(
