@@ -8,6 +8,16 @@ This is a two-step process:
 
 As a maintainer, you can add changes by making new commits and pushing them
 back to the remote.
+
+An example session:
+
+    $ release/hijack_pr.py 1234
+    $ git merge upstream/develop  # or any other changes you want to make
+    $ release/hijack_pr.py push
+
+The above commands would check out the code for the PR, make changes to them, and push them back.
+Obviously, this requires the PR to be writable, but most gensim PRs are.
+If they aren't, then leave it up to the PR author to make the required changes.
 """
 import json
 import subprocess
@@ -24,6 +34,12 @@ if sys.argv[1] == "push":
     remote, remote_branch = check_output(command).split('/')
     current_branch = check_output(['git', 'branch', '--show-current'])
     check_output(['git', 'push', remote, f'{current_branch}:{remote_branch}'])
+
+    #
+    # Cleanup to prevent remotes and branches from piling up
+    #
+    check_output(['git', 'branch', '--delete', current_branch])
+    check_output(['git', 'remote', 'remove', remote])
     sys.exit(0)
 
 prid = int(sys.argv[1])
