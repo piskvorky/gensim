@@ -555,6 +555,12 @@ class TestWord2VecModel(unittest.TestCase):
         """Test that evaluating analogies on KeyedVectors give sane results"""
         model = word2vec.Word2Vec(LeeCorpus())
         score, sections = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+        score_cosmul, sections_cosmul = model.wv.evaluate_word_analogies(
+            datapath('questions-words.txt'),
+            similarity_function='most_similar_cosmul'
+        )
+        self.assertEqual(score, score_cosmul)
+        self.assertEqual(sections, sections_cosmul)
         self.assertGreaterEqual(score, 0.0)
         self.assertLessEqual(score, 1.0)
         self.assertGreater(len(sections), 0)
@@ -834,7 +840,7 @@ class TestWord2VecModel(unittest.TestCase):
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
             # so let's test only for top10
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
-            self.assertLess(neighbor_rank, 2)
+            self.assertLess(neighbor_rank, 5)
 
     def test_r_n_g(self):
         """Test word2vec results identical with identical RNG seed."""

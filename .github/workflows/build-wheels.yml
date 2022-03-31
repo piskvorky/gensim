@@ -10,6 +10,7 @@ on:
 
 jobs:
   build:
+    timeout-minutes: 30
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -17,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.7', '3.8', '3.9', '3.10']
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
@@ -45,11 +46,6 @@ jobs:
         #
         - os: ubuntu-latest
           manylinux-version: 2010
-          python-version: 3.6
-          build-depends: numpy==1.17.0
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
           python-version: 3.7
           build-depends: numpy==1.17.0
 
@@ -63,11 +59,10 @@ jobs:
           python-version: 3.9
           build-depends: numpy==1.19.3
 
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: 3.6
-          build-depends: numpy==1.17.0
+        - os: ubuntu-latest
+          manylinux-version: 2014
+          python-version: "3.10"
+          build-depends: numpy==1.22.2 scipy==1.8.0
 
         - os: macos-latest
           travis-os-name: osx
@@ -87,10 +82,11 @@ jobs:
           python-version: 3.9
           build-depends: numpy==1.19.3
 
-        - os: windows-latest
-          manylinux-version: 2010
-          python-version: 3.6
-          build-depends: numpy==1.17.0
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: "3.10"
+          build-depends: numpy==1.22.2 scipy==1.8.0
 
         - os: windows-latest
           manylinux-version: 2010
@@ -106,6 +102,11 @@ jobs:
           manylinux-version: 2010
           python-version: 3.9
           build-depends: numpy==1.19.3
+
+        - os: windows-latest
+          manylinux-version: 2010
+          python-version: "3.10"
+          build-depends: numpy==1.22.2 scipy==1.8.0
 
     env:
       PKG_NAME: gensim
@@ -114,7 +115,7 @@ jobs:
       PLAT: x86_64
       UNICODE_WIDTH: 32
       MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
-      TEST_DEPENDS: Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 pytest pytest-cov mock cython nmslib pyemd testfixtures scikit-learn pyemd
+      TEST_DEPENDS: pytest mock testfixtures
       DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       SKIP_NETWORK_TESTS: 1
@@ -144,7 +145,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install virtualenv
-    - name: Build and Install Wheels (Multibuild)
+    - name: Build Wheel (Multibuild)
       if: matrix.os != 'windows-latest'
       run: |
         echo ::group::Set up Multibuild
@@ -156,17 +157,16 @@ jobs:
         before_install
         echo ::endgroup::
         echo ::group::Build wheel
+        find . -type f -name "*.egg" -exec rm -v {} \;
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
-        echo ::group::Install run
-        install_run ${{ matrix.PLAT }}
-        echo ::endgroup::
+
     #
     # We can't use multibuild on Windows, so we have to roll our own build script.
     # Adapted from
     # https://github.com/RaRe-Technologies/gensim-wheels/commit/084b863390edee05bbe15d4ec05d1ab726e52202
     #
-    - name: Build and Install Wheels (Windows)
+    - name: Build Wheel (Windows)
       if: matrix.os == 'windows-latest'
       run: |
         echo ::group::Set up dependencies
@@ -189,6 +189,50 @@ jobs:
         # For consistency with the multibuild step.
         #
         mv dist wheelhouse
+
+    - name: Prepare for testing
+      run: |
+        #
+        # FIXME: Why are these eggs here?
+        #
+        # These eggs prevent the wheel from building and running on Py3.10
+        #
+        find . -type f -name "*.egg" -exec rm -v {} \;
+        python -m venv test_environment
+
+    #
+    # Multibuild has a test step but it essentially just installs the wheel
+    # and runs the test, and requires a lot of magic to get it working.
+    # It also does not work under Windows.
+    # So, we create our own simple test step here.
+    #
+    - name: Install and Test Wheel (Linux, MacOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        . test_environment/bin/activate
+        pip install pytest testfixtures mock
+        pip install wheelhouse/*.whl
+        cd test_environment
+        python -c 'import gensim;print(gensim.__version__)'
+        #
+        # This part relies on the wheel containing tests and required data.
+        # If we remove that from the wheel, we'll need to rewrite this step.
+        #
+        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
+
+    #
+    # We need a separate testing step for windows because the command for
+    # activating the virtual environment is slightly different
+    #
+    - name: Install and Test Wheel (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        test_environment/Scripts/activate.bat
+        pip install pytest testfixtures mock
+        pip install wheelhouse/*.whl
+        cd test_environment
+        python -c 'import gensim;print(gensim.__version__)'
+        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
 
     - name: Upload wheels to s3://gensim-wheels
       #

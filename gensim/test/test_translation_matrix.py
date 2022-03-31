@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
-import sys
 from collections import namedtuple
 import unittest
 import logging
 
 import numpy as np
+import pytest
 
 from scipy.spatial.distance import cosine
 from gensim.models.doc2vec import Doc2Vec
@@ -61,9 +61,9 @@ class TestTranslationMatrix(unittest.TestCase):
         for idx, item in enumerate(self.test_word_pairs):
             self.assertTrue(item[1] in translated_words[item[0]])
 
-    @unittest.skipIf(
-        (sys.version_info.major == 3) and (sys.version_info.minor == 9) and (sys.platform == 'darwin'),
-        'blinking test, can be related to <https://github.com/RaRe-Technologies/gensim/issues/2977>'
+    @pytest.mark.xfail(
+        True,
+        reason='blinking test, can be related to <https://github.com/RaRe-Technologies/gensim/issues/2977>'
     )
     def test_translate_gc(self):
         # Test globally corrected neighbour retrieval method
