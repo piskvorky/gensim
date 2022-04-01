@@ -95,6 +95,50 @@ class BM25ABC(interfaces.TransformationABC, metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def get_term_weights(self, num_tokens, term_frequencies, idfs):
+        """Compute vector space weights for a set of terms in a document.
+
+        Parameters
+        ----------
+        num_tokens : int
+            The number of tokens in the document.
+        term_frequencies : ndarray
+            1D array of term frequencies.
+        idfs : ndarray
+            1D array of inverse term document frequencies.
+
+        Returns
+        -------
+        term_weights : ndarray
+            1D array of vector space weights.
+
+        """
+        pass
+
+    def __getitem__(self, bow):
+        is_corpus, bow = utils.is_corpus(bow)
+        if is_corpus:
+            return self._apply(bow)
+
+        num_tokens = sum(freq for term_id, freq in bow)
+
+        term_ids, term_frequencies, idfs = [], [], []
+        for term_id, term_frequency in bow:
+            term_ids.append(term_id)
+            term_frequencies.append(term_frequency)
+            idfs.append(self.idfs.get(term_id) or 0.0)
+        term_frequencies, idfs = np.array(term_frequencies), np.array(idfs)
+
+        term_weights = self.get_term_weights(num_tokens, term_frequencies, idfs)
+
+        vector = [
+            (term_id, float(weight))
+            for term_id, weight
+            in zip(term_ids, term_weights)
+        ]
+        return vector
+
 
 class OkapiBM25Model(BM25ABC):
     """The original Okapi BM25 scoring function of Robertson et al. [2]_.
@@ -189,27 +233,165 @@ class OkapiBM25Model(BM25ABC):
 
         return idfs
 
-    def __getitem__(self, bow):
-        is_corpus, bow = utils.is_corpus(bow)
-        if is_corpus:
-            return self._apply(bow)
-
-        num_tokens = sum(freq for term_id, freq in bow)
-
-        term_ids, term_frequencies, idfs = [], [], []
-        for term_id, term_frequency in bow:
-            term_ids.append(term_id)
-            term_frequencies.append(term_frequency)
-            idfs.append(self.idfs.get(term_id) or 0.0)
-        term_frequencies, idfs = np.array(term_frequencies), np.array(idfs)
-
+    def get_term_weights(self, num_tokens, term_frequencies, idfs):
         term_weights = idfs * (term_frequencies * (self.k1 + 1)
                               / (term_frequencies + self.k1 * (1 - self.b + self.b
                                                               * num_tokens / self.avgdl)))
+        return term_weights
 
-        vector = [
-            (term_id, float(weight))
-            for term_id, weight
-            in zip(term_ids, term_weights)
-        ]
-        return vector
+
+class LuceneBM25Model(BM25ABC):
+    """The scoring function of Apache Lucene 8 [4]_.
+
+    Examples
+    --------
+    .. sourcecode:: pycon
+
+        >>> from gensim.models import LuceneBM25Model
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.corpora.textcorpus import TextCorpus
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
+        >>> dct = Dictionary(dataset)  # fit dictionary
+        >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
+        >>>
+        >>> model = LuceneBM25Model(corpus)  # fit model
+        >>> vector = model[corpus[0]]  # apply model to the first corpus document
+
+    References
+    ----------
+    .. [4] Kamphuis, C., de Vries, A. P., Boytsov, L., Lin, J. (2020). Which
+       BM25 Do You Mean? `A Large-Scale Reproducibility Study of Scoring Variants
+       <https://doi.org/10.1007/978-3-030-45442-5_4>`_. In: Advances in Information Retrieval.
+       28–34.
+
+    """
+    def __init__(self, corpus=None, dictionary=None, k1=1.5, b=0.75):
+        r"""Pre-compute the average length of a document and inverse term document frequencies,
+        which will be used to weight term frequencies for the documents.
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int) or None, optional
+            An input corpus, which will be used to compute the average length of a document and
+            inverse term document frequencies. If None, then `dictionary` will be used to compute
+            the statistics. If both `corpus` and `dictionary` are None, the statistics will be left
+            unintialized. Default is None.
+        dictionary : :class:`~gensim.corpora.Dictionary`
+            An input dictionary, which will be used to compute the average length of a document and
+            inverse term document frequencies.  If None, then `corpus` will be used to compute the
+            statistics. If both `corpus` and `dictionary` are None, the statistics will be left
+            unintialized. Default is None.
+        k1 : float
+            A positive tuning parameter that determines the impact of the term frequency on its BM25
+            weight. Singhal [5]_ suggests to set `k1` between 1.0 and 2.0. Default is 1.5.
+        b : float
+            A tuning parameter between 0.0 and 1.0 that determines the document length
+            normalization: 1.0 corresponds to full document normalization, while 0.0 corresponds to
+            no length normalization. Singhal [5]_ suggests to set `b` to 0.75, which is the default.
+
+        Attributes
+        ----------
+        k1 : float
+            A positive tuning parameter that determines the impact of the term frequency on its BM25
+            weight. Singhal [3]_ suggests to set `k1` between 1.0 and 2.0. Default is 1.5.
+        b : float
+            A tuning parameter between 0.0 and 1.0 that determines the document length
+            normalization: 1.0 corresponds to full document normalization, while 0.0 corresponds to
+            no length normalization. Singhal [3]_ suggests to set `b` to 0.75, which is the default.
+
+        """
+        self.k1, self.b = k1, b
+        super().__init__(corpus, dictionary)
+
+    def precompute_idfs(self, dfs, num_docs):
+        idfs = dict()
+        for term_id, freq in dfs.items():
+            idf = math.log(num_docs + 1.0) - math.log(freq + 0.5)
+            idfs[term_id] = idf
+        return idfs
+
+    def get_term_weights(self, num_tokens, term_frequencies, idfs):
+        term_weights = idfs * (term_frequencies
+                              / (term_frequencies + self.k1 * (1 - self.b + self.b
+                                                              * num_tokens / self.avgdl)))
+        return term_weights
+
+
+class AtireBM25Model(BM25ABC):
+    """The scoring function of Trotman et al. [5]_.
+
+    Examples
+    --------
+    .. sourcecode:: pycon
+
+        >>> from gensim.models import AtireBM25Model
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.corpora.textcorpus import TextCorpus
+        >>> from gensim.test.utils import datapath
+        >>>
+        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
+        >>> dct = Dictionary(dataset)  # fit dictionary
+        >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
+        >>>
+        >>> model = AtireBM25Model(corpus)  # fit model
+        >>> vector = model[corpus[0]]  # apply model to the first corpus document
+
+    References
+    ----------
+    .. [5] Trotman, A., Jia X., Crane M., `Towards an Efficient and Effective Search Engine
+       <http://www.cs.otago.ac.nz/homepages/andrew/involvement/2012-SIGIR-OSIR.pdf#page=45>`_,
+       In: SIGIR 2012 Workshop on Open Source Information Retrieval. 40–47.
+
+    """
+    def __init__(self, corpus=None, dictionary=None, k1=1.5, b=0.75):
+        r"""Pre-compute the average length of a document and inverse term document frequencies,
+        which will be used to weight term frequencies for the documents.
+
+        Parameters
+        ----------
+        corpus : iterable of iterable of (int, int) or None, optional
+            An input corpus, which will be used to compute the average length of a document and
+            inverse term document frequencies. If None, then `dictionary` will be used to compute
+            the statistics. If both `corpus` and `dictionary` are None, the statistics will be left
+            unintialized. Default is None.
+        dictionary : :class:`~gensim.corpora.Dictionary`
+            An input dictionary, which will be used to compute the average length of a document and
+            inverse term document frequencies.  If None, then `corpus` will be used to compute the
+            statistics. If both `corpus` and `dictionary` are None, the statistics will be left
+            unintialized. Default is None.
+        k1 : float
+            A positive tuning parameter that determines the impact of the term frequency on its BM25
+            weight. Singhal [5]_ suggests to set `k1` between 1.0 and 2.0. Default is 1.5.
+        b : float
+            A tuning parameter between 0.0 and 1.0 that determines the document length
+            normalization: 1.0 corresponds to full document normalization, while 0.0 corresponds to
+            no length normalization. Singhal [5]_ suggests to set `b` to 0.75, which is the default.
+
+        Attributes
+        ----------
+        k1 : float
+            A positive tuning parameter that determines the impact of the term frequency on its BM25
+            weight. Singhal [3]_ suggests to set `k1` between 1.0 and 2.0. Default is 1.5.
+        b : float
+            A tuning parameter between 0.0 and 1.0 that determines the document length
+            normalization: 1.0 corresponds to full document normalization, while 0.0 corresponds to
+            no length normalization. Singhal [3]_ suggests to set `b` to 0.75, which is the default.
+
+        """
+        self.k1, self.b = k1, b
+        super().__init__(corpus, dictionary)
+
+    def precompute_idfs(self, dfs, num_docs):
+        idfs = dict()
+        for term_id, freq in dfs.items():
+            idf = math.log(num_docs) - math.log(freq)
+            idfs[term_id] = idf
+        return idfs
+
+    def get_term_weights(self, num_tokens, term_frequencies, idfs):
+        term_weights = idfs * (term_frequencies * (self.k1 + 1)
+                              / (term_frequencies + self.k1 * (1 - self.b + self.b
+                                                              * num_tokens / self.avgdl)))
+        return term_weights
