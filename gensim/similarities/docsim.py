@@ -1118,6 +1118,50 @@ class WmdSimilarity(interfaces.SimilarityABC):
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """Compute cosine similarity against a corpus of documents by storing the index matrix in memory.
 
+    Examples
+    --------
+    Here is how you would index and query a corpus of documents in the bag-of-words format using the
+    cosine similarity:
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.similarities import SparseMatrixSimilarity
+        >>> from gensim.test.utils import common_texts as corpus
+        >>>
+        >>> dictionary = Dictionary(corpus)  # fit dictionary
+        >>> bow_corpus = [dictionary.doc2bow(line) for line in corpus]  # convert corpus to BoW format
+        >>> index = SparseMatrixSimilarity(bm25_corpus, num_docs=len(corpus), num_terms=len(dictionary))
+        >>>
+        >>> query = 'graph trees computer'.split()  # make a query
+        >>> bow_query = dictionary.doc2bow(query)
+        >>> similarities = index[bow_query]  # calculate similarity of query to each doc from bow_corpus
+
+    Here is how you would index and query a corpus of documents using the Okapi BM25 scoring
+    function:
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.models import TfidfModel, OkapiBM25Model
+        >>> from gensim.similarities import SparseMatrixSimilarity
+        >>> from gensim.test.utils import common_texts as corpus
+        >>>
+        >>> dictionary = Dictionary(corpus)  # fit dictionary
+        >>> query_model = TfidfModel(dictionary=dictionary, smartirs='bnn')  # enforce binary weights
+        >>> document_model = OkapiBM25Model(dictionary=dictionary)  # fit bm25 model
+        >>>
+        >>> bow_corpus = [dictionary.doc2bow(line) for line in corpus]  # convert corpus to BoW format
+        >>> bm25_corpus = document_model[bow_corpus]
+        >>> index = SparseMatrixSimilarity(bm25_corpus, num_docs=len(corpus), num_terms=len(dictionary),
+        ...                                normalize_queries=False, normalize_documents=False)
+        >>>
+        >>>
+        >>> query = 'graph trees computer'.split()  # make a query
+        >>> bow_query = dictionary.doc2bow(query)
+        >>> bm25_query = query_model[bow_query]
+        >>> similarities = index[bm25_query]  # calculate similarity of query to each doc from bow_corpus
+
     Notes
     -----
     Use this if your input corpus contains sparse vectors (such as TF-IDF documents) and fits into RAM.

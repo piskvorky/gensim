@@ -147,16 +147,14 @@ class OkapiBM25Model(BM25ABC):
     --------
     .. sourcecode:: pycon
 
-        >>> from gensim.models import OkapiBM25Model
         >>> from gensim.corpora import Dictionary
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
+        >>> from gensim.models import OkapiBM25Model
+        >>> from gensim.test.utils import common_texts
         >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> dct = Dictionary(dataset)  # fit dictionary
-        >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
+        >>> dictionary = Dictionary(common_texts)  # fit dictionary
+        >>> model = OkapiBM25Model(dictionary=dictionary)  # fit model
         >>>
-        >>> model = OkapiBM25Model(corpus)  # fit model
+        >>> corpus = [dictionary.doc2bow(line) for line in common_texts]  # convert corpus to BoW format
         >>> vector = model[corpus[0]]  # apply model to the first corpus document
 
     References
@@ -247,16 +245,14 @@ class LuceneBM25Model(BM25ABC):
     --------
     .. sourcecode:: pycon
 
-        >>> from gensim.models import LuceneBM25Model
         >>> from gensim.corpora import Dictionary
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
+        >>> from gensim.models import LuceneBM25Model
+        >>> from gensim.test.utils import common_texts
         >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> dct = Dictionary(dataset)  # fit dictionary
-        >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
+        >>> dictionary = Dictionary(common_texts)  # fit dictionary
+        >>> corpus = [dictionary.doc2bow(line) for line in common_texts]  # convert corpus to BoW format
         >>>
-        >>> model = LuceneBM25Model(corpus)  # fit model
+        >>> model = LuceneBM25Model(dictionary=dictionary)  # fit model
         >>> vector = model[corpus[0]]  # apply model to the first corpus document
 
     References
@@ -326,16 +322,14 @@ class AtireBM25Model(BM25ABC):
     --------
     .. sourcecode:: pycon
 
-        >>> from gensim.models import AtireBM25Model
         >>> from gensim.corpora import Dictionary
-        >>> from gensim.corpora.textcorpus import TextCorpus
-        >>> from gensim.test.utils import datapath
+        >>> from gensim.models import AtireBM25Model
+        >>> from gensim.test.utils import common_texts
         >>>
-        >>> corpus = TextCorpus(datapath('testcorpus.txt'))
-        >>> dct = Dictionary(dataset)  # fit dictionary
-        >>> corpus = [dct.doc2bow(line) for line in dataset]  # convert corpus to BoW format
+        >>> dictionary = Dictionary(common_texts)  # fit dictionary
+        >>> corpus = [dictionary.doc2bow(line) for line in common_texts]  # convert corpus to BoW format
         >>>
-        >>> model = AtireBM25Model(corpus)  # fit model
+        >>> model = AtireBM25Model(dictionary=dictionary)  # fit model
         >>> vector = model[corpus[0]]  # apply model to the first corpus document
 
     References
