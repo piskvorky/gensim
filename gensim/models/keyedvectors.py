@@ -256,6 +256,9 @@ class KeyedVectors(utils.SaveLoad):
 
         self.mapfile_path = mapfile_path
 
+    def __str__(self):
+        return f"{self.__class__.__name__}<vector_size={self.vector_size}, {len(self)} keys>"
+
     def _load_specials(self, *args, **kwargs):
         """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
         super(KeyedVectors, self)._load_specials(*args, **kwargs)
@@ -1471,16 +1474,13 @@ class KeyedVectors(utils.SaveLoad):
         similarity_model = []
         oov = 0
 
-        original_key_to_index = self.key_to_index
-        self.key_to_index = ok_vocab
-
-        with utils.open(pairs, 'rb') as fin:
-            for line_no, line in enumerate(fin):
-                line = utils.to_unicode(line)
-                if line.startswith('#'):
-                    # May be a comment
-                    continue
-                else:
+        original_key_to_index, self.key_to_index = self.key_to_index, ok_vocab
+        try:
+            with utils.open(pairs, 'rb') as fin:
+                for line_no, line in enumerate(fin):
+                    line = utils.to_unicode(line)
+                    if not line or line.startswith('#'):  # Ignore lines with comments.
+                        continue
                     try:
                         if case_insensitive:
                             a, b, sim = [word.upper() for word in line.split(delimiter)]
@@ -1490,19 +1490,27 @@ class KeyedVectors(utils.SaveLoad):
                     except (ValueError, TypeError):
                         logger.info('Skipping invalid line #%d in %s', line_no, pairs)
                         continue
+
                     if a not in ok_vocab or b not in ok_vocab:
                         oov += 1
                         if dummy4unknown:
                             logger.debug('Zero similarity for line #%d with OOV words: %s', line_no, line.strip())
                             similarity_model.append(0.0)
                             similarity_gold.append(sim)
-                            continue
                         else:
-                            logger.debug('Skipping line #%d with OOV words: %s', line_no, line.strip())
-                            continue
+                            logger.info('Skipping line #%d with OOV words: %s', line_no, line.strip())
+                        continue
                     similarity_gold.append(sim)  # Similarity from the dataset
                     similarity_model.append(self.similarity(a, b))  # Similarity from the model
-        self.key_to_index = original_key_to_index
+        finally:
+            self.key_to_index = original_key_to_index
+
+        assert len(similarity_gold) == len(similarity_model)
+        if not similarity_gold:
+            raise ValueError(
+                f"No valid similarity judgements found in {pairs}: either invalid format or "
+                f"all are out-of-vocabulary in {self}"
+            )
         spearman = stats.spearmanr(similarity_gold, similarity_model)
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         if dummy4unknown:
