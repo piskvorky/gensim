@@ -1423,7 +1423,8 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
     def evaluate_word_pairs(
-            self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
+            self, pairs, delimiter='\t', encoding='utf8',
+            restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
         ):
         """Compute correlation of the model with human similarity judgments.
 
@@ -1476,9 +1477,8 @@ class KeyedVectors(utils.SaveLoad):
 
         original_key_to_index, self.key_to_index = self.key_to_index, ok_vocab
         try:
-            with utils.open(pairs, 'rb') as fin:
+            with utils.open(pairs, encoding=encoding) as fin:
                 for line_no, line in enumerate(fin):
-                    line = utils.to_unicode(line)
                     if not line or line.startswith('#'):  # Ignore lines with comments.
                         continue
                     try:
