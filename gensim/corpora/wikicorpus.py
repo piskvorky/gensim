@@ -569,7 +569,8 @@ class WikiCorpus(TextCorpus):
     """
     def __init__(self, fname, processes=None, lemmatize=None, dictionary=None,
                  filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None, 
+                 metadata=False):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -602,6 +603,8 @@ class WikiCorpus(TextCorpus):
             If set, each XML article element will be passed to this callable before being processed. Only articles
             where the callable returns an XML element are processed, returning None allows filtering out
             some articles based on customised rules.
+        metadata: bool, optional
+                Whether to write articles titles to serialized corpus.
 
         Warnings
         --------
@@ -618,7 +621,7 @@ class WikiCorpus(TextCorpus):
         self.fname = fname
         self.filter_namespaces = filter_namespaces
         self.filter_articles = filter_articles
-        self.metadata = False
+        self.metadata = metadata
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
@@ -627,9 +630,8 @@ class WikiCorpus(TextCorpus):
         self.token_min_len = token_min_len
         self.token_max_len = token_max_len
         self.lower = lower
-
         if dictionary is None:
-            self.dictionary = Dictionary(self.get_texts())
+            self.dictionary = Dictionary(self.get_texts(dictionary_mode=True))
         else:
             self.dictionary = dictionary
 
@@ -637,7 +639,7 @@ class WikiCorpus(TextCorpus):
     def input(self):
         return self.fname
 
-    def get_texts(self):
+    def get_texts(self, dictionary_mode=False):
         """Iterate over the dump, yielding a list of tokens for each article that passed
         the length and namespace filtering.
 
@@ -647,6 +649,12 @@ class WikiCorpus(TextCorpus):
         -----
         This iterates over the **texts**. If you want vectors, just use the standard corpus interface
         instead of this method:
+        
+        Parameters
+        ----------
+        dictionary_mode : bool, optional
+            If True, yields list of str.
+            If False, yield depends on self.metadata (see 'Yields' below).
 
         Examples
         --------
@@ -692,7 +700,7 @@ class WikiCorpus(TextCorpus):
                         continue
                     articles += 1
                     positions += len(tokens)
-                    if self.metadata:
+                    if self.metadata and not dictionary_mode:
                         yield (tokens, (pageid, title))
                     else:
                         yield tokens
