@@ -1449,7 +1449,7 @@ class KeyedVectors(utils.SaveLoad):
                 - why: they are based on the similarity between elements of a taxonomy, which:
                     (i) is not subject to sense ambiguity of words;
                     (ii) can be computed directly by the user
-                         with their desired pairs of words and their taxonomy of choice.
+                    with their desired pairs of words and their taxonomy of choice.
                   Moreover:
                     (iii) the benchmark HSS4570 has more pairs than the human similarity judgments benchmarks.
                 - why not: (i) they are less used in the community.
