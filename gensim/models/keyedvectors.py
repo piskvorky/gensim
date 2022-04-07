@@ -1423,7 +1423,7 @@ class KeyedVectors(utils.SaveLoad):
             self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
         ):
         """Compute correlation of the model with human annotated or taxonomy‐based semantic similarity measures.
-        More information on the evaluation of word embeddings through gold benchmark similarity data 
+        More information on the evaluation of word embeddings through gold benchmark similarity data
         can be found at * https://link.springer.com/article/10.1007/s12559-021-09987-7.
 
         Notes
@@ -1436,19 +1436,20 @@ class KeyedVectors(utils.SaveLoad):
         ----------
         pairs : str
             Path to file, where lines are 3-tuples, each consisting of a word pair and a similarity value.
-            See `test/test_data/wordsim353.tsv` as example of human similarity judgments, 
+            See `test/test_data/wordsim353.tsv` as example of human similarity judgments,
             and test/test_data/HSS4570.tsv as an example of taxonomy‐based semantic similarity.
             What you should use and why:
             -- human similarity judgments:
                 - why: they are the most used benchmarks in word embedding evaluation.
-                - why not: 
+                - why not:
                     (i) they suffer from word sense ambiguity faced by the human testers;
                     (ii) the small size of these datasets;
                     (iii) in some cases they mistake semantic similarity of words with relatedness.
             -- taxonomy‐based semantic similarity measures:
                 - why: they are based on the similarity between elements of a taxonomy, which:
                     (i) is not subject to sense ambiguity of words;
-                    (ii) can be computed directly by the user with their desired pairs of words and their taxonomy of choice. 
+                    (ii) can be computed directly by the user
+                         with their desired pairs of words and their taxonomy of choice.
                   Moreover:
                     (iii) the benchmark HSS4570 has more pairs than the human similarity judgments benchmarks.
                 - why not: (i) they are less used in the community.
