@@ -265,6 +265,11 @@ class TestKeyedVectors(unittest.TestCase):
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
 
+        # assert `len(kv)` == `len(kv.norms)` after `fill_norms()`
+        kv.fill_norms()
+        kv.add_vectors(["___not_present_in_keyed_vectors___"], [np.random.randn(self.vectors.vector_size)], replace=False)
+        self.assertEqual(len(kv), len(kv.norms))
+
     def test_add_type(self):
         kv = KeyedVectors(2)
         assert kv.vectors.dtype == REAL
