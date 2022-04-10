@@ -8,7 +8,10 @@ Also introduces corpus streaming and persistence to disk in various formats.
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # First, let’s create a small corpus of nine short documents [1]_:
@@ -38,11 +41,11 @@ documents = [
 # First, let's tokenize the documents, remove common words (using a toy stoplist)
 # as well as words that only appear once in the corpus:
 
-from pprint import pprint  # pretty-printer
 from collections import defaultdict
+from pprint import pprint  # pretty-printer
 
 # remove common words and tokenize
-stoplist = set('for a of the and to in'.split())
+stoplist = set("for a of the and to in".split())
 texts = [
     [word for word in document.lower().split() if word not in stoplist]
     for document in documents
@@ -54,10 +57,7 @@ for text in texts:
     for token in text:
         frequency[token] += 1
 
-texts = [
-    [token for token in text if frequency[token] > 1]
-    for text in texts
-]
+texts = [[token for token in text if frequency[token] > 1] for text in texts]
 
 pprint(texts)
 
@@ -86,8 +86,9 @@ pprint(texts)
 # between the questions and ids is called a dictionary:
 
 from gensim import corpora
+
 dictionary = corpora.Dictionary(texts)
-dictionary.save('/tmp/deerwester.dict')  # store the dictionary, for future reference
+dictionary.save("/tmp/deerwester.dict")  # store the dictionary, for future reference
 print(dictionary)
 
 ###############################################################################
@@ -104,7 +105,9 @@ print(dictionary.token2id)
 
 new_doc = "Human computer interaction"
 new_vec = dictionary.doc2bow(new_doc.lower().split())
-print(new_vec)  # the word "interaction" does not appear in the dictionary and is ignored
+print(
+    new_vec
+)  # the word "interaction" does not appear in the dictionary and is ignored
 
 ###############################################################################
 # The function :func:`doc2bow` simply counts the number of occurrences of
@@ -114,7 +117,7 @@ print(new_vec)  # the word "interaction" does not appear in the dictionary and i
 # (id 0) and `human` (id 1) appear once; the other ten dictionary words appear (implicitly) zero times.
 
 corpus = [dictionary.doc2bow(text) for text in texts]
-corpora.MmCorpus.serialize('/tmp/deerwester.mm', corpus)  # store to disk, for later use
+corpora.MmCorpus.serialize("/tmp/deerwester.mm", corpus)  # store to disk, for later use
 print(corpus)
 
 ###############################################################################
@@ -138,9 +141,10 @@ from smart_open import open  # for transparently opening remote files
 
 class MyCorpus:
     def __iter__(self):
-        for line in open('https://radimrehurek.com/mycorpus.txt'):
+        for line in open("https://radimrehurek.com/mycorpus.txt"):
             # assume there's one document per line, tokens separated by whitespace
             yield dictionary.doc2bow(line.lower().split())
+
 
 ###############################################################################
 # The full power of Gensim comes from the fact that a corpus doesn't have to be
@@ -180,7 +184,9 @@ for vector in corpus_memory_friendly:  # load one vector into memory at a time
 # Similarly, to construct the dictionary without loading all texts into memory:
 
 # collect statistics about all tokens
-dictionary = corpora.Dictionary(line.lower().split() for line in open('https://radimrehurek.com/mycorpus.txt'))
+dictionary = corpora.Dictionary(
+    line.lower().split() for line in open("https://radimrehurek.com/mycorpus.txt")
+)
 # remove stop words and words that appear only once
 stop_ids = [
     dictionary.token2id[stopword]
@@ -188,7 +194,9 @@ stop_ids = [
     if stopword in dictionary.token2id
 ]
 once_ids = [tokenid for tokenid, docfreq in dictionary.dfs.items() if docfreq == 1]
-dictionary.filter_tokens(stop_ids + once_ids)  # remove stop words and words that appear only once
+dictionary.filter_tokens(
+    stop_ids + once_ids
+)  # remove stop words and words that appear only once
 dictionary.compactify()  # remove gaps in id sequence after words that were removed
 print(dictionary)
 
@@ -218,22 +226,22 @@ print(dictionary)
 # create a toy corpus of 2 documents, as a plain Python list
 corpus = [[(1, 0.5)], []]  # make one document empty, for the heck of it
 
-corpora.MmCorpus.serialize('/tmp/corpus.mm', corpus)
+corpora.MmCorpus.serialize("/tmp/corpus.mm", corpus)
 
 ###############################################################################
 # Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>`_,
 # `Blei's LDA-C format <http://www.cs.princeton.edu/~blei/lda-c/>`_ and
 # `GibbsLDA++ format <http://gibbslda.sourceforge.net/>`_.
 
-corpora.SvmLightCorpus.serialize('/tmp/corpus.svmlight', corpus)
-corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
-corpora.LowCorpus.serialize('/tmp/corpus.low', corpus)
+corpora.SvmLightCorpus.serialize("/tmp/corpus.svmlight", corpus)
+corpora.BleiCorpus.serialize("/tmp/corpus.lda-c", corpus)
+corpora.LowCorpus.serialize("/tmp/corpus.low", corpus)
 
 
 ###############################################################################
 # Conversely, to load a corpus iterator from a Matrix Market file:
 
-corpus = corpora.MmCorpus('/tmp/corpus.mm')
+corpus = corpora.MmCorpus("/tmp/corpus.mm")
 
 ###############################################################################
 # Corpus objects are streams, so typically you won't be able to print them directly:
@@ -259,7 +267,7 @@ for doc in corpus:
 #
 # To save the same Matrix Market document stream in Blei's LDA-C format,
 
-corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
+corpora.BleiCorpus.serialize("/tmp/corpus.lda-c", corpus)
 
 ###############################################################################
 # In this way, `gensim` can also be used as a memory-efficient **I/O format conversion tool**:
@@ -273,8 +281,10 @@ corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
 # Gensim also contains `efficient utility functions <http://radimrehurek.com/gensim/matutils.html>`_
 # to help converting from/to numpy matrices
 
-import gensim
 import numpy as np
+
+import gensim
+
 numpy_matrix = np.random.randint(10, size=[5, 2])  # random matrix as an example
 corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
 # numpy_matrix = gensim.matutils.corpus2dense(corpus, num_terms=number_of_corpus_features)
@@ -283,6 +293,7 @@ corpus = gensim.matutils.Dense2Corpus(numpy_matrix)
 # and from/to `scipy.sparse` matrices
 
 import scipy.sparse
+
 scipy_sparse_matrix = scipy.sparse.random(5, 2)  # random sparse matrix as example
 corpus = gensim.matutils.Sparse2Corpus(scipy_sparse_matrix)
 scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
@@ -302,8 +313,9 @@ scipy_csc_matrix = gensim.matutils.corpus2csc(corpus)
 # .. [1] This is the same corpus as used in
 #        `Deerwester et al. (1990): Indexing by Latent Semantic Analysis <http://www.cs.bham.ac.uk/~pxt/IDA/lsa_ind.pdf>`_, Table 2.
 
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-img = mpimg.imread('run_corpora_and_vector_spaces.png')
+import matplotlib.pyplot as plt
+
+img = mpimg.imread("run_corpora_and_vector_spaces.png")
 imgplot = plt.imshow(img)
-_ = plt.axis('off')
+_ = plt.axis("off")

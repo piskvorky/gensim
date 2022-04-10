@@ -54,28 +54,31 @@ Command line arguments
 """
 
 from __future__ import with_statement
+
+import argparse
+import logging
 import os
 import sys
-import logging
-import threading
 import tempfile
-import argparse
+import threading
 
 try:
     import Queue
 except ImportError:
     import queue as Queue
-import Pyro4
-from gensim.models import ldamodel
-from gensim import utils
 
-logger = logging.getLogger('gensim.models.lda_worker')
+import Pyro4
+
+from gensim import utils
+from gensim.models import ldamodel
+
+logger = logging.getLogger("gensim.models.lda_worker")
 
 
 # periodically save intermediate models after every SAVE_DEBUG updates (0 for never)
 SAVE_DEBUG = 0
 
-LDA_WORKER_PREFIX = 'gensim.lda_worker'
+LDA_WORKER_PREFIX = "gensim.lda_worker"
 
 
 class Worker:
@@ -141,7 +144,7 @@ class Worker:
         else:
             logger.info("worker #%i stopping asking for jobs", self.myid)
 
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def processjob(self, job):
         """Incrementally process the job and potentially logs progress.
 
@@ -155,7 +158,7 @@ class Worker:
         self.model.do_estep(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
-            fname = os.path.join(tempfile.gettempdir(), 'lda_worker.pkl')
+            fname = os.path.join(tempfile.gettempdir(), "lda_worker.pkl")
             self.model.save(fname)
         logger.info("finished processing job #%i", self.jobsdone - 1)
 
@@ -165,7 +168,7 @@ class Worker:
         return True
 
     @Pyro4.expose
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def getstate(self):
         """Log and get the LDA model's current state.
 
@@ -175,7 +178,9 @@ class Worker:
             The current state.
 
         """
-        logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
+        logger.info(
+            "worker #%i returning its state after %s jobs", self.myid, self.jobsdone
+        )
         result = self.model.state
         assert isinstance(result, ldamodel.LdaState)
         self.model.clear()  # free up mem in-between two EM cycles
@@ -183,7 +188,7 @@ class Worker:
         return result
 
     @Pyro4.expose
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def reset(self, state):
         """Reset the worker by setting sufficient stats to 0.
 
@@ -208,32 +213,50 @@ class Worker:
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__[:-130], formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
-    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
-    parser.add_argument(
-        "--no-broadcast", help="Disable broadcast (default: %(default)s)", action='store_const',
-        default=True, const=False
+    parser = argparse.ArgumentParser(
+        description=__doc__[:-130], formatter_class=argparse.RawTextHelpFormatter
     )
-    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
     parser.add_argument(
-        '-v', '--verbose', help='Verbose flag', action='store_const', dest="loglevel",
-        const=logging.INFO, default=logging.WARNING
+        "--host", help="Nameserver hostname (default: %(default)s)", default=None
+    )
+    parser.add_argument(
+        "--port", help="Nameserver port (default: %(default)s)", default=None, type=int
+    )
+    parser.add_argument(
+        "--no-broadcast",
+        help="Disable broadcast (default: %(default)s)",
+        action="store_const",
+        default=True,
+        const=False,
+    )
+    parser.add_argument(
+        "--hmac", help="Nameserver hmac key (default: %(default)s)", default=None
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Verbose flag",
+        action="store_const",
+        dest="loglevel",
+        const=logging.INFO,
+        default=logging.WARNING,
     )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=args.loglevel
+    )
     logger.info("running %s", " ".join(sys.argv))
 
     ns_conf = {
         "broadcast": args.no_broadcast,
         "host": args.host,
         "port": args.port,
-        "hmac_key": args.hmac
+        "hmac_key": args.hmac,
     }
     utils.pyro_daemon(LDA_WORKER_PREFIX, Worker(), random_suffix=True, ns_conf=ns_conf)
     logger.info("finished running %s", " ".join(sys.argv))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

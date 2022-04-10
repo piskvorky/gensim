@@ -7,7 +7,10 @@ Shows how to reproduce results of the "Distributed Representation of Sentences a
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # Introduction
@@ -81,27 +84,33 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #
 import collections
 
-SentimentDocument = collections.namedtuple('SentimentDocument', 'words tags split sentiment')
+SentimentDocument = collections.namedtuple(
+    "SentimentDocument", "words tags split sentiment"
+)
 
 ###############################################################################
 # We can now proceed with loading the corpus.
 import io
+import os.path
 import re
 import tarfile
-import os.path
 
 import smart_open
+
 import gensim.utils
 
-def download_dataset(url='http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz'):
-    fname = url.split('/')[-1]
+
+def download_dataset(
+    url="http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz",
+):
+    fname = url.split("/")[-1]
 
     if os.path.isfile(fname):
-       return fname
+        return fname
 
     # Download the file to local storage first.
     with smart_open.open(url, "rb", ignore_ext=True) as fin:
-        with smart_open.open(fname, 'wb', ignore_ext=True) as fout:
+        with smart_open.open(fname, "wb", ignore_ext=True) as fout:
             while True:
                 buf = fin.read(io.DEFAULT_BUFFER_SIZE)
                 if not buf:
@@ -110,29 +119,34 @@ def download_dataset(url='http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v
 
     return fname
 
+
 def create_sentiment_document(name, text, index):
-    _, split, sentiment_str, _ = name.split('/')
-    sentiment = {'pos': 1.0, 'neg': 0.0, 'unsup': None}[sentiment_str]
+    _, split, sentiment_str, _ = name.split("/")
+    sentiment = {"pos": 1.0, "neg": 0.0, "unsup": None}[sentiment_str]
 
     if sentiment is None:
-        split = 'extra'
+        split = "extra"
 
     tokens = gensim.utils.to_unicode(text).split()
     return SentimentDocument(tokens, [index], split, sentiment)
+
 
 def extract_documents():
     fname = download_dataset()
 
     index = 0
 
-    with tarfile.open(fname, mode='r:gz') as tar:
+    with tarfile.open(fname, mode="r:gz") as tar:
         for member in tar.getmembers():
-            if re.match(r'aclImdb/(train|test)/(pos|neg|unsup)/\d+_\d+.txt$', member.name):
+            if re.match(
+                r"aclImdb/(train|test)/(pos|neg|unsup)/\d+_\d+.txt$", member.name
+            ):
                 member_bytes = tar.extractfile(member).read()
-                member_text = member_bytes.decode('utf-8', errors='replace')
-                assert member_text.count('\n') == 0
+                member_text = member_bytes.decode("utf-8", errors="replace")
+                assert member_text.count("\n") == 0
                 yield create_sentiment_document(member.name, member_text, index)
                 index += 1
+
 
 alldocs = list(extract_documents())
 
@@ -142,9 +156,11 @@ print(alldocs[27])
 
 ###############################################################################
 # Extract our documents and split into training/test sets.
-train_docs = [doc for doc in alldocs if doc.split == 'train']
-test_docs = [doc for doc in alldocs if doc.split == 'test']
-print(f'{len(alldocs)} docs: {len(train_docs)} train-sentiment, {len(test_docs)} test-sentiment')
+train_docs = [doc for doc in alldocs if doc.split == "train"]
+test_docs = [doc for doc in alldocs if doc.split == "test"]
+print(
+    f"{len(alldocs)} docs: {len(train_docs)} train-sentiment, {len(test_docs)} test-sentiment"
+)
 
 ###############################################################################
 # Set-up Doc2Vec Training & Evaluation Models
@@ -178,20 +194,26 @@ import multiprocessing
 from collections import OrderedDict
 
 import gensim.models.doc2vec
+
 assert gensim.models.doc2vec.FAST_VERSION > -1, "This will be painfully slow otherwise"
 
 from gensim.models.doc2vec import Doc2Vec
 
 common_kwargs = dict(
-    vector_size=100, epochs=20, min_count=2,
-    sample=0, workers=multiprocessing.cpu_count(), negative=5, hs=0,
+    vector_size=100,
+    epochs=20,
+    min_count=2,
+    sample=0,
+    workers=multiprocessing.cpu_count(),
+    negative=5,
+    hs=0,
 )
 
 simple_models = [
     # PV-DBOW plain
     Doc2Vec(dm=0, **common_kwargs),
     # PV-DM w/ default averaging; a higher starting alpha may improve CBOW/PV-DM modes
-    Doc2Vec(dm=1, window=10, alpha=0.05, comment='alpha=0.05', **common_kwargs),
+    Doc2Vec(dm=1, window=10, alpha=0.05, comment="alpha=0.05", **common_kwargs),
     # PV-DM w/ concatenation - big, slow, experimental mode
     # window=5 (both sides) approximates paper's apparent 10-word total window size
     Doc2Vec(dm=1, dm_concat=1, window=5, **common_kwargs),
@@ -213,8 +235,9 @@ models_by_name = OrderedDict((str(model), model) for model in simple_models)
 # enabled by the ``dm_concat=1`` mode above.)
 #
 from gensim.test.test_doc2vec import ConcatenatedDoc2Vec
-models_by_name['dbow+dmm'] = ConcatenatedDoc2Vec([simple_models[0], simple_models[1]])
-models_by_name['dbow+dmc'] = ConcatenatedDoc2Vec([simple_models[0], simple_models[2]])
+
+models_by_name["dbow+dmm"] = ConcatenatedDoc2Vec([simple_models[0], simple_models[1]])
+models_by_name["dbow+dmc"] = ConcatenatedDoc2Vec([simple_models[0], simple_models[2]])
 
 ###############################################################################
 # Predictive Evaluation Methods
@@ -239,9 +262,11 @@ models_by_name['dbow+dmc'] = ConcatenatedDoc2Vec([simple_models[0], simple_model
 # We can then compare different ``Doc2Vec`` models by looking at their error rates.
 #
 
+from random import sample
+
 import numpy as np
 import statsmodels.api as sm
-from random import sample
+
 
 def logistic_predictor_from_data(train_targets, train_regressors):
     """Fit a statsmodel logistic predictor on supplied data"""
@@ -249,6 +274,7 @@ def logistic_predictor_from_data(train_targets, train_regressors):
     predictor = logit.fit(disp=0)
     # print(predictor.summary())
     return predictor
+
 
 def error_rate_for_model(test_model, train_set, test_set):
     """Report error rate on test_doc sentiments, using supplied model and train_docs"""
@@ -268,6 +294,7 @@ def error_rate_for_model(test_model, train_set, test_set):
     error_rate = float(errors) / len(test_predictions)
     return (error_rate, errors, len(test_predictions), predictor)
 
+
 ###############################################################################
 # Bulk Training & Per-Model Evaluation
 # ------------------------------------
@@ -284,26 +311,34 @@ def error_rate_for_model(test_model, train_set, test_set):
 # main models takes about an hour.)
 #
 from collections import defaultdict
+
 error_rates = defaultdict(lambda: 1.0)  # To selectively print only best errors achieved
 
 ###############################################################################
 #
 from random import shuffle
+
 shuffled_alldocs = alldocs[:]
 shuffle(shuffled_alldocs)
 
 for model in simple_models:
     print(f"Training {model}")
-    model.train(shuffled_alldocs, total_examples=len(shuffled_alldocs), epochs=model.epochs)
+    model.train(
+        shuffled_alldocs, total_examples=len(shuffled_alldocs), epochs=model.epochs
+    )
 
     print(f"\nEvaluating {model}")
-    err_rate, err_count, test_count, predictor = error_rate_for_model(model, train_docs, test_docs)
+    err_rate, err_count, test_count, predictor = error_rate_for_model(
+        model, train_docs, test_docs
+    )
     error_rates[str(model)] = err_rate
     print("\n%f %s\n" % (err_rate, model))
 
-for model in [models_by_name['dbow+dmm'], models_by_name['dbow+dmc']]:
+for model in [models_by_name["dbow+dmm"], models_by_name["dbow+dmc"]]:
     print(f"\nEvaluating {model}")
-    err_rate, err_count, test_count, predictor = error_rate_for_model(model, train_docs, test_docs)
+    err_rate, err_count, test_count, predictor = error_rate_for_model(
+        model, train_docs, test_docs
+    )
     error_rates[str(model)] = err_rate
     print(f"\n{err_rate} {model}\n")
 
@@ -346,11 +381,13 @@ for rate, name in sorted((rate, name) for name, rate in error_rates.items()):
 ###############################################################################
 # Are inferred vectors close to the precalculated ones?
 # -----------------------------------------------------
-doc_id = np.random.randint(len(simple_models[0].dv))  # Pick random doc; re-run cell for more examples
-print(f'for doc {doc_id}...')
+doc_id = np.random.randint(
+    len(simple_models[0].dv)
+)  # Pick random doc; re-run cell for more examples
+print(f"for doc {doc_id}...")
 for model in simple_models:
     inferred_docvec = model.infer_vector(alldocs[doc_id].words)
-    print(f'{model}:\n {model.dv.most_similar([inferred_docvec], topn=3)}')
+    print(f"{model}:\n {model.dv.most_similar([inferred_docvec], topn=3)}")
 
 ###############################################################################
 # (Yes, here the stored vector from 20 epochs of training is usually one of the
@@ -363,16 +400,18 @@ for model in simple_models:
 # -------------------------------------------------------
 import random
 
-doc_id = np.random.randint(len(simple_models[0].dv))  # pick random doc, re-run cell for more examples
+doc_id = np.random.randint(
+    len(simple_models[0].dv)
+)  # pick random doc, re-run cell for more examples
 model = random.choice(simple_models)  # and a random model
 sims = model.dv.most_similar(doc_id, topn=len(model.dv))  # get *all* similar documents
 print(f'TARGET ({doc_id}): «{" ".join(alldocs[doc_id].words)}»\n')
-print(f'SIMILAR/DISSIMILAR DOCS PER MODEL {model}%s:\n')
-for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
+print(f"SIMILAR/DISSIMILAR DOCS PER MODEL {model}%s:\n")
+for label, index in [("MOST", 0), ("MEDIAN", len(sims) // 2), ("LEAST", len(sims) - 1)]:
     s = sims[index]
     i = sims[index][0]
-    words = ' '.join(alldocs[i].words)
-    print(f'{label} {s}: «{words}»\n')
+    words = " ".join(alldocs[i].words)
+    print(f"{label} {s}: «{words}»\n")
 
 ###############################################################################
 # Somewhat, in terms of reviewer tone, movie genre, etc... the MOST
@@ -389,6 +428,7 @@ import random
 
 word_models = simple_models[:]
 
+
 def pick_random_word(model, threshold=10):
     # pick a random word with a suitable number of occurences
     while True:
@@ -396,14 +436,15 @@ def pick_random_word(model, threshold=10):
         if model.wv.get_vecattr(word, "count") > threshold:
             return word
 
+
 target_word = pick_random_word(word_models[0])
 # or uncomment below line, to just pick a word from the relevant domain:
 # target_word = 'comedy/drama'
 
 for model in word_models:
-    print(f'target_word: {repr(target_word)} model: {model} similar words:')
+    print(f"target_word: {repr(target_word)} model: {model} similar words:")
     for i, (word, sim) in enumerate(model.wv.most_similar(target_word, topn=10), 1):
-        print(f'    {i}. {sim:.2f} {repr(word)}')
+        print(f"    {i}. {sim:.2f} {repr(word)}")
     print()
 
 ###############################################################################
@@ -426,13 +467,16 @@ for model in word_models:
 # -------------------------------------------------------------
 
 from gensim.test.utils import datapath
-questions_filename = datapath('questions-words.txt')
+
+questions_filename = datapath("questions-words.txt")
 
 # Note: this analysis takes many minutes
 for model in word_models:
     score, sections = model.wv.evaluate_word_analogies(questions_filename)
-    correct, incorrect = len(sections[-1]['correct']), len(sections[-1]['incorrect'])
-    print(f'{model}: {float(correct*100)/(correct+incorrect):0.2f}%% correct ({correct} of {correct+incorrect}')
+    correct, incorrect = len(sections[-1]["correct"]), len(sections[-1]["incorrect"])
+    print(
+        f"{model}: {float(correct*100)/(correct+incorrect):0.2f}%% correct ({correct} of {correct+incorrect}"
+    )
 
 ###############################################################################
 # Even though this is a tiny, domain-specific dataset, it shows some meager

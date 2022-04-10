@@ -102,11 +102,9 @@ import numpy as np
 import scipy.sparse
 from scipy.stats import halfnorm
 
-from gensim import interfaces
-from gensim import matutils
-from gensim import utils
+from gensim import interfaces, matutils, utils
 from gensim.interfaces import TransformedCorpus
-from gensim.models import basemodel, CoherenceModel
+from gensim.models import CoherenceModel, basemodel
 from gensim.models.nmf_pgd import solve_h
 
 logger = logging.getLogger(__name__)
@@ -243,7 +241,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def __getitem__(self, bow, eps=None):
         return self.get_document_topics(bow, eps)
 
-    def show_topics(self, num_topics=10, num_words=10, log=False, formatted=True, normalize=None):
+    def show_topics(
+        self, num_topics=10, num_words=10, log=False, formatted=True, normalize=None
+    ):
         """Get the topics sorted by sparsity.
 
         Parameters
@@ -278,7 +278,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         sparsity = np.zeros(self._W.shape[1])
 
         for row in self._W:
-            sparsity += (row == 0)
+            sparsity += row == 0
 
         sparsity /= self._W.shape[0]
 
@@ -290,7 +290,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             sorted_topics = list(matutils.argsort(sparsity))
             chosen_topics = (
-                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2:]
+                sorted_topics[: num_topics // 2] + sorted_topics[-num_topics // 2 :]
             )
 
         shown = []
@@ -334,8 +334,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return [
             (self.id2word[id], value)
-            for id, value in self.get_topic_terms(topicid, topn,
-                                                  normalize=normalize)
+            for id, value in self.get_topic_terms(topicid, topn, normalize=normalize)
         ]
 
     def get_topic_terms(self, topicid, topn=10, normalize=None):
@@ -367,8 +366,16 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         bestn = matutils.argsort(topic, topn, reverse=True)
         return [(idx, topic[idx]) for idx in bestn]
 
-    def top_topics(self, corpus, texts=None, dictionary=None, window_size=None,
-                   coherence='u_mass', topn=20, processes=-1):
+    def top_topics(
+        self,
+        corpus,
+        texts=None,
+        dictionary=None,
+        window_size=None,
+        coherence="u_mass",
+        topn=20,
+        processes=-1,
+    ):
         """Get the topics sorted by coherence.
 
         Parameters
@@ -407,16 +414,27 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         """
         cm = CoherenceModel(
-            model=self, corpus=corpus, texts=texts, dictionary=dictionary,
-            window_size=window_size, coherence=coherence, topn=topn,
-            processes=processes
+            model=self,
+            corpus=corpus,
+            texts=texts,
+            dictionary=dictionary,
+            window_size=window_size,
+            coherence=coherence,
+            topn=topn,
+            processes=processes,
         )
         coherence_scores = cm.get_coherence_per_topic()
 
         str_topics = []
-        for topic in self.get_topics():  # topic = array of vocab_size floats, one per term
-            bestn = matutils.argsort(topic, topn=topn, reverse=True)  # top terms for topic
-            beststr = [(topic[_id], self.id2word[_id]) for _id in bestn]  # membership, token
+        for (
+            topic
+        ) in self.get_topics():  # topic = array of vocab_size floats, one per term
+            bestn = matutils.argsort(
+                topic, topn=topn, reverse=True
+            )  # top terms for topic
+            beststr = [
+                (topic[_id], self.id2word[_id]) for _id in bestn
+            ]  # membership, token
             str_topics.append(beststr)  # list of topn (float membership, token) tuples
 
         scored_topics = zip(str_topics, coherence_scores)
@@ -468,8 +486,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         return values
 
-    def get_document_topics(self, bow, minimum_probability=None,
-                            normalize=None):
+    def get_document_topics(self, bow, minimum_probability=None, normalize=None):
         """Get the topic distribution for the given document.
 
         Parameters
@@ -598,7 +615,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
         logger.info(
             "running NMF training, %s topics, %i passes over the supplied corpus of %s documents, evaluating L2 "
             "norm every %i documents",
-            self.num_topics, passes, "unknown number of" if lencorpus is None else lencorpus, evalafter,
+            self.num_topics,
+            passes,
+            "unknown number of" if lencorpus is None else lencorpus,
+            evalafter,
         )
 
         chunk_overall_idx = 1
@@ -608,10 +628,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 grouper = (
                     # Older scipy (0.19 etc) throw an error when slicing beyond the actual sparse array dimensions, so
                     # we clip manually with min() here.
-
-                    corpus[:, col_idx:min(corpus.shape[1], col_idx + self.chunksize)]
-                    for col_idx
-                    in range(0, corpus.shape[1], self.chunksize)
+                    corpus[:, col_idx : min(corpus.shape[1], col_idx + self.chunksize)]
+                    for col_idx in range(0, corpus.shape[1], self.chunksize)
                 )
             else:
                 grouper = utils.grouper(corpus, self.chunksize)
@@ -634,12 +652,15 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 if np.isinf(lencorpus):
                     logger.info(
                         "PROGRESS: pass %i, at document #%i",
-                        pass_, chunk_idx * chunksize + chunk_len
+                        pass_,
+                        chunk_idx * chunksize + chunk_len,
                     )
                 else:
                     logger.info(
                         "PROGRESS: pass %i, at document #%i/%i",
-                        pass_, chunk_idx * chunksize + chunk_len, lencorpus
+                        pass_,
+                        chunk_idx * chunksize + chunk_len,
+                        lencorpus,
                     )
 
                 if self._W is None:
@@ -651,7 +672,10 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
                 self._h = self._solveproj(v, self._W, h=self._h, v_max=self.v_max)
                 h = self._h
 
-                if eval_every and (((chunk_idx + 1) * chunksize >= lencorpus) or (chunk_idx + 1) % eval_every == 0):
+                if eval_every and (
+                    ((chunk_idx + 1) * chunksize >= lencorpus)
+                    or (chunk_idx + 1) % eval_every == 0
+                ):
                     logger.info("L2 norm: %s", self.l2_norm(v))
                     self.print_topics(5)
 
@@ -674,7 +698,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         def error(WA):
             """An optimized version of 0.5 * trace(WtWA) - trace(WtB)."""
-            return 0.5 * np.einsum('ij,ij', WA, self._W) - np.einsum('ij,ij', self._W, self.B)
+            return 0.5 * np.einsum("ij,ij", WA, self._W) - np.einsum(
+                "ij,ij", self._W, self.B
+            )
 
         eta = self._kappa / np.linalg.norm(self.A)
 
@@ -690,7 +716,8 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             if (
                 self._w_error < np.inf
-                and np.abs((error_ - self._w_error) / self._w_error) < self._w_stop_condition
+                and np.abs((error_ - self._w_error) / self._w_error)
+                < self._w_stop_condition
             ):
                 self._w_error = error_
                 break
@@ -721,7 +748,7 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
     def _transform(self):
         """Apply boundaries on W."""
         np.clip(self._W, 0, self.v_max, out=self._W)
-        sumsq = np.sqrt(np.einsum('ij,ij->j', self._W, self._W))
+        sumsq = np.sqrt(np.einsum("ij,ij->j", self._W, self._W))
         np.maximum(sumsq, 1, out=sumsq)
         self._W /= sumsq
 
@@ -769,7 +796,9 @@ class Nmf(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
             Wtv = self._dense_dot_csc(Wt, v)
 
-            permutation = self.random_state.permutation(self.num_topics).astype(np.int32)
+            permutation = self.random_state.permutation(self.num_topics).astype(
+                np.int32
+            )
 
             error_ = solve_h(h, Wtv, WtW, permutation, self._kappa)
 

@@ -95,20 +95,19 @@ Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
 https://www.sezanzeb.de/machine_learning/ensemble_LDA/
 
 """
+import importlib
 import logging
 import os
-from multiprocessing import Process, Pipe, ProcessError
-import importlib
-from typing import Set, Optional, List
+from dataclasses import dataclass
+from multiprocessing import Pipe, Process, ProcessError
+from typing import List, Optional, Set
 
 import numpy as np
 from scipy.spatial.distance import cosine
-from dataclasses import dataclass
 
 from gensim import utils
-from gensim.models import ldamodel, ldamulticore, basemodel
+from gensim.models import basemodel, ldamodel, ldamulticore
 from gensim.utils import SaveLoad
-
 
 logger = logging.getLogger(__name__)
 
@@ -127,13 +126,17 @@ class Topic:
     neighboring_topic_indices: Set[int]  # which other topics are close by
     label: Optional[int]  # to which cluster this topic belongs
     num_neighboring_labels: int  # how many different labels a core has as parents
-    valid_neighboring_labels: Set[int]  # A set of labels of close by clusters that are large enough
+    valid_neighboring_labels: Set[
+        int
+    ]  # A set of labels of close by clusters that are large enough
 
 
 @dataclass
 class Cluster:
     max_num_neighboring_labels: int  # the max number of parent labels among each topic of a given cluster
-    neighboring_labels: List[Set[int]]  # a concatenated list of the neighboring_labels sets of each topic
+    neighboring_labels: List[
+        Set[int]
+    ]  # a concatenated list of the neighboring_labels sets of each topic
     label: int  # the unique identifier of the cluster
     num_cores: int  # how many topics in the cluster are cores
 
@@ -160,7 +163,15 @@ def _remove_from_all_sets(label, clusters):
 
 def _contains_isolated_cores(label, cluster, min_cores):
     """Check if the cluster has at least ``min_cores`` of cores that belong to no other cluster."""
-    return sum([neighboring_labels == {label} for neighboring_labels in cluster.neighboring_labels]) >= min_cores
+    return (
+        sum(
+            [
+                neighboring_labels == {label}
+                for neighboring_labels in cluster.neighboring_labels
+            ]
+        )
+        >= min_cores
+    )
 
 
 def _aggregate_topics(grouped_by_labels):
@@ -185,17 +196,21 @@ def _aggregate_topics(grouped_by_labels):
         neighboring_labels = []  # will be a list of sets
 
         for topic in topics:
-            max_num_neighboring_labels = max(topic.num_neighboring_labels, max_num_neighboring_labels)
+            max_num_neighboring_labels = max(
+                topic.num_neighboring_labels, max_num_neighboring_labels
+            )
             neighboring_labels.append(topic.neighboring_labels)
 
         neighboring_labels = [x for x in neighboring_labels if len(x) > 0]
 
-        clusters.append(Cluster(
-            max_num_neighboring_labels=max_num_neighboring_labels,
-            neighboring_labels=neighboring_labels,
-            label=label,
-            num_cores=len([topic for topic in topics if topic.is_core]),
-        ))
+        clusters.append(
+            Cluster(
+                max_num_neighboring_labels=max_num_neighboring_labels,
+                neighboring_labels=neighboring_labels,
+                label=label,
+                num_cores=len([topic for topic in topics if topic.is_core]),
+            )
+        )
 
     logger.info("found %s clusters", len(clusters))
 
@@ -328,7 +343,9 @@ def _generate_topic_models_multiproc(ensemble, num_models, ensemble_workers):
     # the way random_states is handled needs to prevent getting different results when multiprocessing is on,
     # or getting the same results in every lda children. so it is solved by generating a list of state seeds before
     # multiprocessing is started.
-    random_states = [ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)]
+    random_states = [
+        ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)
+    ]
 
     # each worker has to work on at least one model.
     # Don't spawn idle workers:
@@ -339,7 +356,9 @@ def _generate_topic_models_multiproc(ensemble, num_models, ensemble_workers):
     # so modifying the ensemble object will not modify the one in the parent because of no shared memory
     processes = []
     pipes = []
-    num_models_unhandled = num_models  # how many more models need to be trained by workers?
+    num_models_unhandled = (
+        num_models  # how many more models need to be trained by workers?
+    )
 
     for i in range(workers):
         parent_conn, child_conn = Pipe()
@@ -352,7 +371,9 @@ def _generate_topic_models_multiproc(ensemble, num_models, ensemble_workers):
             num_subprocess_models = int(num_models_unhandled / (workers - i))
 
         # get the chunk from the random states that is meant to be for those models
-        random_states_for_worker = random_states[-num_models_unhandled:][:num_subprocess_models]
+        random_states_for_worker = random_states[-num_models_unhandled:][
+            :num_subprocess_models
+        ]
 
         args = (ensemble, num_subprocess_models, random_states_for_worker, child_conn)
         try:
@@ -397,7 +418,9 @@ def _generate_topic_models(ensemble, num_models, random_states=None):
         RandomState if None (default).
     """
     if random_states is None:
-        random_states = [ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)]
+        random_states = [
+            ensemble.random_state.randint(_MAX_RANDOM_STATE) for _ in range(num_models)
+        ]
 
     assert len(random_states) == num_models
 
@@ -434,7 +457,9 @@ def _generate_topic_models_worker(ensemble, num_models, random_states, pipe):
     #
     logger.info(f"spawned worker to generate {num_models} topic models")
 
-    _generate_topic_models(ensemble=ensemble, num_models=num_models, random_states=random_states)
+    _generate_topic_models(
+        ensemble=ensemble, num_models=num_models, random_states=random_states
+    )
 
     # send the ttda that is in the child/workers version of the memory into the pipe
     # available, after _generate_topic_models has been called in the worker
@@ -513,7 +538,9 @@ def _calculate_asymmetric_distance_matrix_chunk(
                 distances[ttd1_idx][ttd2_idx] = distance
 
         percent = round(100 * avg_mask_size / ttda1.shape[0] / ttda1.shape[1], 1)
-        logger.info(f'the given threshold of {masking_threshold} covered on average {percent}% of tokens')
+        logger.info(
+            f"the given threshold of {masking_threshold} covered on average {percent}% of tokens"
+        )
 
     return distances
 
@@ -528,9 +555,11 @@ def _asymmetric_distance_matrix_worker(
     pipe,
 ):
     """Worker that computes the distance to all other nodes from a chunk of nodes."""
-    logger.info(f"spawned worker {worker_id} to generate {n_ttdas} rows of the asymmetric distance matrix")
+    logger.info(
+        f"spawned worker {worker_id} to generate {n_ttdas} rows of the asymmetric distance matrix"
+    )
     # the chunk of ttda that's going to be calculated:
-    ttda1 = entire_ttda[ttdas_sent:ttdas_sent + n_ttdas]
+    ttda1 = entire_ttda[ttdas_sent : ttdas_sent + n_ttdas]
     distance_chunk = _calculate_asymmetric_distance_matrix_chunk(
         ttda1=ttda1,
         ttda2=entire_ttda,
@@ -538,7 +567,9 @@ def _asymmetric_distance_matrix_worker(
         masking_method=masking_method,
         masking_threshold=masking_threshold,
     )
-    pipe.send((worker_id, distance_chunk))  # remember that this code is inside the workers memory
+    pipe.send(
+        (worker_id, distance_chunk)
+    )  # remember that this code is inside the workers memory
     pipe.close()
 
 
@@ -565,7 +596,15 @@ def _calculate_assymetric_distance_matrix_multiproc(
             else:
                 n_ttdas = int((len(entire_ttda) - ttdas_sent) / (workers - i))
 
-            args = (i, entire_ttda, ttdas_sent, n_ttdas, masking_method, masking_threshold, child_conn)
+            args = (
+                i,
+                entire_ttda,
+                ttdas_sent,
+                n_ttdas,
+                masking_method,
+                masking_threshold,
+                child_conn,
+            )
             process = Process(target=_asymmetric_distance_matrix_worker, args=args)
             ttdas_sent += n_ttdas
 
@@ -601,11 +640,19 @@ class EnsembleLda(SaveLoad):
     """
 
     def __init__(
-            self, topic_model_class="ldamulticore", num_models=3,
-            min_cores=None,  # default value from _generate_stable_topics()
-            epsilon=0.1, ensemble_workers=1, memory_friendly_ttda=True,
-            min_samples=None, masking_method=mass_masking, masking_threshold=None,
-            distance_workers=1, random_state=None, **gensim_kw_args,
+        self,
+        topic_model_class="ldamulticore",
+        num_models=3,
+        min_cores=None,  # default value from _generate_stable_topics()
+        epsilon=0.1,
+        ensemble_workers=1,
+        memory_friendly_ttda=True,
+        min_samples=None,
+        masking_method=mass_masking,
+        masking_threshold=None,
+        distance_workers=1,
+        random_state=None,
+        **gensim_kw_args,
     ):
         """Create and train a new EnsembleLda model.
 
@@ -678,7 +725,9 @@ class EnsembleLda(SaveLoad):
             gensim_kw_args["corpus"] = None
 
         if gensim_kw_args["id2word"] is None and not gensim_kw_args["corpus"] is None:
-            logger.warning("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.warning(
+                "no word id mapping provided; initializing from corpus, assuming identity"
+            )
             gensim_kw_args["id2word"] = utils.dict_from_corpus(gensim_kw_args["corpus"])
         if gensim_kw_args["id2word"] is None and gensim_kw_args["corpus"] is None:
             raise ValueError(
@@ -687,12 +736,14 @@ class EnsembleLda(SaveLoad):
                 "`corpus` keyword argument."
             )
 
-        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):
+        if type(topic_model_class) == type and issubclass(
+            topic_model_class, ldamodel.LdaModel
+        ):
             self.topic_model_class = topic_model_class
         else:
             kinds = {
                 "lda": ldamodel.LdaModel,
-                "ldamulticore": ldamulticore.LdaMulticore
+                "ldamulticore": ldamulticore.LdaMulticore,
             }
             if topic_model_class not in kinds:
                 raise ValueError(
@@ -733,7 +784,9 @@ class EnsembleLda(SaveLoad):
         if "passes" in gensim_kw_args and gensim_kw_args["passes"] <= 0:
             return
 
-        logger.info(f"generating {num_models} topic models using {ensemble_workers} workers")
+        logger.info(
+            f"generating {num_models} topic models using {ensemble_workers} workers"
+        )
 
         if ensemble_workers > 1:
             _generate_topic_models_multiproc(self, num_models, ensemble_workers)
@@ -751,8 +804,8 @@ class EnsembleLda(SaveLoad):
         """Get the class that is used for :meth:`gensim.models.EnsembleLda.generate_gensim_representation`."""
         if self.topic_model_class is None:
             instruction = (
-                'Try setting topic_model_class manually to what the individual models were based on, '
-                'e.g. LdaMulticore.'
+                "Try setting topic_model_class manually to what the individual models were based on, "
+                "e.g. LdaMulticore."
             )
             try:
                 module = importlib.import_module(self.topic_model_module_string)
@@ -768,7 +821,7 @@ class EnsembleLda(SaveLoad):
                 logger.error(
                     f'Could not import the "{self.topic_model_class_string}" class from the '
                     f'"{self.topic_model_module_string}" module in order to set the "topic_model_class" attribute. '
-                    f'{instruction}'
+                    f"{instruction}"
                 )
         return self.topic_model_class
 
@@ -776,7 +829,9 @@ class EnsembleLda(SaveLoad):
         if self.get_topic_model_class() is not None:
             self.topic_model_module_string = self.topic_model_class.__module__
             self.topic_model_class_string = self.topic_model_class.__name__
-        kwargs['ignore'] = frozenset(kwargs.get('ignore', ())).union(('topic_model_class', ))
+        kwargs["ignore"] = frozenset(kwargs.get("ignore", ())).union(
+            ("topic_model_class",)
+        )
         super(EnsembleLda, self).save(*args, **kwargs)
 
     save.__doc__ = SaveLoad.save.__doc__
@@ -806,12 +861,18 @@ class EnsembleLda(SaveLoad):
             ``classic_model_representation.get_topics() == self.get_topics()``
 
         """
-        logger.info("generating classic gensim model representation based on results from the ensemble")
+        logger.info(
+            "generating classic gensim model representation based on results from the ensemble"
+        )
 
         sstats_sum = self.sstats_sum
         # if sstats_sum (which is the number of words actually) should be wrong for some fantastic funny reason
         # that makes you want to peel your skin off, recreate it (takes a while):
-        if sstats_sum == 0 and "corpus" in self.gensim_kw_args and not self.gensim_kw_args["corpus"] is None:
+        if (
+            sstats_sum == 0
+            and "corpus" in self.gensim_kw_args
+            and not self.gensim_kw_args["corpus"] is None
+        ):
             for document in self.gensim_kw_args["corpus"]:
                 for token in document:
                     sstats_sum += token[1]
@@ -866,7 +927,9 @@ class EnsembleLda(SaveLoad):
         # right sstats, so that get_topics() will return the stable topics no
         # matter eta.
 
-        normalization_factor = np.array([[sstats_sum / num_stable_topics]] * num_stable_topics) + eta_sum
+        normalization_factor = (
+            np.array([[sstats_sum / num_stable_topics]] * num_stable_topics) + eta_sum
+        )
 
         sstats = stable_topics * normalization_factor
         sstats -= eta
@@ -958,7 +1021,9 @@ class EnsembleLda(SaveLoad):
 
             # unknown
             else:
-                raise ValueError(f"target is of unknown type or a list of unknown types: {type(target[0])}")
+                raise ValueError(
+                    f"target is of unknown type or a list of unknown types: {type(target[0])}"
+                )
 
             # new models were added, increase num_models
             # if the user didn't provide a custon numer to use
@@ -973,9 +1038,9 @@ class EnsembleLda(SaveLoad):
             # 1. ttda array
             if isinstance(target.dtype.type(), (np.number, float)):
                 raise ValueError(
-                    'ttda arrays cannot be added to ensembles, for which memory_friendly_ttda=False, '
-                    'you can call convert_to_memory_friendly, but it will discard the stored gensim '
-                    'models and only keep the relevant topic term distributions from them.'
+                    "ttda arrays cannot be added to ensembles, for which memory_friendly_ttda=False, "
+                    "you can call convert_to_memory_friendly, but it will discard the stored gensim "
+                    "models and only keep the relevant topic term distributions from them."
                 )
 
             # 2. list of ensembles
@@ -991,18 +1056,24 @@ class EnsembleLda(SaveLoad):
 
             # unknown
             else:
-                raise ValueError(f"target is of unknown type or a list of unknown types: {type(target[0])}")
+                raise ValueError(
+                    f"target is of unknown type or a list of unknown types: {type(target[0])}"
+                )
 
             # in this case, len(self.tms) should
             # always match self.num_models
-            if num_new_models is not None and num_new_models + self.num_models != len(self.tms):
+            if num_new_models is not None and num_new_models + self.num_models != len(
+                self.tms
+            ):
                 logger.info(
-                    'num_new_models will be ignored. num_models should match the number of '
-                    'stored models for a memory unfriendly ensemble'
+                    "num_new_models will be ignored. num_models should match the number of "
+                    "stored models for a memory unfriendly ensemble"
                 )
             self.num_models = len(self.tms)
 
-        logger.info(f"ensemble contains {self.num_models} models and {len(self.ttda)} topics now")
+        logger.info(
+            f"ensemble contains {self.num_models} models and {len(self.ttda)} topics now"
+        )
 
         if self.ttda.shape[1] != ttda.shape[1]:
             raise ValueError(
@@ -1028,26 +1099,32 @@ class EnsembleLda(SaveLoad):
         # matrix is up to date afterwards
         self.asymmetric_distance_matrix_outdated = False
 
-        logger.info(f"generating a {len(self.ttda)} x {len(self.ttda)} asymmetric distance matrix...")
+        logger.info(
+            f"generating a {len(self.ttda)} x {len(self.ttda)} asymmetric distance matrix..."
+        )
 
         if workers is not None and workers <= 1:
-            self.asymmetric_distance_matrix = _calculate_asymmetric_distance_matrix_chunk(
-                ttda1=self.ttda,
-                ttda2=self.ttda,
-                start_index=0,
-                masking_method=self.masking_method,
-                masking_threshold=self.masking_threshold,
+            self.asymmetric_distance_matrix = (
+                _calculate_asymmetric_distance_matrix_chunk(
+                    ttda1=self.ttda,
+                    ttda2=self.ttda,
+                    start_index=0,
+                    masking_method=self.masking_method,
+                    masking_threshold=self.masking_threshold,
+                )
             )
         else:
             # best performance on 2-core machine: 2 workers
             if workers is None:
                 workers = os.cpu_count()
 
-            self.asymmetric_distance_matrix = _calculate_assymetric_distance_matrix_multiproc(
-                workers=workers,
-                entire_ttda=self.ttda,
-                masking_method=self.masking_method,
-                masking_threshold=self.masking_threshold,
+            self.asymmetric_distance_matrix = (
+                _calculate_assymetric_distance_matrix_multiproc(
+                    workers=workers,
+                    entire_ttda=self.ttda,
+                    masking_method=self.masking_method,
+                    masking_threshold=self.masking_threshold,
+                )
             )
 
     def _generate_topic_clusters(self, eps=0.1, min_samples=None):
@@ -1066,7 +1143,9 @@ class EnsembleLda(SaveLoad):
         """
         if min_samples is None:
             min_samples = int(self.num_models / 2)
-            logger.info("fitting the clustering model, using %s for min_samples", min_samples)
+            logger.info(
+                "fitting the clustering model, using %s for min_samples", min_samples
+            )
         else:
             logger.info("fitting the clustering model")
 
@@ -1112,14 +1191,17 @@ class EnsembleLda(SaveLoad):
 
         for topic in cbdbscan_topics:
             topic.valid_neighboring_labels = {
-                label for label in topic.neighboring_labels
+                label
+                for label in topic.neighboring_labels
                 if label in valid_cluster_labels
             }
 
         # keeping only VALID cores
         valid_core_mask = np.vectorize(_is_valid_core)(cbdbscan_topics)
         valid_topics = self.ttda[valid_core_mask]
-        topic_labels = np.array([topic.label for topic in cbdbscan_topics])[valid_core_mask]
+        topic_labels = np.array([topic.label for topic in cbdbscan_topics])[
+            valid_core_mask
+        ]
         unique_labels = np.unique(topic_labels)
 
         num_stable_topics = len(unique_labels)
@@ -1128,7 +1210,13 @@ class EnsembleLda(SaveLoad):
         # for each cluster
         for label_index, label in enumerate(unique_labels):
             # mean of all the topics that are of that cluster
-            topics_of_cluster = np.array([topic for t, topic in enumerate(valid_topics) if topic_labels[t] == label])
+            topics_of_cluster = np.array(
+                [
+                    topic
+                    for t, topic in enumerate(valid_topics)
+                    if topic_labels[t] == label
+                ]
+            )
             stable_topics[label_index] = topics_of_cluster.mean(axis=0)
 
         self.valid_clusters = valid_clusters
@@ -1278,8 +1366,9 @@ class CBDBSCAN:
                 neighboring_topic_indices=set(),
                 label=None,
                 num_neighboring_labels=0,
-                valid_neighboring_labels=set()
-            ) for i in range(len(amatrix))
+                valid_neighboring_labels=set(),
+            )
+            for i in range(len(amatrix))
         ]
 
         amatrix_copy = amatrix.copy()
@@ -1287,9 +1376,15 @@ class CBDBSCAN:
         # to avoid the problem of comparing the topic with itself
         np.fill_diagonal(amatrix_copy, 1)
 
-        min_distance_per_topic = [(distance, index) for index, distance in enumerate(amatrix_copy.min(axis=1))]
-        min_distance_per_topic_sorted = sorted(min_distance_per_topic, key=lambda distance: distance[0])
-        ordered_min_similarity = [index for distance, index in min_distance_per_topic_sorted]
+        min_distance_per_topic = [
+            (distance, index) for index, distance in enumerate(amatrix_copy.min(axis=1))
+        ]
+        min_distance_per_topic_sorted = sorted(
+            min_distance_per_topic, key=lambda distance: distance[0]
+        )
+        ordered_min_similarity = [
+            index for distance, index in min_distance_per_topic_sorted
+        ]
 
         def scan_topic(topic_index, current_label=None, parent_neighbors=None):
             """Extend the cluster in one direction.
@@ -1311,7 +1406,9 @@ class CBDBSCAN:
                 ],
                 key=lambda x: x[0],
             )
-            neighboring_topic_indices = [index for distance, index in neighbors_sorted if distance < self.eps]
+            neighboring_topic_indices = [
+                index for distance, index in neighbors_sorted if distance < self.eps
+            ]
 
             num_neighboring_topics = len(neighboring_topic_indices)
 
@@ -1333,7 +1430,9 @@ class CBDBSCAN:
                     # asymmetric, it takes return distances into account here)
                     # If less than 25% of the elements are close enough, then create a new cluster rather than further
                     # growing the current cluster in that direction.
-                    close_parent_neighbors_mask = amatrix_copy[topic_index][parent_neighbors] < self.eps
+                    close_parent_neighbors_mask = (
+                        amatrix_copy[topic_index][parent_neighbors] < self.eps
+                    )
 
                     if close_parent_neighbors_mask.mean() < 0.25:
                         # start new cluster by changing current_label
@@ -1346,10 +1445,18 @@ class CBDBSCAN:
                     if topic_clustering_results[neighboring_topic_index].label is None:
                         ordered_min_similarity.remove(neighboring_topic_index)
                         # try to extend the cluster into the direction of the neighbor
-                        scan_topic(neighboring_topic_index, current_label, neighboring_topic_indices + [topic_index])
+                        scan_topic(
+                            neighboring_topic_index,
+                            current_label,
+                            neighboring_topic_indices + [topic_index],
+                        )
 
-                    topic_clustering_results[neighboring_topic_index].neighboring_topic_indices.add(topic_index)
-                    topic_clustering_results[neighboring_topic_index].neighboring_labels.add(current_label)
+                    topic_clustering_results[
+                        neighboring_topic_index
+                    ].neighboring_topic_indices.add(topic_index)
+                    topic_clustering_results[
+                        neighboring_topic_index
+                    ].neighboring_labels.add(current_label)
 
             else:
                 # this topic is not a core!

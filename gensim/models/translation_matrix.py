@@ -162,7 +162,9 @@ class Space:
 
     def normalize(self):
         """Normalize the word vector's matrix."""
-        self.mat = self.mat / np.sqrt(np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True))
+        self.mat = self.mat / np.sqrt(
+            np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True)
+        )
 
 
 class TranslationMatrix(utils.SaveLoad):
@@ -203,7 +205,10 @@ class TranslationMatrix(utils.SaveLoad):
     .. [3] https://github.com/RaRe-Technologies/gensim/blob/3.2.0/docs/notebooks/translation_matrix.ipynb
 
     """
-    def __init__(self, source_lang_vec, target_lang_vec, word_pairs=None, random_state=None):
+
+    def __init__(
+        self, source_lang_vec, target_lang_vec, word_pairs=None, random_state=None
+    ):
         """
         Parameters
         ----------
@@ -230,7 +235,9 @@ class TranslationMatrix(utils.SaveLoad):
 
         if word_pairs is not None:
             if len(word_pairs[0]) != 2:
-                raise ValueError("Each training data item must contain two different language words.")
+                raise ValueError(
+                    "Each training data item must contain two different language words."
+                )
             self.train(word_pairs)
 
     def train(self, word_pairs):
@@ -250,14 +257,18 @@ class TranslationMatrix(utils.SaveLoad):
         self.source_space.normalize()
         self.target_space.normalize()
 
-        m1 = self.source_space.mat[[self.source_space.word2index[item] for item in self.source_word], :]
-        m2 = self.target_space.mat[[self.target_space.word2index[item] for item in self.target_word], :]
+        m1 = self.source_space.mat[
+            [self.source_space.word2index[item] for item in self.source_word], :
+        ]
+        m2 = self.target_space.mat[
+            [self.target_space.word2index[item] for item in self.target_word], :
+        ]
 
         self.translation_matrix = np.linalg.lstsq(m1, m2, -1)[0]
 
     def save(self, *args, **kwargs):
         """Save the model to a file. Ignores (doesn't store) the `source_space` and `target_space` attributes."""
-        kwargs['ignore'] = kwargs.get('ignore', ['source_space', 'target_space'])
+        kwargs["ignore"] = kwargs.get("ignore", ["source_space", "target_space"])
         super(TranslationMatrix, self).save(*args, **kwargs)
 
     def apply_transmat(self, words_space):
@@ -274,9 +285,19 @@ class TranslationMatrix(utils.SaveLoad):
             `Space` object constructed for the mapped words.
 
         """
-        return Space(np.dot(words_space.mat, self.translation_matrix), words_space.index2word)
+        return Space(
+            np.dot(words_space.mat, self.translation_matrix), words_space.index2word
+        )
 
-    def translate(self, source_words, topn=5, gc=0, sample_num=None, source_lang_vec=None, target_lang_vec=None):
+    def translate(
+        self,
+        source_words,
+        topn=5,
+        gc=0,
+        sample_num=None,
+        source_lang_vec=None,
+        target_lang_vec=None,
+    ):
         """Translate the word from the source language to the target language.
 
         Parameters
@@ -330,11 +351,17 @@ class TranslationMatrix(utils.SaveLoad):
                 )
             lexicon = set(source_lang_vec.index_to_key)
             addition = min(sample_num, len(lexicon) - len(source_words))
-            lexicon = self.random_state.choice(list(lexicon.difference(source_words)), addition)
-            source_space = Space.build(source_lang_vec, set(source_words).union(set(lexicon)))
+            lexicon = self.random_state.choice(
+                list(lexicon.difference(source_words)), addition
+            )
+            source_space = Space.build(
+                source_lang_vec, set(source_words).union(set(lexicon))
+            )
         else:
             source_space = Space.build(source_lang_vec, source_words)
-        target_space = Space.build(target_lang_vec, )
+        target_space = Space.build(
+            target_lang_vec,
+        )
 
         # Normalize the source vector and target vector
         source_space.normalize()
@@ -394,7 +421,10 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         >>> result = model_trans.infer_vector(dst_model.dv[data[3].tags])
 
     """
-    def __init__(self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None):
+
+    def __init__(
+        self, source_lang_vec, target_lang_vec, tagged_docs=None, random_state=None
+    ):
         """
 
         Parameters

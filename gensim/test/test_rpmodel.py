@@ -14,15 +14,15 @@ import unittest
 
 import numpy as np
 
+from gensim import matutils
 from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import rpmodel
-from gensim import matutils
 from gensim.test.utils import datapath, get_tmpfile
 
 
 class TestRpModel(unittest.TestCase):
     def setUp(self):
-        self.corpus = MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath("testcorpus.mm"))
 
     def test_transform(self):
         # create the transformation model
@@ -33,32 +33,42 @@ class TestRpModel(unittest.TestCase):
         # transform one document
         doc = list(self.corpus)[0]
         transformed = model[doc]
-        vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(
+            transformed, 2
+        )  # convert to dense vector, for easier equality tests
 
         expected = np.array([-0.70710677, 0.70710677])
-        self.assertTrue(np.allclose(vec, expected))  # transformed entries must be equal up to sign
+        self.assertTrue(
+            np.allclose(vec, expected)
+        )  # transformed entries must be equal up to sign
 
     def test_persistence(self):
-        fname = get_tmpfile('gensim_models.tst')
+        fname = get_tmpfile("gensim_models.tst")
         model = rpmodel.RpModel(self.corpus, num_topics=2)
         model.save(fname)
         model2 = rpmodel.RpModel.load(fname)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        self.assertTrue(
+            np.allclose(model[tstvec], model2[tstvec])
+        )  # try projecting an empty vector
 
     def test_persistence_compressed(self):
-        fname = get_tmpfile('gensim_models.tst.gz')
+        fname = get_tmpfile("gensim_models.tst.gz")
         model = rpmodel.RpModel(self.corpus, num_topics=2)
         model.save(fname)
         model2 = rpmodel.RpModel.load(fname, mmap=None)
         self.assertEqual(model.num_topics, model2.num_topics)
         self.assertTrue(np.allclose(model.projection, model2.projection))
         tstvec = []
-        self.assertTrue(np.allclose(model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        self.assertTrue(
+            np.allclose(model[tstvec], model2[tstvec])
+        )  # try projecting an empty vector
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.DEBUG
+    )
     unittest.main()

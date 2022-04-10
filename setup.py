@@ -16,23 +16,23 @@ import platform
 import shutil
 import sys
 
-from setuptools import Extension, find_packages, setup, distutils
+from setuptools import Extension, distutils, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 c_extensions = {
-    'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
-    'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
-    'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
-    'gensim._matutils': 'gensim/_matutils.c',
-    'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
-    'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
+    "gensim.models.word2vec_inner": "gensim/models/word2vec_inner.c",
+    "gensim.corpora._mmreader": "gensim/corpora/_mmreader.c",
+    "gensim.models.fasttext_inner": "gensim/models/fasttext_inner.c",
+    "gensim._matutils": "gensim/_matutils.c",
+    "gensim.models.nmf_pgd": "gensim/models/nmf_pgd.c",
+    "gensim.similarities.fastss": "gensim/similarities/fastss.c",
 }
 
 cpp_extensions = {
-    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.cpp',
-    'gensim.models.word2vec_corpusfile': 'gensim/models/word2vec_corpusfile.cpp',
-    'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
-    'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
+    "gensim.models.doc2vec_inner": "gensim/models/doc2vec_inner.cpp",
+    "gensim.models.word2vec_corpusfile": "gensim/models/word2vec_corpusfile.cpp",
+    "gensim.models.fasttext_corpusfile": "gensim/models/fasttext_corpusfile.cpp",
+    "gensim.models.doc2vec_corpusfile": "gensim/models/doc2vec_corpusfile.cpp",
 }
 
 
@@ -50,13 +50,13 @@ def need_cython():
 def make_c_ext(use_cython=False):
     for module, source in c_extensions.items():
         if use_cython:
-            source = source.replace('.c', '.pyx')
+            source = source.replace(".c", ".pyx")
         extra_args = []
-#        extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
+        #        extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
         yield Extension(
             module,
             sources=[source],
-            language='c',
+            language="c",
             extra_compile_args=extra_args,
         )
 
@@ -65,18 +65,18 @@ def make_cpp_ext(use_cython=False):
     extra_args = []
     system = platform.system()
 
-    if system == 'Linux':
-        extra_args.append('-std=c++11')
-    elif system == 'Darwin':
-        extra_args.extend(['-stdlib=libc++', '-std=c++11'])
-#    extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
+    if system == "Linux":
+        extra_args.append("-std=c++11")
+    elif system == "Darwin":
+        extra_args.extend(["-stdlib=libc++", "-std=c++11"])
+    #    extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
     for module, source in cpp_extensions.items():
         if use_cython:
-            source = source.replace('.cpp', '.pyx')
+            source = source.replace(".cpp", ".pyx")
         yield Extension(
             module,
             sources=[source],
-            language='c++',
+            language="c++",
             extra_compile_args=extra_args,
             extra_link_args=extra_args,
         )
@@ -88,7 +88,9 @@ def make_cpp_ext(use_cython=False):
 # 1. Cython may not be available at this stage
 # 2. The actual translation from Cython to C/C++ happens inside CustomBuildExt
 #
-ext_modules = list(itertools.chain(make_c_ext(use_cython=False), make_cpp_ext(use_cython=False)))
+ext_modules = list(
+    itertools.chain(make_c_ext(use_cython=False), make_cpp_ext(use_cython=False))
+)
 
 
 class CustomBuildExt(build_ext):
@@ -97,6 +99,7 @@ class CustomBuildExt(build_ext):
     We need this in order to use numpy and Cython in this script without
     importing them at module level, because they may not be available yet.
     """
+
     #
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
     #
@@ -107,16 +110,18 @@ class CustomBuildExt(build_ext):
         __builtins__.__NUMPY_SETUP__ = False
 
         import numpy
+
         self.include_dirs.append(numpy.get_include())
 
         if need_cython():
             import Cython.Build
+
             Cython.Build.cythonize(list(make_c_ext(use_cython=True)))
             Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
 
 
 class CleanExt(distutils.cmd.Command):
-    description = 'Remove C sources, C++ sources and binaries for gensim extensions'
+    description = "Remove C sources, C++ sources and binaries for gensim extensions"
     user_options = []
 
     def initialize_options(self):
@@ -126,30 +131,31 @@ class CleanExt(distutils.cmd.Command):
         pass
 
     def run(self):
-        for root, dirs, files in os.walk('gensim'):
+        for root, dirs, files in os.walk("gensim"):
             files = [
                 os.path.join(root, f)
                 for f in files
-                if os.path.splitext(f)[1] in ('.c', '.cpp', '.so')
+                if os.path.splitext(f)[1] in (".c", ".cpp", ".so")
             ]
             for f in files:
-                self.announce('removing %s' % f, level=distutils.log.INFO)
+                self.announce("removing %s" % f, level=distutils.log.INFO)
                 os.unlink(f)
 
-        if os.path.isdir('build'):
-            self.announce('recursively removing build', level=distutils.log.INFO)
-            shutil.rmtree('build')
+        if os.path.isdir("build"):
+            self.announce("recursively removing build", level=distutils.log.INFO)
+            shutil.rmtree("build")
 
 
-cmdclass = {'build_ext': CustomBuildExt, 'clean_ext': CleanExt}
+cmdclass = {"build_ext": CustomBuildExt, "clean_ext": CleanExt}
 
-WHEELHOUSE_UPLOADER_COMMANDS = {'fetch_artifacts', 'upload_all'}
+WHEELHOUSE_UPLOADER_COMMANDS = {"fetch_artifacts", "upload_all"}
 if WHEELHOUSE_UPLOADER_COMMANDS.intersection(sys.argv):
     import wheelhouse_uploader.cmd
+
     cmdclass.update(vars(wheelhouse_uploader.cmd))
 
 
-LONG_DESCRIPTION = u"""
+LONG_DESCRIPTION = """
 ==============================================
 gensim -- Topic Modelling in Python
 ==============================================
@@ -259,24 +265,26 @@ Copyright (c) 2009-now Radim Rehurek
 
 """
 
-distributed_env = ['Pyro4 >= 4.27']
+distributed_env = ["Pyro4 >= 4.27"]
 
-visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
+visdom_req = ["visdom >= 0.1.8, != 0.1.8.7"]
 
 # packages included for build-testing everywhere
 core_testenv = [
-    'pytest',
-    'pytest-cov',
-    'mock',
-    'cython',
-    'testfixtures',
+    "pytest",
+    "pytest-cov",
+    "mock",
+    "cython",
+    "testfixtures",
 ]
 
 if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
-    core_testenv.extend([
-        'pyemd',
-        'nmslib',
-    ])
+    core_testenv.extend(
+        [
+            "pyemd",
+            "nmslib",
+        ]
+    )
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req
@@ -297,33 +305,38 @@ win_testenv = core_testenv[:]
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
 
-docs_testenv = core_testenv + distributed_env + visdom_req + [
-    'sphinx',
-    'sphinx-gallery',
-    'sphinxcontrib.programoutput',
-    'sphinxcontrib-napoleon',
-    'matplotlib',  # expected by sphinx-gallery
-    'memory_profiler',
-    'annoy',
-    'Pyro4',
-    'nltk',
-    'testfixtures',
-    'statsmodels',
-    'pandas',
-]
+docs_testenv = (
+    core_testenv
+    + distributed_env
+    + visdom_req
+    + [
+        "sphinx",
+        "sphinx-gallery",
+        "sphinxcontrib.programoutput",
+        "sphinxcontrib-napoleon",
+        "matplotlib",  # expected by sphinx-gallery
+        "memory_profiler",
+        "annoy",
+        "Pyro4",
+        "nltk",
+        "testfixtures",
+        "statsmodels",
+        "pandas",
+    ]
+)
 
-NUMPY_STR = 'numpy >= 1.17.0'
+NUMPY_STR = "numpy >= 1.17.0"
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.28'
+CYTHON_STR = "Cython==0.29.28"
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
-    'smart_open >= 1.8.1',
+    "scipy >= 0.18.1",
+    "smart_open >= 1.8.1",
 ]
 
 setup_requires = [NUMPY_STR]
@@ -333,60 +346,50 @@ if need_cython():
     setup_requires.append(CYTHON_STR)
 
 setup(
-    name='gensim',
-    version='4.1.3.dev0',
-    description='Python framework for fast Vector Space Modelling',
+    name="gensim",
+    version="4.1.3.dev0",
+    description="Python framework for fast Vector Space Modelling",
     long_description=LONG_DESCRIPTION,
-
     ext_modules=ext_modules,
     cmdclass=cmdclass,
     packages=find_packages(),
-
-    author=u'Radim Rehurek',
-    author_email='me@radimrehurek.com',
-
-    url='http://radimrehurek.com/gensim',
+    author="Radim Rehurek",
+    author_email="me@radimrehurek.com",
+    url="http://radimrehurek.com/gensim",
     project_urls={
-        'Source': 'https://github.com/RaRe-Technologies/gensim',
+        "Source": "https://github.com/RaRe-Technologies/gensim",
     },
-    download_url='http://pypi.python.org/pypi/gensim',
-
-    license='LGPL-2.1-only',
-
-    keywords='Singular Value Decomposition, SVD, Latent Semantic Indexing, '
-        'LSA, LSI, Latent Dirichlet Allocation, LDA, '
-        'Hierarchical Dirichlet Process, HDP, Random Projections, '
-        'TFIDF, word2vec',
-
-    platforms='any',
-
+    download_url="http://pypi.python.org/pypi/gensim",
+    license="LGPL-2.1-only",
+    keywords="Singular Value Decomposition, SVD, Latent Semantic Indexing, "
+    "LSA, LSI, Latent Dirichlet Allocation, LDA, "
+    "Hierarchical Dirichlet Process, HDP, Random Projections, "
+    "TFIDF, word2vec",
+    platforms="any",
     zip_safe=False,
-
     classifiers=[  # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: Science/Research',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3 :: Only',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-        'Topic :: Scientific/Engineering :: Information Analysis',
-        'Topic :: Text Processing :: Linguistic',
+        "Development Status :: 5 - Production/Stable",
+        "Environment :: Console",
+        "Intended Audience :: Science/Research",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3 :: Only",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
+        "Topic :: Scientific/Engineering :: Information Analysis",
+        "Topic :: Text Processing :: Linguistic",
     ],
-
     test_suite="gensim.test",
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={
-        'distributed': distributed_env,
-        'test-win': win_testenv,
-        'test': linux_testenv,
-        'docs': docs_testenv,
+        "distributed": distributed_env,
+        "test-win": win_testenv,
+        "test": linux_testenv,
+        "docs": docs_testenv,
     },
-
     include_package_data=True,
 )

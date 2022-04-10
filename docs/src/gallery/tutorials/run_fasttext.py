@@ -6,7 +6,10 @@ Introduces Gensim's fastText model and demonstrates its use on the Lee Corpus.
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # Here, we'll learn to work with fastText library for training word-embedding
@@ -59,11 +62,12 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #
 #
 from pprint import pprint as print
+
 from gensim.models.fasttext import FastText
 from gensim.test.utils import datapath
 
 # Set file names for train and test data
-corpus_file = datapath('lee_background.cor')
+corpus_file = datapath("lee_background.cor")
 
 model = FastText(vector_size=100)
 
@@ -72,8 +76,10 @@ model.build_vocab(corpus_file=corpus_file)
 
 # train the model
 model.train(
-    corpus_file=corpus_file, epochs=model.epochs,
-    total_examples=model.corpus_count, total_words=model.corpus_total_words,
+    corpus_file=corpus_file,
+    epochs=model.epochs,
+    total_examples=model.corpus_count,
+    total_words=model.corpus_total_words,
 )
 
 print(model)
@@ -138,10 +144,12 @@ print(model)
 #
 
 
+import os
+
 # Save a model trained via Gensim's fastText implementation to temp.
 import tempfile
-import os
-with tempfile.NamedTemporaryFile(prefix='saved_model_gensim-', delete=False) as tmp:
+
+with tempfile.NamedTemporaryFile(prefix="saved_model_gensim-", delete=False) as tmp:
     model.save(tmp.name, separately=[])
 
 # Load back the same model.
@@ -176,19 +184,19 @@ print(wv)
 #
 # FastText models support vector lookups for out-of-vocabulary words by summing up character ngrams belonging to the word.
 #
-print('night' in wv.key_to_index)
+print("night" in wv.key_to_index)
 
 ###############################################################################
 #
-print('nights' in wv.key_to_index)
+print("nights" in wv.key_to_index)
 
 ###############################################################################
 #
-print(wv['night'])
+print(wv["night"])
 
 ###############################################################################
 #
-print(wv['nights'])
+print(wv["nights"])
 
 
 ###############################################################################
@@ -230,7 +238,7 @@ print(wv.most_similar("nights"))
 
 ###############################################################################
 #
-print(wv.n_similarity(['sushi', 'shop'], ['japanese', 'restaurant']))
+print(wv.n_similarity(["sushi", "shop"], ["japanese", "restaurant"]))
 
 ###############################################################################
 #
@@ -238,11 +246,11 @@ print(wv.doesnt_match("breakfast cereal dinner lunch".split()))
 
 ###############################################################################
 #
-print(wv.most_similar(positive=['baghdad', 'england'], negative=['london']))
+print(wv.most_similar(positive=["baghdad", "england"], negative=["london"]))
 
 ###############################################################################
 #
-print(wv.evaluate_word_analogies(datapath('questions-words.txt')))
+print(wv.evaluate_word_analogies(datapath("questions-words.txt")))
 
 ###############################################################################
 # Word Movers distance
@@ -251,14 +259,15 @@ print(wv.evaluate_word_analogies(datapath('questions-words.txt')))
 # You'll need the optional ``pyemd`` library for this section, ``pip install pyemd``.
 #
 # Let's start with two sentences:
-sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
-sentence_president = 'The president greets the press in Chicago'.lower().split()
+sentence_obama = "Obama speaks to the media in Illinois".lower().split()
+sentence_president = "The president greets the press in Chicago".lower().split()
 
 
 ###############################################################################
 # Remove their stopwords.
 #
 from gensim.parsing.preprocessing import STOPWORDS
+
 sentence_obama = [w for w in sentence_obama if w not in STOPWORDS]
 sentence_president = [w for w in sentence_president if w not in STOPWORDS]
 
@@ -267,11 +276,13 @@ sentence_president = [w for w in sentence_president if w not in STOPWORDS]
 distance = wv.wmdistance(sentence_obama, sentence_president)
 print(f"Word Movers Distance is {distance} (lower means closer)")
 
+import matplotlib.image as mpimg
+
 ###############################################################################
 # That's all! You've made it to the end of this tutorial.
 #
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-img = mpimg.imread('fasttext-logo-color-web.png')
+
+img = mpimg.imread("fasttext-logo-color-web.png")
 imgplot = plt.imshow(img)
-_ = plt.axis('off')
+_ = plt.axis("off")

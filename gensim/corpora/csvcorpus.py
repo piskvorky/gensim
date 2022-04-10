@@ -9,9 +9,9 @@
 
 from __future__ import with_statement
 
-import logging
 import csv
 import itertools
+import logging
 
 from gensim import interfaces, utils
 
@@ -45,12 +45,14 @@ class CsvCorpus(interfaces.CorpusABC):
         self.labels = labels
 
         # load the first few lines, to guess the CSV dialect
-        with utils.open(self.fname, 'rb') as f:
-            head = ''.join(itertools.islice(f, 5))
+        with utils.open(self.fname, "rb") as f:
+            head = "".join(itertools.islice(f, 5))
 
         self.headers = csv.Sniffer().has_header(head)
         self.dialect = csv.Sniffer().sniff(head)
-        logger.info("sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers)
+        logger.info(
+            "sniffed CSV delimiter=%r, headers=%s", self.dialect.delimiter, self.headers
+        )
 
     def __iter__(self):
         """Iterate over the corpus, returning one BoW vector at a time.
@@ -61,10 +63,10 @@ class CsvCorpus(interfaces.CorpusABC):
             Document in BoW format.
 
         """
-        with utils.open(self.fname, 'rb') as f:
+        with utils.open(self.fname, "rb") as f:
             reader = csv.reader(f, self.dialect)
             if self.headers:
-                next(reader)    # skip the headers
+                next(reader)  # skip the headers
 
             line_no = -1
             for line_no, line in enumerate(reader):

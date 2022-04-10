@@ -43,14 +43,14 @@ import struct
 
 import numpy as np
 
-_END_OF_WORD_MARKER = b'\x00'
+_END_OF_WORD_MARKER = b"\x00"
 
 # FastText dictionary data structure holds elements of type `entry` which can have `entry_type`
 # either `word` (0 :: int8) or `label` (1 :: int8). Here we deal with unsupervised case only
 # so we want `word` type.
 # See https://github.com/facebookresearch/fastText/blob/master/src/dictionary.h
 
-_DICT_WORD_ENTRY_TYPE_MARKER = b'\x00'
+_DICT_WORD_ENTRY_TYPE_MARKER = b"\x00"
 
 
 logger = logging.getLogger(__name__)
@@ -66,36 +66,36 @@ _FASTTEXT_FILEFORMAT_MAGIC = np.int32(793712314)
 # https://github.com/facebookresearch/fastText/blob/master/src/args.cc
 
 _NEW_HEADER_FORMAT = [
-    ('dim', 'i'),
-    ('ws', 'i'),
-    ('epoch', 'i'),
-    ('min_count', 'i'),
-    ('neg', 'i'),
-    ('word_ngrams', 'i'),   # Unused in loading
-    ('loss', 'i'),
-    ('model', 'i'),
-    ('bucket', 'i'),
-    ('minn', 'i'),
-    ('maxn', 'i'),
-    ('lr_update_rate', 'i'),   # Unused in loading
-    ('t', 'd'),
+    ("dim", "i"),
+    ("ws", "i"),
+    ("epoch", "i"),
+    ("min_count", "i"),
+    ("neg", "i"),
+    ("word_ngrams", "i"),  # Unused in loading
+    ("loss", "i"),
+    ("model", "i"),
+    ("bucket", "i"),
+    ("minn", "i"),
+    ("maxn", "i"),
+    ("lr_update_rate", "i"),  # Unused in loading
+    ("t", "d"),
 ]
 
 _OLD_HEADER_FORMAT = [
-    ('epoch', 'i'),
-    ('min_count', 'i'),
-    ('neg', 'i'),
-    ('word_ngrams', 'i'),  # Unused in loading
-    ('loss', 'i'),
-    ('model', 'i'),
-    ('bucket', 'i'),
-    ('minn', 'i'),
-    ('maxn', 'i'),
-    ('lr_update_rate', 'i'),  # Unused in loading
-    ('t', 'd'),
+    ("epoch", "i"),
+    ("min_count", "i"),
+    ("neg", "i"),
+    ("word_ngrams", "i"),  # Unused in loading
+    ("loss", "i"),
+    ("model", "i"),
+    ("bucket", "i"),
+    ("minn", "i"),
+    ("maxn", "i"),
+    ("lr_update_rate", "i"),  # Unused in loading
+    ("t", "d"),
 ]
 
-_FLOAT_SIZE = struct.calcsize('@f')
+_FLOAT_SIZE = struct.calcsize("@f")
 if _FLOAT_SIZE == 4:
     _FLOAT_DTYPE = np.dtype(np.float32)
 elif _FLOAT_SIZE == 8:
@@ -106,18 +106,18 @@ else:
 
 def _yield_field_names():
     for name, _ in _OLD_HEADER_FORMAT + _NEW_HEADER_FORMAT:
-        if not name.startswith('_'):
+        if not name.startswith("_"):
             yield name
-    yield 'raw_vocab'
-    yield 'vocab_size'
-    yield 'nwords'
-    yield 'vectors_ngrams'
-    yield 'hidden_output'
-    yield 'ntokens'
+    yield "raw_vocab"
+    yield "vocab_size"
+    yield "nwords"
+    yield "vectors_ngrams"
+    yield "hidden_output"
+    yield "ntokens"
 
 
 _FIELD_NAMES = sorted(set(_yield_field_names()))
-Model = collections.namedtuple('Model', _FIELD_NAMES)
+Model = collections.namedtuple("Model", _FIELD_NAMES)
 """Holds data loaded from the Facebook binary.
 
 Parameters
@@ -168,7 +168,7 @@ def _struct_unpack(fin, fmt):
     return struct.unpack(fmt, fin.read(num_bytes))
 
 
-def _load_vocab(fin, new_format, encoding='utf-8'):
+def _load_vocab(fin, new_format, encoding="utf-8"):
     """Load a vocabulary from a FB binary.
 
     Before the vocab is ready for use, call the prepare_vocab function and pass
@@ -191,17 +191,17 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         The number of words.
         The number of tokens.
     """
-    vocab_size, nwords, nlabels = _struct_unpack(fin, '@3i')
+    vocab_size, nwords, nlabels = _struct_unpack(fin, "@3i")
 
     # Vocab stored by [Dictionary::save](https://github.com/facebookresearch/fastText/blob/master/src/dictionary.cc)
     if nlabels > 0:
         raise NotImplementedError("Supervised fastText models are not supported")
     logger.info("loading %s words for fastText model from %s", vocab_size, fin.name)
 
-    ntokens = _struct_unpack(fin, '@q')[0]  # number of tokens
+    ntokens = _struct_unpack(fin, "@q")[0]  # number of tokens
 
     if new_format:
-        pruneidx_size, = _struct_unpack(fin, '@q')
+        (pruneidx_size,) = _struct_unpack(fin, "@q")
 
     raw_vocab = collections.OrderedDict()
     for i in range(vocab_size):
@@ -216,17 +216,18 @@ def _load_vocab(fin, new_format, encoding='utf-8'):
         try:
             word = word_bytes.decode(encoding)
         except UnicodeDecodeError:
-            word = word_bytes.decode(encoding, errors='backslashreplace')
+            word = word_bytes.decode(encoding, errors="backslashreplace")
             logger.error(
-                'failed to decode invalid unicode bytes %r; replacing invalid characters, using %r',
-                word_bytes, word
+                "failed to decode invalid unicode bytes %r; replacing invalid characters, using %r",
+                word_bytes,
+                word,
             )
-        count, _ = _struct_unpack(fin, '@qb')
+        count, _ = _struct_unpack(fin, "@qb")
         raw_vocab[word] = count
 
     if new_format:
         for j in range(pruneidx_size):
-            _struct_unpack(fin, '@2i')
+            _struct_unpack(fin, "@2i")
 
     return raw_vocab, vocab_size, nwords, ntokens
 
@@ -253,12 +254,12 @@ def _load_matrix(fin, new_format=True):
 
     """
     if _FLOAT_DTYPE is None:
-        raise ValueError('bad _FLOAT_SIZE: %r' % _FLOAT_SIZE)
+        raise ValueError("bad _FLOAT_SIZE: %r" % _FLOAT_SIZE)
 
     if new_format:
-        _struct_unpack(fin, '@?')  # bool quant_input in fasttext.cc
+        _struct_unpack(fin, "@?")  # bool quant_input in fasttext.cc
 
-    num_vectors, dim = _struct_unpack(fin, '@2q')
+    num_vectors, dim = _struct_unpack(fin, "@2q")
     count = num_vectors * dim
 
     #
@@ -273,15 +274,15 @@ def _load_matrix(fin, new_format=True):
     #
     if isinstance(fin, gzip.GzipFile):
         logger.warning(
-            'Loading model from a compressed .gz file.  This can be slow. '
-            'This is a work-around for a bug in NumPy: https://github.com/numpy/numpy/issues/13470. '
-            'Consider decompressing your model file for a faster load. '
+            "Loading model from a compressed .gz file.  This can be slow. "
+            "This is a work-around for a bug in NumPy: https://github.com/numpy/numpy/issues/13470. "
+            "Consider decompressing your model file for a faster load. "
         )
         matrix = _fromfile(fin, _FLOAT_DTYPE, count)
     else:
         matrix = np.fromfile(fin, _FLOAT_DTYPE, count)
 
-    assert matrix.shape == (count,), 'expected (%r,),  got %r' % (count, matrix.shape)
+    assert matrix.shape == (count,), "expected (%r,),  got %r" % (count, matrix.shape)
     matrix = matrix.reshape((num_vectors, dim))
     return matrix
 
@@ -296,12 +297,12 @@ def _batched_generator(fin, count, batch_size=1e6):
 
     """
     while count > batch_size:
-        batch = _struct_unpack(fin, '@%df' % batch_size)
+        batch = _struct_unpack(fin, "@%df" % batch_size)
         for f in batch:
             yield f
         count -= batch_size
 
-    batch = _struct_unpack(fin, '@%df' % count)
+    batch = _struct_unpack(fin, "@%df" % count)
     for f in batch:
         yield f
 
@@ -311,7 +312,7 @@ def _fromfile(fin, dtype, count):
     return np.fromiter(_batched_generator(fin, count), dtype=dtype)
 
 
-def load(fin, encoding='utf-8', full_model=True):
+def load(fin, encoding="utf-8", full_model=True):
     """Load a model from a binary stream.
 
     Parameters
@@ -331,9 +332,9 @@ def load(fin, encoding='utf-8', full_model=True):
 
     """
     if isinstance(fin, str):
-        fin = open(fin, 'rb')
+        fin = open(fin, "rb")
 
-    magic, version = _struct_unpack(fin, '@2i')
+    magic, version = _struct_unpack(fin, "@2i")
     new_format = magic == _FASTTEXT_FILEFORMAT_MAGIC
 
     header_spec = _NEW_HEADER_FORMAT if new_format else _OLD_HEADER_FORMAT
@@ -342,8 +343,12 @@ def load(fin, encoding='utf-8', full_model=True):
     if not new_format:
         model.update(dim=magic, ws=version)
 
-    raw_vocab, vocab_size, nwords, ntokens = _load_vocab(fin, new_format, encoding=encoding)
-    model.update(raw_vocab=raw_vocab, vocab_size=vocab_size, nwords=nwords, ntokens=ntokens)
+    raw_vocab, vocab_size, nwords, ntokens = _load_vocab(
+        fin, new_format, encoding=encoding
+    )
+    model.update(
+        raw_vocab=raw_vocab, vocab_size=vocab_size, nwords=nwords, ntokens=ntokens
+    )
 
     vectors_ngrams = _load_matrix(fin, new_format=new_format)
 
@@ -351,7 +356,7 @@ def load(fin, encoding='utf-8', full_model=True):
         hidden_output = None
     else:
         hidden_output = _load_matrix(fin, new_format=new_format)
-        assert fin.read() == b'', 'expected to reach EOF'
+        assert fin.read() == b"", "expected to reach EOF"
 
     model.update(vectors_ngrams=vectors_ngrams, hidden_output=hidden_output)
     model = {k: v for k, v in model.items() if k in _FIELD_NAMES}
@@ -386,7 +391,7 @@ def _backslashreplace_backport(ex):
     # https://stackoverflow.com/questions/42860186/exact-equivalent-of-b-decodeutf-8-backslashreplace-in-python-2
     #
     bstr, start, end = ex.object, ex.start, ex.end
-    text = u''.join('\\x{:02x}'.format(ord(c)) for c in bstr[start:end])
+    text = "".join("\\x{:02x}".format(ord(c)) for c in bstr[start:end])
     return text, end
 
 
@@ -419,12 +424,14 @@ def _conv_field_to_bytes(field_value, field_type):
     field_type: str
         currently supported `field_types` are `i` for 32-bit integer and `d` for 64-bit float
     """
-    if field_type == 'i':
-        return (np.int32(field_value).tobytes())
-    elif field_type == 'd':
-        return (np.float64(field_value).tobytes())
+    if field_type == "i":
+        return np.int32(field_value).tobytes()
+    elif field_type == "d":
+        return np.float64(field_value).tobytes()
     else:
-        raise NotImplementedError('Currently conversion to "%s" type is not implemmented.' % field_type)
+        raise NotImplementedError(
+            'Currently conversion to "%s" type is not implemmented.' % field_type
+        )
 
 
 def _get_field_from_model(model, field):
@@ -438,13 +445,13 @@ def _get_field_from_model(model, field):
     field: str
         requested field name, fields are listed in the `_NEW_HEADER_FORMAT` list
     """
-    if field == 'bucket':
+    if field == "bucket":
         return model.wv.bucket
-    elif field == 'dim':
+    elif field == "dim":
         return model.vector_size
-    elif field == 'epoch':
+    elif field == "epoch":
         return model.epochs
-    elif field == 'loss':
+    elif field == "loss":
         # `loss` => hs: 1, ns: 2, softmax: 3, ova-vs-all: 4
         # ns = negative sampling loss (default)
         # hs = hierarchical softmax loss
@@ -456,32 +463,36 @@ def _get_field_from_model(model, field):
             return 2
         elif model.hs == 0 and model.negative == 0:
             return 1
-    elif field == 'maxn':
+    elif field == "maxn":
         return model.wv.max_n
-    elif field == 'minn':
+    elif field == "minn":
         return model.wv.min_n
-    elif field == 'min_count':
+    elif field == "min_count":
         return model.min_count
-    elif field == 'model':
+    elif field == "model":
         # `model` => cbow:1, sg:2, sup:3
         # cbow = continous bag of words (default)
         # sg = skip-gram
         # sup = supervised
         return 2 if model.sg == 1 else 1
-    elif field == 'neg':
+    elif field == "neg":
         return model.negative
-    elif field == 't':
+    elif field == "t":
         return model.sample
-    elif field == 'word_ngrams':
+    elif field == "word_ngrams":
         # This is skipped in gensim loading setting, using the default from FB C++ code
         return 1
-    elif field == 'ws':
+    elif field == "ws":
         return model.window
-    elif field == 'lr_update_rate':
+    elif field == "lr_update_rate":
         # This is skipped in gensim loading setting, using the default from FB C++ code
         return 100
     else:
-        msg = 'Extraction of header field "' + field + '" from Gensim FastText object not implemmented.'
+        msg = (
+            'Extraction of header field "'
+            + field
+            + '" from Gensim FastText object not implemmented.'
+        )
         raise NotImplementedError(msg)
 
 
@@ -548,7 +559,7 @@ def _dict_save(fout, model, encoding):
     fout.write(np.int64(-1))
 
     for word in model.wv.index_to_key:
-        word_count = model.wv.get_vecattr(word, 'count')
+        word_count = model.wv.get_vecattr(word, "count")
         fout.write(word.encode(encoding))
         fout.write(_END_OF_WORD_MARKER)
         fout.write(np.int64(word_count).tobytes())
@@ -579,7 +590,7 @@ def _input_save(fout, model):
     assert vocab_n == len(model.wv)
     assert ngrams_n == model.wv.bucket
 
-    fout.write(struct.pack('@2q', vocab_n + ngrams_n, vocab_dim))
+    fout.write(struct.pack("@2q", vocab_n + ngrams_n, vocab_dim))
     fout.write(model.wv.vectors_vocab.tobytes())
     fout.write(model.wv.vectors_ngrams.tobytes())
 
@@ -605,7 +616,7 @@ def _output_save(fout, model):
         hidden_output = model.syn1neg
 
     hidden_n, hidden_dim = hidden_output.shape
-    fout.write(struct.pack('@2q', hidden_n, hidden_dim))
+    fout.write(struct.pack("@2q", hidden_n, hidden_dim))
     fout.write(hidden_output.tobytes())
 
 
@@ -629,11 +640,15 @@ def _save_to_stream(model, fout, fb_fasttext_parameters, encoding):
     _sign_model(fout)
     _args_save(fout, model, fb_fasttext_parameters)
     _dict_save(fout, model, encoding)
-    fout.write(struct.pack('@?', False))  # Save 'quant_', which is False for unsupervised models
+    fout.write(
+        struct.pack("@?", False)
+    )  # Save 'quant_', which is False for unsupervised models
 
     # Save words and ngrams vectors
     _input_save(fout, model)
-    fout.write(struct.pack('@?', False))  # Save 'quot_', which is False for unsupervised models
+    fout.write(
+        struct.pack("@?", False)
+    )  # Save 'quot_', which is False for unsupervised models
 
     # Save output layers of the model
     _output_save(fout, model)

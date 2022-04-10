@@ -3,11 +3,16 @@
 # cython: embedsignature=True
 
 from __future__ import division
+
 cimport cython
+
 import numpy as np
+
 cimport numpy as np
+
 ctypedef cython.floating DTYPE_t
-from libc.math cimport log, exp, fabs
+from libc.math cimport exp, fabs, log
+
 from cython.parallel import prange
 
 

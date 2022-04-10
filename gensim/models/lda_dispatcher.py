@@ -57,9 +57,9 @@ Command line arguments
 """
 
 import argparse
+import logging
 import os
 import sys
-import logging
 import threading
 import time
 from queue import Queue
@@ -68,7 +68,6 @@ import Pyro4
 
 from gensim import utils
 from gensim.models.lda_worker import LDA_WORKER_PREFIX
-
 
 logger = logging.getLogger("gensim.models.lda_dispatcher")
 
@@ -84,7 +83,7 @@ MAX_JOBS_QUEUE = 10
 # so this is really just a hack, see http://bugs.python.org/issue1360
 HUGE_TIMEOUT = 365 * 24 * 60 * 60  # one year
 
-LDA_DISPATCHER_PREFIX = 'gensim.lda_dispatcher'
+LDA_DISPATCHER_PREFIX = "gensim.lda_dispatcher"
 
 
 class Dispatcher:
@@ -138,21 +137,30 @@ class Dispatcher:
 
         self.workers = {}
         with utils.getNS(**self.ns_conf) as ns:
-            self.callback = Pyro4.Proxy(ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX])
+            self.callback = Pyro4.Proxy(
+                ns.list(prefix=LDA_DISPATCHER_PREFIX)[LDA_DISPATCHER_PREFIX]
+            )
             for name, uri in ns.list(prefix=LDA_WORKER_PREFIX).items():
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     logger.info("registering worker #%i at %s", workerid, uri)
-                    worker.initialize(workerid, dispatcher=self.callback, **model_params)
+                    worker.initialize(
+                        workerid, dispatcher=self.callback, **model_params
+                    )
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
-                    logger.warning("unresponsive worker at %s,deleting it from the name server", uri)
+                    logger.warning(
+                        "unresponsive worker at %s,deleting it from the name server",
+                        uri,
+                    )
                     ns.remove(name)
 
         if not self.workers:
-            raise RuntimeError('no workers found; run some lda_worker scripts on your machines first!')
+            raise RuntimeError(
+                "no workers found; run some lda_worker scripts on your machines first!"
+            )
 
     @Pyro4.expose
     def getworkers(self):
@@ -211,7 +219,9 @@ class Dispatcher:
 
         """
         logger.info("end of input, assigning all remaining jobs")
-        logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
+        logger.debug(
+            "jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived
+        )
         i = 0
         count = 10
         while self._jobsdone < self._jobsreceived:
@@ -251,7 +261,7 @@ class Dispatcher:
 
     @Pyro4.expose
     @Pyro4.oneway
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def jobdone(self, workerid):
         """A worker has finished its job. Log this event and then asynchronously transfer control back to the worker.
 
@@ -269,7 +279,9 @@ class Dispatcher:
         """
         self._jobsdone += 1
         logger.info("worker #%s finished job #%i", workerid, self._jobsdone)
-        self.workers[workerid].requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
+        self.workers[
+            workerid
+        ].requestjob()  # tell the worker to ask for another job, asynchronously (one-way)
 
     def jobsdone(self):
         """Wrap :attr:`~gensim.models.lda_dispatcher.Dispatcher._jobsdone` needed for remote access through proxies.
@@ -293,36 +305,60 @@ class Dispatcher:
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument(
         "--maxsize",
         help="How many jobs (=chunks of N documents) to keep 'pre-fetched' in a queue (default: %(default)s)",
-        type=int, default=MAX_JOBS_QUEUE
+        type=int,
+        default=MAX_JOBS_QUEUE,
     )
-    parser.add_argument("--host", help="Nameserver hostname (default: %(default)s)", default=None)
-    parser.add_argument("--port", help="Nameserver port (default: %(default)s)", default=None, type=int)
-    parser.add_argument("--no-broadcast", help="Disable broadcast (default: %(default)s)",
-                        action='store_const', default=True, const=False)
-    parser.add_argument("--hmac", help="Nameserver hmac key (default: %(default)s)", default=None)
     parser.add_argument(
-        '-v', '--verbose',
-        help='Verbose flag',
-        action='store_const', dest="loglevel", const=logging.INFO, default=logging.WARNING
+        "--host", help="Nameserver hostname (default: %(default)s)", default=None
+    )
+    parser.add_argument(
+        "--port", help="Nameserver port (default: %(default)s)", default=None, type=int
+    )
+    parser.add_argument(
+        "--no-broadcast",
+        help="Disable broadcast (default: %(default)s)",
+        action="store_const",
+        default=True,
+        const=False,
+    )
+    parser.add_argument(
+        "--hmac", help="Nameserver hmac key (default: %(default)s)", default=None
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        help="Verbose flag",
+        action="store_const",
+        dest="loglevel",
+        const=logging.INFO,
+        default=logging.WARNING,
     )
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=args.loglevel)
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=args.loglevel
+    )
     logger.info("running %s", " ".join(sys.argv))
 
     ns_conf = {
         "broadcast": args.no_broadcast,
         "host": args.host,
         "port": args.port,
-        "hmac_key": args.hmac
+        "hmac_key": args.hmac,
     }
-    utils.pyro_daemon(LDA_DISPATCHER_PREFIX, Dispatcher(maxsize=args.maxsize, ns_conf=ns_conf), ns_conf=ns_conf)
+    utils.pyro_daemon(
+        LDA_DISPATCHER_PREFIX,
+        Dispatcher(maxsize=args.maxsize, ns_conf=ns_conf),
+        ns_conf=ns_conf,
+    )
     logger.info("finished running %s", " ".join(sys.argv))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

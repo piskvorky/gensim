@@ -6,6 +6,7 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 import logging
 import unittest
+
 import numpy as np
 from numpy.testing import assert_array_equal
 from scipy import sparse
@@ -128,7 +129,7 @@ class TestLdaModelInner(unittest.TestCase):
         for dtype in [np.float16, np.float32, np.float64]:
             for i in range(self.num_runs):
                 # 1 dimensional case
-                input_1d = rs.uniform(.01, 10000, size=(self.num_topics,))
+                input_1d = rs.uniform(0.01, 10000, size=(self.num_topics,))
                 known_good = dirichlet_expectation(input_1d)
                 test_values = matutils.dirichlet_expectation(input_1d)
 
@@ -136,7 +137,14 @@ class TestLdaModelInner(unittest.TestCase):
                 self.assertTrue(np.allclose(known_good, test_values), msg)
 
                 # 2 dimensional case
-                input_2d = rs.uniform(.01, 10000, size=(1, self.num_topics,))
+                input_2d = rs.uniform(
+                    0.01,
+                    10000,
+                    size=(
+                        1,
+                        self.num_topics,
+                    ),
+                )
                 known_good = dirichlet_expectation(input_2d)
                 test_values = matutils.dirichlet_expectation(input_2d)
 
@@ -149,10 +157,10 @@ def manual_unitvec(vec):
     vec = vec.astype(float)
     if sparse.issparse(vec):
         vec_sum_of_squares = vec.multiply(vec)
-        unit = 1. / np.sqrt(vec_sum_of_squares.sum())
+        unit = 1.0 / np.sqrt(vec_sum_of_squares.sum())
         return vec.multiply(unit)
     elif not sparse.issparse(vec):
-        sum_vec_squared = np.sum(vec ** 2)
+        sum_vec_squared = np.sum(vec**2)
         vec /= np.sqrt(sum_vec_squared)
         return vec
 
@@ -160,28 +168,36 @@ def manual_unitvec(vec):
 class UnitvecTestCase(unittest.TestCase):
     # test unitvec
     def test_sparse_npfloat32(self):
-        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.float32)
+        input_vector = sparse.csr_matrix(
+            np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])
+        ).astype(np.float32)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
         self.assertEqual(input_vector.dtype, unit_vector.dtype)
 
     def test_sparse_npfloat64(self):
-        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.float64)
+        input_vector = sparse.csr_matrix(
+            np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])
+        ).astype(np.float64)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
         self.assertEqual(input_vector.dtype, unit_vector.dtype)
 
     def test_sparse_npint32(self):
-        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.int32)
+        input_vector = sparse.csr_matrix(
+            np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])
+        ).astype(np.int32)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
         self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_sparse_npint64(self):
-        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(np.int64)
+        input_vector = sparse.csr_matrix(
+            np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])
+        ).astype(np.int64)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
@@ -216,14 +232,18 @@ class UnitvecTestCase(unittest.TestCase):
         self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
     def test_sparse_python_float(self):
-        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(float)
+        input_vector = sparse.csr_matrix(
+            np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])
+        ).astype(float)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
         self.assertEqual(input_vector.dtype, unit_vector.dtype)
 
     def test_sparse_python_int(self):
-        input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(int)
+        input_vector = sparse.csr_matrix(
+            np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])
+        ).astype(int)
         unit_vector = matutils.unitvec(input_vector)
         man_unit_vector = manual_unitvec(input_vector)
         self.assertTrue(np.allclose(unit_vector.data, man_unit_vector.data, atol=1e-3))
@@ -306,6 +326,8 @@ class TestSparse2Corpus(unittest.TestCase):
         assert_array_equal(self.s2c[...].sparse.toarray(), self.orig_array)
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.DEBUG
+    )
     unittest.main()

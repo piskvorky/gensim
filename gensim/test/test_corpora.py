@@ -20,14 +20,22 @@ import unittest
 
 import numpy as np
 
-from gensim.corpora import (bleicorpus, mmcorpus, lowcorpus, svmlightcorpus,
-                            ucicorpus, malletcorpus, textcorpus, indexedcorpus, wikicorpus)
+from gensim.corpora import (
+    bleicorpus,
+    indexedcorpus,
+    lowcorpus,
+    malletcorpus,
+    mmcorpus,
+    svmlightcorpus,
+    textcorpus,
+    ucicorpus,
+    wikicorpus,
+)
 from gensim.interfaces import TransformedCorpus
+from gensim.test.utils import common_corpus, datapath, get_tmpfile
 from gensim.utils import to_unicode
-from gensim.test.utils import datapath, get_tmpfile, common_corpus
 
-
-GITHUB_ACTIONS_WINDOWS = os.environ.get('RUNNER_OS') == 'Windows'
+GITHUB_ACTIONS_WINDOWS = os.environ.get("RUNNER_OS") == "Windows"
 
 
 class DummyTransformer:
@@ -37,7 +45,9 @@ class DummyTransformer:
             transformed = [(termid, count + 1) for termid, count in bow]
         else:
             # sliced corpus
-            transformed = [[(termid, count + 1) for termid, count in doc] for doc in bow]
+            transformed = [
+                [(termid, count + 1) for termid, count in doc] for doc in bow
+            ]
         return transformed
 
 
@@ -54,26 +64,32 @@ class CorpusTestCase(unittest.TestCase):
 
     def tearDown(self):
         # remove all temporary test files
-        fname = get_tmpfile('gensim_corpus.tst')
-        extensions = ['', '', '.bz2', '.gz', '.index', '.vocab']
+        fname = get_tmpfile("gensim_corpus.tst")
+        extensions = ["", "", ".bz2", ".gz", ".index", ".vocab"]
         for ext in itertools.permutations(extensions, 2):
             try:
                 os.remove(fname + ext[0] + ext[1])
             except OSError:
                 pass
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_load(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
         corpus = self.corpus_class(fname)
 
         docs = list(corpus)
         # the deerwester corpus always has nine documents
         self.assertEqual(len(docs), 9)
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_len(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
         corpus = self.corpus_class(fname)
 
         # make sure corpus.index works, too
@@ -82,19 +98,22 @@ class CorpusTestCase(unittest.TestCase):
 
         # for subclasses of IndexedCorpus, we need to nuke this so we don't
         # test length on the index, but just testcorpus contents
-        if hasattr(corpus, 'index'):
+        if hasattr(corpus, "index"):
             corpus.index = None
 
         self.assertEqual(len(corpus), 9)
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_empty_input(self):
-        tmpf = get_tmpfile('gensim_corpus.tst')
-        with open(tmpf, 'w') as f:
-            f.write('')
+        tmpf = get_tmpfile("gensim_corpus.tst")
+        with open(tmpf, "w") as f:
+            f.write("")
 
-        with open(tmpf + '.vocab', 'w') as f:
-            f.write('')
+        with open(tmpf + ".vocab", "w") as f:
+            f.write("")
 
         corpus = self.corpus_class(tmpf)
         self.assertEqual(len(corpus), 0)
@@ -102,10 +121,13 @@ class CorpusTestCase(unittest.TestCase):
         docs = list(corpus)
         self.assertEqual(len(docs), 0)
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_save(self):
         corpus = self.TEST_CORPUS
-        tmpf = get_tmpfile('gensim_corpus.tst')
+        tmpf = get_tmpfile("gensim_corpus.tst")
 
         # make sure the corpus can be saved
         self.corpus_class.save_corpus(tmpf, corpus)
@@ -114,10 +136,13 @@ class CorpusTestCase(unittest.TestCase):
         corpus2 = list(self.corpus_class(tmpf))
         self.assertEqual(corpus, corpus2)
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_serialize(self):
         corpus = self.TEST_CORPUS
-        tmpf = get_tmpfile('gensim_corpus.tst')
+        tmpf = get_tmpfile("gensim_corpus.tst")
 
         # make sure the corpus can be saved
         self.corpus_class.serialize(tmpf, corpus)
@@ -136,12 +161,15 @@ class CorpusTestCase(unittest.TestCase):
             idx = [1, 3, 5, 7]
             self.assertEqual(corpus[idx], corpus2[idx])
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_serialize_compressed(self):
         corpus = self.TEST_CORPUS
-        tmpf = get_tmpfile('gensim_corpus.tst')
+        tmpf = get_tmpfile("gensim_corpus.tst")
 
-        for extension in ['.gz', '.bz2']:
+        for extension in [".gz", ".bz2"]:
             fname = tmpf + extension
             # make sure the corpus can be saved
             self.corpus_class.serialize(fname, corpus)
@@ -154,15 +182,18 @@ class CorpusTestCase(unittest.TestCase):
             for i in range(len(corpus)):
                 self.assertEqual(corpus[i], corpus2[i])
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_switch_id2word(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
         corpus = self.corpus_class(fname)
-        if hasattr(corpus, 'id2word'):
+        if hasattr(corpus, "id2word"):
             firstdoc = next(iter(corpus))
             testdoc = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc)
 
-            self.assertEqual(testdoc, {('computer', 1), ('human', 1), ('interface', 1)})
+            self.assertEqual(testdoc, {("computer", 1), ("human", 1), ("interface", 1)})
 
             d = corpus.id2word
             d[0], d[1] = d[1], d[0]
@@ -170,11 +201,16 @@ class CorpusTestCase(unittest.TestCase):
 
             firstdoc2 = next(iter(corpus))
             testdoc2 = set((to_unicode(corpus.id2word[x]), y) for x, y in firstdoc2)
-            self.assertEqual(testdoc2, {('computer', 1), ('human', 1), ('interface', 1)})
+            self.assertEqual(
+                testdoc2, {("computer", 1), ("human", 1), ("interface", 1)}
+            )
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_indexing(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
         corpus = self.corpus_class(fname)
         docs = list(corpus)
 
@@ -215,11 +251,15 @@ class CorpusTestCase(unittest.TestCase):
         # check that TransformedCorpus supports indexing when the underlying
         # corpus does, and throws an error otherwise
         corpus_ = TransformedCorpus(DummyTransformer(), corpus)
-        if hasattr(corpus, 'index') and corpus.index is not None:
+        if hasattr(corpus, "index") and corpus.index is not None:
             self.assertEqual(corpus_[0][0][1], docs[0][0][1] + 1)
             self.assertRaises(ValueError, _get_slice, corpus_, {1})
-            transformed_docs = [val + 1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]]
-            self.assertEqual(transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc))
+            transformed_docs = [
+                val + 1 for i, d in enumerate(docs) for _, val in d if i in [1, 3, 4]
+            ]
+            self.assertEqual(
+                transformed_docs, list(v for doc in corpus_[[1, 3, 4]] for _, v in doc)
+            )
             self.assertEqual(3, len(corpus_[[1, 3, 4]]))
         else:
             self.assertRaises(RuntimeError, _get_slice, corpus_, [1, 3, 4])
@@ -230,22 +270,25 @@ class CorpusTestCase(unittest.TestCase):
 class TestMmCorpusWithIndex(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
-        self.corpus = self.corpus_class(datapath('test_mmcorpus_with_index.mm'))
-        self.file_extension = '.mm'
+        self.corpus = self.corpus_class(datapath("test_mmcorpus_with_index.mm"))
+        self.file_extension = ".mm"
 
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
         pass
 
     def test_closed_file_object(self):
-        file_obj = open(datapath('testcorpus.mm'))
+        file_obj = open(datapath("testcorpus.mm"))
         f = file_obj.closed
         mmcorpus.MmCorpus(file_obj)
         s = file_obj.closed
         self.assertEqual(f, 0)
         self.assertEqual(s, 0)
 
-    @unittest.skipIf(GITHUB_ACTIONS_WINDOWS, 'see <https://github.com/RaRe-Technologies/gensim/pull/2836>')
+    @unittest.skipIf(
+        GITHUB_ACTIONS_WINDOWS,
+        "see <https://github.com/RaRe-Technologies/gensim/pull/2836>",
+    )
     def test_load(self):
         self.assertEqual(self.corpus.num_docs, 9)
         self.assertEqual(self.corpus.num_terms, 12)
@@ -254,19 +297,23 @@ class TestMmCorpusWithIndex(CorpusTestCase):
         # confirm we can iterate and that document values match expected for first three docs
         it = iter(self.corpus)
         self.assertEqual(next(it), [(0, 1.0), (1, 1.0), (2, 1.0)])
-        self.assertEqual(next(it), [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)])
+        self.assertEqual(
+            next(it), [(0, 1.0), (3, 1.0), (4, 1.0), (5, 1.0), (6, 1.0), (7, 1.0)]
+        )
         self.assertEqual(next(it), [(2, 1.0), (5, 1.0), (7, 1.0), (8, 1.0)])
 
         # confirm that accessing document by index works
         self.assertEqual(self.corpus[3], [(1, 1.0), (5, 2.0), (8, 1.0)])
-        self.assertEqual(tuple(self.corpus.index), (97, 121, 169, 201, 225, 249, 258, 276, 303))
+        self.assertEqual(
+            tuple(self.corpus.index), (97, 121, 169, 201, 225, 249, 258, 276, 303)
+        )
 
 
 class TestMmCorpusNoIndex(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
-        self.corpus = self.corpus_class(datapath('test_mmcorpus_no_index.mm'))
-        self.file_extension = '.mm'
+        self.corpus = self.corpus_class(datapath("test_mmcorpus_no_index.mm"))
+        self.file_extension = ".mm"
 
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
@@ -281,7 +328,9 @@ class TestMmCorpusNoIndex(CorpusTestCase):
         it = iter(self.corpus)
         self.assertEqual(next(it), [(0, 1.0), (1, 1.0), (2, 1.0)])
         self.assertEqual(next(it), [])
-        self.assertEqual(next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)])
+        self.assertEqual(
+            next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)]
+        )
 
         # confirm that accessing document by index fails
         self.assertRaises(RuntimeError, lambda: self.corpus[3])
@@ -290,8 +339,8 @@ class TestMmCorpusNoIndex(CorpusTestCase):
 class TestMmCorpusNoIndexGzip(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
-        self.corpus = self.corpus_class(datapath('test_mmcorpus_no_index.mm.gz'))
-        self.file_extension = '.mm'
+        self.corpus = self.corpus_class(datapath("test_mmcorpus_no_index.mm.gz"))
+        self.file_extension = ".mm"
 
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
@@ -306,7 +355,9 @@ class TestMmCorpusNoIndexGzip(CorpusTestCase):
         it = iter(self.corpus)
         self.assertEqual(next(it), [(0, 1.0), (1, 1.0), (2, 1.0)])
         self.assertEqual(next(it), [])
-        self.assertEqual(next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)])
+        self.assertEqual(
+            next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)]
+        )
 
         # confirm that accessing document by index fails
         self.assertRaises(RuntimeError, lambda: self.corpus[3])
@@ -315,8 +366,8 @@ class TestMmCorpusNoIndexGzip(CorpusTestCase):
 class TestMmCorpusNoIndexBzip(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
-        self.corpus = self.corpus_class(datapath('test_mmcorpus_no_index.mm.bz2'))
-        self.file_extension = '.mm'
+        self.corpus = self.corpus_class(datapath("test_mmcorpus_no_index.mm.bz2"))
+        self.file_extension = ".mm"
 
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
@@ -331,7 +382,9 @@ class TestMmCorpusNoIndexBzip(CorpusTestCase):
         it = iter(self.corpus)
         self.assertEqual(next(it), [(0, 1.0), (1, 1.0), (2, 1.0)])
         self.assertEqual(next(it), [])
-        self.assertEqual(next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)])
+        self.assertEqual(
+            next(it), [(2, 0.42371910849), (5, 0.6625174), (7, 1.0), (8, 1.0)]
+        )
 
         # confirm that accessing document by index fails
         self.assertRaises(RuntimeError, lambda: self.corpus[3])
@@ -340,8 +393,8 @@ class TestMmCorpusNoIndexBzip(CorpusTestCase):
 class TestMmCorpusCorrupt(CorpusTestCase):
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
-        self.corpus = self.corpus_class(datapath('test_mmcorpus_corrupt.mm'))
-        self.file_extension = '.mm'
+        self.corpus = self.corpus_class(datapath("test_mmcorpus_corrupt.mm"))
+        self.file_extension = ".mm"
 
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
@@ -356,10 +409,11 @@ class TestMmCorpusOverflow(CorpusTestCase):
     Test to make sure cython mmreader doesn't overflow on large number of docs or terms
 
     """
+
     def setUp(self):
         self.corpus_class = mmcorpus.MmCorpus
-        self.corpus = self.corpus_class(datapath('test_mmcorpus_overflow.mm'))
-        self.file_extension = '.mm'
+        self.corpus = self.corpus_class(datapath("test_mmcorpus_overflow.mm"))
+        self.file_extension = ".mm"
 
     def test_serialize_compressed(self):
         # MmCorpus needs file write with seek => doesn't support compressed output (only input)
@@ -372,9 +426,14 @@ class TestMmCorpusOverflow(CorpusTestCase):
 
         # confirm we can iterate and that document values match expected for first three docs
         it = iter(self.corpus)
-        self.assertEqual(next(it)[:3], [(0, 0.3913027376444812),
-                                        (1, -0.07658791716226626),
-                                        (2, -0.020870794080588395)])
+        self.assertEqual(
+            next(it)[:3],
+            [
+                (0, 0.3913027376444812),
+                (1, -0.07658791716226626),
+                (2, -0.020870794080588395),
+            ],
+        )
         self.assertEqual(next(it), [])
         self.assertEqual(next(it), [])
 
@@ -393,7 +452,7 @@ class TestMmCorpusOverflow(CorpusTestCase):
 class TestSvmLightCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = svmlightcorpus.SvmLightCorpus
-        self.file_extension = '.svmlight'
+        self.file_extension = ".svmlight"
 
     def test_serialization(self):
         path = get_tmpfile("svml.corpus")
@@ -410,11 +469,11 @@ class TestSvmLightCorpus(CorpusTestCase):
 class TestBleiCorpus(CorpusTestCase):
     def setUp(self):
         self.corpus_class = bleicorpus.BleiCorpus
-        self.file_extension = '.blei'
+        self.file_extension = ".blei"
 
     def test_save_format_for_dtm(self):
         corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
-        test_file = get_tmpfile('gensim_corpus.tst')
+        test_file = get_tmpfile("gensim_corpus.tst")
         self.corpus_class.save_corpus(test_file, corpus)
         with open(test_file) as f:
             for line in f:
@@ -427,21 +486,21 @@ class TestBleiCorpus(CorpusTestCase):
                     tokens = []
                 self.assertEqual(words_len, len(tokens))
                 for token in tokens:
-                    word, count = token.split(':')
+                    word, count = token.split(":")
                     self.assertEqual(count, str(int(count)))
 
 
 class TestLowCorpus(CorpusTestCase):
     TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
-    CORPUS_LINE = 'mom  wash  window window was washed'
+    CORPUS_LINE = "mom  wash  window window was washed"
 
     def setUp(self):
         self.corpus_class = lowcorpus.LowCorpus
-        self.file_extension = '.low'
+        self.file_extension = ".low"
 
     def test_line2doc(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
-        id2word = {1: 'mom', 2: 'window'}
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
+        id2word = {1: "mom", 2: "window"}
 
         corpus = self.corpus_class(fname, id2word=id2word)
 
@@ -449,13 +508,12 @@ class TestLowCorpus(CorpusTestCase):
         corpus.use_wordids = False
         self.assertEqual(
             sorted(corpus.line2doc(self.CORPUS_LINE)),
-            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2)])
+            [("mom", 1), ("was", 1), ("wash", 1), ("washed", 1), ("window", 2)],
+        )
 
         # should return words in word2id
         corpus.use_wordids = True
-        self.assertEqual(
-            sorted(corpus.line2doc(self.CORPUS_LINE)),
-            [(1, 1), (2, 2)])
+        self.assertEqual(sorted(corpus.line2doc(self.CORPUS_LINE)), [(1, 1), (2, 2)])
 
 
 class TestUciCorpus(CorpusTestCase):
@@ -463,7 +521,7 @@ class TestUciCorpus(CorpusTestCase):
 
     def setUp(self):
         self.corpus_class = ucicorpus.UciCorpus
-        self.file_extension = '.uci'
+        self.file_extension = ".uci"
 
     def test_serialize_compressed(self):
         # UciCorpus needs file write with seek => doesn't support compressed output (only input)
@@ -472,14 +530,14 @@ class TestUciCorpus(CorpusTestCase):
 
 class TestMalletCorpus(TestLowCorpus):
     TEST_CORPUS = [[(1, 1)], [], [(0, 2), (2, 1)], []]
-    CORPUS_LINE = '#3  lang mom  wash  window window was washed'
+    CORPUS_LINE = "#3  lang mom  wash  window window was washed"
 
     def setUp(self):
         self.corpus_class = malletcorpus.MalletCorpus
-        self.file_extension = '.mallet'
+        self.file_extension = ".mallet"
 
     def test_load_with_metadata(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
         corpus = self.corpus_class(fname)
         corpus.metadata = True
         self.assertEqual(len(corpus), 9)
@@ -490,46 +548,44 @@ class TestMalletCorpus(TestLowCorpus):
         for i, docmeta in enumerate(docs):
             doc, metadata = docmeta
             self.assertEqual(metadata[0], str(i + 1))
-            self.assertEqual(metadata[1], 'en')
+            self.assertEqual(metadata[1], "en")
 
     def test_line2doc(self):
         # case with metadata=False (by default)
         super(TestMalletCorpus, self).test_line2doc()
 
         # case with metadata=True
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
-        id2word = {1: 'mom', 2: 'window'}
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
+        id2word = {1: "mom", 2: "window"}
 
         corpus = self.corpus_class(fname, id2word=id2word, metadata=True)
 
         # should return all words in doc
         corpus.use_wordids = False
         doc, (docid, doclang) = corpus.line2doc(self.CORPUS_LINE)
-        self.assertEqual(docid, '#3')
-        self.assertEqual(doclang, 'lang')
+        self.assertEqual(docid, "#3")
+        self.assertEqual(doclang, "lang")
         self.assertEqual(
             sorted(doc),
-            [('mom', 1), ('was', 1), ('wash', 1), ('washed', 1), ('window', 2)])
+            [("mom", 1), ("was", 1), ("wash", 1), ("washed", 1), ("window", 2)],
+        )
 
         # should return words in word2id
         corpus.use_wordids = True
         doc, (docid, doclang) = corpus.line2doc(self.CORPUS_LINE)
 
-        self.assertEqual(docid, '#3')
-        self.assertEqual(doclang, 'lang')
-        self.assertEqual(
-            sorted(doc),
-            [(1, 1), (2, 2)])
+        self.assertEqual(docid, "#3")
+        self.assertEqual(doclang, "lang")
+        self.assertEqual(sorted(doc), [(1, 1), (2, 2)])
 
 
 class TestTextCorpus(CorpusTestCase):
-
     def setUp(self):
         self.corpus_class = textcorpus.TextCorpus
-        self.file_extension = '.txt'
+        self.file_extension = ".txt"
 
     def test_load_with_metadata(self):
-        fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
+        fname = datapath("testcorpus." + self.file_extension.lstrip("."))
         corpus = self.corpus_class(fname)
         corpus.metadata = True
         self.assertEqual(len(corpus), 9)
@@ -545,12 +601,12 @@ class TestTextCorpus(CorpusTestCase):
         lines = [
             "Šéf chomutovských komunistů dostal poštou bílý prášek",
             "this is a test for stopwords",
-            "zf tooth   spaces   "
+            "zf tooth   spaces   ",
         ]
         expected = [
-            ['Sef', 'chomutovskych', 'komunistu', 'dostal', 'postou', 'bily', 'prasek'],
-            ['test', 'stopwords'],
-            ['tooth', 'spaces']
+            ["Sef", "chomutovskych", "komunistu", "dostal", "postou", "bily", "prasek"],
+            ["test", "stopwords"],
+            ["tooth", "spaces"],
         ]
 
         corpus = self.corpus_from_lines(lines)
@@ -559,8 +615,8 @@ class TestTextCorpus(CorpusTestCase):
 
     def corpus_from_lines(self, lines):
         fpath = tempfile.mktemp()
-        with codecs.open(fpath, 'w', encoding='utf8') as f:
-            f.write('\n'.join(lines))
+        with codecs.open(fpath, "w", encoding="utf8") as f:
+            f.write("\n".join(lines))
 
         return self.corpus_class(fpath)
 
@@ -622,20 +678,23 @@ class TestTextCorpus(CorpusTestCase):
 # Cannot be nested due to serializing.
 def custom_tokenizer(content, token_min_len=2, token_max_len=15, lower=True):
     return [
-        to_unicode(token.lower()) if lower else to_unicode(token) for token in content.split()
-        if token_min_len <= len(token) <= token_max_len and not token.startswith('_')
+        to_unicode(token.lower()) if lower else to_unicode(token)
+        for token in content.split()
+        if token_min_len <= len(token) <= token_max_len and not token.startswith("_")
     ]
 
 
 class TestWikiCorpus(TestTextCorpus):
     def setUp(self):
         self.corpus_class = wikicorpus.WikiCorpus
-        self.file_extension = '.xml.bz2'
-        self.fname = datapath('testcorpus.' + self.file_extension.lstrip('.'))
-        self.enwiki = datapath('enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2')
+        self.file_extension = ".xml.bz2"
+        self.fname = datapath("testcorpus." + self.file_extension.lstrip("."))
+        self.enwiki = datapath(
+            "enwiki-latest-pages-articles1.xml-p000000010p000030302-shortened.bz2"
+        )
 
     def test_default_preprocessing(self):
-        expected = ['computer', 'human', 'interface']
+        expected = ["computer", "human", "interface"]
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
         first_text = next(corpus.get_texts())
         self.assertEqual(expected, first_text)
@@ -644,12 +703,12 @@ class TestWikiCorpus(TestTextCorpus):
         # When there is no min_token limit all 9 articles must be registered.
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
         all_articles = corpus.get_texts()
-        assert (len(list(all_articles)) == 9)
+        assert len(list(all_articles)) == 9
 
         # With a huge min_token limit, all articles should be filtered out.
         corpus = self.corpus_class(self.fname, article_min_tokens=100000)
         all_articles = corpus.get_texts()
-        assert (len(list(all_articles)) == 0)
+        assert len(list(all_articles)) == 0
 
     def test_load_with_metadata(self):
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
@@ -663,7 +722,7 @@ class TestWikiCorpus(TestTextCorpus):
             doc, metadata = docmeta
             article_no = i + 1  # Counting IDs from 1
             self.assertEqual(metadata[0], str(article_no))
-            self.assertEqual(metadata[1], 'Article%d' % article_no)
+            self.assertEqual(metadata[1], "Article%d" % article_no)
 
     def test_load(self):
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
@@ -681,31 +740,37 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(self.enwiki, processes=1)
 
         texts = corpus.get_texts()
-        self.assertTrue(u'anarchism' in next(texts))
-        self.assertTrue(u'autism' in next(texts))
+        self.assertTrue("anarchism" in next(texts))
+        self.assertTrue("autism" in next(texts))
 
     def test_unicode_element(self):
         """
         First unicode article in this sample is
         1) папа
         """
-        bgwiki = datapath('bgwiki-latest-pages-articles-shortened.xml.bz2')
+        bgwiki = datapath("bgwiki-latest-pages-articles-shortened.xml.bz2")
         corpus = self.corpus_class(bgwiki)
         texts = corpus.get_texts()
-        self.assertTrue(u'папа' in next(texts))
+        self.assertTrue("папа" in next(texts))
 
     def test_custom_tokenizer(self):
         """
         define a custom tokenizer function and use it
         """
-        wc = self.corpus_class(self.enwiki, processes=1, tokenizer_func=custom_tokenizer,
-                        token_max_len=16, token_min_len=1, lower=False)
+        wc = self.corpus_class(
+            self.enwiki,
+            processes=1,
+            tokenizer_func=custom_tokenizer,
+            token_max_len=16,
+            token_min_len=1,
+            lower=False,
+        )
         row = wc.get_texts()
         list_tokens = next(row)
-        self.assertTrue(u'Anarchism' in list_tokens)
-        self.assertTrue(u'collectivization' in list_tokens)
-        self.assertTrue(u'a' in list_tokens)
-        self.assertTrue(u'i.e.' in list_tokens)
+        self.assertTrue("Anarchism" in list_tokens)
+        self.assertTrue("collectivization" in list_tokens)
+        self.assertTrue("a" in list_tokens)
+        self.assertTrue("i.e." in list_tokens)
 
     def test_lower_case_set_true(self):
         """
@@ -714,8 +779,8 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(self.enwiki, processes=1, lower=True)
         row = corpus.get_texts()
         list_tokens = next(row)
-        self.assertTrue(u'Anarchism' not in list_tokens)
-        self.assertTrue(u'anarchism' in list_tokens)
+        self.assertTrue("Anarchism" not in list_tokens)
+        self.assertTrue("anarchism" in list_tokens)
 
     def test_lower_case_set_false(self):
         """
@@ -724,8 +789,8 @@ class TestWikiCorpus(TestTextCorpus):
         corpus = self.corpus_class(self.enwiki, processes=1, lower=False)
         row = corpus.get_texts()
         list_tokens = next(row)
-        self.assertTrue(u'Anarchism' in list_tokens)
-        self.assertTrue(u'anarchism' in list_tokens)
+        self.assertTrue("Anarchism" in list_tokens)
+        self.assertTrue("anarchism" in list_tokens)
 
     def test_min_token_len_not_set(self):
         """
@@ -733,14 +798,14 @@ class TestWikiCorpus(TestTextCorpus):
         Default token_min_len=2
         """
         corpus = self.corpus_class(self.enwiki, processes=1)
-        self.assertTrue(u'a' not in next(corpus.get_texts()))
+        self.assertTrue("a" not in next(corpus.get_texts()))
 
     def test_min_token_len_set(self):
         """
         Set the parameter token_min_len to 1 and check that 'a' as a token exists
         """
         corpus = self.corpus_class(self.enwiki, processes=1, token_min_len=1)
-        self.assertTrue(u'a' in next(corpus.get_texts()))
+        self.assertTrue("a" in next(corpus.get_texts()))
 
     def test_max_token_len_not_set(self):
         """
@@ -748,23 +813,31 @@ class TestWikiCorpus(TestTextCorpus):
         Default token_max_len=15
         """
         corpus = self.corpus_class(self.enwiki, processes=1)
-        self.assertTrue(u'collectivization' not in next(corpus.get_texts()))
+        self.assertTrue("collectivization" not in next(corpus.get_texts()))
 
     def test_max_token_len_set(self):
         """
         Set the parameter token_max_len to 16 and check that 'collectivisation' as a token exists
         """
         corpus = self.corpus_class(self.enwiki, processes=1, token_max_len=16)
-        self.assertTrue(u'collectivization' in next(corpus.get_texts()))
+        self.assertTrue("collectivization" in next(corpus.get_texts()))
 
     def test_removed_table_markup(self):
         """
         Check if all the table markup has been removed.
         """
-        enwiki_file = datapath('enwiki-table-markup.xml.bz2')
+        enwiki_file = datapath("enwiki-table-markup.xml.bz2")
         corpus = self.corpus_class(enwiki_file)
         texts = corpus.get_texts()
-        table_markup = ["style", "class", "border", "cellspacing", "cellpadding", "colspan", "rowspan"]
+        table_markup = [
+            "style",
+            "class",
+            "border",
+            "cellspacing",
+            "cellpadding",
+            "colspan",
+            "rowspan",
+        ]
         for text in texts:
             for word in table_markup:
                 self.assertTrue(word not in text)
@@ -802,32 +875,33 @@ class TestWikiCorpus(TestTextCorpus):
     def test_custom_filterfunction(self):
         def reject_all(elem, *args, **kwargs):
             return False
+
         corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
         texts = corpus.get_texts()
         self.assertFalse(any(texts))
 
         def keep_some(elem, title, *args, **kwargs):
-            return title[0] == 'C'
+            return title[0] == "C"
+
         corpus = self.corpus_class(self.enwiki, filter_articles=reject_all)
         corpus.metadata = True
         texts = corpus.get_texts()
         for text, (pageid, title) in texts:
-            self.assertEquals(title[0], 'C')
+            self.assertEquals(title[0], "C")
 
 
 class TestTextDirectoryCorpus(unittest.TestCase):
-
     def write_one_level(self, *args):
         if not args:
-            args = ('doc1', 'doc2')
+            args = ("doc1", "doc2")
         dirpath = tempfile.mkdtemp()
         self.write_docs_to_directory(dirpath, *args)
         return dirpath
 
     def write_docs_to_directory(self, dirpath, *args):
         for doc_num, name in enumerate(args):
-            with open(os.path.join(dirpath, name), 'w') as f:
-                f.write('document %d content' % doc_num)
+            with open(os.path.join(dirpath, name), "w") as f:
+                f.write("document %d content" % doc_num)
 
     def test_one_level_directory(self):
         dirpath = self.write_one_level()
@@ -839,9 +913,9 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
     def write_two_levels(self):
         dirpath = self.write_one_level()
-        next_level = os.path.join(dirpath, 'level_two')
+        next_level = os.path.join(dirpath, "level_two")
         os.mkdir(next_level)
-        self.write_docs_to_directory(next_level, 'doc1', 'doc2')
+        self.write_docs_to_directory(next_level, "doc1", "doc2")
         return dirpath, next_level
 
     def test_two_level_directory(self):
@@ -863,15 +937,17 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         self.assertEqual(len(docs), 2)
 
     def test_filename_filtering(self):
-        dirpath = self.write_one_level('test1.log', 'test1.txt', 'test2.log', 'other1.log')
+        dirpath = self.write_one_level(
+            "test1.log", "test1.txt", "test2.log", "other1.log"
+        )
         corpus = textcorpus.TextDirectoryCorpus(dirpath, pattern=r"test.*\.log")
         filenames = list(corpus.iter_filepaths())
-        expected = [os.path.join(dirpath, name) for name in ('test1.log', 'test2.log')]
+        expected = [os.path.join(dirpath, name) for name in ("test1.log", "test2.log")]
         self.assertEqual(sorted(expected), sorted(filenames))
 
         corpus.pattern = ".*.txt"
         filenames = list(corpus.iter_filepaths())
-        expected = [os.path.join(dirpath, 'test1.txt')]
+        expected = [os.path.join(dirpath, "test1.txt")]
         self.assertEqual(expected, filenames)
 
         corpus.pattern = None
@@ -881,10 +957,10 @@ class TestTextDirectoryCorpus(unittest.TestCase):
 
     def test_lines_are_documents(self):
         dirpath = tempfile.mkdtemp()
-        lines = ['doc%d text' % i for i in range(5)]
-        fpath = os.path.join(dirpath, 'test_file.txt')
-        with open(fpath, 'w') as f:
-            f.write('\n'.join(lines))
+        lines = ["doc%d text" % i for i in range(5)]
+        fpath = os.path.join(dirpath, "test_file.txt")
+        with open(fpath, "w") as f:
+            f.write("\n".join(lines))
 
         corpus = textcorpus.TextDirectoryCorpus(dirpath, lines_are_documents=True)
         docs = [doc for doc in corpus.getstream()]
@@ -894,7 +970,7 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         corpus.lines_are_documents = False
         docs = [doc for doc in corpus.getstream()]
         self.assertEqual(1, corpus.length)
-        self.assertEqual('\n'.join(lines), docs[0])
+        self.assertEqual("\n".join(lines), docs[0])
 
     def test_non_trivial_structure(self):
         """Test with non-trivial directory structure, shown below:
@@ -909,30 +985,32 @@ class TestTextDirectoryCorpus(unittest.TestCase):
                 └── 4.txt
         """
         dirpath = tempfile.mkdtemp()
-        self.write_docs_to_directory(dirpath, '0.txt')
+        self.write_docs_to_directory(dirpath, "0.txt")
 
-        a_folder = os.path.join(dirpath, 'a_folder')
+        a_folder = os.path.join(dirpath, "a_folder")
         os.mkdir(a_folder)
-        self.write_docs_to_directory(a_folder, '1.txt')
+        self.write_docs_to_directory(a_folder, "1.txt")
 
-        b_folder = os.path.join(dirpath, 'b_folder')
+        b_folder = os.path.join(dirpath, "b_folder")
         os.mkdir(b_folder)
-        self.write_docs_to_directory(b_folder, '2.txt', '3.txt')
+        self.write_docs_to_directory(b_folder, "2.txt", "3.txt")
 
-        c_folder = os.path.join(b_folder, 'c_folder')
+        c_folder = os.path.join(b_folder, "c_folder")
         os.mkdir(c_folder)
-        self.write_docs_to_directory(c_folder, '4.txt')
+        self.write_docs_to_directory(c_folder, "4.txt")
 
         corpus = textcorpus.TextDirectoryCorpus(dirpath)
         filenames = list(corpus.iter_filepaths())
-        base_names = sorted(name[len(dirpath) + 1:] for name in filenames)
-        expected = sorted([
-            '0.txt',
-            'a_folder/1.txt',
-            'b_folder/2.txt',
-            'b_folder/3.txt',
-            'b_folder/c_folder/4.txt'
-        ])
+        base_names = sorted(name[len(dirpath) + 1 :] for name in filenames)
+        expected = sorted(
+            [
+                "0.txt",
+                "a_folder/1.txt",
+                "b_folder/2.txt",
+                "b_folder/3.txt",
+                "b_folder/c_folder/4.txt",
+            ]
+        )
         expected = [os.path.normpath(path) for path in expected]
         self.assertEqual(expected, base_names)
 
@@ -949,6 +1027,6 @@ class TestTextDirectoryCorpus(unittest.TestCase):
         self.assertEqual(expected[-1], base_names[-1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     unittest.main()

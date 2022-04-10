@@ -59,7 +59,7 @@ class IndexedCorpus(interfaces.CorpusABC):
         """
         try:
             if index_fname is None:
-                index_fname = utils.smart_extension(fname, '.index')
+                index_fname = utils.smart_extension(fname, ".index")
             self.index = utils.unpickle(index_fname)
             # change self.index into a numpy.ndarray to support fancy indexing
             self.index = numpy.asarray(self.index)
@@ -69,8 +69,16 @@ class IndexedCorpus(interfaces.CorpusABC):
         self.length = None
 
     @classmethod
-    def serialize(serializer, fname, corpus, id2word=None, index_fname=None,
-                  progress_cnt=None, labels=None, metadata=False):
+    def serialize(
+        serializer,
+        fname,
+        corpus,
+        id2word=None,
+        index_fname=None,
+        progress_cnt=None,
+        labels=None,
+        metadata=False,
+    ):
         """Serialize corpus with offset metadata, allows to use direct indexes after loading.
 
         Parameters
@@ -106,24 +114,28 @@ class IndexedCorpus(interfaces.CorpusABC):
             [(1, 0.1)]
 
         """
-        if getattr(corpus, 'fname', None) == fname:
-            raise ValueError("identical input vs. output corpus filename, refusing to serialize: %s" % fname)
+        if getattr(corpus, "fname", None) == fname:
+            raise ValueError(
+                "identical input vs. output corpus filename, refusing to serialize: %s"
+                % fname
+            )
 
         if index_fname is None:
-            index_fname = utils.smart_extension(fname, '.index')
+            index_fname = utils.smart_extension(fname, ".index")
 
-        kwargs = {'metadata': metadata}
+        kwargs = {"metadata": metadata}
         if progress_cnt is not None:
-            kwargs['progress_cnt'] = progress_cnt
+            kwargs["progress_cnt"] = progress_cnt
 
         if labels is not None:
-            kwargs['labels'] = labels
+            kwargs["labels"] = labels
 
         offsets = serializer.save_corpus(fname, corpus, id2word, **kwargs)
 
         if offsets is None:
             raise NotImplementedError(
-                "Called serialize on class %s which doesn't support indexing!" % serializer.__name__
+                "Called serialize on class %s which doesn't support indexing!"
+                % serializer.__name__
             )
 
         # store offsets persistently, using pickle
@@ -181,8 +193,16 @@ class IndexedCorpus(interfaces.CorpusABC):
             raise RuntimeError("Cannot call corpus[docid] without an index")
         if isinstance(docno, (slice, list, numpy.ndarray)):
             return utils.SlicedCorpus(self, docno)
-        elif isinstance(docno, (int, numpy.integer,)):
+        elif isinstance(
+            docno,
+            (
+                int,
+                numpy.integer,
+            ),
+        ):
             return self.docbyoffset(self.index[docno])
             # TODO: no `docbyoffset` method, should be defined in this class
         else:
-            raise ValueError('Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray')
+            raise ValueError(
+                "Unrecognised value for docno, use either a single integer, a slice or a numpy.ndarray"
+            )

@@ -31,9 +31,12 @@ from functools import partial
 
 import numpy as np
 
-from gensim import corpora, models, utils, matutils
-from gensim.parsing.preprocessing import preprocess_documents, preprocess_string, DEFAULT_FILTERS
-
+from gensim import corpora, matutils, models, utils
+from gensim.parsing.preprocessing import (
+    DEFAULT_FILTERS,
+    preprocess_documents,
+    preprocess_string,
+)
 
 bg_corpus = None
 corpus = None
@@ -45,21 +48,25 @@ class TestLeeTest(unittest.TestCase):
         """setup lee test corpora"""
         global bg_corpus, corpus, human_sim_vector, bg_corpus2, corpus2
 
-        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
-        bg_corpus_file = 'lee_background.cor'
-        corpus_file = 'lee.cor'
-        sim_file = 'similarities0-1.txt'
+        pre_path = os.path.join(os.path.dirname(__file__), "test_data")
+        bg_corpus_file = "lee_background.cor"
+        corpus_file = "lee.cor"
+        sim_file = "similarities0-1.txt"
 
         # read in the corpora
-        latin1 = partial(utils.to_unicode, encoding='latin1')
-        with utils.open(os.path.join(pre_path, bg_corpus_file), 'rb') as f:
+        latin1 = partial(utils.to_unicode, encoding="latin1")
+        with utils.open(os.path.join(pre_path, bg_corpus_file), "rb") as f:
             bg_corpus = preprocess_documents(latin1(line) for line in f)
-        with utils.open(os.path.join(pre_path, corpus_file), 'rb') as f:
+        with utils.open(os.path.join(pre_path, corpus_file), "rb") as f:
             corpus = preprocess_documents(latin1(line) for line in f)
-        with utils.open(os.path.join(pre_path, bg_corpus_file), 'rb') as f:
-            bg_corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
-        with utils.open(os.path.join(pre_path, corpus_file), 'rb') as f:
-            corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
+        with utils.open(os.path.join(pre_path, bg_corpus_file), "rb") as f:
+            bg_corpus2 = [
+                preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f
+            ]
+        with utils.open(os.path.join(pre_path, corpus_file), "rb") as f:
+            corpus2 = [
+                preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f
+            ]
 
         # read the human similarity data
         sim_matrix = np.loadtxt(os.path.join(pre_path, sim_file))
@@ -108,6 +115,8 @@ class TestLeeTest(unittest.TestCase):
         self.assertTrue(cor > 0.6)
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.DEBUG
+    )
     unittest.main()

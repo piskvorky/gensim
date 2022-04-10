@@ -6,7 +6,10 @@ Demonstrates querying a corpus for similar documents.
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 #
@@ -18,6 +21,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # if you completed it, feel free to skip to the next section.
 
 from collections import defaultdict
+
 from gensim import corpora
 
 documents = [
@@ -33,7 +37,7 @@ documents = [
 ]
 
 # remove common words and tokenize
-stoplist = set('for a of the and to in'.split())
+stoplist = set("for a of the and to in".split())
 texts = [
     [word for word in document.lower().split() if word not in stoplist]
     for document in documents
@@ -45,10 +49,7 @@ for text in texts:
     for token in text:
         frequency[token] += 1
 
-texts = [
-    [token for token in text if frequency[token] > 1]
-    for text in texts
-]
+texts = [[token for token in text if frequency[token] > 1] for text in texts]
 
 dictionary = corpora.Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
@@ -75,6 +76,7 @@ corpus = [dictionary.doc2bow(text) for text in texts]
 # LSI space:
 
 from gensim import models
+
 lsi = models.LsiModel(corpus, id2word=dictionary, num_topics=2)
 
 ###############################################################################
@@ -111,7 +113,10 @@ print(vec_lsi)
 # might also be indexing a different corpus altogether.
 
 from gensim import similarities
-index = similarities.MatrixSimilarity(lsi[corpus])  # transform corpus to LSI space and index it
+
+index = similarities.MatrixSimilarity(
+    lsi[corpus]
+)  # transform corpus to LSI space and index it
 
 ###############################################################################
 # .. warning::
@@ -126,8 +131,8 @@ index = similarities.MatrixSimilarity(lsi[corpus])  # transform corpus to LSI sp
 #
 # Index persistency is handled via the standard :func:`save` and :func:`load` functions:
 
-index.save('/tmp/deerwester.index')
-index = similarities.MatrixSimilarity.load('/tmp/deerwester.index')
+index.save("/tmp/deerwester.index")
+index = similarities.MatrixSimilarity.load("/tmp/deerwester.index")
 
 ###############################################################################
 # This is true for all similarity indexing classes (:class:`similarities.Similarity`,
@@ -186,8 +191,9 @@ for doc_position, doc_score in sims:
 # Its mission is to help NLP practitioners try out popular topic modelling algorithms
 # on large datasets easily, and to facilitate prototyping of new algorithms for researchers.
 
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-img = mpimg.imread('run_similarity_queries.png')
+import matplotlib.pyplot as plt
+
+img = mpimg.imread("run_similarity_queries.png")
 imgplot = plt.imshow(img)
-_ = plt.axis('off')
+_ = plt.axis("off")

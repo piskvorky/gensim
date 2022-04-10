@@ -94,13 +94,16 @@ text_corpus = [
 #
 
 # Create a set of frequent words
-stoplist = set('for a of the and to in'.split(' '))
+stoplist = set("for a of the and to in".split(" "))
 # Lowercase each document, split it by white space and filter out stopwords
-texts = [[word for word in document.lower().split() if word not in stoplist]
-         for document in text_corpus]
+texts = [
+    [word for word in document.lower().split() if word not in stoplist]
+    for document in text_corpus
+]
 
 # Count word frequencies
 from collections import defaultdict
+
 frequency = defaultdict(int)
 for text in texts:
     for token in text:
@@ -288,7 +291,7 @@ index = similarities.SparseMatrixSimilarity(tfidf[bow_corpus], num_features=12)
 
 ###############################################################################
 # and to query the similarity of our query document ``query_document`` against every document in the corpus:
-query_document = 'system engineering'.split()
+query_document = "system engineering".split()
 query_bow = dictionary.doc2bow(query_document)
 sims = index[tfidf[query_bow]]
 print(list(enumerate(sims)))
@@ -323,8 +326,9 @@ for document_number, score in sorted(enumerate(sims), key=lambda x: x[1], revers
 #
 # There's still much more to learn about :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`.
 
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-img = mpimg.imread('run_core_concepts.png')
+import matplotlib.pyplot as plt
+
+img = mpimg.imread("run_core_concepts.png")
 imgplot = plt.imshow(img)
-_ = plt.axis('off')
+_ = plt.axis("off")

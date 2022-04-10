@@ -54,10 +54,10 @@ Command line arguments
 
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
-import argparse
 import threading
 import time
 from queue import Queue
@@ -65,7 +65,6 @@ from queue import Queue
 import Pyro4
 
 from gensim import utils
-
 
 logger = logging.getLogger(__name__)
 
@@ -89,6 +88,7 @@ class Dispatcher:
     There should never be more than one dispatcher running at any one time.
 
     """
+
     def __init__(self, maxsize=0):
         """Partly initialize the dispatcher.
 
@@ -130,21 +130,28 @@ class Dispatcher:
         # locate all available workers and store their proxies, for subsequent RMI calls
         self.workers = {}
         with utils.getNS() as ns:
-            self.callback = Pyro4.Proxy('PYRONAME:gensim.lsi_dispatcher')  # = self
-            for name, uri in ns.list(prefix='gensim.lsi_worker').items():
+            self.callback = Pyro4.Proxy("PYRONAME:gensim.lsi_dispatcher")  # = self
+            for name, uri in ns.list(prefix="gensim.lsi_worker").items():
                 try:
                     worker = Pyro4.Proxy(uri)
                     workerid = len(self.workers)
                     # make time consuming methods work asynchronously
                     logger.info("registering worker #%i from %s", workerid, uri)
-                    worker.initialize(workerid, dispatcher=self.callback, **model_params)
+                    worker.initialize(
+                        workerid, dispatcher=self.callback, **model_params
+                    )
                     self.workers[workerid] = worker
                 except Pyro4.errors.PyroError:
-                    logger.exception("unresponsive worker at %s, deleting it from the name server", uri)
+                    logger.exception(
+                        "unresponsive worker at %s, deleting it from the name server",
+                        uri,
+                    )
                     ns.remove(name)
 
         if not self.workers:
-            raise RuntimeError('no workers found; run some lsi_worker scripts on your machines first!')
+            raise RuntimeError(
+                "no workers found; run some lsi_worker scripts on your machines first!"
+            )
 
     @Pyro4.expose
     def getworkers(self):
@@ -203,7 +210,9 @@ class Dispatcher:
 
         """
         logger.info("end of input, assigning all remaining jobs")
-        logger.debug("jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived)
+        logger.debug(
+            "jobs done: %s, jobs received: %s", self._jobsdone, self._jobsreceived
+        )
         while self._jobsdone < self._jobsreceived:
             time.sleep(0.5)  # check every half a second
 
@@ -232,7 +241,7 @@ class Dispatcher:
 
     @Pyro4.expose
     @Pyro4.oneway
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def jobdone(self, workerid):
         """A worker has finished its job. Log this event and then asynchronously transfer control back to the worker.
 
@@ -274,18 +283,22 @@ class Dispatcher:
         os._exit(0)  # exit the whole process (not just this thread ala sys.exit())
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
-    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
+    )
+    parser = argparse.ArgumentParser(
+        description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument(
-        'maxsize',
-        nargs='?',
+        "maxsize",
+        nargs="?",
         type=int,
-        help='Maximum number of jobs to be kept pre-fetched in the queue.',
+        help="Maximum number of jobs to be kept pre-fetched in the queue.",
         default=MAX_JOBS_QUEUE,
     )
     args = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
-    utils.pyro_daemon('gensim.lsi_dispatcher', Dispatcher(maxsize=args.maxsize))
+    utils.pyro_daemon("gensim.lsi_dispatcher", Dispatcher(maxsize=args.maxsize))
     logger.info("finished running %s", parser.prog)

@@ -11,12 +11,11 @@
 # Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
-from libcpp.string cimport string
-from libcpp.vector cimport vector
-from libcpp.unordered_map cimport unordered_map
-from libcpp cimport bool as bool_t
-
 cimport numpy as np
+from libcpp cimport bool as bool_t
+from libcpp.string cimport string
+from libcpp.unordered_map cimport unordered_map
+from libcpp.vector cimport vector
 
 ctypedef np.float32_t REAL_t
 

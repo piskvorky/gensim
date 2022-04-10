@@ -7,17 +7,18 @@
 """
 Automated tests for checking visdom API
 """
-import unittest
 import subprocess
 import time
+import unittest
 
-from gensim.models import LdaModel
-from gensim.test.utils import datapath, common_dictionary
 from gensim.corpora import MmCorpus
+from gensim.models import LdaModel
 from gensim.models.callbacks import CoherenceMetric
+from gensim.test.utils import common_dictionary, datapath
 
 try:
     from visdom import Visdom
+
     VISDOM_INSTALLED = True
 except ImportError:
     VISDOM_INSTALLED = False
@@ -25,18 +26,23 @@ except ImportError:
 
 @unittest.skipIf(VISDOM_INSTALLED is False, "Visdom not installed")
 class TestLdaCallback(unittest.TestCase):
-
     def setUp(self):
-        self.corpus = MmCorpus(datapath('testcorpus.mm'))
-        self.ch_umass = CoherenceMetric(corpus=self.corpus, coherence="u_mass", logger="visdom", title="Coherence")
+        self.corpus = MmCorpus(datapath("testcorpus.mm"))
+        self.ch_umass = CoherenceMetric(
+            corpus=self.corpus, coherence="u_mass", logger="visdom", title="Coherence"
+        )
         self.callback = [self.ch_umass]
-        self.model = LdaModel(id2word=common_dictionary, num_topics=2, passes=10, callbacks=self.callback)
+        self.model = LdaModel(
+            id2word=common_dictionary, num_topics=2, passes=10, callbacks=self.callback
+        )
 
         self.host = "http://localhost"
         self.port = 8097
 
     def test_callback_update_graph(self):
-        with subprocess.Popen(['python', '-m', 'visdom.server', '-port', str(self.port)]) as proc:
+        with subprocess.Popen(
+            ["python", "-m", "visdom.server", "-port", str(self.port)]
+        ) as proc:
             # wait for visdom server startup (any better way?)
             viz = Visdom(server=self.host, port=self.port)
             for attempt in range(5):
@@ -49,5 +55,5 @@ class TestLdaCallback(unittest.TestCase):
             proc.kill()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

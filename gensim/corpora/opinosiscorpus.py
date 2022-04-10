@@ -17,6 +17,7 @@ References
 
 import os
 import re
+
 from gensim.corpora import Dictionary
 from gensim.parsing.porter import PorterStemmer
 from gensim.parsing.preprocessing import STOPWORDS
@@ -65,7 +66,8 @@ class OpinosisCorpus:
                     doc = file.read()
 
                 preprocessed_doc = [
-                    stemmer.stem(token) for token in re.findall(r'\w+', doc.lower())
+                    stemmer.stem(token)
+                    for token in re.findall(r"\w+", doc.lower())
                     if token not in STOPWORDS
                 ]
 

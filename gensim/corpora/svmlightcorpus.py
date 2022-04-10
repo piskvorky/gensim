@@ -15,7 +15,6 @@ import logging
 from gensim import utils
 from gensim.corpora import IndexedCorpus
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +63,7 @@ class SvmLightCorpus(IndexedCorpus):
         self.labels = []
 
     def __iter__(self):
-        """ Iterate over the corpus, returning one sparse (BoW) vector at a time.
+        """Iterate over the corpus, returning one sparse (BoW) vector at a time.
 
         Yields
         ------
@@ -74,7 +73,7 @@ class SvmLightCorpus(IndexedCorpus):
         """
         lineno = -1
         self.labels = []
-        with utils.open(self.fname, 'rb') as fin:
+        with utils.open(self.fname, "rb") as fin:
             for lineno, line in enumerate(fin):
                 doc = self.line2doc(line)
                 if doc is not None:
@@ -115,7 +114,7 @@ class SvmLightCorpus(IndexedCorpus):
             # Cast any sequence (incl. a numpy array) to a list, to simplify the processing below.
             labels = list(labels)
         offsets = []
-        with utils.open(fname, 'wb') as fout:
+        with utils.open(fname, "wb") as fout:
             for docno, doc in enumerate(corpus):
                 label = labels[docno] if labels else 0  # target class is 0 by default
                 offsets.append(fout.tell())
@@ -135,7 +134,7 @@ class SvmLightCorpus(IndexedCorpus):
         tuple of (int, float)
 
         """
-        with utils.open(self.fname, 'rb') as f:
+        with utils.open(self.fname, "rb") as f:
             f.seek(offset)
             return self.line2doc(f.readline())[0]
             # TODO: it brakes if gets None from line2doc
@@ -156,15 +155,15 @@ class SvmLightCorpus(IndexedCorpus):
 
         """
         line = utils.to_unicode(line)
-        line = line[: line.find('#')].strip()
+        line = line[: line.find("#")].strip()
         if not line:
             return None  # ignore comments and empty lines
         parts = line.split()
         if not parts:
-            raise ValueError('invalid line format in %s' % self.fname)
-        target, fields = parts[0], [part.rsplit(':', 1) for part in parts[1:]]
+            raise ValueError("invalid line format in %s" % self.fname)
+        target, fields = parts[0], [part.rsplit(":", 1) for part in parts[1:]]
         # ignore 'qid' features, convert 1-based feature ids to 0-based
-        doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != 'qid']
+        doc = [(int(p1) - 1, float(p2)) for p1, p2 in fields if p1 != "qid"]
         return doc, target
 
     @staticmethod
@@ -185,5 +184,7 @@ class SvmLightCorpus(IndexedCorpus):
             `doc` in SVMlight format.
 
         """
-        pairs = ' '.join("%i:%s" % (termid + 1, termval) for termid, termval in doc)  # +1 to convert 0-base to 1-base
+        pairs = " ".join(
+            "%i:%s" % (termid + 1, termval) for termid, termval in doc
+        )  # +1 to convert 0-base to 1-base
         return "%s %s\n" % (label, pairs)

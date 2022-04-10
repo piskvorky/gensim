@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 EPSILON = 1e-12
 
 
-def log_conditional_probability(segmented_topics, accumulator, with_std=False, with_support=False):
+def log_conditional_probability(
+    segmented_topics, accumulator, with_std=False, with_support=False
+):
     r"""Calculate the log-conditional-probability measure which is used by coherence measures such as `U_mass`.
     This is defined as :math:`m_{lc}(S_i) = log \frac{P(W', W^{*}) + \epsilon}{P(W^{*})}`.
 
@@ -70,7 +72,9 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
             try:
                 w_star_count = accumulator[w_star]
                 co_occur_count = accumulator[w_prime, w_star]
-                m_lc_i = np.log(((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs))
+                m_lc_i = np.log(
+                    ((co_occur_count / num_docs) + EPSILON) / (w_star_count / num_docs)
+                )
             except KeyError:
                 m_lc_i = 0.0
             except ZeroDivisionError:
@@ -79,7 +83,9 @@ def log_conditional_probability(segmented_topics, accumulator, with_std=False, w
 
             segment_sims.append(m_lc_i)
 
-        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+        topic_coherences.append(
+            aggregate_segment_sims(segment_sims, with_std, with_support)
+        )
 
     return topic_coherences
 
@@ -125,7 +131,9 @@ def aggregate_segment_sims(segment_sims, with_std, with_support):
     return stats[0] if len(stats) == 1 else tuple(stats)
 
 
-def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=False, with_support=False):
+def log_ratio_measure(
+    segmented_topics, accumulator, normalize=False, with_std=False, with_support=False
+):
     r"""Compute log ratio measure for `segment_topics`.
 
     Parameters
@@ -205,6 +213,8 @@ def log_ratio_measure(segmented_topics, accumulator, normalize=False, with_std=F
 
             segment_sims.append(m_lr_i)
 
-        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+        topic_coherences.append(
+            aggregate_segment_sims(segment_sims, with_std, with_support)
+        )
 
     return topic_coherences

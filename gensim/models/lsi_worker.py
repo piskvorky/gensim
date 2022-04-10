@@ -53,19 +53,18 @@ Command line arguments
 
 """
 
-import os
-import sys
-import logging
 import argparse
-import threading
-import tempfile
+import logging
+import os
 import queue as Queue
+import sys
+import tempfile
+import threading
 
 import Pyro4
 
-from gensim.models import lsimodel
 from gensim import utils
-
+from gensim.models import lsimodel
 
 logger = logging.getLogger(__name__)
 
@@ -134,7 +133,7 @@ class Worker:
         else:
             logger.info("worker #%i stopping asking for jobs", self.myid)
 
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def processjob(self, job):
         """Incrementally process the job and potentially logs progress.
 
@@ -147,11 +146,11 @@ class Worker:
         self.model.add_documents(job)
         self.jobsdone += 1
         if SAVE_DEBUG and self.jobsdone % SAVE_DEBUG == 0:
-            fname = os.path.join(tempfile.gettempdir(), 'lsi_worker.pkl')
+            fname = os.path.join(tempfile.gettempdir(), "lsi_worker.pkl")
             self.model.save(fname)
 
     @Pyro4.expose
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def getstate(self):
         """Log and get the LSI model's current projection.
 
@@ -161,13 +160,15 @@ class Worker:
             The current projection.
 
         """
-        logger.info("worker #%i returning its state after %s jobs", self.myid, self.jobsdone)
+        logger.info(
+            "worker #%i returning its state after %s jobs", self.myid, self.jobsdone
+        )
         assert isinstance(self.model.projection, lsimodel.Projection)
         self.finished = True
         return self.model.projection
 
     @Pyro4.expose
-    @utils.synchronous('lock_update')
+    @utils.synchronous("lock_update")
     def reset(self):
         """Reset the worker by deleting its current projection."""
         logger.info("resetting worker #%i", self.myid)
@@ -181,13 +182,17 @@ class Worker:
         os._exit(0)
 
 
-if __name__ == '__main__':
-    """The main script. """
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+if __name__ == "__main__":
+    """The main script."""
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
+    )
 
-    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__[:-135], formatter_class=argparse.RawTextHelpFormatter
+    )
     _ = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
-    utils.pyro_daemon('gensim.lsi_worker', Worker(), random_suffix=True)
+    utils.pyro_daemon("gensim.lsi_worker", Worker(), random_suffix=True)
     logger.info("finished running %s", parser.prog)

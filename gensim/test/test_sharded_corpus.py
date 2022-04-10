@@ -3,15 +3,15 @@ Tests for ShardedCorpus.
 """
 
 import os
-import unittest
 import random
 import shutil
+import unittest
 
 import numpy as np
 from scipy import sparse
 
-from gensim.utils import is_corpus, mock_data
 from gensim.corpora.sharded_corpus import ShardedCorpus
+from gensim.utils import is_corpus, mock_data
 
 #############################################################################
 
@@ -37,15 +37,17 @@ class TestShardedCorpus(unittest.TestCase):
 
     def setUp(self):
         self.dim = 1000
-        self.random_string = ''.join(random.choice('1234567890') for _ in range(8))
-        self.tmp_dir = 'test-temp-' + self.random_string
+        self.random_string = "".join(random.choice("1234567890") for _ in range(8))
+        self.tmp_dir = "test-temp-" + self.random_string
         os.makedirs(self.tmp_dir)
 
-        self.tmp_fname = os.path.join(self.tmp_dir,
-                                      'shcorp.' + self.random_string + '.tmp')
+        self.tmp_fname = os.path.join(
+            self.tmp_dir, "shcorp." + self.random_string + ".tmp"
+        )
         self.data = mock_data(dim=1000)
-        self.corpus = ShardedCorpus(self.tmp_fname, self.data, dim=self.dim,
-                                    shardsize=100)
+        self.corpus = ShardedCorpus(
+            self.tmp_fname, self.data, dim=self.dim, shardsize=100
+        )
 
     def tearDown(self):
 
@@ -54,12 +56,12 @@ class TestShardedCorpus(unittest.TestCase):
     def test_init(self):
 
         # Test that the shards were actually created during setUp
-        self.assertTrue(os.path.isfile(self.tmp_fname + '.1'))
+        self.assertTrue(os.path.isfile(self.tmp_fname + ".1"))
 
     def test_load(self):
 
         # Test that the shards were actually created
-        self.assertTrue(os.path.isfile(self.tmp_fname + '.1'))
+        self.assertTrue(os.path.isfile(self.tmp_fname + ".1"))
 
         self.corpus.save()
         loaded_corpus = ShardedCorpus.load(self.tmp_fname)
@@ -85,7 +87,13 @@ class TestShardedCorpus(unittest.TestCase):
 
         no_exception = True
         try:
-            ShardedCorpus(self.tmp_fname, self.data, shardsize=100, dim=self.dim, sparse_serialization=True)
+            ShardedCorpus(
+                self.tmp_fname,
+                self.data,
+                shardsize=100,
+                dim=self.dim,
+                sparse_serialization=True,
+            )
         except Exception:
             no_exception = False
             raise
@@ -95,8 +103,12 @@ class TestShardedCorpus(unittest.TestCase):
     def test_getitem_dense2dense(self):
 
         corpus = ShardedCorpus(
-            self.tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=False, sparse_retrieval=False
+            self.tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=False,
+            sparse_retrieval=False,
         )
 
         item = corpus[3]
@@ -116,8 +128,12 @@ class TestShardedCorpus(unittest.TestCase):
     def test_getitem_dense2sparse(self):
 
         corpus = ShardedCorpus(
-            self.tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=False, sparse_retrieval=True
+            self.tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=False,
+            sparse_retrieval=True,
         )
 
         item = corpus[3]
@@ -136,15 +152,23 @@ class TestShardedCorpus(unittest.TestCase):
 
     def test_getitem_sparse2sparse(self):
 
-        sp_tmp_fname = self.tmp_fname + '.sparse'
+        sp_tmp_fname = self.tmp_fname + ".sparse"
         corpus = ShardedCorpus(
-            sp_tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=True, sparse_retrieval=True
+            sp_tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=True,
+            sparse_retrieval=True,
         )
 
         dense_corpus = ShardedCorpus(
-            self.tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=False, sparse_retrieval=True
+            self.tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=False,
+            sparse_retrieval=True,
         )
 
         item = corpus[3]
@@ -168,15 +192,23 @@ class TestShardedCorpus(unittest.TestCase):
         self.assertEqual((ilist != dslice).getnnz(), 0)
 
     def test_getitem_sparse2dense(self):
-        sp_tmp_fname = self.tmp_fname + '.sparse'
+        sp_tmp_fname = self.tmp_fname + ".sparse"
         corpus = ShardedCorpus(
-            sp_tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=True, sparse_retrieval=False
+            sp_tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=True,
+            sparse_retrieval=False,
         )
 
         dense_corpus = ShardedCorpus(
-            self.tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=False, sparse_retrieval=False
+            self.tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=False,
+            sparse_retrieval=False,
         )
 
         item = corpus[3]
@@ -199,8 +231,12 @@ class TestShardedCorpus(unittest.TestCase):
     def test_getitem_dense2gensim(self):
 
         corpus = ShardedCorpus(
-            self.tmp_fname, self.data, shardsize=100, dim=self.dim,
-            sparse_serialization=False, gensim=True
+            self.tmp_fname,
+            self.data,
+            shardsize=100,
+            dim=self.dim,
+            sparse_serialization=False,
+            gensim=True,
         )
 
         item = corpus[3]
@@ -215,7 +251,9 @@ class TestShardedCorpus(unittest.TestCase):
         self.assertTrue(isinstance(dslice[0][0], tuple))
 
         iscorp, _ = is_corpus(dslice)
-        self.assertTrue(iscorp, "Is the object returned by slice notation a gensim corpus?")
+        self.assertTrue(
+            iscorp, "Is the object returned by slice notation a gensim corpus?"
+        )
 
         ilist = corpus[[2, 3, 4, 5]]
         self.assertTrue(next(ilist) == corpus[2])
@@ -228,22 +266,27 @@ class TestShardedCorpus(unittest.TestCase):
 
         self.assertEqual(len(ilist), len(dslice))
         for i in range(len(ilist)):
-            self.assertEqual(len(ilist[i]), len(dslice[i]),
-                             "Row %d: dims %d/%d" % (i, len(ilist[i]),
-                                                     len(dslice[i])))
+            self.assertEqual(
+                len(ilist[i]),
+                len(dslice[i]),
+                "Row %d: dims %d/%d" % (i, len(ilist[i]), len(dslice[i])),
+            )
             for j in range(len(ilist[i])):
-                self.assertEqual(ilist[i][j], dslice[i][j],
-                                 "ilist[%d][%d] = %s ,dslice[%d][%d] = %s" % (
-                                     i, j, str(ilist[i][j]), i, j,
-                                     str(dslice[i][j])))
+                self.assertEqual(
+                    ilist[i][j],
+                    dslice[i][j],
+                    "ilist[%d][%d] = %s ,dslice[%d][%d] = %s"
+                    % (i, j, str(ilist[i][j]), i, j, str(dslice[i][j])),
+                )
 
         iscorp, _ = is_corpus(ilist)
-        self.assertTrue(iscorp, "Is the object returned by list notation a gensim corpus?")
+        self.assertTrue(
+            iscorp, "Is the object returned by list notation a gensim corpus?"
+        )
 
     def test_resize(self):
 
-        dataset = ShardedCorpus(self.tmp_fname, self.data, shardsize=100,
-                                dim=self.dim)
+        dataset = ShardedCorpus(self.tmp_fname, self.data, shardsize=100, dim=self.dim)
 
         self.assertEqual(10, dataset.n_shards)
 
@@ -255,19 +298,18 @@ class TestShardedCorpus(unittest.TestCase):
             self.assertTrue(os.path.isfile(fname))
 
     def test_init_with_generator(self):
-
         def data_generator():
             yield [(0, 1)]
             yield [(1, 1)]
 
-        gen_tmp_fname = self.tmp_fname + '.generator'
+        gen_tmp_fname = self.tmp_fname + ".generator"
         corpus = ShardedCorpus(gen_tmp_fname, data_generator(), dim=2)
 
         self.assertEqual(2, len(corpus))
         self.assertEqual(1, corpus[0][0])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
     tests = loader.loadTestsFromTestCase(TestShardedCorpus)

@@ -61,16 +61,25 @@ import logging
 import multiprocessing
 import re
 import sys
-from xml.etree import ElementTree
 from functools import partial
+from xml.etree import ElementTree
 
-from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
 import gensim.utils
+from gensim.corpora.wikicorpus import (
+    IGNORED_NAMESPACES,
+    WikiCorpus,
+    filter_wiki,
+    find_interlinks,
+    get_namespace,
+    utils,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def segment_all_articles(file_path, min_article_character=200, workers=None, include_interlinks=False):
+def segment_all_articles(
+    file_path, min_article_character=200, workers=None, include_interlinks=False
+):
     """Extract article titles and sections from a MediaWiki bz2 database dump.
 
     Parameters
@@ -95,10 +104,13 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
         (Optionally) [(interlink_article, interlink_text), ...]).
 
     """
-    with gensim.utils.open(file_path, 'rb') as xml_fileobj:
+    with gensim.utils.open(file_path, "rb") as xml_fileobj:
         wiki_sections_corpus = _WikiSectionsCorpus(
-            xml_fileobj, min_article_character=min_article_character, processes=workers,
-            include_interlinks=include_interlinks)
+            xml_fileobj,
+            min_article_character=min_article_character,
+            processes=workers,
+            include_interlinks=include_interlinks,
+        )
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
 
@@ -106,8 +118,13 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
             yield article
 
 
-def segment_and_write_all_articles(file_path, output_file, min_article_character=200, workers=None,
-                                   include_interlinks=False):
+def segment_and_write_all_articles(
+    file_path,
+    output_file,
+    min_article_character=200,
+    workers=None,
+    include_interlinks=False,
+):
     """Write article title and sections to `output_file` (or stdout, if output_file is None).
 
     The output format is one article per line, in json-line format with 4 fields::
@@ -136,13 +153,19 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
         Whether or not interlinks should be included in the output
     """
     if output_file is None:
-        outfile = getattr(sys.stdout, 'buffer', sys.stdout)  # we want write bytes, so for py3 we used 'buffer'
+        outfile = getattr(
+            sys.stdout, "buffer", sys.stdout
+        )  # we want write bytes, so for py3 we used 'buffer'
     else:
-        outfile = gensim.utils.open(output_file, 'wb')
+        outfile = gensim.utils.open(output_file, "wb")
 
     try:
-        article_stream = segment_all_articles(file_path, min_article_character, workers=workers,
-                                              include_interlinks=include_interlinks)
+        article_stream = segment_all_articles(
+            file_path,
+            min_article_character,
+            workers=workers,
+            include_interlinks=include_interlinks,
+        )
         for idx, article in enumerate(article_stream):
             article_title, article_sections = article[0], article[1]
             if include_interlinks:
@@ -161,8 +184,10 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
                 output_data["section_texts"].append(section_content)
 
             if (idx + 1) % 100000 == 0:
-                logger.info("processed #%d articles (at %r now)", idx + 1, article_title)
-            outfile.write((json.dumps(output_data) + "\n").encode('utf-8'))
+                logger.info(
+                    "processed #%d articles (at %r now)", idx + 1, article_title
+                )
+            outfile.write((json.dumps(output_data) + "\n").encode("utf-8"))
 
     finally:
         if output_file is not None:
@@ -222,7 +247,7 @@ def segment(page_xml, include_interlinks=False):
 
     """
     elem = ElementTree.fromstring(page_xml)
-    filter_namespaces = ('0',)
+    filter_namespaces = ("0",)
     namespace = get_namespace(elem.tag)
     ns_mapping = {"ns": namespace}
     text_path = "./{%(ns)s}revision/{%(ns)s}text" % ns_mapping
@@ -242,7 +267,9 @@ def segment(page_xml, include_interlinks=False):
         if include_interlinks:
             interlinks = find_interlinks(text)
         section_contents = re.split(top_level_heading_regex, text)
-        section_headings = [lead_section_heading] + re.findall(top_level_heading_regex_capture, text)
+        section_headings = [lead_section_heading] + re.findall(
+            top_level_heading_regex_capture, text
+        )
         section_headings = [heading.strip() for heading in section_headings]
         assert len(section_contents) == len(section_headings)
     else:
@@ -250,7 +277,9 @@ def segment(page_xml, include_interlinks=False):
         section_contents = []
         section_headings = []
 
-    section_contents = [filter_wiki(section_content) for section_content in section_contents]
+    section_contents = [
+        filter_wiki(section_content) for section_content in section_contents
+    ]
     sections = list(zip(section_headings, section_contents))
 
     if include_interlinks:
@@ -267,8 +296,15 @@ class _WikiSectionsCorpus(WikiCorpus):
 
     """
 
-    def __init__(self, fileobj, min_article_character=200, processes=None,
-                 lemmatize=None, filter_namespaces=('0',), include_interlinks=False):
+    def __init__(
+        self,
+        fileobj,
+        min_article_character=200,
+        processes=None,
+        lemmatize=None,
+        filter_namespaces=("0",),
+        include_interlinks=False,
+    ):
         """
         Parameters
         ----------
@@ -286,9 +322,9 @@ class _WikiSectionsCorpus(WikiCorpus):
         """
         if lemmatize is not None:
             raise NotImplementedError(
-                'The lemmatize parameter is no longer supported since Gensim 4.0.0. '
-                'If you need to lemmatize, use e.g. https://github.com/clips/pattern '
-                'to preprocess your corpus before submitting it to Gensim.'
+                "The lemmatize parameter is no longer supported since Gensim 4.0.0. "
+                "If you need to lemmatize, use e.g. https://github.com/clips/pattern "
+                "to preprocess your corpus before submitting it to Gensim."
             )
 
         self.fileobj = fileobj
@@ -329,19 +365,30 @@ class _WikiSectionsCorpus(WikiCorpus):
         pool = multiprocessing.Pool(self.processes)
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
-        for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
-            for article in pool.imap(partial(segment, include_interlinks=self.include_interlinks),
-                                     group):  # chunksize=10): partial(merge_names, b='Sons')
+        for group in utils.chunkize(
+            page_xmls, chunksize=10 * self.processes, maxsize=1
+        ):
+            for article in pool.imap(
+                partial(segment, include_interlinks=self.include_interlinks), group
+            ):  # chunksize=10): partial(merge_names, b='Sons')
                 article_title, sections = article[0], article[1]
 
                 # article redirects are pruned here
-                if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
+                if any(
+                    article_title.startswith(ignore + ":")
+                    for ignore in IGNORED_NAMESPACES
+                ):  # filter non-articles
                     skipped_namespace += 1
                     continue
-                if not sections or sections[0][1].lstrip().lower().startswith("#redirect"):  # filter redirect
+                if not sections or sections[0][1].lstrip().lower().startswith(
+                    "#redirect"
+                ):  # filter redirect
                     skipped_redirect += 1
                     continue
-                if sum(len(body.strip()) for (_, body) in sections) < self.min_article_character:
+                if (
+                    sum(len(body.strip()) for (_, body) in sections)
+                    < self.min_article_character
+                ):
                     # filter stubs (incomplete, very short articles)
                     skipped_length += 1
                     continue
@@ -356,46 +403,67 @@ class _WikiSectionsCorpus(WikiCorpus):
 
         logger.info(
             "finished processing %i articles with %i sections (skipped %i redirects, %i stubs, %i ignored namespaces)",
-            total_articles, total_sections, skipped_redirect, skipped_length, skipped_namespace)
+            total_articles,
+            total_sections,
+            skipped_redirect,
+            skipped_length,
+            skipped_namespace,
+        )
         pool.terminate()
         self.length = total_articles  # cache corpus length
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, description=__doc__[:-136])
+    logging.basicConfig(
+        format="%(asctime)s - %(module)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter, description=__doc__[:-136]
+    )
     default_workers = max(1, multiprocessing.cpu_count() - 1)
-    parser.add_argument('-f', '--file', help='Path to MediaWiki database dump (read-only).', required=True)
     parser.add_argument(
-        '-o', '--output',
-        help='Path to output file (stdout if not specified). If ends in .gz or .bz2, '
-             'the output file will be automatically compressed (recommended!).')
-    parser.add_argument(
-        '-w', '--workers',
-        help='Number of parallel workers for multi-core systems. Default: %(default)s.',
-        type=int,
-        default=default_workers
+        "-f",
+        "--file",
+        help="Path to MediaWiki database dump (read-only).",
+        required=True,
     )
     parser.add_argument(
-        '-m', '--min-article-character',
+        "-o",
+        "--output",
+        help="Path to output file (stdout if not specified). If ends in .gz or .bz2, "
+        "the output file will be automatically compressed (recommended!).",
+    )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        help="Number of parallel workers for multi-core systems. Default: %(default)s.",
+        type=int,
+        default=default_workers,
+    )
+    parser.add_argument(
+        "-m",
+        "--min-article-character",
         help="Ignore articles with fewer characters than this (article stubs). Default: %(default)s.",
         type=int,
-        default=200
+        default=200,
     )
     parser.add_argument(
-        '-i', '--include-interlinks',
-        help='Include a mapping for interlinks to other articles in the dump. The mappings format is: '
-             '"interlinks": [("article_title_1", "interlink_text_1"), ("article_title_2", "interlink_text_2"), ...]',
-        action='store_true'
+        "-i",
+        "--include-interlinks",
+        help="Include a mapping for interlinks to other articles in the dump. The mappings format is: "
+        '"interlinks": [("article_title_1", "interlink_text_1"), ("article_title_2", "interlink_text_2"), ...]',
+        action="store_true",
     )
     args = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
     segment_and_write_all_articles(
-        args.file, args.output,
+        args.file,
+        args.output,
         min_article_character=args.min_article_character,
         workers=args.workers,
-        include_interlinks=args.include_interlinks
+        include_interlinks=args.include_interlinks,
     )
 
     logger.info("finished running %s", sys.argv[0])

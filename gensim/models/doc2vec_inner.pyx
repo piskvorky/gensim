@@ -12,10 +12,11 @@
 
 import cython
 import numpy as np
-from numpy import zeros, float32 as REAL
-cimport numpy as np
+from numpy import float32 as REAL
+from numpy import zeros
 
-from libc.string cimport memset, memcpy
+cimport numpy as np
+from libc.string cimport memcpy, memset
 
 # scipy <= 0.15
 try:
@@ -24,7 +25,8 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
+from word2vec_inner cimport (EXP_TABLE, REAL_t, bisect_left, our_dot,
+                             our_saxpy, random_int32, sscal)
 
 DEF MAX_DOCUMENT_LEN = 10000
 

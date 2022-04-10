@@ -42,12 +42,10 @@ import numpy as np
 
 from gensim import interfaces, matutils, utils
 
-
 logger = logging.getLogger(__name__)
 
 
 class RpModel(interfaces.TransformationABC):
-
     def __init__(self, corpus, id2word=None, num_topics=300):
         """
 
@@ -70,7 +68,11 @@ class RpModel(interfaces.TransformationABC):
             self.add_lifecycle_event("created", msg=f"created {self}")
 
     def __str__(self):
-        return "%s<num_terms=%s, num_topics=%s>" % (self.__class__.__name__, self.num_terms, self.num_topics)
+        return "%s<num_terms=%s, num_topics=%s>" % (
+            self.__class__.__name__,
+            self.num_terms,
+            self.num_topics,
+        )
 
     def initialize(self, corpus):
         """Initialize the random projection matrix.
@@ -82,7 +84,9 @@ class RpModel(interfaces.TransformationABC):
 
         """
         if self.id2word is None:
-            logger.info("no word id mapping provided; initializing from corpus, assuming identity")
+            logger.info(
+                "no word id mapping provided; initializing from corpus, assuming identity"
+            )
             self.id2word = utils.dict_from_corpus(corpus)
             self.num_terms = len(self.id2word)
         elif self.id2word:
@@ -139,17 +143,22 @@ class RpModel(interfaces.TransformationABC):
         if is_corpus:
             return self._apply(bow)
 
-        if getattr(self, 'freshly_loaded', False):
+        if getattr(self, "freshly_loaded", False):
             # This is a hack to work around a bug in np, where a FORTRAN-order array
             # unpickled from disk segfaults on using it.
             self.freshly_loaded = False
-            self.projection = self.projection.copy('F')  # simply making a fresh copy fixes the broken array
+            self.projection = self.projection.copy(
+                "F"
+            )  # simply making a fresh copy fixes the broken array
 
-        vec = matutils.sparse2full(bow, self.num_terms).reshape(self.num_terms, 1) / np.sqrt(self.num_topics)
+        vec = matutils.sparse2full(bow, self.num_terms).reshape(
+            self.num_terms, 1
+        ) / np.sqrt(self.num_topics)
         vec = np.asfortranarray(vec, dtype=np.float32)
         topic_dist = np.dot(self.projection, vec)  # (k, d) * (d, 1) = (k, 1)
         return [
-            (topicid, float(topicvalue)) for topicid, topicvalue in enumerate(topic_dist.flat)
+            (topicid, float(topicvalue))
+            for topicid, topicvalue in enumerate(topic_dist.flat)
             if np.isfinite(topicvalue) and not np.allclose(topicvalue, 0.0)
         ]
 

@@ -12,17 +12,15 @@ import logging
 from collections import defaultdict
 
 from gensim import utils
-from gensim.corpora import Dictionary
-from gensim.corpora import IndexedCorpus
-from gensim.matutils import MmReader
-from gensim.matutils import MmWriter
-
+from gensim.corpora import Dictionary, IndexedCorpus
+from gensim.matutils import MmReader, MmWriter
 
 logger = logging.getLogger(__name__)
 
 
 class UciReader(MmReader):
     """Reader of UCI format for :class:`gensim.corpora.ucicorpus.UciCorpus`."""
+
     def __init__(self, input):
         """
 
@@ -33,11 +31,11 @@ class UciReader(MmReader):
 
         """
 
-        logger.info('Initializing corpus reader from %s', input)
+        logger.info("Initializing corpus reader from %s", input)
 
         self.input = input
 
-        with utils.open(self.input, 'rb') as fin:
+        with utils.open(self.input, "rb") as fin:
             self.num_docs = self.num_terms = self.num_nnz = 0
             try:
                 self.num_docs = int(next(fin).strip())
@@ -48,7 +46,9 @@ class UciReader(MmReader):
 
         logger.info(
             "accepted corpus with %i documents, %i features, %i non-zero entries",
-            self.num_docs, self.num_terms, self.num_nnz
+            self.num_docs,
+            self.num_terms,
+            self.num_nnz,
         )
 
     def skip_headers(self, input_file):
@@ -75,8 +75,9 @@ class UciWriter(MmWriter):
     contain `number_docs`, `num_terms`, and `num_nnz`, one value per line.
 
     """
+
     MAX_HEADER_LENGTH = 20  # reserve 20 bytes per header value
-    FAKE_HEADER = utils.to_utf8(' ' * MAX_HEADER_LENGTH + '\n')
+    FAKE_HEADER = utils.to_utf8(" " * MAX_HEADER_LENGTH + "\n")
 
     def write_headers(self):
         """Write blank header lines. Will be updated later, once corpus stats are known."""
@@ -93,7 +94,7 @@ class UciWriter(MmWriter):
 
         for value in values:
             if len(value) > len(self.FAKE_HEADER):
-                raise ValueError('Invalid header: value too large!')
+                raise ValueError("Invalid header: value too large!")
             self.fout.seek(offset)
             self.fout.write(value)
             offset += len(self.FAKE_HEADER)
@@ -135,7 +136,9 @@ class UciWriter(MmWriter):
                 offsets.append(posnow)
                 poslast = posnow
 
-            vector = [(x, int(y)) for (x, y) in bow if int(y) != 0]  # integer count, not floating weights
+            vector = [
+                (x, int(y)) for (x, y) in bow if int(y) != 0
+            ]  # integer count, not floating weights
             max_id, veclen = writer.write_vector(docno, vector)
             num_terms = max(num_terms, 1 + max_id)
             num_nnz += veclen
@@ -144,8 +147,11 @@ class UciWriter(MmWriter):
         if num_docs * num_terms != 0:
             logger.info(
                 "saved %ix%i matrix, density=%.3f%% (%i/%i)",
-                num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms),
-                num_nnz, num_docs * num_terms
+                num_docs,
+                num_terms,
+                100.0 * num_nnz / (num_docs * num_terms),
+                num_nnz,
+                num_docs * num_terms,
             )
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
@@ -158,6 +164,7 @@ class UciWriter(MmWriter):
 
 class UciCorpus(UciReader, IndexedCorpus):
     """Corpus in the UCI bag-of-words format."""
+
     def __init__(self, fname, fname_vocab=None):
         """
         Parameters
@@ -183,10 +190,10 @@ class UciCorpus(UciReader, IndexedCorpus):
         UciReader.__init__(self, fname)
 
         if fname_vocab is None:
-            fname_vocab = utils.smart_extension(fname, '.vocab')
+            fname_vocab = utils.smart_extension(fname, ".vocab")
 
         self.fname = fname
-        with utils.open(fname_vocab, 'rb') as fin:
+        with utils.open(fname_vocab, "rb") as fin:
             words = [word.strip() for word in fin]
         self.id2word = dict(enumerate(words))
 
@@ -237,7 +244,9 @@ class UciCorpus(UciReader, IndexedCorpus):
 
         for docno, doc in enumerate(self):
             if docno % 10000 == 0:
-                logger.info('PROGRESS: processing document %i of %i', docno, self.num_docs)
+                logger.info(
+                    "PROGRESS: processing document %i of %i", docno, self.num_docs
+                )
 
             for word, count in doc:
                 dictionary.dfs[word] += 1
@@ -282,12 +291,14 @@ class UciCorpus(UciReader, IndexedCorpus):
             num_terms = 0
 
         # write out vocabulary
-        fname_vocab = utils.smart_extension(fname, '.vocab')
+        fname_vocab = utils.smart_extension(fname, ".vocab")
         logger.info("saving vocabulary of %i words to %s", num_terms, fname_vocab)
-        with utils.open(fname_vocab, 'wb') as fout:
+        with utils.open(fname_vocab, "wb") as fout:
             for featureid in range(num_terms):
-                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
+                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, "---")))
 
         logger.info("storing corpus in UCI Bag-of-Words format: %s", fname)
 
-        return UciWriter.write_corpus(fname, corpus, index=True, progress_cnt=progress_cnt)
+        return UciWriter.write_corpus(
+            fname, corpus, index=True, progress_cnt=progress_cnt
+        )

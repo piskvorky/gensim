@@ -7,30 +7,31 @@
 """Various general utility functions."""
 
 from __future__ import with_statement
-from contextlib import contextmanager
+
 import collections.abc
-import logging
-import warnings
-import numbers
-from html.entities import name2codepoint as n2cp
-import pickle as _pickle
-import re
-import unicodedata
-import os
-import random
-import itertools
-import tempfile
-from functools import wraps
-import multiprocessing
-import shutil
-import sys
-import subprocess
-import inspect
 import heapq
+import inspect
+import itertools
+import logging
+import multiprocessing
+import numbers
+import os
+import pickle as _pickle
+import platform
+import random
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import types
+import unicodedata
+import warnings
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime
-import platform
-import types
+from functools import wraps
+from html.entities import name2codepoint as n2cp
 
 import numpy as np
 import scipy.sparse
@@ -47,8 +48,8 @@ logger = logging.getLogger(__name__)
 # See also https://github.com/RaRe-Technologies/gensim/pull/3065
 PICKLE_PROTOCOL = 4
 
-PAT_ALPHABETIC = re.compile(r'(((?![\d])\w)+)', re.UNICODE)
-RE_HTML_ENTITY = re.compile(r'&(#?)([xX]?)(\w{1,8});', re.UNICODE)
+PAT_ALPHABETIC = re.compile(r"(((?![\d])\w)+)", re.UNICODE)
+RE_HTML_ENTITY = re.compile(r"&(#?)([xX]?)(\w{1,8});", re.UNICODE)
 
 NO_CYTHON = RuntimeError(
     "Compiled extensions are unavailable. "
@@ -92,7 +93,9 @@ def get_random_state(seed):
         return np.random.RandomState(seed)
     if isinstance(seed, np.random.RandomState):
         return seed
-    raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
+    raise ValueError(
+        "%r cannot be used to seed a np.random.RandomState instance" % seed
+    )
 
 
 def synchronous(tlockname):
@@ -103,6 +106,7 @@ def synchronous(tlockname):
     Adapted from http://code.activestate.com/recipes/577105-synchronization-decorator-for-class-methods/.
 
     """
+
     def _synched(func):
         @wraps(func)
         def _synchronizer(self, *args, **kwargs):
@@ -114,7 +118,9 @@ def synchronous(tlockname):
                 result = func(self, *args, **kwargs)
                 logger.debug("releasing lock %r for %s", tlockname, func.__name__)
                 return result
+
         return _synchronizer
+
     return _synched
 
 
@@ -134,7 +140,7 @@ def file_or_filename(input):
     """
     if isinstance(input, str):
         # input was a filename: open as file
-        return open(input, 'rb')
+        return open(input, "rb")
     else:
         # input already a file-like object; just reset to the beginning
         input.seek(0)
@@ -195,9 +201,9 @@ def deaccent(text):
     """
     if not isinstance(text, str):
         # assume utf8 for byte strings, use default (strict) error handling
-        text = text.decode('utf8')
+        text = text.decode("utf8")
     norm = unicodedata.normalize("NFD", text)
-    result = ''.join(ch for ch in norm if unicodedata.category(ch) != 'Mn')
+    result = "".join(ch for ch in norm if unicodedata.category(ch) != "Mn")
     return unicodedata.normalize("NFC", result)
 
 
@@ -224,7 +230,15 @@ def copytree_hardlink(source, dest):
         shutil.copy2 = copy2
 
 
-def tokenize(text, lowercase=False, deacc=False, encoding='utf8', errors="strict", to_lower=False, lower=False):
+def tokenize(
+    text,
+    lowercase=False,
+    deacc=False,
+    encoding="utf8",
+    errors="strict",
+    to_lower=False,
+    lower=False,
+):
     """Iteratively yield tokens as unicode strings, optionally removing accent marks and lowercasing it.
 
     Parameters
@@ -308,13 +322,14 @@ def simple_preprocess(doc, deacc=False, min_len=2, max_len=15):
 
     """
     tokens = [
-        token for token in tokenize(doc, lower=True, deacc=deacc, errors='ignore')
-        if min_len <= len(token) <= max_len and not token.startswith('_')
+        token
+        for token in tokenize(doc, lower=True, deacc=deacc, errors="ignore")
+        if min_len <= len(token) <= max_len and not token.startswith("_")
     ]
     return tokens
 
 
-def any2utf8(text, errors='strict', encoding='utf8'):
+def any2utf8(text, errors="strict", encoding="utf8"):
     """Convert a unicode or bytes string in the given encoding into a utf8 bytestring.
 
     Parameters
@@ -334,15 +349,15 @@ def any2utf8(text, errors='strict', encoding='utf8'):
     """
 
     if isinstance(text, str):
-        return text.encode('utf8')
+        return text.encode("utf8")
     # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
-    return str(text, encoding, errors=errors).encode('utf8')
+    return str(text, encoding, errors=errors).encode("utf8")
 
 
 to_utf8 = any2utf8
 
 
-def any2unicode(text, encoding='utf8', errors='strict'):
+def any2unicode(text, encoding="utf8", errors="strict"):
     """Convert `text` (bytestring in given encoding or unicode) to unicode.
 
     Parameters
@@ -384,7 +399,7 @@ def call_on_class_only(*args, **kwargs):
         If a class method is called on an instance.
 
     """
-    raise AttributeError('This method should be called on a class object.')
+    raise AttributeError("This method should be called on a class object.")
 
 
 class SaveLoad:
@@ -396,6 +411,7 @@ class SaveLoad:
     such as lambda functions etc.
 
     """
+
     def add_lifecycle_event(self, event_name, log_level=logging.INFO, **event):
         """
         Append an event into the `lifecycle_events` attribute of this object, and also
@@ -433,19 +449,24 @@ class SaveLoad:
         # See also https://github.com/RaRe-Technologies/gensim/issues/2863
 
         event_dict = deepcopy(event)
-        event_dict['datetime'] = datetime.now().isoformat()
-        event_dict['gensim'] = gensim_version
-        event_dict['python'] = sys.version
-        event_dict['platform'] = platform.platform()
-        event_dict['event'] = event_name
+        event_dict["datetime"] = datetime.now().isoformat()
+        event_dict["gensim"] = gensim_version
+        event_dict["python"] = sys.version
+        event_dict["platform"] = platform.platform()
+        event_dict["event"] = event_name
 
-        if not hasattr(self, 'lifecycle_events'):
+        if not hasattr(self, "lifecycle_events"):
             # Avoid calling str(self), the object may not be fully initialized yet at this point.
-            logger.debug("starting a new internal lifecycle event log for %s", self.__class__.__name__)
+            logger.debug(
+                "starting a new internal lifecycle event log for %s",
+                self.__class__.__name__,
+            )
             self.lifecycle_events = []
 
         if log_level:
-            logger.log(log_level, "%s lifecycle event %s", self.__class__.__name__, event_dict)
+            logger.log(
+                log_level, "%s lifecycle event %s", self.__class__.__name__, event_dict
+            )
 
         if self.lifecycle_events is not None:
             self.lifecycle_events.append(event_dict)
@@ -505,52 +526,63 @@ class SaveLoad:
             Attribute name. Set automatically during recursive processing.
 
         """
+
         def mmap_error(obj, filename):
             return IOError(
-                'Cannot mmap compressed object %s in file %s. ' % (obj, filename)
-                + 'Use `load(fname, mmap=None)` or uncompress files manually.'
+                "Cannot mmap compressed object %s in file %s. " % (obj, filename)
+                + "Use `load(fname, mmap=None)` or uncompress files manually."
             )
 
-        for attrib in getattr(self, '__recursive_saveloads', []):
-            cfname = '.'.join((fname, attrib))
-            logger.info("loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap)
+        for attrib in getattr(self, "__recursive_saveloads", []):
+            cfname = ".".join((fname, attrib))
+            logger.info(
+                "loading %s recursively from %s.* with mmap=%s", attrib, cfname, mmap
+            )
             with ignore_deprecation_warning():
                 getattr(self, attrib)._load_specials(cfname, mmap, compress, subname)
 
-        for attrib in getattr(self, '__numpys', []):
-            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
+        for attrib in getattr(self, "__numpys", []):
+            logger.info(
+                "loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap
+            )
 
             if compress:
                 if mmap:
                     raise mmap_error(attrib, subname(fname, attrib))
 
-                val = np.load(subname(fname, attrib))['val']
+                val = np.load(subname(fname, attrib))["val"]
             else:
                 val = np.load(subname(fname, attrib), mmap_mode=mmap)
 
             with ignore_deprecation_warning():
                 setattr(self, attrib, val)
 
-        for attrib in getattr(self, '__scipys', []):
-            logger.info("loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap)
+        for attrib in getattr(self, "__scipys", []):
+            logger.info(
+                "loading %s from %s with mmap=%s", attrib, subname(fname, attrib), mmap
+            )
             sparse = unpickle(subname(fname, attrib))
             if compress:
                 if mmap:
                     raise mmap_error(attrib, subname(fname, attrib))
 
-                with np.load(subname(fname, attrib, 'sparse')) as f:
-                    sparse.data = f['data']
-                    sparse.indptr = f['indptr']
-                    sparse.indices = f['indices']
+                with np.load(subname(fname, attrib, "sparse")) as f:
+                    sparse.data = f["data"]
+                    sparse.indptr = f["indptr"]
+                    sparse.indices = f["indices"]
             else:
-                sparse.data = np.load(subname(fname, attrib, 'data'), mmap_mode=mmap)
-                sparse.indptr = np.load(subname(fname, attrib, 'indptr'), mmap_mode=mmap)
-                sparse.indices = np.load(subname(fname, attrib, 'indices'), mmap_mode=mmap)
+                sparse.data = np.load(subname(fname, attrib, "data"), mmap_mode=mmap)
+                sparse.indptr = np.load(
+                    subname(fname, attrib, "indptr"), mmap_mode=mmap
+                )
+                sparse.indices = np.load(
+                    subname(fname, attrib, "indices"), mmap_mode=mmap
+                )
 
             with ignore_deprecation_warning():
                 setattr(self, attrib, sparse)
 
-        for attrib in getattr(self, '__ignoreds', []):
+        for attrib in getattr(self, "__ignoreds", []):
             logger.info("setting ignored attribute %s to None", attrib)
             with ignore_deprecation_warning():
                 setattr(self, attrib, None)
@@ -570,13 +602,21 @@ class SaveLoad:
             First argument will be True if `fname` compressed.
 
         """
-        compress, suffix = (True, 'npz') if fname.endswith('.gz') or fname.endswith('.bz2') else (False, 'npy')
-        return compress, lambda *args: '.'.join(args + (suffix,))
+        compress, suffix = (
+            (True, "npz")
+            if fname.endswith(".gz") or fname.endswith(".bz2")
+            else (False, "npy")
+        )
+        return compress, lambda *args: ".".join(args + (suffix,))
 
     def _smart_save(
-            self, fname,
-            separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL,
-        ):
+        self,
+        fname,
+        separately=None,
+        sep_limit=10 * 1024**2,
+        ignore=frozenset(),
+        pickle_protocol=PICKLE_PROTOCOL,
+    ):
         """Save the object to a file. Used internally by :meth:`gensim.utils.SaveLoad.save()`.
 
         Parameters
@@ -605,7 +645,13 @@ class SaveLoad:
         compress, subname = SaveLoad._adapt_by_suffix(fname)
 
         restores = self._save_specials(
-            fname, separately, sep_limit, ignore, pickle_protocol, compress, subname,
+            fname,
+            separately,
+            sep_limit,
+            ignore,
+            pickle_protocol,
+            compress,
+            subname,
         )
         try:
             pickle(self, fname, protocol=pickle_protocol)
@@ -617,7 +663,9 @@ class SaveLoad:
                         setattr(obj, attrib, val)
         logger.info("saved %s", fname)
 
-    def _save_specials(self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname):
+    def _save_specials(
+        self, fname, separately, sep_limit, ignore, pickle_protocol, compress, subname
+    ):
         """Save aside any attributes that need to be handled separately, including
         by recursion any attributes that are themselves :class:`~gensim.utils.SaveLoad` instances.
 
@@ -665,38 +713,61 @@ class SaveLoad:
         recursive_saveloads = []
         restores = []
         for attrib, val in self.__dict__.items():
-            if hasattr(val, '_save_specials'):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
+            if hasattr(
+                val, "_save_specials"
+            ):  # better than 'isinstance(val, SaveLoad)' if IPython reloading
                 recursive_saveloads.append(attrib)
-                cfname = '.'.join((fname, attrib))
-                restores.extend(val._save_specials(cfname, None, sep_limit, ignore, pickle_protocol, compress, subname))
+                cfname = ".".join((fname, attrib))
+                restores.extend(
+                    val._save_specials(
+                        cfname,
+                        None,
+                        sep_limit,
+                        ignore,
+                        pickle_protocol,
+                        compress,
+                        subname,
+                    )
+                )
 
         try:
             numpys, scipys, ignoreds = [], [], []
             for attrib, val in asides.items():
                 if isinstance(val, np.ndarray) and attrib not in ignore:
                     numpys.append(attrib)
-                    logger.info("storing np array '%s' to %s", attrib, subname(fname, attrib))
-
-                    if compress:
-                        np.savez_compressed(subname(fname, attrib), val=np.ascontiguousarray(val))
-                    else:
-                        np.save(subname(fname, attrib), np.ascontiguousarray(val))
-
-                elif isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix)) and attrib not in ignore:
-                    scipys.append(attrib)
-                    logger.info("storing scipy.sparse array '%s' under %s", attrib, subname(fname, attrib))
+                    logger.info(
+                        "storing np array '%s' to %s", attrib, subname(fname, attrib)
+                    )
 
                     if compress:
                         np.savez_compressed(
-                            subname(fname, attrib, 'sparse'),
-                            data=val.data,
-                            indptr=val.indptr,
-                            indices=val.indices
+                            subname(fname, attrib), val=np.ascontiguousarray(val)
                         )
                     else:
-                        np.save(subname(fname, attrib, 'data'), val.data)
-                        np.save(subname(fname, attrib, 'indptr'), val.indptr)
-                        np.save(subname(fname, attrib, 'indices'), val.indices)
+                        np.save(subname(fname, attrib), np.ascontiguousarray(val))
+
+                elif (
+                    isinstance(val, (scipy.sparse.csr_matrix, scipy.sparse.csc_matrix))
+                    and attrib not in ignore
+                ):
+                    scipys.append(attrib)
+                    logger.info(
+                        "storing scipy.sparse array '%s' under %s",
+                        attrib,
+                        subname(fname, attrib),
+                    )
+
+                    if compress:
+                        np.savez_compressed(
+                            subname(fname, attrib, "sparse"),
+                            data=val.data,
+                            indptr=val.indptr,
+                            indices=val.indices,
+                        )
+                    else:
+                        np.save(subname(fname, attrib, "data"), val.data)
+                        np.save(subname(fname, attrib, "indptr"), val.indptr)
+                        np.save(subname(fname, attrib, "indices"), val.indices)
 
                     data, indptr, indices = val.data, val.indptr, val.indices
                     val.data, val.indptr, val.indices = None, None, None
@@ -710,10 +781,10 @@ class SaveLoad:
                     logger.info("not storing attribute %s", attrib)
                     ignoreds.append(attrib)
 
-            self.__dict__['__numpys'] = numpys
-            self.__dict__['__scipys'] = scipys
-            self.__dict__['__ignoreds'] = ignoreds
-            self.__dict__['__recursive_saveloads'] = recursive_saveloads
+            self.__dict__["__numpys"] = numpys
+            self.__dict__["__scipys"] = scipys
+            self.__dict__["__ignoreds"] = ignoreds
+            self.__dict__["__recursive_saveloads"] = recursive_saveloads
         except Exception:
             # restore the attributes if exception-interrupted
             for attrib, val in asides.items():
@@ -722,9 +793,13 @@ class SaveLoad:
         return restores + [(self, asides)]
 
     def save(
-            self, fname_or_handle,
-            separately=None, sep_limit=10 * 1024**2, ignore=frozenset(), pickle_protocol=PICKLE_PROTOCOL,
-        ):
+        self,
+        fname_or_handle,
+        separately=None,
+        sep_limit=10 * 1024**2,
+        ignore=frozenset(),
+        pickle_protocol=PICKLE_PROTOCOL,
+    ):
         """Save the object to a file.
 
         Parameters
@@ -764,7 +839,13 @@ class SaveLoad:
             _pickle.dump(self, fname_or_handle, protocol=pickle_protocol)
             logger.info("saved %s object", self.__class__.__name__)
         except TypeError:  # `fname_or_handle` does not have write attribute
-            self._smart_save(fname_or_handle, separately, sep_limit, ignore, pickle_protocol=pickle_protocol)
+            self._smart_save(
+                fname_or_handle,
+                separately,
+                sep_limit,
+                ignore,
+                pickle_protocol=pickle_protocol,
+            )
 
 
 def identity(p):
@@ -816,6 +897,7 @@ class FakeDict:
     This is meant to avoid allocating real dictionaries when `num_terms` is huge, which is a waste of memory.
 
     """
+
     def __init__(self, num_terms):
         """
 
@@ -833,7 +915,9 @@ class FakeDict:
     def __getitem__(self, val):
         if 0 <= val < self.num_terms:
             return str(val)
-        raise ValueError("internal id out of bounds (%s, expected <0..%s))" % (val, self.num_terms))
+        raise ValueError(
+            "internal id out of bounds (%s, expected <0..%s))" % (val, self.num_terms)
+        )
 
     def __contains__(self, val):
         return 0 <= val < self.num_terms
@@ -932,12 +1016,12 @@ def is_corpus(obj):
 
     """
     try:
-        if 'Corpus' in obj.__class__.__name__:  # the most common case, quick hack
+        if "Corpus" in obj.__class__.__name__:  # the most common case, quick hack
             return True, obj
     except Exception:
         pass
     try:
-        if hasattr(obj, 'next') or hasattr(obj, '__next__'):
+        if hasattr(obj, "next") or hasattr(obj, "__next__"):
             # the input is an iterator object, meaning once we call next()
             # that element could be gone forever. we must be careful to put
             # whatever we retrieve back again
@@ -945,7 +1029,9 @@ def is_corpus(obj):
             obj = itertools.chain([doc1], obj)
         else:
             doc1 = next(iter(obj))  # empty corpus is resolved to False here
-        if len(doc1) == 0:  # sparse documents must have a __len__ function (list, tuple...)
+        if (
+            len(doc1) == 0
+        ):  # sparse documents must have a __len__ function (list, tuple...)
             return True, obj  # the first document is empty=>assume this is a corpus
 
         # if obj is a 1D numpy array(scalars) instead of 2-tuples, it resolves to False here
@@ -972,8 +1058,10 @@ def get_my_ip():
 
     """
     import socket
+
     try:
         from Pyro4.naming import locateNS
+
         # we know the nameserver must exist, so use it as our anchor point
         ns = locateNS()
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -983,8 +1071,9 @@ def get_my_ip():
         try:
             # see what ifconfig says about our default interface
             import commands
+
             result = commands.getoutput("ifconfig").split("\n")[1].split()[1][5:]
-            if len(result.split('.')) != 4:
+            if len(result.split(".")) != 4:
                 raise Exception()
         except Exception:
             # give up, leave the resolution to gethostbyname
@@ -1008,6 +1097,7 @@ class RepeatCorpus(SaveLoad):
         [[(1, 2)], [], [(1, 2)], [], [(1, 2)]]
 
     """
+
     def __init__(self, corpus, reps):
         """
 
@@ -1040,6 +1130,7 @@ class RepeatCorpusNTimes(SaveLoad):
         [[(1, 0.5)], [], [(1, 0.5)], [], [(1, 0.5)], []]
 
     """
+
     def __init__(self, corpus, n):
         """
 
@@ -1062,6 +1153,7 @@ class RepeatCorpusNTimes(SaveLoad):
 
 class ClippedCorpus(SaveLoad):
     """Wrap a `corpus` and return `max_doc` element from it."""
+
     def __init__(self, corpus, max_docs=None):
         """
 
@@ -1090,6 +1182,7 @@ class ClippedCorpus(SaveLoad):
 
 class SlicedCorpus(SaveLoad):
     """Wrap `corpus` and return a slice of it."""
+
     def __init__(self, corpus, slice_):
         """
 
@@ -1114,9 +1207,11 @@ class SlicedCorpus(SaveLoad):
         self.length = None
 
     def __iter__(self):
-        if hasattr(self.corpus, 'index') and len(self.corpus.index) > 0:
+        if hasattr(self.corpus, "index") and len(self.corpus.index) > 0:
             return (self.corpus.docbyoffset(i) for i in self.corpus.index[self.slice_])
-        return itertools.islice(self.corpus, self.slice_.start, self.slice_.stop, self.slice_.step)
+        return itertools.islice(
+            self.corpus, self.slice_.start, self.slice_.stop, self.slice_.step
+        )
 
     def __len__(self):
         # check cached length, calculate if needed
@@ -1154,7 +1249,7 @@ def safe_unichr(intval):
         # ValueError: chr() arg not in range(0x10000) (narrow Python build)
         s = "\\U%08x" % intval
         # return UTF16 surrogate pair
-        return s.decode('unicode-escape')
+        return s.decode("unicode-escape")
 
 
 def decode_htmlentities(text):
@@ -1182,15 +1277,16 @@ def decode_htmlentities(text):
         foo < bar
 
     """
+
     def substitute_entity(match):
         try:
             ent = match.group(3)
             if match.group(1) == "#":
                 # decoding by number
-                if match.group(2) == '':
+                if match.group(2) == "":
                     # number is in decimal
                     return safe_unichr(int(ent))
-                elif match.group(2) in ['x', 'X']:
+                elif match.group(2) in ["x", "X"]:
                     # number is in hex
                     return safe_unichr(int(ent, 16))
             else:
@@ -1239,7 +1335,12 @@ def chunkize_serial(iterable, chunksize, as_numpy=False, dtype=np.float32):
         if as_numpy:
             # convert each document to a 2d numpy array (~6x faster when transmitting
             # chunk data over the wire, in Pyro)
-            wrapped_chunk = [[np.array(doc, dtype=dtype) for doc in itertools.islice(it, int(chunksize))]]
+            wrapped_chunk = [
+                [
+                    np.array(doc, dtype=dtype)
+                    for doc in itertools.islice(it, int(chunksize))
+                ]
+            ]
         else:
             wrapped_chunk = [list(itertools.islice(it, int(chunksize)))]
         if not wrapped_chunk[0]:
@@ -1258,6 +1359,7 @@ class InputQueue(multiprocessing.Process):
     so that workers that use the queue are not starved for input chunks.
 
     """
+
     def __init__(self, q, corpus, chunksize, maxsize, as_numpy):
         """
         Parameters
@@ -1298,8 +1400,12 @@ class InputQueue(multiprocessing.Process):
             try:
                 qsize = self.q.qsize()
             except NotImplementedError:
-                qsize = '?'
-            logger.debug("prepared another chunk of %i documents (qsize=%s)", len(wrapped_chunk[0]), qsize)
+                qsize = "?"
+            logger.debug(
+                "prepared another chunk of %i documents (qsize=%s)",
+                len(wrapped_chunk[0]),
+                qsize,
+            )
             self.q.put(wrapped_chunk.pop(), block=True)
 
 
@@ -1307,7 +1413,8 @@ class InputQueue(multiprocessing.Process):
 # causes issues with pickling.
 # So for these two platforms, use simpler serial processing in `chunkize`.
 # See https://github.com/RaRe-Technologies/gensim/pull/2800#discussion_r410890171
-if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
+if os.name == "nt" or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
+
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
@@ -1329,11 +1436,13 @@ if os.name == 'nt' or (sys.platform == "darwin" and sys.version_info >= (3, 8)):
 
         """
         if maxsize > 0:
-            entity = "Windows" if os.name == 'nt' else "OSX with python3.8+"
+            entity = "Windows" if os.name == "nt" else "OSX with python3.8+"
             warnings.warn("detected %s; aliasing chunkize to chunkize_serial" % entity)
         for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
             yield chunk
+
 else:
+
     def chunkize(corpus, chunksize, maxsize=0, as_numpy=False):
         """Split `corpus` into fixed-sized chunks, using :func:`~gensim.utils.chunkize_serial`.
 
@@ -1376,7 +1485,9 @@ else:
 
         if maxsize > 0:
             q = multiprocessing.Queue(maxsize=maxsize)
-            worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
+            worker = InputQueue(
+                q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy
+            )
             worker.daemon = True
             worker.start()
             while True:
@@ -1416,10 +1527,10 @@ def smart_extension(fname, ext):
 
     """
     fname, oext = os.path.splitext(fname)
-    if oext.endswith('.bz2'):
-        fname = fname + oext[:-4] + ext + '.bz2'
-    elif oext.endswith('.gz'):
-        fname = fname + oext[:-3] + ext + '.gz'
+    if oext.endswith(".bz2"):
+        fname = fname + oext[:-4] + ext + ".bz2"
+    elif oext.endswith(".gz"):
+        fname = fname + oext[:-3] + ext + ".gz"
     else:
         fname = fname + oext + ext
 
@@ -1439,7 +1550,7 @@ def pickle(obj, fname, protocol=PICKLE_PROTOCOL):
         Pickle protocol number.
 
     """
-    with open(fname, 'wb') as fout:  # 'b' for binary, needed on Windows
+    with open(fname, "wb") as fout:  # 'b' for binary, needed on Windows
         _pickle.dump(obj, fout, protocol=protocol)
 
 
@@ -1457,8 +1568,10 @@ def unpickle(fname):
         Python object loaded from `fname`.
 
     """
-    with open(fname, 'rb') as f:
-        return _pickle.load(f, encoding='latin1')  # needed because loading from S3 doesn't support readline()
+    with open(fname, "rb") as f:
+        return _pickle.load(
+            f, encoding="latin1"
+        )  # needed because loading from S3 doesn't support readline()
 
 
 def revdict(d):
@@ -1509,6 +1622,7 @@ def deprecated(reason):
 
     """
     if isinstance(reason, str):
+
         def decorator(func):
             fmt = "Call to deprecated `{name}` ({reason})."
 
@@ -1517,11 +1631,12 @@ def deprecated(reason):
                 warnings.warn(
                     fmt.format(name=func.__name__, reason=reason),
                     category=DeprecationWarning,
-                    stacklevel=2
+                    stacklevel=2,
                 )
                 return func(*args, **kwargs)
 
             return new_func1
+
         return decorator
 
     elif inspect.isclass(reason) or inspect.isfunction(reason):
@@ -1533,9 +1648,10 @@ def deprecated(reason):
             warnings.warn(
                 fmt.format(name=func.__name__),
                 category=DeprecationWarning,
-                stacklevel=2
+                stacklevel=2,
             )
             return func(*args, **kwargs)
+
         return new_func2
 
     else:
@@ -1574,10 +1690,12 @@ def toptexts(query, texts, index, n=10):
     sims = index[query]  # perform a similarity query against the corpus
     sims = sorted(enumerate(sims), key=lambda item: -item[1])
 
-    return [(topid, topcosine, texts[topid]) for topid, topcosine in sims[:n]]  # only consider top-n most similar docs
+    return [
+        (topid, topcosine, texts[topid]) for topid, topcosine in sims[:n]
+    ]  # only consider top-n most similar docs
 
 
-def randfname(prefix='gensim'):
+def randfname(prefix="gensim"):
     """Generate a random filename in temp.
 
     Parameters
@@ -1591,7 +1709,7 @@ def randfname(prefix='gensim'):
         Full path in the in system's temporary folder, ending in a random filename.
 
     """
-    randpart = hex(random.randint(0, 0xffffff))[2:]
+    randpart = hex(random.randint(0, 0xFFFFFF))[2:]
     return os.path.join(tempfile.gettempdir(), prefix + randpart)
 
 
@@ -1613,8 +1731,8 @@ def upload_chunked(server, docs, chunksize=1000, preprocess=None):
         if preprocess is not None:
             pchunk = []
             for doc in chunk:
-                doc['tokens'] = preprocess(doc['text'])
-                del doc['text']
+                doc["tokens"] = preprocess(doc["text"])
+                del doc["text"]
                 pchunk.append(doc)
             chunk = pchunk
         server.buffer(chunk)
@@ -1647,6 +1765,7 @@ def getNS(host=None, port=None, broadcast=True, hmac_key=None):
 
     """
     import Pyro4
+
     try:
         return Pyro4.locateNS(host, port, broadcast, hmac_key)
     except Pyro4.errors.NamingError:
@@ -1663,9 +1782,10 @@ def pyro_daemon(name, obj, random_suffix=False, ip=None, port=None, ns_conf=None
     if ns_conf is None:
         ns_conf = {}
     if random_suffix:
-        name += '.' + hex(random.randint(0, 0xffffff))[2:]
+        name += "." + hex(random.randint(0, 0xFFFFFF))[2:]
 
     import Pyro4
+
     with getNS(**ns_conf) as ns:
         with Pyro4.Daemon(ip or get_my_ip(), port or 0) as daemon:
             # register server for remote access
@@ -1695,7 +1815,11 @@ def mock_data_row(dim=1000, prob_nnz=0.5, lam=1.0):
 
     """
     nnz = np.random.uniform(size=(dim,))
-    return [(i, float(np.random.poisson(lam=lam) + 1.0)) for i in range(dim) if nnz[i] < prob_nnz]
+    return [
+        (i, float(np.random.poisson(lam=lam) + 1.0))
+        for i in range(dim)
+        if nnz[i] < prob_nnz
+    ]
 
 
 def mock_data(n_items=1000, dim=1000, prob_nnz=0.5, lam=1.0):
@@ -1745,12 +1869,17 @@ def prune_vocab(vocab, min_reduce, trim_rule=None):
     result = 0
     old_len = len(vocab)
     for w in list(vocab):  # make a copy of dict's keys
-        if not keep_vocab_item(w, vocab[w], min_reduce, trim_rule):  # vocab[w] <= min_reduce:
+        if not keep_vocab_item(
+            w, vocab[w], min_reduce, trim_rule
+        ):  # vocab[w] <= min_reduce:
             result += vocab[w]
             del vocab[w]
     logger.info(
         "pruned out %i tokens with count <=%i (before %i, after %i)",
-        old_len - len(vocab), min_reduce, old_len, len(vocab)
+        old_len - len(vocab),
+        min_reduce,
+        old_len,
+        len(vocab),
     )
     return result
 
@@ -1916,7 +2045,11 @@ def sample_dict(d, n=10, use_random=True):
         Selected items from dictionary, as a list.
 
     """
-    selected_keys = random.sample(list(d), min(len(d), n)) if use_random else itertools.islice(d.keys(), n)
+    selected_keys = (
+        random.sample(list(d), min(len(d), n))
+        if use_random
+        else itertools.islice(d.keys(), n)
+    )
     return [(key, d[key]) for key in selected_keys]
 
 
@@ -1964,11 +2097,15 @@ def strided_windows(ndarray, window_size):
 
     stride = ndarray.strides[0]
     return np.lib.stride_tricks.as_strided(
-        ndarray, shape=(ndarray.shape[0] - window_size + 1, window_size),
-        strides=(stride, stride))
+        ndarray,
+        shape=(ndarray.shape[0] - window_size + 1, window_size),
+        strides=(stride, stride),
+    )
 
 
-def iter_windows(texts, window_size, copy=False, ignore_below_size=True, include_doc_num=False):
+def iter_windows(
+    texts, window_size, copy=False, ignore_below_size=True, include_doc_num=False
+):
     """Produce a generator over the given texts using a sliding window of `window_size`.
 
     The windows produced are views of some subsequence of a text.
@@ -2055,9 +2192,9 @@ def save_as_line_sentence(corpus, filename):
     corpus : iterable of iterables of strings
 
     """
-    with open(filename, mode='wb', encoding='utf8') as fout:
+    with open(filename, mode="wb", encoding="utf8") as fout:
         for sentence in corpus:
-            line = any2unicode(' '.join(sentence) + '\n')
+            line = any2unicode(" ".join(sentence) + "\n")
             fout.write(line)
 
 
@@ -2079,7 +2216,7 @@ def effective_n_jobs(n_jobs):
 
     """
     if n_jobs == 0:
-        raise ValueError('n_jobs == 0 in Parallel has no meaning')
+        raise ValueError("n_jobs == 0 in Parallel has no meaning")
     elif n_jobs is None:
         return 1
     elif n_jobs < 0:

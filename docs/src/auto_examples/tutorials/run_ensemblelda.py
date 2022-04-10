@@ -7,7 +7,10 @@ Introduces Gensim's EnsembleLda model
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # This tutorial will explain how to use the EnsembleLDA model class.
@@ -25,12 +28,13 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # so it won't be explained again in detail.
 #
 
-import gensim.downloader as api
-from gensim.corpora import Dictionary
 from nltk.stem.wordnet import WordNetLemmatizer
 
+import gensim.downloader as api
+from gensim.corpora import Dictionary
+
 lemmatizer = WordNetLemmatizer()
-docs = api.load('text8')
+docs = api.load("text8")
 
 dictionary = Dictionary()
 for doc in docs:
@@ -50,6 +54,7 @@ corpus = [dictionary.doc2bow(doc) for doc in docs]
 #
 
 from gensim.models import LdaModel
+
 topic_model_class = LdaModel
 
 ###############################################################################
@@ -81,6 +86,7 @@ passes = 2
 #
 
 from gensim.models import EnsembleLda
+
 ensemble = EnsembleLda(
     corpus=corpus,
     id2word=dictionary,
@@ -89,7 +95,7 @@ ensemble = EnsembleLda(
     num_models=num_models,
     topic_model_class=LdaModel,
     ensemble_workers=ensemble_workers,
-    distance_workers=distance_workers
+    distance_workers=distance_workers,
 )
 
 print(len(ensemble.ttda))
@@ -111,8 +117,11 @@ print(len(ensemble.get_topics()))
 #
 
 import numpy as np
+
 shape = ensemble.asymmetric_distance_matrix.shape
-without_diagonal = ensemble.asymmetric_distance_matrix[~np.eye(shape[0], dtype=bool)].reshape(shape[0], -1)
+without_diagonal = ensemble.asymmetric_distance_matrix[
+    ~np.eye(shape[0], dtype=bool)
+].reshape(shape[0], -1)
 print(without_diagonal.min(), without_diagonal.mean(), without_diagonal.max())
 
 ensemble.recluster(eps=0.09, min_samples=2, min_cores=2)

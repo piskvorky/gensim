@@ -11,7 +11,6 @@ import logging
 from gensim import matutils
 from gensim.corpora import IndexedCorpus
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -40,6 +39,7 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         ...     pass
 
     """
+
     def __init__(self, fname):
         """
 
@@ -111,5 +111,10 @@ class MmCorpus(matutils.MmReader, IndexedCorpus):
         logger.info("storing corpus in Matrix Market format to %s", fname)
         num_terms = len(id2word) if id2word is not None else None
         return matutils.MmWriter.write_corpus(
-            fname, corpus, num_terms=num_terms, index=True, progress_cnt=progress_cnt, metadata=metadata
+            fname,
+            corpus,
+            num_terms=num_terms,
+            index=True,
+            progress_cnt=progress_cnt,
+            metadata=metadata,
         )

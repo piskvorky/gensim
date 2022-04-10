@@ -8,20 +8,18 @@
 
 from __future__ import with_statement
 
-
 import logging
 import math
 
-from gensim import utils
-
 import numpy as np
-import scipy.sparse
-from scipy.stats import entropy
 import scipy.linalg
+import scipy.sparse
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.linalg.special_matrices import triu
 from scipy.special import psi  # gamma function utils
+from scipy.stats import entropy
 
+from gensim import utils
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +70,21 @@ def argsort(x, topn=None, reverse=False):
         return []
     if reverse:
         x = -x
-    if topn >= x.size or not hasattr(np, 'argpartition'):
+    if topn >= x.size or not hasattr(np, "argpartition"):
         return np.argsort(x)[:topn]
     # np >= 1.8 has a fast partial argsort, use that!
     most_extreme = np.argpartition(x, topn)[:topn]
     return most_extreme.take(np.argsort(x.take(most_extreme)))  # resort topn into order
 
 
-def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=None, printprogress=0):
+def corpus2csc(
+    corpus,
+    num_terms=None,
+    dtype=np.float64,
+    num_docs=None,
+    num_nnz=None,
+    printprogress=0,
+):
     """Convert a streamed corpus in bag-of-words format into a sparse matrix `scipy.sparse.csc_matrix`,
     with documents as columns.
 
@@ -130,18 +135,26 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
     if num_terms is not None and num_docs is not None and num_nnz is not None:
         # faster and much more memory-friendly version of creating the sparse csc
         posnow, indptr = 0, [0]
-        indices = np.empty((num_nnz,), dtype=np.int32)  # HACK assume feature ids fit in 32bit integer
+        indices = np.empty(
+            (num_nnz,), dtype=np.int32
+        )  # HACK assume feature ids fit in 32bit integer
         data = np.empty((num_nnz,), dtype=dtype)
         for docno, doc in enumerate(corpus):
             if printprogress and docno % printprogress == 0:
                 logger.info("PROGRESS: at document #%i/%i", docno, num_docs)
             posnext = posnow + len(doc)
             # zip(*doc) transforms doc to (token_indices, token_counts]
-            indices[posnow: posnext], data[posnow: posnext] = zip(*doc) if doc else ([], [])
+            indices[posnow:posnext], data[posnow:posnext] = (
+                zip(*doc) if doc else ([], [])
+            )
             indptr.append(posnext)
             posnow = posnext
-        assert posnow == num_nnz, "mismatch between supplied and computed number of non-zeros"
-        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+        assert (
+            posnow == num_nnz
+        ), "mismatch between supplied and computed number of non-zeros"
+        result = scipy.sparse.csc_matrix(
+            (data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype
+        )
     else:
         # slower version; determine the sparse matrix parameters during iteration
         num_nnz, data, indices, indptr = 0, [], [], [0]
@@ -161,7 +174,9 @@ def corpus2csc(corpus, num_terms=None, dtype=np.float64, num_docs=None, num_nnz=
         # now num_docs, num_terms and num_nnz contain the correct values
         data = np.asarray(data, dtype=dtype)
         indices = np.asarray(indices)
-        result = scipy.sparse.csc_matrix((data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype)
+        result = scipy.sparse.csc_matrix(
+            (data, indices, indptr), shape=(num_terms, num_docs), dtype=dtype
+        )
     return result
 
 
@@ -188,13 +203,15 @@ def pad(mat, padrow, padcol):
     if padcol < 0:
         padcol = 0
     rows, cols = mat.shape
-    return np.block([
-        [mat, np.zeros((rows, padcol))],
-        [np.zeros((padrow, cols + padcol))],
-    ])
+    return np.block(
+        [
+            [mat, np.zeros((rows, padcol))],
+            [np.zeros((padrow, cols + padcol))],
+        ]
+    )
 
 
-def zeros_aligned(shape, dtype, order='C', align=128):
+def zeros_aligned(shape, dtype, order="C", align=128):
     """Get array aligned at `align` byte boundary in memory.
 
     Parameters
@@ -215,9 +232,15 @@ def zeros_aligned(shape, dtype, order='C', align=128):
 
     """
     nbytes = np.prod(shape, dtype=np.int64) * np.dtype(dtype).itemsize
-    buffer = np.zeros(nbytes + align, dtype=np.uint8)  # problematic on win64 ("maximum allowed dimension exceeded")
+    buffer = np.zeros(
+        nbytes + align, dtype=np.uint8
+    )  # problematic on win64 ("maximum allowed dimension exceeded")
     start_index = -buffer.ctypes.data % align
-    return buffer[start_index: start_index + nbytes].view(dtype).reshape(shape, order=order)
+    return (
+        buffer[start_index : start_index + nbytes]
+        .view(dtype)
+        .reshape(shape, order=order)
+    )
 
 
 def ismatrix(m):
@@ -310,7 +333,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
         # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
         return scipy.sparse.csr.csr_matrix(
             (matrix_data, matrix_indices, matrix_indptr),
-            shape=(matrix.shape[0], np.max(matrix_indices) + 1)
+            shape=(matrix.shape[0], np.max(matrix_indices) + 1),
         )
 
 
@@ -333,7 +356,11 @@ def scipy2sparse(vec, eps=1e-9):
     """
     vec = vec.tocsr()
     assert vec.shape[0] == 1
-    return [(int(pos), float(val)) for pos, val in zip(vec.indices, vec.data) if np.abs(val) > eps]
+    return [
+        (int(pos), float(val))
+        for pos, val in zip(vec.indices, vec.data)
+        if np.abs(val) > eps
+    ]
 
 
 class Scipy2Corpus:
@@ -345,6 +372,7 @@ class Scipy2Corpus:
         Convert corpus in Gensim format to `scipy.sparse.csc` matrix.
 
     """
+
     def __init__(self, vecs):
         """
 
@@ -523,6 +551,7 @@ class Dense2Corpus:
         Convert sparse matrix to Gensim corpus format.
 
     """
+
     def __init__(self, dense, documents_columns=True):
         """
 
@@ -566,6 +595,7 @@ class Sparse2Corpus:
         Convert dense matrix to gensim corpus.
 
     """
+
     def __init__(self, sparse, documents_columns=True):
         """
 
@@ -580,7 +610,9 @@ class Sparse2Corpus:
         if documents_columns:
             self.sparse = sparse.tocsc()
         else:
-            self.sparse = sparse.tocsr().T  # make sure shape[1]=number of docs (needed in len())
+            self.sparse = (
+                sparse.tocsr().T
+            )  # make sure shape[1]=number of docs (needed in len())
 
     def __iter__(self):
         """
@@ -592,7 +624,12 @@ class Sparse2Corpus:
 
         """
         for indprev, indnow in zip(self.sparse.indptr, self.sparse.indptr[1:]):
-            yield list(zip(self.sparse.indices[indprev:indnow], self.sparse.data[indprev:indnow]))
+            yield list(
+                zip(
+                    self.sparse.indices[indprev:indnow],
+                    self.sparse.data[indprev:indnow],
+                )
+            )
 
     def __len__(self):
         return self.sparse.shape[1]
@@ -689,11 +726,11 @@ def ret_log_normalize_vec(vec, axis=1):
     return vec, log_norm
 
 
-blas_nrm2 = blas('nrm2', np.array([], dtype=float))
-blas_scal = blas('scal', np.array([], dtype=float))
+blas_nrm2 = blas("nrm2", np.array([], dtype=float))
+blas_scal = blas("scal", np.array([], dtype=float))
 
 
-def unitvec(vec, norm='l2', return_norm=False):
+def unitvec(vec, norm="l2", return_norm=False):
     """Scale a vector to unit length.
 
     Parameters
@@ -717,17 +754,20 @@ def unitvec(vec, norm='l2', return_norm=False):
     Zero-vector will be unchanged.
 
     """
-    supported_norms = ('l1', 'l2', 'unique')
+    supported_norms = ("l1", "l2", "unique")
     if norm not in supported_norms:
-        raise ValueError("'%s' is not a supported norm. Currently supported norms are %s." % (norm, supported_norms))
+        raise ValueError(
+            "'%s' is not a supported norm. Currently supported norms are %s."
+            % (norm, supported_norms)
+        )
 
     if scipy.sparse.issparse(vec):
         vec = vec.tocsr()
-        if norm == 'l1':
+        if norm == "l1":
             veclen = np.sum(np.abs(vec.data))
-        if norm == 'l2':
-            veclen = np.sqrt(np.sum(vec.data ** 2))
-        if norm == 'unique':
+        if norm == "l2":
+            veclen = np.sqrt(np.sum(vec.data**2))
+        if norm == "unique":
             veclen = vec.nnz
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
@@ -744,14 +784,14 @@ def unitvec(vec, norm='l2', return_norm=False):
                 return vec
 
     if isinstance(vec, np.ndarray):
-        if norm == 'l1':
+        if norm == "l1":
             veclen = np.sum(np.abs(vec))
-        if norm == 'l2':
+        if norm == "l2":
             if vec.size == 0:
                 veclen = 0.0
             else:
                 veclen = blas_nrm2(vec)
-        if norm == 'unique':
+        if norm == "unique":
             veclen = np.count_nonzero(vec)
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
@@ -775,13 +815,15 @@ def unitvec(vec, norm='l2', return_norm=False):
             return vec
 
     if isinstance(first, (tuple, list)) and len(first) == 2:  # gensim sparse format
-        if norm == 'l1':
+        if norm == "l1":
             length = float(sum(abs(val) for _, val in vec))
-        if norm == 'l2':
-            length = 1.0 * math.sqrt(sum(val ** 2 for _, val in vec))
-        if norm == 'unique':
+        if norm == "l2":
+            length = 1.0 * math.sqrt(sum(val**2 for _, val in vec))
+        if norm == "unique":
             length = 1.0 * len(vec)
-        assert length > 0.0, "sparse documents must not contain any explicit zero entries"
+        assert (
+            length > 0.0
+        ), "sparse documents must not contain any explicit zero entries"
         if return_norm:
             return ret_normalized_vec(vec, length), length
         else:
@@ -813,9 +855,14 @@ def cossim(vec1, vec2):
         return 0.0
     vec1len = 1.0 * math.sqrt(sum(val * val for val in vec1.values()))
     vec2len = 1.0 * math.sqrt(sum(val * val for val in vec2.values()))
-    assert vec1len > 0.0 and vec2len > 0.0, "sparse documents must not contain any explicit zero entries"
+    assert (
+        vec1len > 0.0 and vec2len > 0.0
+    ), "sparse documents must not contain any explicit zero entries"
     if len(vec2) < len(vec1):
-        vec1, vec2 = vec2, vec1  # swap references so that we iterate over the shorter vector
+        vec1, vec2 = (
+            vec2,
+            vec1,
+        )  # swap references so that we iterate over the shorter vector
     result = sum(value * vec2.get(index, 0.0) for index, value in vec1.items())
     result /= vec1len * vec2len  # rescale by vector lengths
     return result
@@ -838,7 +885,9 @@ def isbow(vec):
     if scipy.sparse.issparse(vec):
         vec = vec.todense().tolist()
     try:
-        id_, val_ = vec[0]  # checking first value to see if it is in bag of words format by unpacking
+        id_, val_ = vec[
+            0
+        ]  # checking first value to see if it is in bag of words format by unpacking
         int(id_), float(val_)
     except IndexError:
         return True  # this is to handle the empty input case
@@ -851,9 +900,15 @@ def _convert_vec(vec1, vec2, num_features=None):
     if scipy.sparse.issparse(vec1):
         vec1 = vec1.toarray()
     if scipy.sparse.issparse(vec2):
-        vec2 = vec2.toarray()  # converted both the vectors to dense in case they were in sparse matrix
-    if isbow(vec1) and isbow(vec2):  # if they are in bag of words format we make it dense
-        if num_features is not None:  # if not None, make as large as the documents drawing from
+        vec2 = (
+            vec2.toarray()
+        )  # converted both the vectors to dense in case they were in sparse matrix
+    if isbow(vec1) and isbow(
+        vec2
+    ):  # if they are in bag of words format we make it dense
+        if (
+            num_features is not None
+        ):  # if not None, make as large as the documents drawing from
             dense1 = sparse2full(vec1, num_features)
             dense2 = sparse2full(vec2, num_features)
             return dense1, dense2
@@ -948,11 +1003,15 @@ def hellinger(vec1, vec2):
         vec1, vec2 = dict(vec1), dict(vec2)
         indices = set(list(vec1.keys()) + list(vec2.keys()))
         sim = np.sqrt(
-            0.5 * sum((np.sqrt(vec1.get(index, 0.0)) - np.sqrt(vec2.get(index, 0.0)))**2 for index in indices)
+            0.5
+            * sum(
+                (np.sqrt(vec1.get(index, 0.0)) - np.sqrt(vec2.get(index, 0.0))) ** 2
+                for index in indices
+            )
         )
         return sim
     else:
-        sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2))**2).sum())
+        sim = np.sqrt(0.5 * ((np.sqrt(vec1) - np.sqrt(vec2)) ** 2).sum())
         return sim
 
 
@@ -983,7 +1042,9 @@ def jaccard(vec1, vec2):
         # if it's in bow format, we use the following definitions:
         # union = sum of the 'weights' of both the bags
         # intersection = lowest weight for a particular id; basically the number of common words or items
-        union = sum(weight for id_, weight in vec1) + sum(weight for id_, weight in vec2)
+        union = sum(weight for id_, weight in vec1) + sum(
+            weight for id_, weight in vec2
+        )
         vec1, vec2 = dict(vec1), dict(vec2)
         intersection = 0.0
         for feature_id, feature_weight in vec1.items():
@@ -1021,16 +1082,21 @@ def jaccard_distance(set1, set2):
 
     union_cardinality = len(set1 | set2)
     if union_cardinality == 0:  # Both sets are empty
-        return 1.
+        return 1.0
 
-    return 1. - float(len(set1 & set2)) / float(union_cardinality)
+    return 1.0 - float(len(set1 & set2)) / float(union_cardinality)
 
 
 try:
     # try to load fast, cythonized code if possible
-    from gensim._matutils import logsumexp, mean_absolute_difference, dirichlet_expectation
+    from gensim._matutils import (
+        dirichlet_expectation,
+        logsumexp,
+        mean_absolute_difference,
+    )
 
 except ImportError:
+
     def logsumexp(x):
         """Log of sum of exponentials.
 
@@ -1091,7 +1157,9 @@ except ImportError:
             result = psi(alpha) - psi(np.sum(alpha))
         else:
             result = psi(alpha) - psi(np.sum(alpha, 1))[:, np.newaxis]
-        return result.astype(alpha.dtype, copy=False)  # keep the same precision as input
+        return result.astype(
+            alpha.dtype, copy=False
+        )  # keep the same precision as input
 
 
 def qr_destroy(la):
@@ -1123,7 +1191,7 @@ def qr_destroy(la):
     m, n = a.shape
     # perform q, r = QR(a); code hacked out of scipy.linalg.qr
     logger.debug("computing QR of %s dense matrix", str(a.shape))
-    geqrf, = get_lapack_funcs(('geqrf',), (a,))
+    (geqrf,) = get_lapack_funcs(("geqrf",), (a,))
     qr, tau, work, info = geqrf(a, lwork=-1, overwrite_a=True)
     qr, tau, work, info = geqrf(a, lwork=work[0], overwrite_a=True)
     del a  # free up mem
@@ -1131,7 +1199,7 @@ def qr_destroy(la):
     r = triu(qr[:n, :n])
     if m < n:  # rare case, #features < #topics
         qr = qr[:, :m]  # retains fortran order
-    gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
+    (gorgqr,) = get_lapack_funcs(("orgqr",), (qr,))
     q, work, info = gorgqr(qr, tau, lwork=-1, overwrite_a=True)
     q, work, info = gorgqr(qr, tau, lwork=work[0], overwrite_a=True)
     assert info >= 0, "qr failed"
@@ -1156,7 +1224,8 @@ class MmWriter:
     rewriting the fake header with the final values.
 
     """
-    HEADER_LINE = b'%%MatrixMarket matrix coordinate real general\n'  # the only supported MM format
+
+    HEADER_LINE = b"%%MatrixMarket matrix coordinate real general\n"  # the only supported MM format
 
     def __init__(self, fname):
         """
@@ -1168,9 +1237,9 @@ class MmWriter:
 
         """
         self.fname = fname
-        if fname.endswith(".gz") or fname.endswith('.bz2'):
+        if fname.endswith(".gz") or fname.endswith(".bz2"):
             raise NotImplementedError("compressed output not supported with MmWriter")
-        self.fout = utils.open(self.fname, 'wb+')  # open for both reading and writing
+        self.fout = utils.open(self.fname, "wb+")  # open for both reading and writing
         self.headers_written = False
 
     def write_headers(self, num_docs, num_terms, num_nnz):
@@ -1191,13 +1260,20 @@ class MmWriter:
         if num_nnz < 0:
             # we don't know the matrix shape/density yet, so only log a general line
             logger.info("saving sparse matrix to %s", self.fname)
-            self.fout.write(utils.to_utf8(' ' * 50 + '\n'))  # 48 digits must be enough for everybody
+            self.fout.write(
+                utils.to_utf8(" " * 50 + "\n")
+            )  # 48 digits must be enough for everybody
         else:
             logger.info(
                 "saving sparse %sx%s matrix with %i non-zero entries to %s",
-                num_docs, num_terms, num_nnz, self.fname
+                num_docs,
+                num_terms,
+                num_nnz,
+                self.fname,
             )
-            self.fout.write(utils.to_utf8('%s %s %s\n' % (num_docs, num_terms, num_nnz)))
+            self.fout.write(
+                utils.to_utf8("%s %s %s\n" % (num_docs, num_terms, num_nnz))
+            )
         self.last_docno = -1
         self.headers_written = True
 
@@ -1214,9 +1290,9 @@ class MmWriter:
             Number of non-zero elements in corpus.
 
         """
-        stats = '%i %i %i' % (num_docs, num_terms, num_nnz)
+        stats = "%i %i %i" % (num_docs, num_terms, num_nnz)
         if len(stats) > 50:
-            raise ValueError('Invalid stats: matrix too large!')
+            raise ValueError("Invalid stats: matrix too large!")
         self.fout.seek(len(MmWriter.HEADER_LINE))
         self.fout.write(utils.to_utf8(stats))
 
@@ -1236,17 +1312,27 @@ class MmWriter:
             Max word index in vector and len of vector. If vector is empty, return (-1, 0).
 
         """
-        assert self.headers_written, "must write Matrix Market file headers before writing data!"
-        assert self.last_docno < docno, "documents %i and %i not in sequential order!" % (self.last_docno, docno)
-        vector = sorted((i, w) for i, w in vector if abs(w) > 1e-12)  # ignore near-zero entries
+        assert (
+            self.headers_written
+        ), "must write Matrix Market file headers before writing data!"
+        assert (
+            self.last_docno < docno
+        ), "documents %i and %i not in sequential order!" % (self.last_docno, docno)
+        vector = sorted(
+            (i, w) for i, w in vector if abs(w) > 1e-12
+        )  # ignore near-zero entries
         for termid, weight in vector:  # write term ids in sorted order
             # +1 because MM format starts counting from 1
-            self.fout.write(utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight)))
+            self.fout.write(
+                utils.to_utf8("%i %i %s\n" % (docno + 1, termid + 1, weight))
+            )
         self.last_docno = docno
         return (vector[-1][0], len(vector)) if vector else (-1, 0)
 
     @staticmethod
-    def write_corpus(fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False):
+    def write_corpus(
+        fname, corpus, progress_cnt=1000, index=False, num_terms=None, metadata=False
+    ):
         """Save the corpus to disk in `Matrix Market format <https://math.nist.gov/MatrixMarket/formats.html>`_.
 
         Parameters
@@ -1282,13 +1368,15 @@ class MmWriter:
         mw = MmWriter(fname)
 
         # write empty headers to the file (with enough space to be overwritten later)
-        mw.write_headers(-1, -1, -1)  # will print 50 spaces followed by newline on the stats line
+        mw.write_headers(
+            -1, -1, -1
+        )  # will print 50 spaces followed by newline on the stats line
 
         # calculate necessary header info (nnz elements, num terms, num docs) while writing out vectors
         _num_terms, num_nnz = 0, 0
         docno, poslast = -1, -1
         offsets = []
-        if hasattr(corpus, 'metadata'):
+        if hasattr(corpus, "metadata"):
             orig_metadata = corpus.metadata
             corpus.metadata = metadata
             if metadata:
@@ -1313,7 +1401,7 @@ class MmWriter:
             _num_terms = max(_num_terms, 1 + max_id)
             num_nnz += veclen
         if metadata:
-            utils.pickle(docno2metadata, fname + '.metadata.cpickle')
+            utils.pickle(docno2metadata, fname + ".metadata.cpickle")
             corpus.metadata = orig_metadata
 
         num_docs = docno + 1
@@ -1322,7 +1410,11 @@ class MmWriter:
         if num_docs * num_terms != 0:
             logger.info(
                 "saved %ix%i matrix, density=%.3f%% (%i/%i)",
-                num_docs, num_terms, 100.0 * num_nnz / (num_docs * num_terms), num_nnz, num_docs * num_terms
+                num_docs,
+                num_terms,
+                100.0 * num_nnz / (num_docs * num_terms),
+                num_nnz,
+                num_docs * num_terms,
             )
 
         # now write proper headers, by seeking and overwriting the spaces written earlier
@@ -1345,7 +1437,7 @@ class MmWriter:
     def close(self):
         """Close `self.fout` file."""
         logger.debug("closing %s", self.fname)
-        if hasattr(self, 'fout'):
+        if hasattr(self, "fout"):
             self.fout.close()
 
 

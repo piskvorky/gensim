@@ -9,12 +9,11 @@
 
 from __future__ import with_statement
 
-from os import path
 import logging
+from os import path
 
 from gensim import utils
 from gensim.corpora import IndexedCorpus
-
 
 logger = logging.getLogger(__name__)
 
@@ -62,18 +61,18 @@ class BleiCorpus(IndexedCorpus):
             fname_base, _ = path.splitext(fname)
             fname_dir = path.dirname(fname)
             for fname_vocab in [
-                        utils.smart_extension(fname, '.vocab'),
-                        utils.smart_extension(fname, '/vocab.txt'),
-                        utils.smart_extension(fname_base, '.vocab'),
-                        utils.smart_extension(fname_dir, '/vocab.txt'),
-                        ]:
+                utils.smart_extension(fname, ".vocab"),
+                utils.smart_extension(fname, "/vocab.txt"),
+                utils.smart_extension(fname_base, ".vocab"),
+                utils.smart_extension(fname_dir, "/vocab.txt"),
+            ]:
                 if path.exists(fname_vocab):
                     break
             else:
-                raise IOError('BleiCorpus: could not find vocabulary file')
+                raise IOError("BleiCorpus: could not find vocabulary file")
 
         self.fname = fname
-        with utils.open(fname_vocab, 'rb') as fin:
+        with utils.open(fname_vocab, "rb") as fin:
             words = [utils.to_unicode(word).rstrip() for word in fin]
         self.id2word = dict(enumerate(words))
 
@@ -87,7 +86,7 @@ class BleiCorpus(IndexedCorpus):
 
         """
         lineno = -1
-        with utils.open(self.fname, 'rb') as fin:
+        with utils.open(self.fname, "rb") as fin:
             for lineno, line in enumerate(fin):
                 yield self.line2doc(line)
         self.length = lineno + 1
@@ -109,7 +108,7 @@ class BleiCorpus(IndexedCorpus):
         parts = utils.to_unicode(line).split()
         if int(parts[0]) != len(parts) - 1:
             raise ValueError("invalid format in %s: %s" % (self.fname, repr(line)))
-        doc = [part.rsplit(':', 1) for part in parts[1:]]
+        doc = [part.rsplit(":", 1) for part in parts[1:]]
         doc = [(int(p1), float(p2)) for p1, p2 in doc]
         return doc
 
@@ -148,20 +147,20 @@ class BleiCorpus(IndexedCorpus):
             num_terms = 0
 
         logger.info("storing corpus in Blei's LDA-C format into %s", fname)
-        with utils.open(fname, 'wb') as fout:
+        with utils.open(fname, "wb") as fout:
             offsets = []
             for doc in corpus:
                 doc = list(doc)
                 offsets.append(fout.tell())
                 parts = ["%i:%g" % p for p in doc if abs(p[1]) > 1e-7]
-                fout.write(utils.to_utf8("%i %s\n" % (len(doc), ' '.join(parts))))
+                fout.write(utils.to_utf8("%i %s\n" % (len(doc), " ".join(parts))))
 
         # write out vocabulary, in a format compatible with Blei's topics.py script
-        fname_vocab = utils.smart_extension(fname, '.vocab')
+        fname_vocab = utils.smart_extension(fname, ".vocab")
         logger.info("saving vocabulary of %i words to %s", num_terms, fname_vocab)
-        with utils.open(fname_vocab, 'wb') as fout:
+        with utils.open(fname_vocab, "wb") as fout:
             for featureid in range(num_terms):
-                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, '---')))
+                fout.write(utils.to_utf8("%s\n" % id2word.get(featureid, "---")))
 
         return offsets
 
@@ -180,6 +179,6 @@ class BleiCorpus(IndexedCorpus):
             Document in BoW format.
 
         """
-        with utils.open(self.fname, 'rb') as f:
+        with utils.open(self.fname, "rb") as f:
             f.seek(offset)
             return self.line2doc(f.readline())

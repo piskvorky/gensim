@@ -22,15 +22,15 @@ import multiprocessing
 import re
 import signal
 from pickle import PicklingError
+
 # LXML isn't faster, so let's go with the built-in solution
 from xml.etree.ElementTree import iterparse
 
-
 from gensim import utils
+
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
-
 
 logger = logging.getLogger(__name__)
 
@@ -41,50 +41,62 @@ ARTICLE_MIN_WORDS = 50
 TOKEN_MIN_LEN = 2
 TOKEN_MAX_LEN = 15
 
-RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)
+RE_P0 = re.compile(r"<!--.*?-->", re.DOTALL | re.UNICODE)
 """Comments."""
-RE_P1 = re.compile(r'<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)
+RE_P1 = re.compile(r"<ref([> ].*?)(</ref>|/>)", re.DOTALL | re.UNICODE)
 """Footnotes."""
-RE_P2 = re.compile(r'(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$', re.UNICODE)
+RE_P2 = re.compile(r"(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$", re.UNICODE)
 """Links to languages."""
-RE_P3 = re.compile(r'{{([^}{]*)}}', re.DOTALL | re.UNICODE)
+RE_P3 = re.compile(r"{{([^}{]*)}}", re.DOTALL | re.UNICODE)
 """Template."""
-RE_P4 = re.compile(r'{{([^}]*)}}', re.DOTALL | re.UNICODE)
+RE_P4 = re.compile(r"{{([^}]*)}}", re.DOTALL | re.UNICODE)
 """Template."""
-RE_P5 = re.compile(r'\[(\w+):\/\/(.*?)(( (.*?))|())\]', re.UNICODE)
+RE_P5 = re.compile(r"\[(\w+):\/\/(.*?)(( (.*?))|())\]", re.UNICODE)
 """Remove URL, keep description."""
-RE_P6 = re.compile(r'\[([^][]*)\|([^][]*)\]', re.DOTALL | re.UNICODE)
+RE_P6 = re.compile(r"\[([^][]*)\|([^][]*)\]", re.DOTALL | re.UNICODE)
 """Simplify links, keep description."""
-RE_P7 = re.compile(r'\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
+RE_P7 = re.compile(r"\n\[\[[iI]mage(.*?)(\|.*?)*\|(.*?)\]\]", re.UNICODE)
 """Keep description of images."""
-RE_P8 = re.compile(r'\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]', re.UNICODE)
+RE_P8 = re.compile(r"\n\[\[[fF]ile(.*?)(\|.*?)*\|(.*?)\]\]", re.UNICODE)
 """Keep description of files."""
-RE_P9 = re.compile(r'<nowiki([> ].*?)(</nowiki>|/>)', re.DOTALL | re.UNICODE)
+RE_P9 = re.compile(r"<nowiki([> ].*?)(</nowiki>|/>)", re.DOTALL | re.UNICODE)
 """External links."""
-RE_P10 = re.compile(r'<math([> ].*?)(</math>|/>)', re.DOTALL | re.UNICODE)
+RE_P10 = re.compile(r"<math([> ].*?)(</math>|/>)", re.DOTALL | re.UNICODE)
 """Math content."""
-RE_P11 = re.compile(r'<(.*?)>', re.DOTALL | re.UNICODE)
+RE_P11 = re.compile(r"<(.*?)>", re.DOTALL | re.UNICODE)
 """All other tags."""
-RE_P12 = re.compile(r'(({\|)|(\|-(?!\d))|(\|}))(.*?)(?=\n)', re.UNICODE)
+RE_P12 = re.compile(r"(({\|)|(\|-(?!\d))|(\|}))(.*?)(?=\n)", re.UNICODE)
 """Table formatting."""
-RE_P13 = re.compile(r'(?<=(\n[ ])|(\n\n)|([ ]{2})|(.\n)|(.\t))(\||\!)([^[\]\n]*?\|)*', re.UNICODE)
+RE_P13 = re.compile(
+    r"(?<=(\n[ ])|(\n\n)|([ ]{2})|(.\n)|(.\t))(\||\!)([^[\]\n]*?\|)*", re.UNICODE
+)
 """Table cell formatting."""
-RE_P14 = re.compile(r'\[\[Category:[^][]*\]\]', re.UNICODE)
+RE_P14 = re.compile(r"\[\[Category:[^][]*\]\]", re.UNICODE)
 """Categories."""
-RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
+RE_P15 = re.compile(r"\[\[([fF]ile:|[iI]mage)[^]]*(\]\])", re.UNICODE)
 """Remove File and Image templates."""
-RE_P16 = re.compile(r'\[{2}(.*?)\]{2}', re.UNICODE)
+RE_P16 = re.compile(r"\[{2}(.*?)\]{2}", re.UNICODE)
 """Capture interlinks text and article linked"""
 RE_P17 = re.compile(
-    r'(\n.{0,4}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=)|(scope=))(.*))|'
-    r'(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
-    re.UNICODE
+    r"(\n.{0,4}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=)|(scope=))(.*))|"
+    r"(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))",
+    re.UNICODE,
 )
 """Table markup"""
 IGNORED_NAMESPACES = [
-    'Wikipedia', 'Category', 'File', 'Portal', 'Template',
-    'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
-    'Special', 'Talk'
+    "Wikipedia",
+    "Category",
+    "File",
+    "Portal",
+    "Template",
+    "MediaWiki",
+    "User",
+    "Help",
+    "Book",
+    "Draft",
+    "WikiProject",
+    "Special",
+    "Talk",
 ]
 """MediaWiki namespaces that ought to be ignored."""
 
@@ -139,8 +151,8 @@ def filter_example(elem, text, *args, **kwargs):
     # regex is in the function call so that we do not pollute the wikicorpus
     # namespace do not do this in production as this function is called for
     # every element in the wiki dump
-    _regex_de_excellent = re.compile(r'.*\{\{(Exzellent.*?)\}\}[\s]*', flags=re.DOTALL)
-    _regex_de_featured = re.compile(r'.*\{\{(Lesenswert.*?)\}\}[\s]*', flags=re.DOTALL)
+    _regex_de_excellent = re.compile(r".*\{\{(Exzellent.*?)\}\}[\s]*", flags=re.DOTALL)
+    _regex_de_featured = re.compile(r".*\{\{(Lesenswert.*?)\}\}[\s]*", flags=re.DOTALL)
 
     if text is None:
         return False
@@ -168,7 +180,7 @@ def find_interlinks(raw):
     interlinks_raw = re.findall(RE_P16, filtered)
 
     interlinks = []
-    for parts in [i.split('|') for i in interlinks_raw]:
+    for parts in [i.split("|") for i in interlinks_raw]:
         actual_title = parts[0]
         try:
             interlink_text = parts[1]
@@ -177,7 +189,7 @@ def find_interlinks(raw):
         interlink_tuple = (actual_title, interlink_text)
         interlinks.append(interlink_tuple)
 
-    legit_interlinks = [(i, j) for i, j in interlinks if '[' not in i and ']' not in i]
+    legit_interlinks = [(i, j) for i, j in interlinks if "[" not in i and "]" not in i]
     return legit_interlinks
 
 
@@ -201,7 +213,7 @@ def filter_wiki(raw, promote_remaining=True, simplify_links=True):
     """
     # parsing of the wiki markup is not perfect, but sufficient for our purposes
     # contributions to improving this code are welcome :)
-    text = utils.to_unicode(raw, 'utf8', errors='ignore')
+    text = utils.to_unicode(raw, "utf8", errors="ignore")
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
     return remove_markup(text, promote_remaining, simplify_links)
 
@@ -224,7 +236,7 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         `text` without markup.
 
     """
-    text = re.sub(RE_P2, '', text)  # remove the last list (=languages)
+    text = re.sub(RE_P2, "", text)  # remove the last list (=languages)
     # the wiki markup is recursive (markup inside markup etc)
     # instead of writing a recursive grammar, here we deal with that by removing
     # markup in a loop, starting with inner-most expressions and working outwards,
@@ -234,33 +246,37 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
     iters = 0
     while True:
         old, iters = text, iters + 1
-        text = re.sub(RE_P0, '', text)  # remove comments
-        text = re.sub(RE_P1, '', text)  # remove footnotes
-        text = re.sub(RE_P9, '', text)  # remove outside links
-        text = re.sub(RE_P10, '', text)  # remove math content
-        text = re.sub(RE_P11, '', text)  # remove all remaining tags
-        text = re.sub(RE_P14, '', text)  # remove categories
-        text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
+        text = re.sub(RE_P0, "", text)  # remove comments
+        text = re.sub(RE_P1, "", text)  # remove footnotes
+        text = re.sub(RE_P9, "", text)  # remove outside links
+        text = re.sub(RE_P10, "", text)  # remove math content
+        text = re.sub(RE_P11, "", text)  # remove all remaining tags
+        text = re.sub(RE_P14, "", text)  # remove categories
+        text = re.sub(RE_P5, "\\3", text)  # remove urls, keep description
 
         if simplify_links:
-            text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
+            text = re.sub(RE_P6, "\\2", text)  # simplify links, keep description only
         # remove table markup
         text = text.replace("!!", "\n|")  # each table head cell on a separate line
         text = text.replace("|-||", "\n|")  # for cases where a cell is filled with '-'
-        text = re.sub(RE_P12, '\n', text)  # remove formatting lines
-        text = text.replace('|||', '|\n|')  # each table cell on a separate line(where |{{a|b}}||cell-content)
-        text = text.replace('||', '\n|')  # each table cell on a separate line
-        text = re.sub(RE_P13, '\n', text)  # leave only cell content
-        text = re.sub(RE_P17, '\n', text)  # remove formatting lines
+        text = re.sub(RE_P12, "\n", text)  # remove formatting lines
+        text = text.replace(
+            "|||", "|\n|"
+        )  # each table cell on a separate line(where |{{a|b}}||cell-content)
+        text = text.replace("||", "\n|")  # each table cell on a separate line
+        text = re.sub(RE_P13, "\n", text)  # leave only cell content
+        text = re.sub(RE_P17, "\n", text)  # remove formatting lines
 
         # remove empty mark-up
-        text = text.replace('[]', '')
+        text = text.replace("[]", "")
         # stop if nothing changed between two iterations or after a fixed number of iterations
         if old == text or iters > 2:
             break
 
     if promote_remaining:
-        text = text.replace('[', '').replace(']', '')  # promote all remaining markup to plain text
+        text = text.replace("[", "").replace(
+            "]", ""
+        )  # promote all remaining markup to plain text
 
     return text
 
@@ -291,14 +307,14 @@ def remove_template(s):
     prev_c = None
     for i, c in enumerate(s):
         if not in_template:
-            if c == '{' and c == prev_c:
+            if c == "{" and c == prev_c:
                 starts.append(i - 1)
                 in_template = True
                 n_open = 1
         if in_template:
-            if c == '{':
+            if c == "{":
                 n_open += 1
-            elif c == '}':
+            elif c == "}":
                 n_close += 1
             if n_open == n_close:
                 ends.append(i)
@@ -308,7 +324,7 @@ def remove_template(s):
 
     # Remove all the templates
     starts.append(None)
-    return ''.join(s[end + 1:start] for end, start in zip(ends, starts))
+    return "".join(s[end + 1 : start] for end, start in zip(ends, starts))
 
 
 def remove_file(s):
@@ -329,12 +345,14 @@ def remove_file(s):
     # The regex RE_P15 match a File: or Image: markup
     for match in re.finditer(RE_P15, s):
         m = match.group(0)
-        caption = m[:-2].split('|')[-1]
+        caption = m[:-2].split("|")[-1]
         s = s.replace(m, caption, 1)
     return s
 
 
-def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True):
+def tokenize(
+    content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True
+):
     """Tokenize a piece of text from Wikipedia.
 
     Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
@@ -358,8 +376,9 @@ def tokenize(content, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, 
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     return [
-        utils.to_unicode(token) for token in utils.tokenize(content, lower=lower, errors='ignore')
-        if token_min_len <= len(token) <= token_max_len and not token.startswith('_')
+        utils.to_unicode(token)
+        for token in utils.tokenize(content, lower=lower, errors="ignore")
+        if token_min_len <= len(token) <= token_max_len and not token.startswith("_")
     ]
 
 
@@ -430,10 +449,16 @@ def extract_pages(f, filter_namespaces=False, filter_articles=None):
 
             if filter_articles is not None:
                 if not filter_articles(
-                        elem, namespace=namespace, title=title,
-                        text=text, page_tag=page_tag,
-                        text_path=text_path, title_path=title_path,
-                        ns_path=ns_path, pageid_path=pageid_path):
+                    elem,
+                    namespace=namespace,
+                    title=title,
+                    text=text,
+                    page_tag=page_tag,
+                    text_path=text_path,
+                    title_path=title_path,
+                    ns_path=ns_path,
+                    pageid_path=pageid_path,
+                ):
                     text = None
 
             pageid = elem.find(pageid_path).text
@@ -452,8 +477,13 @@ def extract_pages(f, filter_namespaces=False, filter_articles=None):
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
-                    token_max_len=TOKEN_MAX_LEN, lower=True):
+def process_article(
+    args,
+    tokenizer_func=tokenize,
+    token_min_len=TOKEN_MIN_LEN,
+    token_max_len=TOKEN_MAX_LEN,
+    lower=True,
+):
     """Parse a Wikipedia article, extract all tokens.
 
     Notes
@@ -524,8 +554,11 @@ def _process_article(args):
     args = args[:-1]
 
     return process_article(
-        args, tokenizer_func=tokenizer_func, token_min_len=token_min_len,
-        token_max_len=token_max_len, lower=lower
+        args,
+        tokenizer_func=tokenizer_func,
+        token_min_len=token_min_len,
+        token_max_len=token_max_len,
+        lower=lower,
     )
 
 
@@ -567,9 +600,21 @@ class WikiCorpus(TextCorpus):
         >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
-    def __init__(self, fname, processes=None, lemmatize=None, dictionary=None,
-                 filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
+
+    def __init__(
+        self,
+        fname,
+        processes=None,
+        lemmatize=None,
+        dictionary=None,
+        filter_namespaces=("0",),
+        tokenizer_func=tokenize,
+        article_min_tokens=ARTICLE_MIN_WORDS,
+        token_min_len=TOKEN_MIN_LEN,
+        token_max_len=TOKEN_MAX_LEN,
+        lower=True,
+        filter_articles=None,
+    ):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -610,10 +655,10 @@ class WikiCorpus(TextCorpus):
         """
         if lemmatize is not None:
             raise NotImplementedError(
-                'The lemmatize parameter is no longer supported. '
-                'If you need to lemmatize, use e.g. <https://github.com/clips/pattern>. '
-                'Perform lemmatization as part of your tokenization function and '
-                'pass it as the tokenizer_func parameter to this initializer.'
+                "The lemmatize parameter is no longer supported. "
+                "If you need to lemmatize, use e.g. <https://github.com/clips/pattern>. "
+                "Perform lemmatization as part of your tokenization function and "
+                "pass it as the tokenizer_func parameter to this initializer."
             )
         self.fname = fname
         self.filter_namespaces = filter_namespaces
@@ -671,24 +716,33 @@ class WikiCorpus(TextCorpus):
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
 
-        tokenization_params = (self.tokenizer_func, self.token_min_len, self.token_max_len, self.lower)
+        tokenization_params = (
+            self.tokenizer_func,
+            self.token_min_len,
+            self.token_max_len,
+            self.lower,
+        )
         texts = (
             (text, title, pageid, tokenization_params)
-            for title, text, pageid
-            in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles)
+            for title, text, pageid in extract_pages(
+                bz2.BZ2File(self.fname), self.filter_namespaces, self.filter_articles
+            )
         )
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
 
         try:
             # process the corpus in smaller chunks of docs, because multiprocessing.Pool
             # is dumb and would load the entire input into RAM at once...
-            for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
+            for group in utils.chunkize(
+                texts, chunksize=10 * self.processes, maxsize=1
+            ):
                 for tokens, title, pageid in pool.imap(_process_article, group):
                     articles_all += 1
                     positions_all += len(tokens)
                     # article redirects and short stubs are pruned here
-                    if len(tokens) < self.article_min_tokens or \
-                            any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                    if len(tokens) < self.article_min_tokens or any(
+                        title.startswith(ignore + ":") for ignore in IGNORED_NAMESPACES
+                    ):
                         continue
                     articles += 1
                     positions += len(tokens)
@@ -701,18 +755,26 @@ class WikiCorpus(TextCorpus):
             logger.warning(
                 "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, self.article_min_tokens
+                articles,
+                positions,
+                articles_all,
+                positions_all,
+                self.article_min_tokens,
             )
         except PicklingError as exc:
             raise PicklingError(
-                f'Can not send filtering function {self.filter_articles} to multiprocessing, '
-                'make sure the function can be pickled.'
+                f"Can not send filtering function {self.filter_articles} to multiprocessing, "
+                "make sure the function can be pickled."
             ) from exc
         else:
             logger.info(
                 "finished iterating over Wikipedia corpus of %i documents with %i positions "
                 "(total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, self.article_min_tokens
+                articles,
+                positions,
+                articles_all,
+                positions_all,
+                self.article_min_tokens,
             )
             self.length = articles  # cache corpus length
         finally:

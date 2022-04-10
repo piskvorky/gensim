@@ -9,15 +9,21 @@ Automated tests for checking transformation algorithms (the models package).
 """
 
 import logging
-import unittest
 import multiprocessing as mp
+import unittest
 from functools import partial
 
 import numpy as np
+
 from gensim.matutils import argsort
-from gensim.models.coherencemodel import CoherenceModel, BOOLEAN_DOCUMENT_BASED
+from gensim.models.coherencemodel import BOOLEAN_DOCUMENT_BASED, CoherenceModel
 from gensim.models.ldamodel import LdaModel
-from gensim.test.utils import get_tmpfile, common_texts, common_dictionary, common_corpus
+from gensim.test.utils import (
+    common_corpus,
+    common_dictionary,
+    common_texts,
+    get_tmpfile,
+)
 
 
 class TestCoherenceModel(unittest.TestCase):
@@ -33,108 +39,131 @@ class TestCoherenceModel(unittest.TestCase):
         # interaction and graphs. Hence both the coherence measures for `topics1` should be
         # greater.
         self.topics1 = [
-            ['human', 'computer', 'system', 'interface'],
-            ['graph', 'minors', 'trees', 'eps']
+            ["human", "computer", "system", "interface"],
+            ["graph", "minors", "trees", "eps"],
         ]
         self.topics2 = [
-            ['user', 'graph', 'minors', 'system'],
-            ['time', 'graph', 'survey', 'minors']
+            ["user", "graph", "minors", "system"],
+            ["time", "graph", "survey", "minors"],
         ]
         self.topics3 = [
-            ['token', 'computer', 'system', 'interface'],
-            ['graph', 'minors', 'trees', 'eps']
+            ["token", "computer", "system", "interface"],
+            ["graph", "minors", "trees", "eps"],
         ]
         # using this list the model should be unable to interpret topic
         # as either a list of tokens or a list of ids
         self.topics4 = [
-            ['not a token', 'not an id', 'tests using', "this list"],
-            ['should raise', 'an error', 'to pass', 'correctly']
+            ["not a token", "not an id", "tests using", "this list"],
+            ["should raise", "an error", "to pass", "correctly"],
         ]
         self.topicIds1 = []
         for topic in self.topics1:
             self.topicIds1.append([self.dictionary.token2id[token] for token in topic])
 
         self.ldamodel = LdaModel(
-            corpus=self.corpus, id2word=self.dictionary, num_topics=2,
-            passes=0, iterations=0
+            corpus=self.corpus,
+            id2word=self.dictionary,
+            num_topics=2,
+            passes=0,
+            iterations=0,
         )
 
     def check_coherence_measure(self, coherence):
         """Check provided topic coherence algorithm on given topics"""
         if coherence in BOOLEAN_DOCUMENT_BASED:
-            kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence=coherence)
+            kwargs = dict(
+                corpus=self.corpus, dictionary=self.dictionary, coherence=coherence
+            )
         else:
-            kwargs = dict(texts=self.texts, dictionary=self.dictionary, coherence=coherence)
+            kwargs = dict(
+                texts=self.texts, dictionary=self.dictionary, coherence=coherence
+            )
 
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm2 = CoherenceModel(topics=self.topics2, **kwargs)
         cm3 = CoherenceModel(topics=self.topics3, **kwargs)
         cm4 = CoherenceModel(topics=self.topicIds1, **kwargs)
-        self.assertRaises(ValueError, lambda: CoherenceModel(topics=self.topics4, **kwargs))
+        self.assertRaises(
+            ValueError, lambda: CoherenceModel(topics=self.topics4, **kwargs)
+        )
         self.assertEqual(cm1.get_coherence(), cm4.get_coherence())
         self.assertIsInstance(cm3.get_coherence(), np.double)
         self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
 
     def testUMass(self):
         """Test U_Mass topic coherence algorithm on given topics"""
-        self.check_coherence_measure('u_mass')
+        self.check_coherence_measure("u_mass")
 
     def testCv(self):
         """Test C_v topic coherence algorithm on given topics"""
-        self.check_coherence_measure('c_v')
+        self.check_coherence_measure("c_v")
 
     def testCuci(self):
         """Test C_uci topic coherence algorithm on given topics"""
-        self.check_coherence_measure('c_uci')
+        self.check_coherence_measure("c_uci")
 
     def testCnpmi(self):
         """Test C_npmi topic coherence algorithm on given topics"""
-        self.check_coherence_measure('c_npmi')
+        self.check_coherence_measure("c_npmi")
 
     def testUMassLdaModel(self):
         """Perform sanity check to see if u_mass coherence works with LDA Model"""
         # Note that this is just a sanity check because LDA does not guarantee a better coherence
         # value on the topics if iterations are increased. This can be seen here:
         # https://gist.github.com/dsquareindia/60fd9ab65b673711c3fa00509287ddde
-        CoherenceModel(model=self.ldamodel, corpus=self.corpus, coherence='u_mass')
+        CoherenceModel(model=self.ldamodel, corpus=self.corpus, coherence="u_mass")
 
     def testCvLdaModel(self):
         """Perform sanity check to see if c_v coherence works with LDA Model"""
-        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_v')
+        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence="c_v")
 
     def testCw2vLdaModel(self):
         """Perform sanity check to see if c_w2v coherence works with LDAModel."""
-        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_w2v')
+        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence="c_w2v")
 
     def testCuciLdaModel(self):
         """Perform sanity check to see if c_uci coherence works with LDA Model"""
-        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_uci')
+        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence="c_uci")
 
     def testCnpmiLdaModel(self):
         """Perform sanity check to see if c_npmi coherence works with LDA Model"""
-        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence='c_npmi')
+        CoherenceModel(model=self.ldamodel, texts=self.texts, coherence="c_npmi")
 
     def testErrors(self):
         """Test if errors are raised on bad input"""
         # not providing dictionary
         self.assertRaises(
-            ValueError, CoherenceModel, topics=self.topics1, corpus=self.corpus,
-            coherence='u_mass'
+            ValueError,
+            CoherenceModel,
+            topics=self.topics1,
+            corpus=self.corpus,
+            coherence="u_mass",
         )
         # not providing texts for c_v and instead providing corpus
         self.assertRaises(
-            ValueError, CoherenceModel, topics=self.topics1, corpus=self.corpus,
-            dictionary=self.dictionary, coherence='c_v'
+            ValueError,
+            CoherenceModel,
+            topics=self.topics1,
+            corpus=self.corpus,
+            dictionary=self.dictionary,
+            coherence="c_v",
         )
         # not providing corpus or texts for u_mass
         self.assertRaises(
-            ValueError, CoherenceModel, topics=self.topics1, dictionary=self.dictionary,
-            coherence='u_mass'
+            ValueError,
+            CoherenceModel,
+            topics=self.topics1,
+            dictionary=self.dictionary,
+            coherence="u_mass",
         )
 
     def testProcesses(self):
-        get_model = partial(CoherenceModel,
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+        get_model = partial(
+            CoherenceModel,
+            topics=self.topics1,
+            corpus=self.corpus,
+            dictionary=self.dictionary,
+            coherence="u_mass",
         )
 
         model, used_cpus = get_model(), mp.cpu_count() - 1
@@ -146,27 +175,36 @@ class TestCoherenceModel(unittest.TestCase):
             self.assertEqual(get_model(processes=p).processes, p)
 
     def testPersistence(self):
-        fname = get_tmpfile('gensim_models_coherence.tst')
+        fname = get_tmpfile("gensim_models_coherence.tst")
         model = CoherenceModel(
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+            topics=self.topics1,
+            corpus=self.corpus,
+            dictionary=self.dictionary,
+            coherence="u_mass",
         )
         model.save(fname)
         model2 = CoherenceModel.load(fname)
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testPersistenceCompressed(self):
-        fname = get_tmpfile('gensim_models_coherence.tst.gz')
+        fname = get_tmpfile("gensim_models_coherence.tst.gz")
         model = CoherenceModel(
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+            topics=self.topics1,
+            corpus=self.corpus,
+            dictionary=self.dictionary,
+            coherence="u_mass",
         )
         model.save(fname)
         model2 = CoherenceModel.load(fname)
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testPersistenceAfterProbabilityEstimationUsingCorpus(self):
-        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        fname = get_tmpfile("gensim_similarities.tst.pkl")
         model = CoherenceModel(
-            topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
+            topics=self.topics1,
+            corpus=self.corpus,
+            dictionary=self.dictionary,
+            coherence="u_mass",
         )
         model.estimate_probabilities()
         model.save(fname)
@@ -175,9 +213,12 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testPersistenceAfterProbabilityEstimationUsingTexts(self):
-        fname = get_tmpfile('gensim_similarities.tst.pkl')
+        fname = get_tmpfile("gensim_similarities.tst.pkl")
         model = CoherenceModel(
-            topics=self.topics1, texts=self.texts, dictionary=self.dictionary, coherence='c_v'
+            topics=self.topics1,
+            texts=self.texts,
+            dictionary=self.dictionary,
+            coherence="c_v",
         )
         model.estimate_probabilities()
         model.save(fname)
@@ -186,7 +227,9 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertTrue(model.get_coherence() == model2.get_coherence())
 
     def testAccumulatorCachingSameSizeTopics(self):
-        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+        kwargs = dict(
+            corpus=self.corpus, dictionary=self.dictionary, coherence="u_mass"
+        )
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm1.estimate_probabilities()
         accumulator = cm1._accumulator
@@ -197,7 +240,9 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertEqual(None, cm1._accumulator)
 
     def testAccumulatorCachingTopicSubsets(self):
-        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+        kwargs = dict(
+            corpus=self.corpus, dictionary=self.dictionary, coherence="u_mass"
+        )
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm1.estimate_probabilities()
         accumulator = cm1._accumulator
@@ -208,7 +253,9 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertEqual(accumulator, cm1._accumulator)
 
     def testAccumulatorCachingWithModelSetting(self):
-        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass')
+        kwargs = dict(
+            corpus=self.corpus, dictionary=self.dictionary, coherence="u_mass"
+        )
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm1.estimate_probabilities()
         self.assertIsNotNone(cm1._accumulator)
@@ -221,7 +268,9 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertIsNone(cm1._accumulator)
 
     def testAccumulatorCachingWithTopnSettingGivenTopics(self):
-        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence='u_mass')
+        kwargs = dict(
+            corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence="u_mass"
+        )
         cm1 = CoherenceModel(topics=self.topics1, **kwargs)
         cm1.estimate_probabilities()
         self.assertIsNotNone(cm1._accumulator)
@@ -243,7 +292,9 @@ class TestCoherenceModel(unittest.TestCase):
             cm1.topn = 6  # can't expand topics any further without model
 
     def testAccumulatorCachingWithTopnSettingGivenModel(self):
-        kwargs = dict(corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence='u_mass')
+        kwargs = dict(
+            corpus=self.corpus, dictionary=self.dictionary, topn=5, coherence="u_mass"
+        )
         cm1 = CoherenceModel(model=self.ldamodel, **kwargs)
         cm1.estimate_probabilities()
         self.assertIsNotNone(cm1._accumulator)
@@ -261,7 +312,8 @@ class TestCoherenceModel(unittest.TestCase):
     def testCompareCoherenceForTopics(self):
         topics = [self.topics1, self.topics2]
         cm = CoherenceModel.for_topics(
-            topics, dictionary=self.dictionary, texts=self.texts, coherence='c_v')
+            topics, dictionary=self.dictionary, texts=self.texts, coherence="c_v"
+        )
         self.assertIsNotNone(cm._accumulator)
 
         # Accumulator should have all relevant IDs.
@@ -269,8 +321,10 @@ class TestCoherenceModel(unittest.TestCase):
             cm.topics = topic_list
             self.assertIsNotNone(cm._accumulator)
 
-        (coherence_topics1, coherence1), (coherence_topics2, coherence2) = \
-            cm.compare_model_topics(topics)
+        (coherence_topics1, coherence1), (
+            coherence_topics2,
+            coherence2,
+        ) = cm.compare_model_topics(topics)
 
         self.assertAlmostEqual(np.mean(coherence_topics1), coherence1, 4)
         self.assertAlmostEqual(np.mean(coherence_topics2), coherence2, 4)
@@ -279,7 +333,8 @@ class TestCoherenceModel(unittest.TestCase):
     def testCompareCoherenceForModels(self):
         models = [self.ldamodel, self.ldamodel]
         cm = CoherenceModel.for_models(
-            models, dictionary=self.dictionary, texts=self.texts, coherence='c_v')
+            models, dictionary=self.dictionary, texts=self.texts, coherence="c_v"
+        )
         self.assertIsNotNone(cm._accumulator)
 
         # Accumulator should have all relevant IDs.
@@ -287,14 +342,18 @@ class TestCoherenceModel(unittest.TestCase):
             cm.model = model
             self.assertIsNotNone(cm._accumulator)
 
-        (coherence_topics1, coherence1), (coherence_topics2, coherence2) = \
-            cm.compare_models(models)
+        (coherence_topics1, coherence1), (
+            coherence_topics2,
+            coherence2,
+        ) = cm.compare_models(models)
 
         self.assertAlmostEqual(np.mean(coherence_topics1), coherence1, 4)
         self.assertAlmostEqual(np.mean(coherence_topics2), coherence2, 4)
         self.assertAlmostEqual(coherence1, coherence2, places=4)
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.DEBUG
+    )
     unittest.main()

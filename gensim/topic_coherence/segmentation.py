@@ -46,7 +46,7 @@ def s_one_pre(topics):
     for top_words in topics:
         s_one_pre_t = []
         for w_prime_index, w_prime in enumerate(top_words[1:]):
-            for w_star in top_words[:w_prime_index + 1]:
+            for w_star in top_words[: w_prime_index + 1]:
                 s_one_pre_t.append((w_prime, w_star))
         s_one_pre_res.append(s_one_pre_t)
 

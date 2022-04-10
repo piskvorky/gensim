@@ -11,14 +11,13 @@
 """
 
 import logging
-from functools import partial
 import re
+from functools import partial
 
 import numpy as np
 
 from gensim import interfaces, matutils, utils
 from gensim.utils import deprecated
-
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +81,22 @@ def resolve_weights(smartirs):
 
     w_tf, w_df, w_n = smartirs
 
-    if w_tf not in 'btnaldL':
-        raise ValueError("Expected term frequency weight to be one of 'btnaldL', got {}".format(w_tf))
+    if w_tf not in "btnaldL":
+        raise ValueError(
+            "Expected term frequency weight to be one of 'btnaldL', got {}".format(w_tf)
+        )
 
-    if w_df not in 'xnftp':
-        raise ValueError("Expected inverse document frequency weight to be one of 'xnftp', got {}".format(w_df))
+    if w_df not in "xnftp":
+        raise ValueError(
+            "Expected inverse document frequency weight to be one of 'xnftp', got {}".format(
+                w_df
+            )
+        )
 
-    if w_n not in 'xncub':
-        raise ValueError("Expected normalization weight to be one of 'xncub', got {}".format(w_n))
+    if w_n not in "xncub":
+        raise ValueError(
+            "Expected normalization weight to be one of 'xncub', got {}".format(w_n)
+        )
 
     # resolve aliases
     if w_tf == "t":
@@ -175,7 +182,7 @@ def smartirs_wlocal(tf, local_scheme):
     elif local_scheme == "a":
         return 0.5 + (0.5 * tf / tf.max(axis=0))
     elif local_scheme == "b":
-        return tf.astype('bool').astype('int')
+        return tf.astype("bool").astype("int")
     elif local_scheme == "L":
         return (1 + np.log2(tf)) / (1 + np.log2(tf.mean(axis=0)))
 
@@ -258,8 +265,19 @@ class TfidfModel(interfaces.TransformationABC):
         >>> vector = model[corpus[0]]  # apply model to the first corpus document
 
     """
-    def __init__(self, corpus=None, id2word=None, dictionary=None, wlocal=utils.identity,
-                 wglobal=df2idf, normalize=True, smartirs=None, pivot=None, slope=0.25):
+
+    def __init__(
+        self,
+        corpus=None,
+        id2word=None,
+        dictionary=None,
+        wlocal=utils.identity,
+        wglobal=df2idf,
+        normalize=True,
+        smartirs=None,
+        pivot=None,
+        slope=0.25,
+    ):
         r"""Compute TF-IDF by multiplying a local component (term frequency) with a global component
         (inverse document frequency), and normalizing the resulting documents to unit length.
         Formula for non-normalized weight of term :math:`i` in document :math:`j` in a corpus of :math:`D` documents
@@ -391,19 +409,26 @@ class TfidfModel(interfaces.TransformationABC):
         if not smartirs:
             return
         if self.pivot is not None:
-            if n_n in 'ub':
+            if n_n in "ub":
                 logger.warning("constructor received pivot; ignoring smartirs[2]")
             return
-        if n_n in 'ub' and callable(self.normalize):
+        if n_n in "ub" and callable(self.normalize):
             logger.warning("constructor received smartirs; ignoring normalize")
-        if n_n in 'ub' and not dictionary and not corpus:
-            logger.warning("constructor received no corpus or dictionary; ignoring smartirs[2]")
+        if n_n in "ub" and not dictionary and not corpus:
+            logger.warning(
+                "constructor received no corpus or dictionary; ignoring smartirs[2]"
+            )
         elif n_n == "u":
             self.pivot = 1.0 * self.num_nnz / self.num_docs
         elif n_n == "b":
-            self.pivot = 1.0 * sum(
-                self.cfs[termid] * (self.term_lens[termid] + 1.0) for termid in dictionary.keys()
-            ) / self.num_docs
+            self.pivot = (
+                1.0
+                * sum(
+                    self.cfs[termid] * (self.term_lens[termid] + 1.0)
+                    for termid in dictionary.keys()
+                )
+                / self.num_docs
+            )
 
     @classmethod
     def load(cls, *args, **kwargs):
@@ -412,22 +437,26 @@ class TfidfModel(interfaces.TransformationABC):
 
         """
         model = super(TfidfModel, cls).load(*args, **kwargs)
-        if not hasattr(model, 'pivot'):
+        if not hasattr(model, "pivot"):
             model.pivot = None
-            logger.info('older version of %s loaded without pivot arg', cls.__name__)
-            logger.info('Setting pivot to %s.', model.pivot)
-        if not hasattr(model, 'slope'):
+            logger.info("older version of %s loaded without pivot arg", cls.__name__)
+            logger.info("Setting pivot to %s.", model.pivot)
+        if not hasattr(model, "slope"):
             model.slope = 0.65
-            logger.info('older version of %s loaded without slope arg', cls.__name__)
-            logger.info('Setting slope to %s.', model.slope)
-        if not hasattr(model, 'smartirs'):
+            logger.info("older version of %s loaded without slope arg", cls.__name__)
+            logger.info("Setting slope to %s.", model.slope)
+        if not hasattr(model, "smartirs"):
             model.smartirs = None
-            logger.info('older version of %s loaded without smartirs arg', cls.__name__)
-            logger.info('Setting smartirs to %s.', model.smartirs)
+            logger.info("older version of %s loaded without smartirs arg", cls.__name__)
+            logger.info("Setting smartirs to %s.", model.smartirs)
         return model
 
     def __str__(self):
-        return "%s<num_docs=%s, num_nnz=%s>" % (self.__class__.__name__, self.num_docs, self.num_nnz)
+        return "%s<num_docs=%s, num_nnz=%s>" % (
+            self.__class__.__name__,
+            self.num_docs,
+            self.num_nnz,
+        )
 
     def initialize(self, corpus):
         """Compute inverse document weights, which will be used to modify term frequencies for documents.
@@ -500,14 +529,15 @@ class TfidfModel(interfaces.TransformationABC):
 
         vector = [
             (termid, tf * self.idfs.get(termid))
-            for termid, tf in zip(termid_array, tf_array) if abs(self.idfs.get(termid, 0.0)) > self.eps
+            for termid, tf in zip(termid_array, tf_array)
+            if abs(self.idfs.get(termid, 0.0)) > self.eps
         ]
 
         # and finally, normalize the vector either to unit length, or use a
         # user-defined normalization function
         if self.smartirs:
             n_n = self.smartirs[2]
-            if n_n == "n" or (n_n in 'ub' and self.pivot is None):
+            if n_n == "n" or (n_n in "ub" and self.pivot is None):
                 if self.pivot is not None:
                     _, old_norm = matutils.unitvec(vector, return_norm=True)
                 norm_vector = vector
@@ -517,9 +547,11 @@ class TfidfModel(interfaces.TransformationABC):
                 else:
                     norm_vector = matutils.unitvec(vector)
             elif n_n == "u":
-                _, old_norm = matutils.unitvec(vector, return_norm=True, norm='unique')
+                _, old_norm = matutils.unitvec(vector, return_norm=True, norm="unique")
             elif n_n == "b":
-                old_norm = sum(freq * (self.term_lens[termid] + 1.0) for termid, freq in bow)
+                old_norm = sum(
+                    freq * (self.term_lens[termid] + 1.0) for termid, freq in bow
+                )
         else:
             if self.normalize is True:
                 self.normalize = matutils.unitvec
@@ -532,7 +564,11 @@ class TfidfModel(interfaces.TransformationABC):
                 norm_vector = self.normalize(vector)
 
         if self.pivot is None:
-            norm_vector = [(termid, weight) for termid, weight in norm_vector if abs(weight) > self.eps]
+            norm_vector = [
+                (termid, weight)
+                for termid, weight in norm_vector
+                if abs(weight) > self.eps
+            ]
         else:
             pivoted_norm = (1 - self.slope) * self.pivot + self.slope * old_norm
             norm_vector = [

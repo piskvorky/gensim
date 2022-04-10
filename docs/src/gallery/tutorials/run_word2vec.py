@@ -7,7 +7,10 @@ Introduces Gensim's Word2Vec model and demonstrates its use on the `Lee Evaluati
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # In case you missed the buzz, Word2Vec is a widely used algorithm based on neural
@@ -131,7 +134,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # **entire** Google News dataset, of **about 100 billion words**.
 #
 import gensim.downloader as api
-wv = api.load('word2vec-google-news-300')
+
+wv = api.load("word2vec-google-news-300")
 
 ###############################################################################
 # A common operation is to retrieve the vocabulary of a model. That is trivial:
@@ -143,7 +147,7 @@ for index, word in enumerate(wv.index_to_key):
 ###############################################################################
 # We can easily obtain vectors for terms the model is familiar with:
 #
-vec_king = wv['king']
+vec_king = wv["king"]
 
 ###############################################################################
 # Unfortunately, the model is unable to infer vectors for unfamiliar words.
@@ -151,7 +155,7 @@ vec_king = wv['king']
 # out the FastText model.
 #
 try:
-    vec_cameroon = wv['cameroon']
+    vec_cameroon = wv["cameroon"]
 except KeyError:
     print("The word 'cameroon' does not appear in this model")
 
@@ -161,22 +165,22 @@ except KeyError:
 # less and less similar.
 #
 pairs = [
-    ('car', 'minivan'),   # a minivan is a kind of car
-    ('car', 'bicycle'),   # still a wheeled vehicle
-    ('car', 'airplane'),  # ok, no wheels, but still a vehicle
-    ('car', 'cereal'),    # ... and so on
-    ('car', 'communism'),
+    ("car", "minivan"),  # a minivan is a kind of car
+    ("car", "bicycle"),  # still a wheeled vehicle
+    ("car", "airplane"),  # ok, no wheels, but still a vehicle
+    ("car", "cereal"),  # ... and so on
+    ("car", "communism"),
 ]
 for w1, w2 in pairs:
-    print('%r\t%r\t%.2f' % (w1, w2, wv.similarity(w1, w2)))
+    print("%r\t%r\t%.2f" % (w1, w2, wv.similarity(w1, w2)))
 
 ###############################################################################
 # Print the 5 most similar words to "car" or "minivan"
-print(wv.most_similar(positive=['car', 'minivan'], topn=5))
+print(wv.most_similar(positive=["car", "minivan"], topn=5))
 
 ###############################################################################
 # Which of the below does not belong in the sequence?
-print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
+print(wv.doesnt_match(["fire", "water", "land", "sea", "air", "car"]))
 
 ###############################################################################
 # Training Your Own Model
@@ -194,17 +198,19 @@ print(wv.doesnt_match(['fire', 'water', 'land', 'sea', 'air', 'car']))
 # would handle a larger corpus.
 #
 
-from gensim.test.utils import datapath
 from gensim import utils
+from gensim.test.utils import datapath
+
 
 class MyCorpus:
     """An iterator that yields sentences (lists of str)."""
 
     def __iter__(self):
-        corpus_path = datapath('lee_background.cor')
+        corpus_path = datapath("lee_background.cor")
         for line in open(corpus_path):
             # assume there's one document per line, tokens separated by whitespace
             yield utils.simple_preprocess(line)
+
 
 ###############################################################################
 # If we wanted to do any custom preprocessing, e.g. decode a non-standard
@@ -226,7 +232,7 @@ model = gensim.models.Word2Vec(sentences=sentences)
 #
 # The main part of the model is ``model.wv``\ , where "wv" stands for "word vectors".
 #
-vec_king = model.wv['king']
+vec_king = model.wv["king"]
 
 ###############################################################################
 # Retrieving the vocabulary works the same way:
@@ -247,7 +253,7 @@ for index, word in enumerate(wv.index_to_key):
 #
 import tempfile
 
-with tempfile.NamedTemporaryFile(prefix='gensim-model-', delete=False) as tmp:
+with tempfile.NamedTemporaryFile(prefix="gensim-model-", delete=False) as tmp:
     temporary_filepath = tmp.name
     model.save(temporary_filepath)
     #
@@ -367,7 +373,7 @@ model = gensim.models.Word2Vec(sentences, workers=4)
 ###############################################################################
 # Gensim supports the same evaluation set, in exactly the same format:
 #
-model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+model.wv.evaluate_word_analogies(datapath("questions-words.txt"))
 
 ###############################################################################
 #
@@ -387,7 +393,7 @@ model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 # as they appear in the same context. At the same time 'clothes' and 'closet'
 # are less similar because they are related but not interchangeable.
 #
-model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
+model.wv.evaluate_word_pairs(datapath("wordsim353.tsv"))
 
 ###############################################################################
 # .. Important::
@@ -407,14 +413,28 @@ model.wv.evaluate_word_pairs(datapath('wordsim353.tsv'))
 #
 model = gensim.models.Word2Vec.load(temporary_filepath)
 more_sentences = [
-    ['Advanced', 'users', 'can', 'load', 'a', 'model',
-     'and', 'continue', 'training', 'it', 'with', 'more', 'sentences'],
+    [
+        "Advanced",
+        "users",
+        "can",
+        "load",
+        "a",
+        "model",
+        "and",
+        "continue",
+        "training",
+        "it",
+        "with",
+        "more",
+        "sentences",
+    ],
 ]
 model.build_vocab(more_sentences, update=True)
 model.train(more_sentences, total_examples=model.corpus_count, epochs=model.epochs)
 
 # cleaning up temporary file
 import os
+
 os.remove(temporary_filepath)
 
 ###############################################################################
@@ -468,9 +488,10 @@ print(training_loss)
 import io
 import os
 
-import gensim.models.word2vec
-import gensim.downloader as api
 import smart_open
+
+import gensim.downloader as api
+import gensim.models.word2vec
 
 
 def head(path, size):
@@ -479,14 +500,14 @@ def head(path, size):
 
 
 def generate_input_data():
-    lee_path = datapath('lee_background.cor')
+    lee_path = datapath("lee_background.cor")
     ls = gensim.models.word2vec.LineSentence(lee_path)
-    ls.name = '25kB'
+    ls.name = "25kB"
     yield ls
 
-    text8_path = api.load('text8').fn
-    labels = ('1MB', '10MB', '50MB', '100MB')
-    sizes = (1024 ** 2, 10 * 1024 ** 2, 50 * 1024 ** 2, 100 * 1024 ** 2)
+    text8_path = api.load("text8").fn
+    labels = ("1MB", "10MB", "50MB", "100MB")
+    sizes = (1024**2, 10 * 1024**2, 50 * 1024**2, 100 * 1024**2)
     for l, s in zip(labels, sizes):
         ls = gensim.models.word2vec.LineSentence(head(text8_path, s))
         ls.name = l
@@ -507,6 +528,7 @@ input_data = list(generate_input_data())
 logging.root.level = logging.ERROR
 
 import time
+
 import numpy as np
 import pandas as pd
 
@@ -543,19 +565,19 @@ for data in input_data_subset:
                 time_std = np.std(time_taken_list)
 
                 model_result = {
-                    'train_data': data.name,
-                    'compute_loss': loss_flag,
-                    'sg': sg_val,
-                    'hs': hs_val,
-                    'train_time_mean': time_mean,
-                    'train_time_std': time_std,
+                    "train_data": data.name,
+                    "compute_loss": loss_flag,
+                    "sg": sg_val,
+                    "hs": hs_val,
+                    "train_time_mean": time_mean,
+                    "train_time_std": time_std,
                 }
                 print("Word2vec model #%i: %s" % (len(train_time_values), model_result))
                 train_time_values.append(model_result)
 
 train_times_table = pd.DataFrame(train_time_values)
 train_times_table = train_times_table.sort_values(
-    by=['train_data', 'sg', 'hs', 'compute_loss'],
+    by=["train_data", "sg", "hs", "compute_loss"],
     ascending=[False, False, True, False],
 )
 print(train_times_table)
@@ -583,9 +605,9 @@ print(train_times_table)
 #   some of the relations might not be so clear.
 #
 
-from sklearn.decomposition import IncrementalPCA    # inital reduction
-from sklearn.manifold import TSNE                   # final reduction
-import numpy as np                                  # array handling
+import numpy as np  # array handling
+from sklearn.decomposition import IncrementalPCA  # inital reduction
+from sklearn.manifold import TSNE  # final reduction
 
 
 def reduce_dimensions(model):
@@ -606,23 +628,25 @@ def reduce_dimensions(model):
 
 x_vals, y_vals, labels = reduce_dimensions(model)
 
-def plot_with_plotly(x_vals, y_vals, labels, plot_in_notebook=True):
-    from plotly.offline import init_notebook_mode, iplot, plot
-    import plotly.graph_objs as go
 
-    trace = go.Scatter(x=x_vals, y=y_vals, mode='text', text=labels)
+def plot_with_plotly(x_vals, y_vals, labels, plot_in_notebook=True):
+    import plotly.graph_objs as go
+    from plotly.offline import init_notebook_mode, iplot, plot
+
+    trace = go.Scatter(x=x_vals, y=y_vals, mode="text", text=labels)
     data = [trace]
 
     if plot_in_notebook:
         init_notebook_mode(connected=True)
-        iplot(data, filename='word-embedding-plot')
+        iplot(data, filename="word-embedding-plot")
     else:
-        plot(data, filename='word-embedding-plot.html')
+        plot(data, filename="word-embedding-plot.html")
 
 
 def plot_with_matplotlib(x_vals, y_vals, labels):
-    import matplotlib.pyplot as plt
     import random
+
+    import matplotlib.pyplot as plt
 
     random.seed(0)
 
@@ -636,6 +660,7 @@ def plot_with_matplotlib(x_vals, y_vals, labels):
     selected_indices = random.sample(indices, 25)
     for i in selected_indices:
         plt.annotate(labels[i], (x_vals[i], y_vals[i]))
+
 
 try:
     get_ipython()

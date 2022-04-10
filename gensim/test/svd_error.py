@@ -20,12 +20,12 @@ Example: ./svd_error.py ~/gensim/results/wiki_en_v10k.mm.bz2 100000 10000
 
 from __future__ import print_function, with_statement
 
+import bz2
+import itertools
 import logging
 import os
 import sys
 import time
-import bz2
-import itertools
 
 import numpy as np
 import scipy.linalg
@@ -66,8 +66,8 @@ def print_error(name, aat, u, s, ideal_nf, ideal_n2):
     err += aat
     nf, n2 = np.linalg.norm(err), norm2(err)
     print(
-        '%s error: norm_frobenius=%f (/ideal=%g), norm2=%f (/ideal=%g), RMSE=%g' %
-        (name, nf, nf / ideal_nf, n2, n2 / ideal_n2, rmse(err))
+        "%s error: norm_frobenius=%f (/ideal=%g), norm2=%f (/ideal=%g), RMSE=%g"
+        % (name, nf, nf / ideal_nf, n2, n2 / ideal_n2, rmse(err))
     )
     sys.stdout.flush()
 
@@ -82,8 +82,10 @@ class ClippedCorpus:
             yield [(f, w) for f, w in doc if f < self.max_terms]
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+    )
     logging.info("running %s", " ".join(sys.argv))
 
     program = os.path.basename(sys.argv[0])
@@ -93,7 +95,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     fname = sys.argv[1]
-    if fname.endswith('bz2'):
+    if fname.endswith("bz2"):
         mm = gensim.corpora.MmCorpus(bz2.BZ2File(fname))
     else:
         mm = gensim.corpora.MmCorpus(fname)
@@ -111,11 +113,15 @@ if __name__ == '__main__':
     corpus = ClippedCorpus(mm, n, m)
     id2word = gensim.utils.FakeDict(m)
 
-    logging.info("computing corpus * corpus^T")  # eigenvalues of this matrix are singular values of `corpus`, squared
+    logging.info(
+        "computing corpus * corpus^T"
+    )  # eigenvalues of this matrix are singular values of `corpus`, squared
     aat = np.zeros((m, m), dtype=np.float64)
     for chunk in gensim.utils.grouper(corpus, chunksize=5000):
         num_nnz = sum(len(doc) for doc in chunk)
-        chunk = gensim.matutils.corpus2csc(chunk, num_nnz=num_nnz, num_terms=m, num_docs=len(chunk), dtype=np.float32)
+        chunk = gensim.matutils.corpus2csc(
+            chunk, num_nnz=num_nnz, num_terms=m, num_docs=len(chunk), dtype=np.float32
+        )
         chunk = chunk * chunk.T
         chunk = chunk.toarray()
         aat += chunk
@@ -126,18 +132,31 @@ if __name__ == '__main__':
     spectrum_s, spectrum_u = scipy.linalg.eigh(aat)
     spectrum_s = spectrum_s[::-1]  # re-order to descending eigenvalue order
     spectrum_u = spectrum_u.T[::-1].T
-    np.save(fname + '.spectrum.npy', spectrum_s)
+    np.save(fname + ".spectrum.npy", spectrum_s)
 
     for factors in FACTORS:
-        err = -np.dot(spectrum_u[:, :factors], np.dot(np.diag(spectrum_s[:factors]), spectrum_u[:, :factors].T))
+        err = -np.dot(
+            spectrum_u[:, :factors],
+            np.dot(np.diag(spectrum_s[:factors]), spectrum_u[:, :factors].T),
+        )
         err += aat
         ideal_fro = np.linalg.norm(err)
         del err
         ideal_n2 = spectrum_s[factors + 1]
-        print('*' * 40, "%i factors, ideal error norm_frobenius=%f, norm_2=%f" % (factors, ideal_fro, ideal_n2))
+        print(
+            "*" * 40,
+            "%i factors, ideal error norm_frobenius=%f, norm_2=%f"
+            % (factors, ideal_fro, ideal_n2),
+        )
         print("*" * 30, end="")
-        print_error("baseline", aat,
-                    np.zeros((m, factors)), np.zeros((factors)), ideal_fro, ideal_n2)
+        print_error(
+            "baseline",
+            aat,
+            np.zeros((m, factors)),
+            np.zeros((factors)),
+            ideal_fro,
+            ideal_n2,
+        )
         if sparsesvd:
             logging.info("computing SVDLIBC SVD for %i factors", factors)
             taken = time.time()
@@ -146,49 +165,73 @@ if __name__ == '__main__':
             taken = time.time() - taken
             del corpus_ram
             del vt
-            u, s = ut.T.astype(np.float32), s.astype(np.float32)**2  # convert singular values to eigenvalues
+            u, s = (
+                ut.T.astype(np.float32),
+                s.astype(np.float32) ** 2,
+            )  # convert singular values to eigenvalues
             del ut
-            print("SVDLIBC SVD for %i factors took %s s (spectrum %f .. %f)"
-                  % (factors, taken, s[0], s[-1]))
+            print(
+                "SVDLIBC SVD for %i factors took %s s (spectrum %f .. %f)"
+                % (factors, taken, s[0], s[-1])
+            )
             print_error("SVDLIBC", aat, u, s, ideal_fro, ideal_n2)
             del u
         for power_iters in POWER_ITERS:
             for chunksize in CHUNKSIZE:
                 logging.info(
                     "computing incremental SVD for %i factors, %i power iterations, chunksize %i",
-                    factors, power_iters, chunksize
+                    factors,
+                    power_iters,
+                    chunksize,
                 )
                 taken = time.time()
                 gensim.models.lsimodel.P2_EXTRA_ITERS = power_iters
                 model = gensim.models.LsiModel(
-                    corpus, id2word=id2word, num_topics=factors,
-                    chunksize=chunksize, power_iters=power_iters
+                    corpus,
+                    id2word=id2word,
+                    num_topics=factors,
+                    chunksize=chunksize,
+                    power_iters=power_iters,
                 )
                 taken = time.time() - taken
-                u, s = model.projection.u.astype(np.float32), model.projection.s.astype(np.float32)**2
+                u, s = (
+                    model.projection.u.astype(np.float32),
+                    model.projection.s.astype(np.float32) ** 2,
+                )
                 del model
                 print(
                     "incremental SVD for %i factors, %i power iterations, "
-                    "chunksize %i took %s s (spectrum %f .. %f)" %
-                    (factors, power_iters, chunksize, taken, s[0], s[-1])
+                    "chunksize %i took %s s (spectrum %f .. %f)"
+                    % (factors, power_iters, chunksize, taken, s[0], s[-1])
                 )
-                print_error('incremental SVD', aat, u, s, ideal_fro, ideal_n2)
+                print_error("incremental SVD", aat, u, s, ideal_fro, ideal_n2)
                 del u
-            logging.info("computing multipass SVD for %i factors, %i power iterations", factors, power_iters)
+            logging.info(
+                "computing multipass SVD for %i factors, %i power iterations",
+                factors,
+                power_iters,
+            )
             taken = time.time()
             model = gensim.models.LsiModel(
-                corpus, id2word=id2word, num_topics=factors, chunksize=2000,
-                onepass=False, power_iters=power_iters
+                corpus,
+                id2word=id2word,
+                num_topics=factors,
+                chunksize=2000,
+                onepass=False,
+                power_iters=power_iters,
             )
             taken = time.time() - taken
-            u, s = model.projection.u.astype(np.float32), model.projection.s.astype(np.float32)**2
+            u, s = (
+                model.projection.u.astype(np.float32),
+                model.projection.s.astype(np.float32) ** 2,
+            )
             del model
             print(
                 "multipass SVD for %i factors, "
-                "%i power iterations took %s s (spectrum %f .. %f)" %
-                (factors, power_iters, taken, s[0], s[-1])
+                "%i power iterations took %s s (spectrum %f .. %f)"
+                % (factors, power_iters, taken, s[0], s[-1])
             )
-            print_error('multipass SVD', aat, u, s, ideal_fro, ideal_n2)
+            print_error("multipass SVD", aat, u, s, ideal_fro, ideal_n2)
             del u
 
     logging.info("finished running %s", program)

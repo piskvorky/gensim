@@ -6,7 +6,10 @@ Demonstrates simple and quick access to common corpora and pretrained models.
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # One of Gensim's features is simple and easy access to common data.
@@ -32,13 +35,14 @@ import gensim.downloader as api
 # Now, let's download the text8 corpus and load it as a Python object
 # that supports streamed access.
 #
-corpus = api.load('text8')
+corpus = api.load("text8")
 
 ###############################################################################
 # In this case, our corpus is an iterable.
 # If you look under the covers, it has the following definition:
 
 import inspect
+
 print(inspect.getsource(corpus.__class__))
 
 ###############################################################################
@@ -53,6 +57,7 @@ print(inspect.getfile(corpus.__class__))
 #
 
 from gensim.models.word2vec import Word2Vec
+
 model = Word2Vec(corpus)
 
 ###############################################################################
@@ -61,7 +66,7 @@ model = Word2Vec(corpus)
 #
 
 
-print(model.wv.most_similar('tree'))
+print(model.wv.most_similar("tree"))
 
 ###############################################################################
 #
@@ -71,6 +76,7 @@ print(model.wv.most_similar('tree'))
 
 
 import json
+
 info = api.info()
 print(json.dumps(info, indent=4))
 
@@ -80,23 +86,25 @@ print(info.keys())
 
 ###############################################################################
 # Let's have a look at the available corpora:
-for corpus_name, corpus_data in sorted(info['corpora'].items()):
+for corpus_name, corpus_data in sorted(info["corpora"].items()):
     print(
-        '%s (%d records): %s' % (
+        "%s (%d records): %s"
+        % (
             corpus_name,
-            corpus_data.get('num_records', -1),
-            corpus_data['description'][:40] + '...',
+            corpus_data.get("num_records", -1),
+            corpus_data["description"][:40] + "...",
         )
     )
 
 ###############################################################################
 # ... and the same for models:
-for model_name, model_data in sorted(info['models'].items()):
+for model_name, model_data in sorted(info["models"].items()):
     print(
-        '%s (%d records): %s' % (
+        "%s (%d records): %s"
+        % (
             model_name,
-            model_data.get('num_records', -1),
-            model_data['description'][:40] + '...',
+            model_data.get("num_records", -1),
+            model_data["description"][:40] + "...",
         )
     )
 
@@ -106,7 +114,7 @@ for model_name, model_data in sorted(info['models'].items()):
 #
 
 
-fake_news_info = api.info('fake-news')
+fake_news_info = api.info("fake-news")
 print(json.dumps(fake_news_info, indent=4))
 
 ###############################################################################
@@ -116,7 +124,7 @@ print(json.dumps(fake_news_info, indent=4))
 #
 
 
-print(api.load('glove-wiki-gigaword-50', return_path=True))
+print(api.load("glove-wiki-gigaword-50", return_path=True))
 
 ###############################################################################
 #

@@ -27,29 +27,29 @@ class TestIsCorpus(unittest.TestCase):
         # test list words
 
         # one document, one word
-        potentialCorpus = [[(0, 4.)]]
+        potentialCorpus = [[(0, 4.0)]]
         result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
         # one document, several words
-        potentialCorpus = [[(0, 4.), (1, 2.)]]
+        potentialCorpus = [[(0, 4.0), (1, 2.0)]]
         result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
-        potentialCorpus = [[(0, 4.), (1, 2.), (2, 5.), (3, 8.)]]
+        potentialCorpus = [[(0, 4.0), (1, 2.0), (2, 5.0), (3, 8.0)]]
         result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
         # several documents, one word
-        potentialCorpus = [[(0, 4.)], [(1, 2.)]]
+        potentialCorpus = [[(0, 4.0)], [(1, 2.0)]]
         result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
 
-        potentialCorpus = [[(0, 4.)], [(1, 2.)], [(2, 5.)], [(3, 8.)]]
+        potentialCorpus = [[(0, 4.0)], [(1, 2.0)], [(2, 5.0)], [(3, 8.0)]]
         result = utils.is_corpus(potentialCorpus)
         expected = (True, potentialCorpus)
         self.assertEqual(expected, result)
@@ -69,7 +69,7 @@ class TestIsCorpus(unittest.TestCase):
         potentials.append("human")
         potentials.append(["human", "star"])
         potentials.append([1, 2, 3, 4, 5, 5])
-        potentials.append([[(0, 'string')]])
+        potentials.append([[(0, "string")]])
         for noCorpus in potentials:
             result = utils.is_corpus(noCorpus)
             expected = (False, noCorpus)
@@ -79,23 +79,23 @@ class TestIsCorpus(unittest.TestCase):
 class TestUtils(unittest.TestCase):
     def test_decode_entities(self):
         # create a string that fails to decode with unichr on narrow python builds
-        body = u'It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;'
-        expected = u'It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af'
+        body = "It&#146;s the Year of the Horse. YES VIN DIESEL &#128588; &#128175;"
+        expected = "It\x92s the Year of the Horse. YES VIN DIESEL \U0001f64c \U0001f4af"
         self.assertEqual(utils.decode_htmlentities(body), expected)
 
     def test_open_file_existent_file(self):
         number_of_lines_in_file = 30
-        with utils.open_file(datapath('testcorpus.mm')) as infile:
+        with utils.open_file(datapath("testcorpus.mm")) as infile:
             self.assertEqual(sum(1 for _ in infile), number_of_lines_in_file)
 
     def test_open_file_non_existent_file(self):
         with self.assertRaises(Exception):
-            with utils.open_file('non_existent_file.txt'):
+            with utils.open_file("non_existent_file.txt"):
                 pass
 
     def test_open_file_existent_file_object(self):
         number_of_lines_in_file = 30
-        file_obj = open(datapath('testcorpus.mm'))
+        file_obj = open(datapath("testcorpus.mm"))
         with utils.open_file(file_obj) as infile:
             self.assertEqual(sum(1 for _ in infile), number_of_lines_in_file)
 
@@ -143,14 +143,16 @@ class TestMergeDicts(unittest.TestCase):
 
 class TestWindowing(unittest.TestCase):
 
-    arr10_5 = np.array([
-        [0, 1, 2, 3, 4],
-        [1, 2, 3, 4, 5],
-        [2, 3, 4, 5, 6],
-        [3, 4, 5, 6, 7],
-        [4, 5, 6, 7, 8],
-        [5, 6, 7, 8, 9]
-    ])
+    arr10_5 = np.array(
+        [
+            [0, 1, 2, 3, 4],
+            [1, 2, 3, 4, 5],
+            [2, 3, 4, 5, 6],
+            [3, 4, 5, 6, 7],
+            [4, 5, 6, 7, 8],
+            [5, 6, 7, 8, 9],
+        ]
+    )
 
     def _assert_arrays_equal(self, expected, actual):
         self.assertEqual(expected.shape, actual.shape)
@@ -158,12 +160,7 @@ class TestWindowing(unittest.TestCase):
 
     def test_strided_windows1(self):
         out = utils.strided_windows(range(5), 2)
-        expected = np.array([
-            [0, 1],
-            [1, 2],
-            [2, 3],
-            [3, 4]
-        ])
+        expected = np.array([[0, 1], [1, 2], [2, 3], [3, 4]])
         self._assert_arrays_equal(expected, out)
 
     def test_strided_windows2(self):
@@ -175,19 +172,19 @@ class TestWindowing(unittest.TestCase):
         self.assertEqual(10, input_arr[0], "should make view rather than copy")
 
     def test_strided_windows_window_size_exceeds_size(self):
-        input_arr = np.array(['this', 'is', 'test'], dtype='object')
+        input_arr = np.array(["this", "is", "test"], dtype="object")
         out = utils.strided_windows(input_arr, 4)
         expected = np.ndarray((0, 0))
         self._assert_arrays_equal(expected, out)
 
     def test_strided_windows_window_size_equals_size(self):
-        input_arr = np.array(['this', 'is', 'test'], dtype='object')
+        input_arr = np.array(["this", "is", "test"], dtype="object")
         out = utils.strided_windows(input_arr, 3)
         expected = np.array([input_arr.copy()])
         self._assert_arrays_equal(expected, out)
 
     def test_iter_windows_include_below_window_size(self):
-        texts = [['this', 'is', 'a'], ['test', 'document']]
+        texts = [["this", "is", "a"], ["test", "document"]]
         out = utils.iter_windows(texts, 3, ignore_below_size=False)
         windows = [list(w) for w in out]
         self.assertEqual(texts, windows)
@@ -197,33 +194,33 @@ class TestWindowing(unittest.TestCase):
         self.assertEqual([texts[0]], windows)
 
     def test_iter_windows_list_texts(self):
-        texts = [['this', 'is', 'a'], ['test', 'document']]
+        texts = [["this", "is", "a"], ["test", "document"]]
         windows = list(utils.iter_windows(texts, 2))
         list_windows = [list(iterable) for iterable in windows]
-        expected = [['this', 'is'], ['is', 'a'], ['test', 'document']]
+        expected = [["this", "is"], ["is", "a"], ["test", "document"]]
         self.assertListEqual(list_windows, expected)
 
     def test_iter_windows_uses_views(self):
-        texts = [np.array(['this', 'is', 'a'], dtype='object'), ['test', 'document']]
+        texts = [np.array(["this", "is", "a"], dtype="object"), ["test", "document"]]
         windows = list(utils.iter_windows(texts, 2))
         list_windows = [list(iterable) for iterable in windows]
-        expected = [['this', 'is'], ['is', 'a'], ['test', 'document']]
+        expected = [["this", "is"], ["is", "a"], ["test", "document"]]
         self.assertListEqual(list_windows, expected)
-        windows[0][0] = 'modified'
-        self.assertEqual('modified', texts[0][0])
+        windows[0][0] = "modified"
+        self.assertEqual("modified", texts[0][0])
 
     def test_iter_windows_with_copy(self):
         texts = [
-            np.array(['this', 'is', 'a'], dtype='object'),
-            np.array(['test', 'document'], dtype='object')
+            np.array(["this", "is", "a"], dtype="object"),
+            np.array(["test", "document"], dtype="object"),
         ]
         windows = list(utils.iter_windows(texts, 2, copy=True))
 
-        windows[0][0] = 'modified'
-        self.assertEqual('this', texts[0][0])
+        windows[0][0] = "modified"
+        self.assertEqual("this", texts[0][0])
 
-        windows[2][0] = 'modified'
-        self.assertEqual('test', texts[1][0])
+        windows[2][0] = "modified"
+        self.assertEqual("test", texts[1][0])
 
     def test_flatten_nested(self):
         nested_list = [[[1, 2, 3], [4, 5]], 6]
@@ -238,31 +235,35 @@ class TestWindowing(unittest.TestCase):
 
 class TestSaveAsLineSentence(unittest.TestCase):
     def test_save_as_line_sentence_en(self):
-        corpus_file = get_tmpfile('gensim_utils.tst')
+        corpus_file = get_tmpfile("gensim_utils.tst")
         ref_sentences = [
             line.split()
-            for line in utils.any2unicode('hello world\nhow are you').split('\n')
+            for line in utils.any2unicode("hello world\nhow are you").split("\n")
         ]
 
         utils.save_as_line_sentence(ref_sentences, corpus_file)
 
-        with utils.open(corpus_file, 'rb', encoding='utf8') as fin:
-            sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
+        with utils.open(corpus_file, "rb", encoding="utf8") as fin:
+            sentences = [
+                line.strip().split() for line in fin.read().strip().split("\n")
+            ]
             self.assertEqual(sentences, ref_sentences)
 
     def test_save_as_line_sentence_ru(self):
-        corpus_file = get_tmpfile('gensim_utils.tst')
+        corpus_file = get_tmpfile("gensim_utils.tst")
         ref_sentences = [
             line.split()
-            for line in utils.any2unicode('привет мир\nкак ты поживаешь').split('\n')
+            for line in utils.any2unicode("привет мир\nкак ты поживаешь").split("\n")
         ]
         utils.save_as_line_sentence(ref_sentences, corpus_file)
 
-        with utils.open(corpus_file, 'rb', encoding='utf8') as fin:
-            sentences = [line.strip().split() for line in fin.read().strip().split('\n')]
+        with utils.open(corpus_file, "rb", encoding="utf8") as fin:
+            sentences = [
+                line.strip().split() for line in fin.read().strip().split("\n")
+            ]
             self.assertEqual(sentences, ref_sentences)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.root.setLevel(logging.WARNING)
     unittest.main()

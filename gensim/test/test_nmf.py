@@ -8,17 +8,17 @@
 Automated tests for checking transformation algorithms (the models package).
 """
 
-import unittest
 import copy
 import logging
 import numbers
+import unittest
 
 import numpy as np
 
 from gensim import matutils
 from gensim.models import nmf
 from gensim.test import basetmtests
-from gensim.test.utils import datapath, get_tmpfile, common_corpus, common_dictionary
+from gensim.test.utils import common_corpus, common_dictionary, datapath, get_tmpfile
 
 
 class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
@@ -85,7 +85,9 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         doc = list(common_corpus)[0]
         transformed = self.model[doc]
 
-        vec = matutils.sparse2full(transformed, 2)  # convert to dense vector, for easier equality tests
+        vec = matutils.sparse2full(
+            transformed, 2
+        )  # convert to dense vector, for easier equality tests
         # The results sometimes differ on Windows, for unknown reasons.
         # See https://github.com/RaRe-Technologies/gensim/pull/2481#issuecomment-549456750
         expected = [0.03028875, 0.96971124]
@@ -155,36 +157,40 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
             self.assertTrue(np.issubdtype(probability, float))
 
     def test_persistence(self):
-        fname = get_tmpfile('gensim_models_nmf.tst')
+        fname = get_tmpfile("gensim_models_nmf.tst")
 
         self.model.save(fname)
         model2 = nmf.Nmf.load(fname)
         tstvec = []
-        self.assertTrue(np.allclose(self.model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        self.assertTrue(
+            np.allclose(self.model[tstvec], model2[tstvec])
+        )  # try projecting an empty vector
 
     def test_large_mmap(self):
-        fname = get_tmpfile('gensim_models_nmf.tst')
+        fname = get_tmpfile("gensim_models_nmf.tst")
 
         # simulate storing large arrays separately
         self.model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        model2 = nmf.Nmf.load(fname, mmap='r')
+        model2 = nmf.Nmf.load(fname, mmap="r")
         self.assertEqual(self.model.num_topics, model2.num_topics)
         tstvec = []
-        self.assertTrue(np.allclose(self.model[tstvec], model2[tstvec]))  # try projecting an empty vector
+        self.assertTrue(
+            np.allclose(self.model[tstvec], model2[tstvec])
+        )  # try projecting an empty vector
 
     def test_large_mmap_compressed(self):
-        fname = get_tmpfile('gensim_models_nmf.tst.gz')
+        fname = get_tmpfile("gensim_models_nmf.tst.gz")
 
         # simulate storing large arrays separately
         self.model.save(fname, sep_limit=0)
 
         # test loading the large model arrays with mmap
-        self.assertRaises(IOError, nmf.Nmf.load, fname, mmap='r')
+        self.assertRaises(IOError, nmf.Nmf.load, fname, mmap="r")
 
     def test_dtype_backward_compatibility(self):
-        nmf_fname = datapath('nmf_model')
+        nmf_fname = datapath("nmf_model")
         test_doc = [(0, 1), (1, 1), (2, 1)]
         expected_topics = [(1, 1.0)]
 
@@ -199,6 +205,8 @@ class TestNmf(unittest.TestCase, basetmtests.TestBaseTopicModel):
         self.assertTrue(np.allclose(expected_topics, topics))
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+    )
     unittest.main()

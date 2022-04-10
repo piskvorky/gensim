@@ -14,17 +14,16 @@ Originally by Jeff Winkler, http://jeffwinkler.net
 Forked from wkral http://github.com/wkral/Nosy
 """
 
+import datetime
+import fnmatch
 import os
 import stat
-import time
-import datetime
 import sys
-import fnmatch
+import time
 
-
-EXTENSIONS = ['*.py']
-EXECUTABLE = 'nosetests test/'
-DEFAULTARGS = '--with-color -exe'  # -w tests'
+EXTENSIONS = ["*.py"]
+EXECUTABLE = "nosetests test/"
+DEFAULTARGS = "--with-color -exe"  # -w tests'
 
 
 def check_sum():
@@ -40,15 +39,17 @@ def check_sum():
     return val
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     val = 0
     try:
         while True:
             if check_sum() != val:
                 val = check_sum()
-                os.system('%s %s %s' % (EXECUTABLE, DEFAULTARGS, ' '.join(sys.argv[1:])))
+                os.system(
+                    "%s %s %s" % (EXECUTABLE, DEFAULTARGS, " ".join(sys.argv[1:]))
+                )
                 print(datetime.datetime.now().__str__())
-                print('=' * 77)
+                print("=" * 77)
             time.sleep(1)
     except KeyboardInterrupt:
-        print('Goodbye')
+        print("Goodbye")

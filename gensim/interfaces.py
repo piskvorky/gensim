@@ -16,8 +16,7 @@ and implement the missing methods.
 
 import logging
 
-from gensim import utils, matutils
-
+from gensim import matutils, utils
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +72,10 @@ class CorpusABC(utils.SaveLoad):
         Corpora in different formats.
 
     """
+
     def __iter__(self):
         """Iterate all over corpus."""
-        raise NotImplementedError('cannot instantiate abstract base class')
+        raise NotImplementedError("cannot instantiate abstract base class")
 
     def save(self, *args, **kwargs):
         """Saves the in-memory state of the corpus (pickles the object).
@@ -89,6 +89,7 @@ class CorpusABC(utils.SaveLoad):
 
         """
         import warnings
+
         warnings.warn(
             "corpus.save() stores only the (tiny) iteration object in memory; "
             "to serialize the actual corpus content, use e.g. MmCorpus.serialize(corpus)"
@@ -129,11 +130,12 @@ class CorpusABC(utils.SaveLoad):
             Write additional metadata to a separate too?
 
         """
-        raise NotImplementedError('cannot instantiate abstract base class')
+        raise NotImplementedError("cannot instantiate abstract base class")
 
 
 class TransformedCorpus(CorpusABC):
     """Interface for corpora that are the result of an online (streamed) transformation."""
+
     def __init__(self, obj, corpus, chunksize=None, **kwargs):
         """
 
@@ -200,10 +202,12 @@ class TransformedCorpus(CorpusABC):
             If corpus doesn't support index slicing (`__getitem__` doesn't exists).
 
         """
-        if hasattr(self.corpus, '__getitem__'):
+        if hasattr(self.corpus, "__getitem__"):
             return self.obj[self.corpus[docno]]
         else:
-            raise RuntimeError('Type {} does not support slicing.'.format(type(self.corpus)))
+            raise RuntimeError(
+                "Type {} does not support slicing.".format(type(self.corpus))
+            )
 
 
 class TransformationABC(utils.SaveLoad):
@@ -222,6 +226,7 @@ class TransformationABC(utils.SaveLoad):
         >>> bow_corpus = model[common_corpus]  # also, we can apply model on the full corpus
 
     """
+
     def __getitem__(self, vec):
         """Transform a single document, or a whole corpus, from one vector space into another.
 
@@ -231,7 +236,7 @@ class TransformationABC(utils.SaveLoad):
             Document in bag-of-words, or streamed corpus.
 
         """
-        raise NotImplementedError('cannot instantiate abstract base class')
+        raise NotImplementedError("cannot instantiate abstract base class")
 
     def _apply(self, corpus, chunksize=None, **kwargs):
         """Apply the transformation to a whole corpus and get the result as another corpus.
@@ -280,6 +285,7 @@ class SimilarityABC(utils.SaveLoad):
         Different index implementations of this interface.
 
     """
+
     def __init__(self, corpus):
         """
 
@@ -341,7 +347,7 @@ class SimilarityABC(utils.SaveLoad):
 
         # if maintain_sparsity is True, result is scipy sparse. Sort, clip the
         # topn and return as a scipy sparse matrix.
-        if getattr(self, 'maintain_sparsity', False):
+        if getattr(self, "maintain_sparsity", False):
             return matutils.scipy2scipy_clipped(result, self.num_best)
 
         # if the input query was a corpus (=more documents), compute the top-n
@@ -387,7 +393,7 @@ class SimilarityABC(utils.SaveLoad):
                 # (unlike numpy). so, clip the end of the chunk explicitly to make
                 # scipy.sparse happy
                 chunk_end = min(self.index.shape[0], chunk_start + self.chunksize)
-                chunk = self.index[chunk_start: chunk_end]
+                chunk = self.index[chunk_start:chunk_end]
                 for sim in self[chunk]:
                     yield sim
         else:

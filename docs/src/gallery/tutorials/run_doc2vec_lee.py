@@ -8,7 +8,10 @@ Introduces Gensim's Doc2Vec model and demonstrates its use on the
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # Doc2Vec is a :ref:`core_concepts_model` that represents each
@@ -128,11 +131,13 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #
 
 import os
+
 import gensim
+
 # Set file names for train and test data
-test_data_dir = os.path.join(gensim.__path__[0], 'test', 'test_data')
-lee_train_file = os.path.join(test_data_dir, 'lee_background.cor')
-lee_test_file = os.path.join(test_data_dir, 'lee.cor')
+test_data_dir = os.path.join(gensim.__path__[0], "test", "test_data")
+lee_train_file = os.path.join(test_data_dir, "lee_background.cor")
+lee_test_file = os.path.join(test_data_dir, "lee.cor")
 
 ###############################################################################
 # Define a Function to Read and Preprocess Text
@@ -154,6 +159,7 @@ lee_test_file = os.path.join(test_data_dir, 'lee.cor')
 #
 import smart_open
 
+
 def read_corpus(fname, tokens_only=False):
     with smart_open.open(fname, encoding="iso-8859-1") as f:
         for i, line in enumerate(f):
@@ -163,6 +169,7 @@ def read_corpus(fname, tokens_only=False):
             else:
                 # For training data, add tags
                 yield gensim.models.doc2vec.TaggedDocument(tokens, [i])
+
 
 train_corpus = list(read_corpus(lee_train_file))
 test_corpus = list(read_corpus(lee_test_file, tokens_only=True))
@@ -211,7 +218,9 @@ model.build_vocab(train_corpus)
 # Additional attributes for each word are available using the ``model.wv.get_vecattr()`` method,
 # For example, to see how many times ``penalty`` appeared in the training corpus:
 #
-print(f"Word 'penalty' appeared {model.wv.get_vecattr('penalty', 'count')} times in the training corpus.")
+print(
+    f"Word 'penalty' appeared {model.wv.get_vecattr('penalty', 'count')} times in the training corpus."
+)
 
 ###############################################################################
 # Next, train the model on the corpus.
@@ -226,7 +235,7 @@ model.train(train_corpus, total_examples=model.corpus_count, epochs=model.epochs
 # by passing a list of words to the ``model.infer_vector`` function. This
 # vector can then be compared with other vectors via cosine similarity.
 #
-vector = model.infer_vector(['only', 'you', 'can', 'prevent', 'forest', 'fires'])
+vector = model.infer_vector(["only", "you", "can", "prevent", "forest", "fires"])
 print(vector)
 
 ###############################################################################
@@ -281,10 +290,18 @@ print(counter)
 #
 # This is great and not entirely surprising. We can take a look at an example:
 #
-print('Document ({}): «{}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
-print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
-for label, index in [('MOST', 0), ('SECOND-MOST', 1), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
-    print(u'%s %s: «%s»\n' % (label, sims[index], ' '.join(train_corpus[sims[index][0]].words)))
+print("Document ({}): «{}»\n".format(doc_id, " ".join(train_corpus[doc_id].words)))
+print("SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n" % model)
+for label, index in [
+    ("MOST", 0),
+    ("SECOND-MOST", 1),
+    ("MEDIAN", len(sims) // 2),
+    ("LEAST", len(sims) - 1),
+]:
+    print(
+        "%s %s: «%s»\n"
+        % (label, sims[index], " ".join(train_corpus[sims[index][0]].words))
+    )
 
 ###############################################################################
 # Notice above that the most similar document (usually the same text) is has a
@@ -299,12 +316,19 @@ for label, index in [('MOST', 0), ('SECOND-MOST', 1), ('MEDIAN', len(sims)//2), 
 
 # Pick a random document from the corpus and infer a vector from the model
 import random
+
 doc_id = random.randint(0, len(train_corpus) - 1)
 
 # Compare and print the second-most-similar document
-print('Train Document ({}): «{}»\n'.format(doc_id, ' '.join(train_corpus[doc_id].words)))
+print(
+    "Train Document ({}): «{}»\n".format(doc_id, " ".join(train_corpus[doc_id].words))
+)
 sim_id = second_ranks[doc_id]
-print('Similar Document {}: «{}»\n'.format(sim_id, ' '.join(train_corpus[sim_id[0]].words)))
+print(
+    "Similar Document {}: «{}»\n".format(
+        sim_id, " ".join(train_corpus[sim_id[0]].words)
+    )
+)
 
 ###############################################################################
 # Testing the Model
@@ -320,10 +344,13 @@ inferred_vector = model.infer_vector(test_corpus[doc_id])
 sims = model.dv.most_similar([inferred_vector], topn=len(model.dv))
 
 # Compare and print the most/median/least similar documents from the train corpus
-print('Test Document ({}): «{}»\n'.format(doc_id, ' '.join(test_corpus[doc_id])))
-print(u'SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n' % model)
-for label, index in [('MOST', 0), ('MEDIAN', len(sims)//2), ('LEAST', len(sims) - 1)]:
-    print(u'%s %s: «%s»\n' % (label, sims[index], ' '.join(train_corpus[sims[index][0]].words)))
+print("Test Document ({}): «{}»\n".format(doc_id, " ".join(test_corpus[doc_id])))
+print("SIMILAR/DISSIMILAR DOCS PER MODEL %s:\n" % model)
+for label, index in [("MOST", 0), ("MEDIAN", len(sims) // 2), ("LEAST", len(sims) - 1)]:
+    print(
+        "%s %s: «%s»\n"
+        % (label, sims[index], " ".join(train_corpus[sims[index][0]].words))
+    )
 
 ###############################################################################
 # Conclusion

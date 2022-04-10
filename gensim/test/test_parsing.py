@@ -15,9 +15,9 @@ from gensim.parsing.preprocessing import (
     remove_short_tokens,
     remove_stopword_tokens,
     remove_stopwords,
-    stem_text,
     split_alphanum,
     split_on_space,
+    stem_text,
     strip_multiple_whitespaces,
     strip_non_alphanum,
     strip_numeric,
@@ -57,7 +57,6 @@ classes = np.array([[1, 0], [1, 0], [0, 1], [0, 1]])
 
 
 class TestPreprocessing(unittest.TestCase):
-
     def test_strip_numeric(self):
         self.assertEqual(strip_numeric("salut les amis du 59"), "salut les amis du ")
 
@@ -68,7 +67,9 @@ class TestPreprocessing(unittest.TestCase):
         self.assertEqual(strip_tags("<i>Hello</i> <b>World</b>!"), "Hello World!")
 
     def test_strip_multiple_whitespaces(self):
-        self.assertEqual(strip_multiple_whitespaces("salut  les\r\nloulous!"), "salut les loulous!")
+        self.assertEqual(
+            strip_multiple_whitespaces("salut  les\r\nloulous!"), "salut les loulous!"
+        )
 
     def test_strip_non_alphanum(self):
         self.assertEqual(strip_non_alphanum("toto nf-kappa titi"), "toto nf kappa titi")
@@ -81,31 +82,41 @@ class TestPreprocessing(unittest.TestCase):
         self.assertEqual(remove_stopwords("the world is square"), "world square")
 
         # confirm redifining the global `STOPWORDS` working
-        with mock.patch('gensim.parsing.preprocessing.STOPWORDS', frozenset(["the"])):
+        with mock.patch("gensim.parsing.preprocessing.STOPWORDS", frozenset(["the"])):
             self.assertEqual(remove_stopwords("the world is square"), "world is square")
 
     def test_strip_stopword_tokens(self):
-        self.assertEqual(remove_stopword_tokens(["the", "world", "is", "sphere"]), ["world", "sphere"])
+        self.assertEqual(
+            remove_stopword_tokens(["the", "world", "is", "sphere"]),
+            ["world", "sphere"],
+        )
 
         # confirm redifining the global `STOPWORDS` working
-        with mock.patch('gensim.parsing.preprocessing.STOPWORDS', frozenset(["the"])):
+        with mock.patch("gensim.parsing.preprocessing.STOPWORDS", frozenset(["the"])):
             self.assertEqual(
                 remove_stopword_tokens(["the", "world", "is", "sphere"]),
-                ["world", "is", "sphere"]
+                ["world", "is", "sphere"],
             )
 
     def test_strip_short_tokens(self):
-        self.assertEqual(remove_short_tokens(["salut", "les", "amis", "du", "59"], 3), ["salut", "les", "amis"])
+        self.assertEqual(
+            remove_short_tokens(["salut", "les", "amis", "du", "59"], 3),
+            ["salut", "les", "amis"],
+        )
 
     def test_split_on_space(self):
-        self.assertEqual(split_on_space(" salut   les  amis du 59 "), ["salut", "les", "amis", "du", "59"])
+        self.assertEqual(
+            split_on_space(" salut   les  amis du 59 "),
+            ["salut", "les", "amis", "du", "59"],
+        )
 
     def test_stem_text(self):
-        target = \
-            "while it is quit us to be abl to search a larg " + \
-            "collect of document almost instantli for a joint occurr " + \
-            "of a collect of exact words, for mani search purposes, " + \
-            "a littl fuzzi would help."
+        target = (
+            "while it is quit us to be abl to search a larg "
+            + "collect of document almost instantli for a joint occurr "
+            + "of a collect of exact words, for mani search purposes, "
+            + "a littl fuzzi would help."
+        )
         self.assertEqual(stem_text(doc5), target)
 
 

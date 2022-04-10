@@ -9,8 +9,9 @@ import sys
 
 import requests
 
+
 def to_int(value):
-    value = ''.join((x for x in value if x.isdigit()))
+    value = "".join((x for x in value if x.isdigit()))
     try:
         return int(value)
     except Exception:
@@ -18,21 +19,20 @@ def to_int(value):
 
 
 def to_tuple(version):
-    return tuple(to_int(x) for x in version.split('.'))
+    return tuple(to_int(x) for x in version.split("."))
 
 
 def main():
     project = sys.argv[1]
-    json = requests.get('https://pypi.org/pypi/%s/json' % project).json()
-    for version in sorted(json['releases'], key=to_tuple):
+    json = requests.get("https://pypi.org/pypi/%s/json" % project).json()
+    for version in sorted(json["releases"], key=to_tuple):
         print(version)
         wheel_packages = [
-            p for p in json['releases'][version]
-            if p['packagetype'] == 'bdist_wheel'
+            p for p in json["releases"][version] if p["packagetype"] == "bdist_wheel"
         ]
         for p in wheel_packages:
-            print('    %(python_version)s %(filename)s' % p)
+            print("    %(python_version)s %(filename)s" % p)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -19,14 +19,14 @@ import logging
 import os
 import unittest
 
-from gensim import utils, corpora, models, similarities
+from gensim import corpora, models, similarities, utils
 from gensim.test.utils import datapath, get_tmpfile
 
 logger = logging.getLogger(__name__)
 
 
 class CorpusMiislita(corpora.TextCorpus):
-    stoplist = set('for a of the and to in on'.split())
+    stoplist = set("for a of the and to in on".split())
 
     def get_texts(self):
         """
@@ -37,12 +37,15 @@ class CorpusMiislita(corpora.TextCorpus):
 
         """
         for doc in self.getstream():
-            yield [word for word in utils.to_unicode(doc).lower().split()
-                    if word not in CorpusMiislita.stoplist]
+            yield [
+                word
+                for word in utils.to_unicode(doc).lower().split()
+                if word not in CorpusMiislita.stoplist
+            ]
 
     def __len__(self):
         """Define this so we can use `len(corpus)`"""
-        if 'length' not in self.__dict__:
+        if "length" not in self.__dict__:
             logger.info("caching corpus size (calculating number of documents)")
             self.length = sum(1 for _ in self.get_texts())
         return self.length
@@ -50,12 +53,12 @@ class CorpusMiislita(corpora.TextCorpus):
 
 class TestMiislita(unittest.TestCase):
     def test_textcorpus(self):
-        """Make sure TextCorpus can be serialized to disk. """
+        """Make sure TextCorpus can be serialized to disk."""
         # construct corpus from file
-        miislita = CorpusMiislita(datapath('head500.noblanks.cor.bz2'))
+        miislita = CorpusMiislita(datapath("head500.noblanks.cor.bz2"))
 
         # make sure serializing works
-        ftmp = get_tmpfile('test_textcorpus.mm')
+        ftmp = get_tmpfile("test_textcorpus.mm")
         corpora.MmCorpus.save_corpus(ftmp, miislita)
         self.assertTrue(os.path.exists(ftmp))
 
@@ -69,11 +72,11 @@ class TestMiislita(unittest.TestCase):
         as the underlying input isn't a file-like object; we cannot pickle those).
         """
         # construct corpus from file
-        corpusname = datapath('miIslita.cor')
+        corpusname = datapath("miIslita.cor")
         miislita = CorpusMiislita(corpusname)
 
         # pickle to disk
-        tmpf = get_tmpfile('tc_test.cpickle')
+        tmpf = get_tmpfile("tc_test.cpickle")
         miislita.save(tmpf)
 
         miislita2 = CorpusMiislita.load(tmpf)
@@ -83,14 +86,16 @@ class TestMiislita(unittest.TestCase):
 
     def test_miislita_high_level(self):
         # construct corpus from file
-        miislita = CorpusMiislita(datapath('miIslita.cor'))
+        miislita = CorpusMiislita(datapath("miIslita.cor"))
 
         # initialize tfidf transformation and similarity index
         tfidf = models.TfidfModel(miislita, miislita.dictionary, normalize=False)
-        index = similarities.SparseMatrixSimilarity(tfidf[miislita], num_features=len(miislita.dictionary))
+        index = similarities.SparseMatrixSimilarity(
+            tfidf[miislita], num_features=len(miislita.dictionary)
+        )
 
         # compare to query
-        query = 'latent semantic indexing'
+        query = "latent semantic indexing"
         vec_bow = miislita.dictionary.doc2bow(query.lower().split())
         vec_tfidf = tfidf[vec_bow]
 
@@ -103,6 +108,6 @@ class TestMiislita(unittest.TestCase):
             self.assertAlmostEqual(sims_tfidf[i], value, 2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     unittest.main()

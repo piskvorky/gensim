@@ -21,11 +21,13 @@ or using CLI interface
    :ellipsis: 0, -4
 """
 import argparse
+import os
 import platform
 import sys
-import os
+
 import numpy
 import scipy
+
 import gensim
 
 
@@ -41,7 +43,7 @@ def package_info():
     """
     return {
         "Platform": platform.platform(),
-        "Python": sys.version.replace("\n", ', '),
+        "Python": sys.version.replace("\n", ", "),
         "NumPy": numpy.__version__,
         "SciPy": scipy.__version__,
         "Gensim": gensim.__version__,
@@ -50,8 +52,12 @@ def package_info():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__[:-65], formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--info", help="Information about Gensim package", action="store_true")
+    parser = argparse.ArgumentParser(
+        description=__doc__[:-65], formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--info", help="Information about Gensim package", action="store_true"
+    )
     args = parser.parse_args()
 
     if args.info:

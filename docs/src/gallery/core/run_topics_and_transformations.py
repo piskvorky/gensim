@@ -6,7 +6,10 @@ Introduces transformations and demonstrates their use on a toy corpus.
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # In this tutorial, I will show how to transform documents from one vector representation
@@ -27,6 +30,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 # if you completed it, feel free to skip to the next section.
 
 from collections import defaultdict
+
 from gensim import corpora
 
 documents = [
@@ -42,7 +46,7 @@ documents = [
 ]
 
 # remove common words and tokenize
-stoplist = set('for a of the and to in'.split())
+stoplist = set("for a of the and to in".split())
 texts = [
     [word for word in document.lower().split() if word not in stoplist]
     for document in documents
@@ -54,10 +58,7 @@ for text in texts:
     for token in text:
         frequency[token] += 1
 
-texts = [
-    [token for token in text if frequency[token] > 1]
-    for text in texts
-]
+texts = [[token for token in text if frequency[token] > 1] for text in texts]
 
 dictionary = corpora.Dictionary(texts)
 corpus = [dictionary.doc2bow(text) for text in texts]
@@ -126,8 +127,12 @@ for doc in corpus_tfidf:
 #
 # Transformations can also be serialized, one on top of another, in a sort of chain:
 
-lsi_model = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # initialize an LSI transformation
-corpus_lsi = lsi_model[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
+lsi_model = models.LsiModel(
+    corpus_tfidf, id2word=dictionary, num_topics=2
+)  # initialize an LSI transformation
+corpus_lsi = lsi_model[
+    corpus_tfidf
+]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 ###############################################################################
 # Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
@@ -155,7 +160,7 @@ for doc, as_text in zip(corpus_lsi, documents):
 import os
 import tempfile
 
-with tempfile.NamedTemporaryFile(prefix='model-', suffix='.lsi', delete=False) as tmp:
+with tempfile.NamedTemporaryFile(prefix="model-", suffix=".lsi", delete=False) as tmp:
     lsi_model.save(tmp.name)  # same for tfidf, lda, ...
 
 loaded_lsi_model = models.LsiModel.load(tmp.name)
@@ -285,8 +290,9 @@ os.unlink(tmp.name)
 #
 # .. [5] Řehůřek. 2011. Subspace tracking for Latent Semantic Analysis.
 
-import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-img = mpimg.imread('run_topics_and_transformations.png')
+import matplotlib.pyplot as plt
+
+img = mpimg.imread("run_topics_and_transformations.png")
 imgplot = plt.imshow(img)
-_ = plt.axis('off')
+_ = plt.axis("off")

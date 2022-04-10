@@ -10,15 +10,16 @@ Automated test to check similarity functions and isbow function.
 
 
 import logging
+import math
 import unittest
 
-from gensim import matutils
-from scipy.sparse import csr_matrix
 import numpy as np
-import math
+from scipy.sparse import csr_matrix
+
+from gensim import matutils
 from gensim.corpora.mmcorpus import MmCorpus
 from gensim.models import ldamodel
-from gensim.test.utils import datapath, common_dictionary, common_corpus
+from gensim.test.utils import common_corpus, common_dictionary, datapath
 
 
 class TestIsBow(unittest.TestCase):
@@ -38,7 +39,7 @@ class TestIsBow(unittest.TestCase):
         self.assertEqual(expected, result)
 
         # multiple bags
-        potentialbow = [(0, 4.), (1, 2.), (2, 5.), (3, 8.)]
+        potentialbow = [(0, 4.0), (1, 2.0), (2, 5.0), (3, 8.0)]
         result = matutils.isbow(potentialbow)
         expected = True
         self.assertEqual(expected, result)
@@ -76,9 +77,11 @@ class TestIsBow(unittest.TestCase):
 
 class TestHellinger(unittest.TestCase):
     def setUp(self):
-        self.corpus = MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath("testcorpus.mm"))
         self.class_ = ldamodel.LdaModel
-        self.model = self.class_(common_corpus, id2word=common_dictionary, num_topics=2, passes=100)
+        self.model = self.class_(
+            common_corpus, id2word=common_dictionary, num_topics=2, passes=100
+        )
 
     def test_inputs(self):
         # checking empty inputs
@@ -135,7 +138,9 @@ class TestHellinger(unittest.TestCase):
 
         # testing LDA distribution vectors
         np.random.seed(0)
-        model = self.class_(self.corpus, id2word=common_dictionary, num_topics=2, passes=100)
+        model = self.class_(
+            self.corpus, id2word=common_dictionary, num_topics=2, passes=100
+        )
         lda_vec1 = model[[(1, 2), (2, 3)]]
         lda_vec2 = model[[(2, 2), (1, 3)]]
         result = matutils.hellinger(lda_vec1, lda_vec2)
@@ -145,9 +150,11 @@ class TestHellinger(unittest.TestCase):
 
 class TestKL(unittest.TestCase):
     def setUp(self):
-        self.corpus = MmCorpus(datapath('testcorpus.mm'))
+        self.corpus = MmCorpus(datapath("testcorpus.mm"))
         self.class_ = ldamodel.LdaModel
-        self.model = self.class_(common_corpus, id2word=common_dictionary, num_topics=2, passes=100)
+        self.model = self.class_(
+            common_corpus, id2word=common_dictionary, num_topics=2, passes=100
+        )
 
     def test_inputs(self):
 
@@ -202,7 +209,9 @@ class TestKL(unittest.TestCase):
 
         # testing LDA distribution vectors
         np.random.seed(0)
-        model = self.class_(self.corpus, id2word=common_dictionary, num_topics=2, passes=100)
+        model = self.class_(
+            self.corpus, id2word=common_dictionary, num_topics=2, passes=100
+        )
         lda_vec1 = model[[(1, 2), (2, 3)]]
         lda_vec2 = model[[(2, 2), (1, 3)]]
         result = matutils.kullback_leibler(lda_vec1, lda_vec2)
@@ -240,6 +249,8 @@ class TestJaccard(unittest.TestCase):
         self.assertAlmostEqual(expected, result)
 
 
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.DEBUG
+    )
     unittest.main()

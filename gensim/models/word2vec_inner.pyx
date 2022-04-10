@@ -14,9 +14,7 @@ import cython
 import numpy as np
 
 cimport numpy as np
-
-from libc.math cimport exp
-from libc.math cimport log
+from libc.math cimport exp, log
 from libc.string cimport memset
 
 # scipy <= 0.15

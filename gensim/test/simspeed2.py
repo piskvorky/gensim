@@ -13,24 +13,25 @@ each corpus for testing (or use all if no NUMDOCS is given).
 Example: ./simspeed2.py wikismall.dense.mm wikismall.sparse.mm
 """
 
-import logging
-import sys
 import itertools
-import os
+import logging
 import math
+import os
+import sys
 from time import time
 
 import gensim
 
-
-if __name__ == '__main__':
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+if __name__ == "__main__":
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+    )
     logging.info("running %s", " ".join(sys.argv))
 
     # check and process cmdline input
     program = os.path.basename(sys.argv[0])
     if len(sys.argv) < 3:
-        print(globals()['__doc__'] % locals())
+        print(globals()["__doc__"] % locals())
         sys.exit(1)
 
     corpus_dense = gensim.corpora.MmCorpus(sys.argv[1])
@@ -42,14 +43,23 @@ if __name__ == '__main__':
         corpus_sparse = list(itertools.islice(corpus_sparse, NUMDOCS))
 
     # create the query index to be tested (one for dense input, one for sparse)
-    index_dense = gensim.similarities.Similarity('/tmp/tstdense', corpus_dense, dense_features)
-    index_sparse = gensim.similarities.Similarity('/tmp/tstsparse', corpus_sparse, sparse_features)
+    index_dense = gensim.similarities.Similarity(
+        "/tmp/tstdense", corpus_dense, dense_features
+    )
+    index_sparse = gensim.similarities.Similarity(
+        "/tmp/tstsparse", corpus_sparse, sparse_features
+    )
 
-    density = 100.0 * sum(shard.num_nnz for shard in index_sparse.shards) / (len(index_sparse) * sparse_features)
+    density = (
+        100.0
+        * sum(shard.num_nnz for shard in index_sparse.shards)
+        / (len(index_sparse) * sparse_features)
+    )
 
     logging.info(
         "test 1 (dense): similarity of all vs. all (%i documents, %i dense features)",
-        len(corpus_dense), index_dense.num_features
+        len(corpus_dense),
+        index_dense.num_features,
     )
     for chunksize in [1, 8, 32, 64, 128, 256, 512, 1024, index_dense.shardsize]:
         index_dense.chunksize = chunksize
@@ -60,11 +70,16 @@ if __name__ == '__main__':
         queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
         logging.info(
             "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
-            chunksize, taken, len(corpus_dense) / taken, queries / taken
+            chunksize,
+            taken,
+            len(corpus_dense) / taken,
+            queries / taken,
         )
 
     index_dense.num_best = 10
-    logging.info("test 2 (dense): as above, but only ask for the top-10 most similar for each document")
+    logging.info(
+        "test 2 (dense): as above, but only ask for the top-10 most similar for each document"
+    )
     for chunksize in [1, 8, 32, 64, 128, 256, 512, 1024, index_dense.shardsize]:
         index_dense.chunksize = chunksize
         start = time()
@@ -73,13 +88,18 @@ if __name__ == '__main__':
         queries = math.ceil(1.0 * len(corpus_dense) / chunksize)
         logging.info(
             "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
-            chunksize, taken, len(corpus_dense) / taken, queries / taken
+            chunksize,
+            taken,
+            len(corpus_dense) / taken,
+            queries / taken,
         )
     index_dense.num_best = None
 
     logging.info(
         "test 3 (sparse): similarity of all vs. all (%i documents, %i features, %.2f%% density)",
-        len(corpus_sparse), index_sparse.num_features, density
+        len(corpus_sparse),
+        index_sparse.num_features,
+        density,
     )
 
     for chunksize in [1, 5, 10, 100, 256, 500, 1000, index_sparse.shardsize]:
@@ -91,11 +111,16 @@ if __name__ == '__main__':
         queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
         logging.info(
             "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
-            chunksize, taken, len(corpus_sparse) / taken, queries / taken
+            chunksize,
+            taken,
+            len(corpus_sparse) / taken,
+            queries / taken,
         )
 
     index_sparse.num_best = 10
-    logging.info("test 4 (sparse): as above, but only ask for the top-10 most similar for each document")
+    logging.info(
+        "test 4 (sparse): as above, but only ask for the top-10 most similar for each document"
+    )
     for chunksize in [1, 5, 10, 100, 256, 500, 1000, index_sparse.shardsize]:
         index_sparse.chunksize = chunksize
         start = time()
@@ -105,7 +130,10 @@ if __name__ == '__main__':
         queries = math.ceil(1.0 * len(corpus_sparse) / chunksize)
         logging.info(
             "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
-            chunksize, taken, len(corpus_sparse) / taken, queries / taken
+            chunksize,
+            taken,
+            len(corpus_sparse) / taken,
+            queries / taken,
         )
     index_sparse.num_best = None
 
@@ -116,7 +144,9 @@ if __name__ == '__main__':
     query = list(itertools.islice(corpus_dense, 1000))
     logging.info(
         "test 5 (dense): dense corpus of %i docs vs. index (%i documents, %i dense features)",
-        len(query), len(index_dense), index_dense.num_features
+        len(query),
+        len(index_dense),
+        index_dense.num_features,
     )
     for chunksize in [1, 8, 32, 64, 128, 256, 512, 1024]:
         start = time()
@@ -131,14 +161,20 @@ if __name__ == '__main__':
         queries = math.ceil(1.0 * len(query) / chunksize)
         logging.info(
             "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
-            chunksize, taken, len(query) / taken, queries / taken
+            chunksize,
+            taken,
+            len(query) / taken,
+            queries / taken,
         )
 
     # Same comment as for test #5.
     query = list(itertools.islice(corpus_dense, 1000))
     logging.info(
         "test 6 (sparse): sparse corpus of %i docs vs. sparse index (%i documents, %i features, %.2f%% density)",
-        len(query), len(corpus_sparse), index_sparse.num_features, density
+        len(query),
+        len(corpus_sparse),
+        index_sparse.num_features,
+        density,
     )
     for chunksize in [1, 5, 10, 100, 500, 1000]:
         start = time()
@@ -153,7 +189,10 @@ if __name__ == '__main__':
         queries = math.ceil(1.0 * len(query) / chunksize)
         logging.info(
             "chunksize=%i, time=%.4fs (%.2f docs/s, %.2f queries/s)",
-            chunksize, taken, len(query) / taken, queries / taken
+            chunksize,
+            taken,
+            len(query) / taken,
+            queries / taken,
         )
 
     logging.info("finished running %s", program)

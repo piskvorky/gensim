@@ -30,12 +30,12 @@ See Also
 
 import cython
 import numpy as np
+
 cimport numpy as np
-
-from libc.math cimport exp
-from libc.math cimport log
+from libc.math cimport exp, log
 from libc.string cimport memset
-
+from word2vec_inner cimport (REAL_t, bisect_left, our_dot, our_saxpy,
+                             random_int32, scopy, sscal)
 
 #
 # We make use of the following BLAS functions (or their analogs, if BLAS is
@@ -55,8 +55,6 @@ from libc.string cimport memset
 #
 # The versions are as chosen in word2vec_inner.pyx, and aliased to `our_` functions
 
-from word2vec_inner cimport bisect_left, random_int32, scopy, sscal, \
-     REAL_t, our_dot, our_saxpy
 
 DEF MAX_SENTENCE_LEN = 10000
 DEF MAX_SUBWORDS = 1000

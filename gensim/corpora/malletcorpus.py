@@ -12,7 +12,6 @@ import logging
 from gensim import utils
 from gensim.corpora import LowCorpus
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -54,6 +53,7 @@ class MalletCorpus(LowCorpus):
         >>> loaded_corpus = MalletCorpus(output_fname)
 
     """
+
     def __init__(self, fname, id2word=None, metadata=False):
         """
 
@@ -70,7 +70,7 @@ class MalletCorpus(LowCorpus):
             :meth:`~gensim.corpora.malletcorpus.MalletCorpus.__iter__` or
             :meth:`~gensim.corpora.malletcorpus.MalletCorpus.docbyoffset`
 
-       """
+        """
         self.metadata = metadata
         LowCorpus.__init__(self, fname, id2word)
 
@@ -83,7 +83,7 @@ class MalletCorpus(LowCorpus):
             Number of documents in file.
 
         """
-        with utils.open(self.fname, 'rb') as fin:
+        with utils.open(self.fname, "rb") as fin:
             result = sum(1 for _ in fin)
         return result
 
@@ -96,7 +96,7 @@ class MalletCorpus(LowCorpus):
             Document in BoW format (+"document_id" and "lang" if metadata=True).
 
         """
-        with utils.open(self.fname, 'rb') as f:
+        with utils.open(self.fname, "rb") as f:
             for line in f:
                 yield self.line2doc(line)
 
@@ -127,7 +127,7 @@ class MalletCorpus(LowCorpus):
         """
         split_line = utils.to_unicode(line).strip().split(None, 2)
         docid, doclang = split_line[0], split_line[1]
-        words = split_line[2] if len(split_line) >= 3 else ''
+        words = split_line[2] if len(split_line) >= 3 else ""
 
         doc = super(MalletCorpus, self).line2doc(words)
 
@@ -180,13 +180,13 @@ class MalletCorpus(LowCorpus):
 
         truncated = 0
         offsets = []
-        with utils.open(fname, 'wb') as fout:
+        with utils.open(fname, "wb") as fout:
             for doc_id, doc in enumerate(corpus):
                 if metadata:
                     doc_id, doc_lang = doc[1]
                     doc = doc[0]
                 else:
-                    doc_lang = '__unknown__'
+                    doc_lang = "__unknown__"
 
                 words = []
                 for wordid, value in doc:
@@ -194,12 +194,15 @@ class MalletCorpus(LowCorpus):
                         truncated += 1
                     words.extend([utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
-                fout.write(utils.to_utf8('%s %s %s\n' % (doc_id, doc_lang, ' '.join(words))))
+                fout.write(
+                    utils.to_utf8("%s %s %s\n" % (doc_id, doc_lang, " ".join(words)))
+                )
 
         if truncated:
             logger.warning(
                 "Mallet format can only save vectors with integer elements; "
-                "%i float entries were truncated to integer value", truncated
+                "%i float entries were truncated to integer value",
+                truncated,
             )
 
         return offsets
@@ -231,6 +234,6 @@ class MalletCorpus(LowCorpus):
             [(4, 1)]
 
         """
-        with utils.open(self.fname, 'rb') as f:
+        with utils.open(self.fname, "rb") as f:
             f.seek(offset)
             return self.line2doc(f.readline())

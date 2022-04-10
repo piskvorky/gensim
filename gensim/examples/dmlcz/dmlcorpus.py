@@ -13,11 +13,11 @@ Corpus for the DML-CZ project.
 import logging
 import os.path
 
-from gensim import interfaces, matutils
 import dictionary  # for constructing word->id mappings
 
+from gensim import interfaces, matutils
 
-logger = logging.getLogger('gensim.corpora.dmlcorpus')
+logger = logging.getLogger("gensim.corpora.dmlcorpus")
 
 
 class DmlConfig:
@@ -37,31 +37,42 @@ class DmlConfig:
     def __init__(self, configId, resultDir, acceptLangs=None):
         self.resultDir = resultDir  # output files will be stored in this directory
         self.configId = configId
-        self.sources = {}  # all article sources; see sources.DmlSource class for an example of source
+        self.sources = (
+            {}
+        )  # all article sources; see sources.DmlSource class for an example of source
 
         if acceptLangs is None:  # which languages to accept
-            acceptLangs = {'any'}  # if not specified, accept all languages (including unknown/unspecified)
+            acceptLangs = {
+                "any"
+            }  # if not specified, accept all languages (including unknown/unspecified)
         self.acceptLangs = set(acceptLangs)
-        logger.info('initialized %s', self)
+        logger.info("initialized %s", self)
 
     def resultFile(self, fname):
-        return os.path.join(self.resultDir, self.configId + '_' + fname)
+        return os.path.join(self.resultDir, self.configId + "_" + fname)
 
     def acceptArticle(self, metadata):
-        lang = metadata.get('language', 'unk')
-        if 'any' not in self.acceptLangs and lang not in self.acceptLangs:
+        lang = metadata.get("language", "unk")
+        if "any" not in self.acceptLangs and lang not in self.acceptLangs:
             return False
         return True
 
     def addSource(self, source):
         sourceId = str(source)
-        assert sourceId not in self.sources, "source %s already present in the config!" % sourceId
+        assert sourceId not in self.sources, (
+            "source %s already present in the config!" % sourceId
+        )
         self.sources[sourceId] = source
 
     def __str__(self):
         return "%s<id=%s, sources=[%s], acceptLangs=[%s]>" % (
-            self.__class__.__name__, self.configId, ', '.join(self.sources.iterkeys()), ', '.join(self.acceptLangs)
+            self.__class__.__name__,
+            self.configId,
+            ", ".join(self.sources.iterkeys()),
+            ", ".join(self.acceptLangs),
         )
+
+
 # endclass DmlConfig
 
 
@@ -111,7 +122,13 @@ class DmlCorpus(interfaces.CorpusABC):
         numPositions = 0
         for docNo, (sourceId, docUri) in enumerate(self.documents):
             if docNo % 1000 == 0:
-                logger.info("PROGRESS: at document #%i/%i (%s, %s)", docNo, len(self.documents), sourceId, docUri)
+                logger.info(
+                    "PROGRESS: at document #%i/%i (%s, %s)",
+                    docNo,
+                    len(self.documents),
+                    sourceId,
+                    docUri,
+                )
             source = self.config.sources[sourceId]
             contents = source.getContent(docUri)
             words = [source.normalizeWord(word) for word in source.tokenize(contents)]
@@ -121,7 +138,9 @@ class DmlCorpus(interfaces.CorpusABC):
             _ = self.dictionary.doc2bow(words, allowUpdate=True)  # noqa:F841
         logger.info(
             "built %s from %i documents (total %i corpus positions)",
-            self.dictionary, len(self.documents), numPositions
+            self.dictionary,
+            len(self.documents),
+            numPositions,
         )
 
     def processConfig(self, config, shuffle=False):
@@ -142,25 +161,34 @@ class DmlCorpus(interfaces.CorpusABC):
             logger.info("processing source '%s'", sourceId)
             accepted = []
             for articleUri in source.findArticles():
-                meta = source.getMeta(articleUri)  # retrieve metadata (= dictionary of key->value)
-                if config.acceptArticle(meta):  # do additional filtering on articles, based on the article's metadata
+                meta = source.getMeta(
+                    articleUri
+                )  # retrieve metadata (= dictionary of key->value)
+                if config.acceptArticle(
+                    meta
+                ):  # do additional filtering on articles, based on the article's metadata
                     accepted.append((sourceId, articleUri))
             logger.info("accepted %i articles for source '%s'", len(accepted), sourceId)
             self.documents.extend(accepted)
 
         if not self.documents:
-            logger.warning('no articles at all found from the config; something went wrong!')
+            logger.warning(
+                "no articles at all found from the config; something went wrong!"
+            )
 
         if shuffle:
             logger.info("shuffling %i documents for random order", len(self.documents))
             import random
+
             random.shuffle(self.documents)
 
-        logger.info("accepted total of %i articles for %s", len(self.documents), str(config))
+        logger.info(
+            "accepted total of %i articles for %s", len(self.documents), str(config)
+        )
 
     def saveDictionary(self, fname):
         logger.info("saving dictionary mapping to %s", fname)
-        fout = open(fname, 'w')
+        fout = open(fname, "w")
         for tokenId, token in self.dictionary.id2token.iteritems():
             fout.write("%i\t%s\n" % (tokenId, token))
         fout.close()
@@ -169,7 +197,7 @@ class DmlCorpus(interfaces.CorpusABC):
     def loadDictionary(fname):
         result = {}
         for lineNo, line in enumerate(open(fname)):
-            pair = line[:-1].split('\t')
+            pair = line[:-1].split("\t")
             if len(pair) != 2:
                 continue
             wordId, word = pair
@@ -178,7 +206,7 @@ class DmlCorpus(interfaces.CorpusABC):
 
     def saveDocuments(self, fname):
         logger.info("saving documents mapping to %s", fname)
-        fout = open(fname, 'w')
+        fout = open(fname, "w")
         for docNo, docId in enumerate(self.documents):
             sourceId, docUri = docId
             intId, pathId = docUri
@@ -197,9 +225,9 @@ class DmlCorpus(interfaces.CorpusABC):
 
         The exact filesystem paths and filenames are determined from the config.
         """
-        self.saveDictionary(self.config.resultFile('wordids.txt'))
-        self.saveDocuments(self.config.resultFile('docids.txt'))
-        matutils.MmWriter.writeCorpus(self.config.resultFile('bow.mm'), self)
+        self.saveDictionary(self.config.resultFile("wordids.txt"))
+        self.saveDocuments(self.config.resultFile("docids.txt"))
+        matutils.MmWriter.writeCorpus(self.config.resultFile("bow.mm"), self)
 
     def articleDir(self, docNo):
         """
@@ -216,4 +244,6 @@ class DmlCorpus(interfaces.CorpusABC):
         sourceId, uri = self.documents[docNo]
         source = self.config.sources[sourceId]
         return source.getMeta(uri)
+
+
 # endclass DmlCorpus

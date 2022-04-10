@@ -33,12 +33,14 @@ Demonstrates using Gensim's implemenation of the WMD.
 # distribution of document 1 to the distribution of document 2.
 #
 
+import matplotlib.image as mpimg
+
 # Image from https://vene.ro/images/wmd-obama.png
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-img = mpimg.imread('wmd-obama.png')
+
+img = mpimg.imread("wmd-obama.png")
 imgplot = plt.imshow(img)
-plt.axis('off')
+plt.axis("off")
 plt.show()
 
 ###############################################################################
@@ -68,10 +70,13 @@ plt.show()
 
 # Initialize logging.
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-sentence_obama = 'Obama speaks to the media in Illinois'
-sentence_president = 'The president greets the press in Chicago'
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
+
+sentence_obama = "Obama speaks to the media in Illinois"
+sentence_president = "The president greets the press in Chicago"
 
 ###############################################################################
 # These sentences have very similar content, and as such the WMD should be low.
@@ -79,14 +84,18 @@ sentence_president = 'The president greets the press in Chicago'
 # as these do not contribute a lot to the information in the sentences.
 #
 
+from nltk import download
+
 # Import and download stopwords from NLTK.
 from nltk.corpus import stopwords
-from nltk import download
-download('stopwords')  # Download stopwords list.
-stop_words = stopwords.words('english')
+
+download("stopwords")  # Download stopwords list.
+stop_words = stopwords.words("english")
+
 
 def preprocess(sentence):
     return [w for w in sentence.lower().split() if w not in stop_words]
+
 
 sentence_obama = preprocess(sentence_obama)
 sentence_president = preprocess(sentence_president)
@@ -99,20 +108,21 @@ sentence_president = preprocess(sentence_president)
 #   The embeddings we have chosen here require a lot of memory.
 #
 import gensim.downloader as api
-model = api.load('word2vec-google-news-300')
+
+model = api.load("word2vec-google-news-300")
 
 ###############################################################################
 # So let's compute WMD using the ``wmdistance`` method.
 #
 distance = model.wmdistance(sentence_obama, sentence_president)
-print('distance = %.4f' % distance)
+print("distance = %.4f" % distance)
 
 ###############################################################################
 # Let's try the same thing with two completely unrelated sentences. Notice that the distance is larger.
 #
-sentence_orange = preprocess('Oranges are my favorite fruit')
+sentence_orange = preprocess("Oranges are my favorite fruit")
 distance = model.wmdistance(sentence_obama, sentence_orange)
-print('distance = %.4f' % distance)
+print("distance = %.4f" % distance)
 
 ###############################################################################
 # References

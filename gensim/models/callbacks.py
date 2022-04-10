@@ -87,11 +87,13 @@ Create and bind a callback to a topic model. This callback will log the perplexi
 
 """
 
-import gensim
-import logging
 import copy
+import logging
 import sys
+
 import numpy as np
+
+import gensim
 
 if sys.version_info[0] >= 3:
     from queue import Queue
@@ -101,6 +103,7 @@ else:
 # Visdom is used for training stats visualization
 try:
     from visdom import Visdom
+
     VISDOM_INSTALLED = True
 except ImportError:
     VISDOM_INSTALLED = False
@@ -117,6 +120,7 @@ class Metric:
         * :class:`~gensim.models.callbacks.ConvergenceMetric`
 
     """
+
     def __str__(self):
         """Get a string representation of Metric class.
 
@@ -166,7 +170,9 @@ class Metric:
             that is useful to report or visualize.
 
         """
-        raise NotImplementedError("Please provide an implementation for `get_value` in your subclass.")
+        raise NotImplementedError(
+            "Please provide an implementation for `get_value` in your subclass."
+        )
 
 
 class CoherenceMetric(Metric):
@@ -177,8 +183,19 @@ class CoherenceMetric(Metric):
     :class:`~gensim.models.coherencemodel.CoherenceModel`
 
     """
-    def __init__(self, corpus=None, texts=None, dictionary=None, coherence=None,
-                 window_size=None, topn=10, logger=None, viz_env=None, title=None):
+
+    def __init__(
+        self,
+        corpus=None,
+        texts=None,
+        dictionary=None,
+        coherence=None,
+        window_size=None,
+        topn=10,
+        logger=None,
+        viz_env=None,
+        title=None,
+    ):
         """
 
         Parameters
@@ -251,9 +268,14 @@ class CoherenceMetric(Metric):
         super(CoherenceMetric, self).set_parameters(**kwargs)
 
         cm = gensim.models.CoherenceModel(
-            model=self.model, topics=self.topics, texts=self.texts, corpus=self.corpus,
-            dictionary=self.dictionary, window_size=self.window_size,
-            coherence=self.coherence, topn=self.topn
+            model=self.model,
+            topics=self.topics,
+            texts=self.texts,
+            corpus=self.corpus,
+            dictionary=self.dictionary,
+            window_size=self.window_size,
+            coherence=self.coherence,
+            topn=self.topn,
         )
 
         return cm.get_coherence()
@@ -261,6 +283,7 @@ class CoherenceMetric(Metric):
 
 class PerplexityMetric(Metric):
     """Metric class for perplexity evaluation."""
+
     def __init__(self, corpus=None, logger=None, viz_env=None, title=None):
         """
 
@@ -309,8 +332,19 @@ class PerplexityMetric(Metric):
 
 class DiffMetric(Metric):
     """Metric class for topic difference evaluation."""
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
-                 annotation=False, normed=True, logger=None, viz_env=None, title=None):
+
+    def __init__(
+        self,
+        distance="jaccard",
+        num_words=100,
+        n_ann_terms=10,
+        diagonal=True,
+        annotation=False,
+        normed=True,
+        logger=None,
+        viz_env=None,
+        title=None,
+    ):
         """
 
         Parameters
@@ -368,16 +402,32 @@ class DiffMetric(Metric):
         """
         super(DiffMetric, self).set_parameters(**kwargs)
         diff_diagonal, _ = self.model.diff(
-            self.other_model, self.distance, self.num_words, self.n_ann_terms,
-            self.diagonal, self.annotation, self.normed
+            self.other_model,
+            self.distance,
+            self.num_words,
+            self.n_ann_terms,
+            self.diagonal,
+            self.annotation,
+            self.normed,
         )
         return diff_diagonal
 
 
 class ConvergenceMetric(Metric):
-    """Metric class for convergence evaluation. """
-    def __init__(self, distance="jaccard", num_words=100, n_ann_terms=10, diagonal=True,
-                 annotation=False, normed=True, logger=None, viz_env=None, title=None):
+    """Metric class for convergence evaluation."""
+
+    def __init__(
+        self,
+        distance="jaccard",
+        num_words=100,
+        n_ann_terms=10,
+        diagonal=True,
+        annotation=False,
+        normed=True,
+        logger=None,
+        viz_env=None,
+        title=None,
+    ):
         """
 
         Parameters
@@ -403,7 +453,7 @@ class ConvergenceMetric(Metric):
         title : str, optional
             Title of the graph plot in case `logger == 'visdom'`. Unused.
 
-       """
+        """
         self.distance = distance
         self.num_words = num_words
         self.n_ann_terms = n_ann_terms
@@ -436,8 +486,13 @@ class ConvergenceMetric(Metric):
         """
         super(ConvergenceMetric, self).set_parameters(**kwargs)
         diff_diagonal, _ = self.model.diff(
-            self.other_model, self.distance, self.num_words, self.n_ann_terms,
-            self.diagonal, self.annotation, self.normed
+            self.other_model,
+            self.distance,
+            self.num_words,
+            self.n_ann_terms,
+            self.diagonal,
+            self.annotation,
+            self.normed,
         )
         return np.sum(diff_diagonal)
 
@@ -454,6 +509,7 @@ class Callback:
         * :class:`~gensim.models.callbacks.ConvergenceMetric`
 
     """
+
     def __init__(self, metrics):
         """
 
@@ -477,7 +533,10 @@ class Callback:
         self.model = model
         self.previous = None
         # check for any metric which need model state from previous epoch
-        if any(isinstance(metric, (DiffMetric, ConvergenceMetric)) for metric in self.metrics):
+        if any(
+            isinstance(metric, (DiffMetric, ConvergenceMetric))
+            for metric in self.metrics
+        ):
             self.previous = copy.deepcopy(model)
             # store diff diagonals of previous epochs
             self.diff_mat = Queue()
@@ -489,7 +548,7 @@ class Callback:
             self.windows = []
         if any(metric.logger == "shell" for metric in self.metrics):
             # set logger for current topic model
-            self.log_type = logging.getLogger('gensim.models.ldamodel')
+            self.log_type = logging.getLogger("gensim.models.ldamodel")
 
     def on_epoch_end(self, epoch, topics=None):
         """Report the current epoch's metric value.
@@ -517,7 +576,9 @@ class Callback:
         # plot all metrics in current epoch
         for i, metric in enumerate(self.metrics):
             label = str(metric)
-            value = metric.get_value(topics=topics, model=self.model, other_model=self.previous)
+            value = metric.get_value(
+                topics=topics, model=self.model, other_model=self.previous
+            )
 
             current_metrics[label] = value
 
@@ -526,7 +587,9 @@ class Callback:
                     if value.ndim > 0:
                         diff_mat = np.array([value])
                         viz_metric = self.viz.heatmap(
-                            X=diff_mat.T, env=metric.viz_env, opts=dict(xlabel='Epochs', ylabel=label, title=label)
+                            X=diff_mat.T,
+                            env=metric.viz_env,
+                            opts=dict(xlabel="Epochs", ylabel=label, title=label),
                         )
                         # store current epoch's diff diagonal
                         self.diff_mat.put(diff_mat)
@@ -534,18 +597,24 @@ class Callback:
                         self.windows.append(copy.deepcopy(viz_metric))
                     else:
                         viz_metric = self.viz.line(
-                            Y=np.array([value]), X=np.array([epoch]), env=metric.viz_env,
-                            opts=dict(xlabel='Epochs', ylabel=label, title=label)
+                            Y=np.array([value]),
+                            X=np.array([epoch]),
+                            env=metric.viz_env,
+                            opts=dict(xlabel="Epochs", ylabel=label, title=label),
                         )
                         # saving initial plot window
                         self.windows.append(copy.deepcopy(viz_metric))
                 else:
                     if value.ndim > 0:
                         # concatenate with previous epoch's diff diagonals
-                        diff_mat = np.concatenate((self.diff_mat.get(), np.array([value])))
+                        diff_mat = np.concatenate(
+                            (self.diff_mat.get(), np.array([value]))
+                        )
                         self.viz.heatmap(
-                            X=diff_mat.T, env=metric.viz_env, win=self.windows[i],
-                            opts=dict(xlabel='Epochs', ylabel=label, title=label)
+                            X=diff_mat.T,
+                            env=metric.viz_env,
+                            win=self.windows[i],
+                            opts=dict(xlabel="Epochs", ylabel=label, title=label),
                         )
                         self.diff_mat.put(diff_mat)
                     else:
@@ -554,15 +623,20 @@ class Callback:
                             X=np.array([epoch]),
                             env=metric.viz_env,
                             win=self.windows[i],
-                            update='append'
+                            update="append",
                         )
 
             if metric.logger == "shell":
-                statement = "".join(("Epoch ", str(epoch), ": ", label, " estimate: ", str(value)))
+                statement = "".join(
+                    ("Epoch ", str(epoch), ": ", label, " estimate: ", str(value))
+                )
                 self.log_type.info(statement)
 
         # check for any metric which need model state from previous epoch
-        if any(isinstance(metric, (DiffMetric, ConvergenceMetric)) for metric in self.metrics):
+        if any(
+            isinstance(metric, (DiffMetric, ConvergenceMetric))
+            for metric in self.metrics
+        ):
             self.previous = copy.deepcopy(self.model)
 
         return current_metrics
@@ -584,6 +658,7 @@ class CallbackAny2Vec:
     - on_batch_end
 
     """
+
     def on_epoch_begin(self, model):
         """Method called at the start of each epoch.
 

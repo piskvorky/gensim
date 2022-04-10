@@ -53,8 +53,10 @@ def _ids_to_words(ids, dictionary):
         set(['cats', 'fake'])
 
     """
-    if not dictionary.id2token:  # may not be initialized in the standard gensim.corpora.Dictionary
-        setattr(dictionary, 'id2token', {v: k for k, v in dictionary.token2id.items()})
+    if (
+        not dictionary.id2token
+    ):  # may not be initialized in the standard gensim.corpora.Dictionary
+        setattr(dictionary, "id2token", {v: k for k, v in dictionary.token2id.items()})
 
     top_words = set()
     for word_id in ids:
@@ -84,6 +86,7 @@ class BaseAnalyzer:
         Number of documents.
 
     """
+
     def __init__(self, relevant_ids):
         """
 
@@ -120,13 +123,15 @@ class BaseAnalyzer:
         if self._num_docs % self.log_every == 0:
             logger.info(
                 "%s accumulated stats from %d documents",
-                self.__class__.__name__, self._num_docs)
+                self.__class__.__name__,
+                self._num_docs,
+            )
 
     def analyze_text(self, text, doc_num=None):
         raise NotImplementedError("Base classes should implement analyze_text.")
 
     def __getitem__(self, word_or_words):
-        if isinstance(word_or_words, str) or not hasattr(word_or_words, '__iter__'):
+        if isinstance(word_or_words, str) or not hasattr(word_or_words, "__iter__"):
             return self.get_occurrences(word_or_words)
         else:
             return self.get_co_occurrences(*word_or_words)
@@ -140,7 +145,9 @@ class BaseAnalyzer:
 
     def get_co_occurrences(self, word_id1, word_id2):
         """Return number of docs the words co-occur in, once `accumulate` has been called."""
-        return self._get_co_occurrences(self.id2contiguous[word_id1], self.id2contiguous[word_id2])
+        return self._get_co_occurrences(
+            self.id2contiguous[word_id1], self.id2contiguous[word_id2]
+        )
 
     def _get_co_occurrences(self, word_id1, word_id2):
         raise NotImplementedError("Base classes should implement co_occurrences")
@@ -161,6 +168,7 @@ class UsesDictionary(BaseAnalyzer):
         Mapping from :class:`~gensim.corpora.dictionary.Dictionary`
 
     """
+
     def __init__(self, relevant_ids, dictionary):
         """
 
@@ -250,7 +258,10 @@ class InvertedIndexBased(BaseAnalyzer):
 
     def index_to_dict(self):
         contiguous2id = {n: word_id for word_id, n in self.id2contiguous.items()}
-        return {contiguous2id[n]: doc_id_set for n, doc_id_set in enumerate(self._inverted_index)}
+        return {
+            contiguous2id[n]: doc_id_set
+            for n, doc_id_set in enumerate(self._inverted_index)
+        }
 
 
 class CorpusAccumulator(InvertedIndexBased):
@@ -290,7 +301,8 @@ class WindowedTextsAnalyzer(UsesDictionary):
     def accumulate(self, texts, window_size):
         relevant_texts = self._iter_texts(texts)
         windows = utils.iter_windows(
-            relevant_texts, window_size, ignore_below_size=False, include_doc_num=True)
+            relevant_texts, window_size, ignore_below_size=False, include_doc_num=True
+        )
 
         for doc_num, virtual_document in windows:
             self.analyze_text(virtual_document, doc_num)
@@ -301,10 +313,16 @@ class WindowedTextsAnalyzer(UsesDictionary):
         dtype = np.uint16 if np.iinfo(np.uint16).max >= self._vocab_size else np.uint32
         for text in texts:
             if self.text_is_relevant(text):
-                yield np.fromiter((
-                    self.id2contiguous[self.token2id[w]] if w in self.relevant_words
-                    else self._none_token
-                    for w in text), dtype=dtype, count=len(text))
+                yield np.fromiter(
+                    (
+                        self.id2contiguous[self.token2id[w]]
+                        if w in self.relevant_words
+                        else self._none_token
+                        for w in text
+                    ),
+                    dtype=dtype,
+                    count=len(text),
+                )
 
     def text_is_relevant(self, text):
         """Check if the text has any relevant words."""
@@ -328,10 +346,14 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
     def __init__(self, *args):
         super(WordOccurrenceAccumulator, self).__init__(*args)
-        self._occurrences = np.zeros(self._vocab_size, dtype='uint32')
-        self._co_occurrences = sps.lil_matrix((self._vocab_size, self._vocab_size), dtype='uint32')
+        self._occurrences = np.zeros(self._vocab_size, dtype="uint32")
+        self._co_occurrences = sps.lil_matrix(
+            (self._vocab_size, self._vocab_size), dtype="uint32"
+        )
 
-        self._uniq_words = np.zeros((self._vocab_size + 1,), dtype=bool)  # add 1 for none token
+        self._uniq_words = np.zeros(
+            (self._vocab_size + 1,), dtype=bool
+        )  # add 1 for none token
         self._counter = Counter()
 
     def __str__(self):
@@ -391,9 +413,12 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
         """
         co_occ = self._co_occurrences
-        co_occ.setdiag(self._occurrences)  # diagonal should be equal to occurrence counts
-        self._co_occurrences = \
-            co_occ + co_occ.T - sps.diags(co_occ.diagonal(), offsets=0, dtype='uint32')
+        co_occ.setdiag(
+            self._occurrences
+        )  # diagonal should be equal to occurrence counts
+        self._co_occurrences = (
+            co_occ + co_occ.T - sps.diags(co_occ.diagonal(), offsets=0, dtype="uint32")
+        )
 
     def _get_occurrences(self, word_id):
         return self._occurrences[word_id]
@@ -409,6 +434,7 @@ class WordOccurrenceAccumulator(WindowedTextsAnalyzer):
 
 class PatchedWordOccurrenceAccumulator(WordOccurrenceAccumulator):
     """Monkey patched for multiprocessing worker usage, to move some of the logic to the master process."""
+
     def _iter_texts(self, texts):
         return texts  # master process will handle this
 
@@ -431,13 +457,17 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         super(ParallelWordOccurrenceAccumulator, self).__init__(*args)
         if processes < 2:
             raise ValueError(
-                "Must have at least 2 processes to run in parallel; got %d" % processes)
+                "Must have at least 2 processes to run in parallel; got %d" % processes
+            )
         self.processes = processes
-        self.batch_size = kwargs.get('batch_size', 64)
+        self.batch_size = kwargs.get("batch_size", 64)
 
     def __str__(self):
         return "%s<processes=%s, batch_size=%s>" % (
-            self.__class__.__name__, self.processes, self.batch_size)
+            self.__class__.__name__,
+            self.processes,
+            self.batch_size,
+        )
 
     def accumulate(self, texts, window_size):
         workers, input_q, output_q = self.start_workers(window_size)
@@ -445,7 +475,10 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             self.queue_all_texts(input_q, texts, window_size)
             interrupted = False
         except KeyboardInterrupt:
-            logger.warn("stats accumulation interrupted; <= %d documents processed", self._num_docs)
+            logger.warn(
+                "stats accumulation interrupted; <= %d documents processed",
+                self._num_docs,
+            )
             interrupted = True
 
         accumulators = self.terminate_workers(input_q, output_q, workers, interrupted)
@@ -472,7 +505,9 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         output_q = mp.Queue()
         workers = []
         for _ in range(self.processes):
-            accumulator = PatchedWordOccurrenceAccumulator(self.relevant_ids, self.dictionary)
+            accumulator = PatchedWordOccurrenceAccumulator(
+                self.relevant_ids, self.dictionary
+            )
             worker = AccumulatingWorker(input_q, output_q, accumulator, window_size)
             worker.start()
             workers.append(worker)
@@ -502,7 +537,10 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
             if before < (self._num_docs / self.log_every):
                 logger.info(
                     "%d batches submitted to accumulate stats from %d documents (%d virtual)",
-                    (batch_num + 1), (batch_num + 1) * self.batch_size, self._num_docs)
+                    (batch_num + 1),
+                    (batch_num + 1) * self.batch_size,
+                    self._num_docs,
+                )
 
     def terminate_workers(self, input_q, output_q, workers, interrupted=False):
         """Wait until all workers have transmitted their WordOccurrenceAccumulator instances, then terminate each.
@@ -548,7 +586,10 @@ class ParallelWordOccurrenceAccumulator(WindowedTextsAnalyzer):
         # Workers do partial accumulation, so none of the co-occurrence matrices are symmetrized.
         # This is by design, to avoid unnecessary matrix additions/conversions during accumulation.
         accumulator._symmetrize()
-        logger.info("accumulated word occurrence stats for %d virtual documents", accumulator.num_docs)
+        logger.info(
+            "accumulated word occurrence stats for %d virtual documents",
+            accumulator.num_docs,
+        )
         return accumulator
 
 
@@ -569,7 +610,9 @@ class AccumulatingWorker(mp.Process):
         except KeyboardInterrupt:
             logger.info(
                 "%s interrupted after processing %d documents",
-                self.__class__.__name__, self.accumulator.num_docs)
+                self.__class__.__name__,
+                self.accumulator.num_docs,
+            )
         except Exception:
             logger.exception("worker encountered unexpected exception")
         finally:
@@ -589,11 +632,16 @@ class AccumulatingWorker(mp.Process):
             n_docs += len(docs)
             logger.debug(
                 "completed batch %d; %d documents processed (%d virtual)",
-                batch_num, n_docs, self.accumulator.num_docs)
+                batch_num,
+                n_docs,
+                self.accumulator.num_docs,
+            )
 
         logger.debug(
             "finished all batches; %d documents processed (%d virtual)",
-            n_docs, self.accumulator.num_docs)
+            n_docs,
+            self.accumulator.num_docs,
+        )
 
     def reply_to_master(self):
         logger.info("serializing accumulator to return to master...")
@@ -628,11 +676,13 @@ class WordVectorsAccumulator(UsesDictionary):
             self.token2id[word]  # is this a token or an id?
         except KeyError:
             word = self.dictionary.id2token[word]
-        return self.model.get_vecattr(word, 'count')
+        return self.model.get_vecattr(word, "count")
 
     def get_co_occurrences(self, word1, word2):
         """Return number of docs the words co-occur in, once `accumulate` has been called."""
-        raise NotImplementedError("Word2Vec model does not support co-occurrence counting")
+        raise NotImplementedError(
+            "Word2Vec model does not support co-occurrence counting"
+        )
 
     def accumulate(self, texts, window_size):
         if self.model is not None:
@@ -641,14 +691,16 @@ class WordVectorsAccumulator(UsesDictionary):
 
         kwargs = self.model_kwargs.copy()
         if window_size is not None:
-            kwargs['window'] = window_size
-        kwargs['min_count'] = kwargs.get('min_count', 1)
-        kwargs['sg'] = kwargs.get('sg', 1)
-        kwargs['hs'] = kwargs.get('hw', 0)
+            kwargs["window"] = window_size
+        kwargs["min_count"] = kwargs.get("min_count", 1)
+        kwargs["sg"] = kwargs.get("sg", 1)
+        kwargs["hs"] = kwargs.get("hw", 0)
 
         self.model = Word2Vec(**kwargs)
         self.model.build_vocab(texts)
-        self.model.train(texts, total_examples=self.model.corpus_count, epochs=self.model.epochs)
+        self.model.train(
+            texts, total_examples=self.model.corpus_count, epochs=self.model.epochs
+        )
         self.model = self.model.wv  # retain KeyedVectors
         return self
 
@@ -658,7 +710,7 @@ class WordVectorsAccumulator(UsesDictionary):
         return self.model.n_similarity(words1, words2)
 
     def _words_with_embeddings(self, ids):
-        if not hasattr(ids, '__iter__'):
+        if not hasattr(ids, "__iter__"):
             ids = [ids]
 
         words = [self.dictionary.id2token[word_id] for word_id in ids]

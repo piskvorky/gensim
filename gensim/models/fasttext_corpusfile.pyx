@@ -12,30 +12,22 @@
 """Optimized cython functions for file-based training :class:`~gensim.models.fasttext.FastText` model."""
 
 import numpy as np
-cimport numpy as np
 
+cimport numpy as np
 from libcpp.string cimport string
 from libcpp.vector cimport vector
 
-from gensim.models.fasttext_inner cimport (
-    fasttext_fast_sentence_sg_hs,
-    fasttext_fast_sentence_sg_neg,
-    fasttext_fast_sentence_cbow_hs,
-    fasttext_fast_sentence_cbow_neg,
-    init_ft_config,
-    FastTextConfig
-)
-
+from gensim.models.fasttext_inner cimport (FastTextConfig,
+                                           fasttext_fast_sentence_cbow_hs,
+                                           fasttext_fast_sentence_cbow_neg,
+                                           fasttext_fast_sentence_sg_hs,
+                                           fasttext_fast_sentence_sg_neg,
+                                           init_ft_config)
+from gensim.models.word2vec_corpusfile cimport (CythonLineSentence,
+                                                CythonVocab, VocabItem,
+                                                cvocab_t, get_alpha,
+                                                get_next_alpha)
 from gensim.models.word2vec_inner cimport random_int32
-
-from gensim.models.word2vec_corpusfile cimport (
-    VocabItem,
-    CythonVocab,
-    CythonLineSentence,
-    get_alpha,
-    get_next_alpha,
-    cvocab_t
-)
 
 ctypedef np.float32_t REAL_t
 DEF MAX_SENTENCE_LEN = 10000

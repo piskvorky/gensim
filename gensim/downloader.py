@@ -52,43 +52,47 @@ By default, this subdirectory is ~/gensim-data.
 """
 
 from __future__ import absolute_import
+
 import argparse
-import os
+import errno
+import hashlib
 import io
 import json
 import logging
-import sys
-import errno
-import hashlib
 import math
+import os
 import shutil
+import sys
 import tempfile
 from functools import partial
 
 if sys.version_info[0] == 2:
     import urllib
+
     from urllib2 import urlopen
 else:
     import urllib.request as urllib
     from urllib.request import urlopen
 
 
-_DEFAULT_BASE_DIR = os.path.expanduser('~/gensim-data')
-BASE_DIR = os.environ.get('GENSIM_DATA_DIR', _DEFAULT_BASE_DIR)
+_DEFAULT_BASE_DIR = os.path.expanduser("~/gensim-data")
+BASE_DIR = os.environ.get("GENSIM_DATA_DIR", _DEFAULT_BASE_DIR)
 """The default location to store downloaded data.
 
 You may override this with the GENSIM_DATA_DIR environment variable.
 
 """
 
-_PARENT_DIR = os.path.abspath(os.path.join(BASE_DIR, '..'))
+_PARENT_DIR = os.path.abspath(os.path.join(BASE_DIR, ".."))
 
 
 base_dir = BASE_DIR  # for backward compatibility with some of our test data
 
 logger = logging.getLogger(__name__)
 
-DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
+DATA_LIST_URL = (
+    "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
+)
 DOWNLOAD_BASE_URL = "https://github.com/RaRe-Technologies/gensim-data/releases/download"
 
 
@@ -118,21 +122,31 @@ def _progress(chunks_downloaded, chunk_size, total_size, part=1, total_parts=1):
     size_downloaded = float(chunks_downloaded * chunk_size)
     filled_len = int(math.floor((bar_len * size_downloaded) / total_size))
     percent_downloaded = round(((size_downloaded * 100) / total_size), 1)
-    bar = '=' * filled_len + '-' * (bar_len - filled_len)
+    bar = "=" * filled_len + "-" * (bar_len - filled_len)
     if total_parts == 1:
         sys.stdout.write(
-            '\r[%s] %s%s %s/%sMB downloaded' % (
-                bar, percent_downloaded, "%",
+            "\r[%s] %s%s %s/%sMB downloaded"
+            % (
+                bar,
+                percent_downloaded,
+                "%",
                 round(size_downloaded / (1024 * 1024), 1),
-                round(float(total_size) / (1024 * 1024), 1))
+                round(float(total_size) / (1024 * 1024), 1),
+            )
         )
         sys.stdout.flush()
     else:
         sys.stdout.write(
-            '\r Part %s/%s [%s] %s%s %s/%sMB downloaded' % (
-                part + 1, total_parts, bar, percent_downloaded, "%",
+            "\r Part %s/%s [%s] %s%s %s/%sMB downloaded"
+            % (
+                part + 1,
+                total_parts,
+                bar,
+                percent_downloaded,
+                "%",
                 round(size_downloaded / (1024 * 1024), 1),
-                round(float(total_size) / (1024 * 1024), 1))
+                round(float(total_size) / (1024 * 1024), 1),
+            )
         )
         sys.stdout.flush()
 
@@ -160,8 +174,9 @@ def _create_base_dir():
             else:
                 raise Exception(
                     "Can't create {}. Make sure you have the read/write permissions "
-                    "to the directory or you can try creating the folder manually"
-                    .format(BASE_DIR)
+                    "to the directory or you can try creating the folder manually".format(
+                        BASE_DIR
+                    )
                 )
 
 
@@ -186,13 +201,13 @@ def _calculate_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
-def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
+def _load_info(url=DATA_LIST_URL, encoding="utf-8"):
     """Load dataset information from the network.
 
     If the network access fails, fall back to a local cache.  This cache gets
     updated each time a network request _succeeds_.
     """
-    cache_path = os.path.join(BASE_DIR, 'information.json')
+    cache_path = os.path.join(BASE_DIR, "information.json")
     _create_base_dir()
 
     try:
@@ -205,23 +220,25 @@ def _load_info(url=DATA_LIST_URL, encoding='utf-8'):
         # https://docs.python.org/2/library/urllib.html
         #
         logger.exception(
-            'caught non-fatal exception while trying to update gensim-data cache from %r; '
-            'using local cache at %r instead', url, cache_path
+            "caught non-fatal exception while trying to update gensim-data cache from %r; "
+            "using local cache at %r instead",
+            url,
+            cache_path,
         )
     else:
-        with open(cache_path, 'wb') as fout:
+        with open(cache_path, "wb") as fout:
             fout.write(info_bytes)
 
     try:
         #
         # We need io.open here because Py2 open doesn't support encoding keyword
         #
-        with io.open(cache_path, 'r', encoding=encoding) as fin:
+        with io.open(cache_path, "r", encoding=encoding) as fin:
             return json.load(fin)
     except IOError:
         raise ValueError(
-            'unable to read local cache %r during fallback, '
-            'connect to the Internet and retry' % cache_path
+            "unable to read local cache %r during fallback, "
+            "connect to the Internet and retry" % cache_path
         )
 
 
@@ -268,12 +285,12 @@ def info(name=None, show_only_latest=True, name_only=False):
     information = _load_info()
 
     if name is not None:
-        corpora = information['corpora']
-        models = information['models']
+        corpora = information["corpora"]
+        models = information["models"]
         if name in corpora:
-            return information['corpora'][name]
+            return information["corpora"][name]
         elif name in models:
-            return information['models'][name]
+            return information["models"][name]
         else:
             raise ValueError("Incorrect model/corpus name")
 
@@ -281,11 +298,22 @@ def info(name=None, show_only_latest=True, name_only=False):
         return information
 
     if name_only:
-        return {"corpora": list(information['corpora'].keys()), "models": list(information['models'])}
+        return {
+            "corpora": list(information["corpora"].keys()),
+            "models": list(information["models"]),
+        }
 
     return {
-        "corpora": {name: data for (name, data) in information['corpora'].items() if data.get("latest", True)},
-        "models": {name: data for (name, data) in information['models'].items() if data.get("latest", True)}
+        "corpora": {
+            name: data
+            for (name, data) in information["corpora"].items()
+            if data.get("latest", True)
+        },
+        "models": {
+            name: data
+            for (name, data) in information["models"].items()
+            if data.get("latest", True)
+        },
     }
 
 
@@ -306,18 +334,18 @@ def _get_checksum(name, part=None):
 
     """
     information = info()
-    corpora = information['corpora']
-    models = information['models']
+    corpora = information["corpora"]
+    models = information["models"]
     if part is None:
         if name in corpora:
-            return information['corpora'][name]["checksum"]
+            return information["corpora"][name]["checksum"]
         elif name in models:
-            return information['models'][name]["checksum"]
+            return information["models"][name]["checksum"]
     else:
         if name in corpora:
-            return information['corpora'][name]["checksum-{}".format(part)]
+            return information["corpora"][name]["checksum-{}".format(part)]
         elif name in models:
-            return information['models'][name]["checksum-{}".format(part)]
+            return information["models"][name]["checksum-{}".format(part)]
 
 
 def _get_parts(name):
@@ -335,12 +363,12 @@ def _get_parts(name):
 
     """
     information = info()
-    corpora = information['corpora']
-    models = information['models']
+    corpora = information["corpora"]
+    models = information["models"]
     if name in corpora:
-        return information['corpora'][name]["parts"]
+        return information["corpora"][name]["parts"]
     elif name in models:
-        return information['models'][name]["parts"]
+        return information["models"][name]["parts"]
 
 
 def _download(name):
@@ -357,9 +385,11 @@ def _download(name):
         If md5sum on client and in repo are different.
 
     """
-    url_load_file = "{base}/{fname}/__init__.py".format(base=DOWNLOAD_BASE_URL, fname=name)
+    url_load_file = "{base}/{fname}/__init__.py".format(
+        base=DOWNLOAD_BASE_URL, fname=name
+    )
     data_folder_dir = os.path.join(BASE_DIR, name)
-    data_folder_dir_tmp = data_folder_dir + '_tmp'
+    data_folder_dir_tmp = data_folder_dir + "_tmp"
     tmp_dir = tempfile.mkdtemp()
     init_path = os.path.join(tmp_dir, "__init__.py")
     urllib.urlretrieve(url_load_file, init_path)
@@ -368,13 +398,16 @@ def _download(name):
         concatenated_folder_name = "{fname}.gz".format(fname=name)
         concatenated_folder_dir = os.path.join(tmp_dir, concatenated_folder_name)
         for part in range(0, total_parts):
-            url_data = "{base}/{fname}/{fname}.gz_0{part}".format(base=DOWNLOAD_BASE_URL, fname=name, part=part)
+            url_data = "{base}/{fname}/{fname}.gz_0{part}".format(
+                base=DOWNLOAD_BASE_URL, fname=name, part=part
+            )
 
             fname = "{f}.gz_0{p}".format(f=name, p=part)
             dst_path = os.path.join(tmp_dir, fname)
             urllib.urlretrieve(
-                url_data, dst_path,
-                reporthook=partial(_progress, part=part, total_parts=total_parts)
+                url_data,
+                dst_path,
+                reporthook=partial(_progress, part=part, total_parts=total_parts),
             )
             if _calculate_md5_checksum(dst_path) == _get_checksum(name, part):
                 sys.stdout.write("\n")
@@ -383,14 +416,18 @@ def _download(name):
             else:
                 shutil.rmtree(tmp_dir)
                 raise Exception("Checksum comparison failed, try again")
-        with open(concatenated_folder_dir, 'wb') as wfp:
+        with open(concatenated_folder_dir, "wb") as wfp:
             for part in range(0, total_parts):
-                part_path = os.path.join(tmp_dir, "{fname}.gz_0{part}".format(fname=name, part=part))
+                part_path = os.path.join(
+                    tmp_dir, "{fname}.gz_0{part}".format(fname=name, part=part)
+                )
                 with open(part_path, "rb") as rfp:
                     shutil.copyfileobj(rfp, wfp)
                 os.remove(part_path)
     else:
-        url_data = "{base}/{fname}/{fname}.gz".format(base=DOWNLOAD_BASE_URL, fname=name)
+        url_data = "{base}/{fname}/{fname}.gz".format(
+            base=DOWNLOAD_BASE_URL, fname=name
+        )
         fname = "{fname}.gz".format(fname=name)
         dst_path = os.path.join(tmp_dir, fname)
         urllib.urlretrieve(url_data, dst_path, reporthook=_progress)
@@ -424,12 +461,12 @@ def _get_filename(name):
 
     """
     information = info()
-    corpora = information['corpora']
-    models = information['models']
+    corpora = information["corpora"]
+    models = information["models"]
     if name in corpora:
-        return information['corpora'][name]["file_name"]
+        return information["corpora"][name]["file_name"]
     elif name in models:
-        return information['models'][name]["file_name"]
+        return information["models"][name]["file_name"]
 
 
 def load(name, return_path=False):
@@ -503,25 +540,34 @@ def load(name, return_path=False):
         return module.load_data()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(
-        format='%(asctime)s : %(name)s : %(levelname)s : %(message)s', stream=sys.stdout, level=logging.INFO
+        format="%(asctime)s : %(name)s : %(levelname)s : %(message)s",
+        stream=sys.stdout,
+        level=logging.INFO,
     )
     parser = argparse.ArgumentParser(
         description="Gensim console API",
-        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name]"
+        usage="python -m gensim.api.downloader  [-h] [-d data_name | -i data_name]",
     )
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
-        "-d", "--download", metavar="data_name", nargs=1,
-        help="To download a corpus/model : python -m gensim.downloader -d <dataname>"
+        "-d",
+        "--download",
+        metavar="data_name",
+        nargs=1,
+        help="To download a corpus/model : python -m gensim.downloader -d <dataname>",
     )
 
     full_information = 1
     group.add_argument(
-        "-i", "--info", metavar="data_name", nargs='?', const=full_information,
-        help="To get information about a corpus/model : python -m gensim.downloader -i <dataname>"
+        "-i",
+        "--info",
+        metavar="data_name",
+        nargs="?",
+        const=full_information,
+        help="To get information about a corpus/model : python -m gensim.downloader -i <dataname>",
     )
 
     args = parser.parse_args()
@@ -529,7 +575,7 @@ if __name__ == '__main__':
         data_path = load(args.download[0], return_path=True)
         logger.info("Data has been installed and data path is %s", data_path)
     elif args.info is not None:
-        if args.info == 'name':
+        if args.info == "name":
             print(json.dumps(info(name_only=True), indent=4))
         else:
             output = info() if (args.info == full_information) else info(name=args.info)

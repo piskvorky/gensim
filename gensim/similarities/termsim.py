@@ -8,9 +8,9 @@
 This module provides classes that deal with term similarities.
 """
 
+import logging
 from array import array
 from itertools import chain
-import logging
 from math import sqrt
 
 import numpy as np
@@ -22,9 +22,9 @@ from gensim.utils import SaveLoad, is_corpus
 logger = logging.getLogger(__name__)
 
 NON_NEGATIVE_NORM_ASSERTION_MESSAGE = (
-    u"sparse documents must not contain any explicit "
-    u"zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any "
-    u"nonzero bag-of-words vector x."
+    "sparse documents must not contain any explicit "
+    "zero entries and the similarity matrix S must satisfy x^T * S * x >= 0 for any "
+    "nonzero bag-of-words vector x."
 )
 
 
@@ -38,6 +38,7 @@ class TermSimilarityIndex(SaveLoad):
         A sparse term similarity matrix built using a term similarity index.
 
     """
+
     def most_similar(self, term, topn=10):
         """Get most similar terms for a given term.
 
@@ -60,8 +61,8 @@ class TermSimilarityIndex(SaveLoad):
         raise NotImplementedError
 
     def __str__(self):
-        members = ', '.join('%s=%s' % pair for pair in vars(self).items())
-        return '%s<%s>' % (self.__class__.__name__, members)
+        members = ", ".join("%s=%s" % pair for pair in vars(self).items())
+        return "%s<%s>" % (self.__class__.__name__, members)
 
 
 class UniformTermSimilarityIndex(TermSimilarityIndex):
@@ -87,13 +88,16 @@ class UniformTermSimilarityIndex(TermSimilarityIndex):
     depend on the TermSimilarityIndex.
 
     """
+
     def __init__(self, dictionary, term_similarity=0.5):
         self.dictionary = sorted(dictionary.items())
         self.term_similarity = term_similarity
 
     def most_similar(self, t1, topn=10):
-        for __, (t2_index, t2) in zip(range(topn), (
-                (t2_index, t2) for t2_index, t2 in self.dictionary if t2 != t1)):
+        for __, (t2_index, t2) in zip(
+            range(topn),
+            ((t2_index, t2) for t2_index, t2 in self.dictionary if t2 != t1),
+        ):
             yield (t2, self.term_similarity)
 
 
@@ -146,6 +150,7 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
         Build a term similarity matrix and compute the Soft Cosine Measure.
 
     """
+
     def __init__(self, keyedvectors, threshold=0.0, exponent=2.0, kwargs=None):
         self.keyedvectors = keyedvectors
         self.threshold = threshold
@@ -157,7 +162,9 @@ class WordEmbeddingSimilarityIndex(TermSimilarityIndex):
         if t1 not in self.keyedvectors:
             logger.debug('an out-of-dictionary term "%s"', t1)
         else:
-            most_similar = self.keyedvectors.most_similar(positive=[t1], topn=topn, **self.kwargs)
+            most_similar = self.keyedvectors.most_similar(
+                positive=[t1], topn=topn, **self.kwargs
+            )
             for t2, similarity in most_similar:
                 if similarity > self.threshold:
                     yield (t2, similarity**self.exponent)
@@ -204,7 +211,9 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
     matrix_order = len(dictionary)
 
     if matrix_order == 0:
-        raise ValueError('Dictionary provided to SparseTermSimilarityMatrix must not be empty')
+        raise ValueError(
+            "Dictionary provided to SparseTermSimilarityMatrix must not be empty"
+        )
 
     logger.info("constructing a sparse term similarity matrix using %s", index)
 
@@ -232,14 +241,16 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
         column_sum = np.zeros(matrix_order, dtype=dtype)
     if symmetric:
         assigned_cells = set()
-    row_buffer = array('Q')
-    column_buffer = array('Q')
+    row_buffer = array("Q")
+    column_buffer = array("Q")
     if dtype is np.float16 or dtype is np.float32:
-        data_buffer = array('f')
+        data_buffer = array("f")
     elif dtype is np.float64:
-        data_buffer = array('d')
+        data_buffer = array("d")
     else:
-        raise ValueError('Dtype %s is unsupported, use numpy.float16, float32, or float64.' % dtype)
+        raise ValueError(
+            "Dtype %s is unsupported, use numpy.float16, float32, or float64." % dtype
+        )
 
     def cell_full(t1_index, t2_index, similarity):
         if dominant and column_sum[t1_index] + abs(similarity) >= 1.0:
@@ -264,6 +275,7 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
     try:
         from tqdm import tqdm as progress_bar
     except ImportError:
+
         def progress_bar(iterable):
             return iterable
 
@@ -278,11 +290,15 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
         t1 = dictionary[t1_index]
         num_nonzero = column_nonzero[t1_index]
         num_rows = nonzero_limit - num_nonzero
-        most_similar = [
-            (dictionary.token2id[term], similarity)
-            for term, similarity in index.most_similar(t1, topn=num_rows)
-            if term in dictionary.token2id
-        ] if num_rows > 0 else []
+        most_similar = (
+            [
+                (dictionary.token2id[term], similarity)
+                for term, similarity in index.most_similar(t1, topn=num_rows)
+                if term in dictionary.token2id
+            ]
+            if num_rows > 0
+            else []
+        )
 
         if tfidf is None:
             rows = sorted(most_similar)
@@ -301,7 +317,9 @@ def _create_source(index, dictionary, tfidf, symmetric, dominant, nonzero_limit,
     data_buffer = np.frombuffer(data_buffer, dtype=dtype)
     row_buffer = np.frombuffer(row_buffer, dtype=np.uint64)
     column_buffer = np.frombuffer(column_buffer, dtype=np.uint64)
-    matrix = sparse.coo_matrix((data_buffer, (row_buffer, column_buffer)), shape=(matrix_order, matrix_order))
+    matrix = sparse.coo_matrix(
+        (data_buffer, (row_buffer, column_buffer)), shape=(matrix_order, matrix_order)
+    )
 
     logger.info(
         "constructed a sparse term similarity matrix with %0.06f%% density",
@@ -337,7 +355,7 @@ def _normalize_dense_vector(vector, matrix, normalization):
 
     vector_norm = vector.T.dot(matrix).dot(vector)[0, 0]
     assert vector_norm >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-    if normalization == 'maintain' and vector_norm > 0.0:
+    if normalization == "maintain" and vector_norm > 0.0:
         vector_norm /= vector.T.dot(vector)
     vector_norm = sqrt(vector_norm)
 
@@ -375,7 +393,7 @@ def _normalize_dense_corpus(corpus, matrix, normalization):
     # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
     corpus_norm = np.multiply(corpus.T.dot(matrix), corpus.T).sum(axis=1).T
     assert corpus_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-    if normalization == 'maintain':
+    if normalization == "maintain":
         corpus_norm /= np.multiply(corpus.T, corpus.T).sum(axis=1).T
     corpus_norm = np.sqrt(corpus_norm)
 
@@ -411,7 +429,7 @@ def _normalize_sparse_corpus(corpus, matrix, normalization):
     # use the following equality: np.diag(A.T.dot(B).dot(A)) == A.T.dot(B).multiply(A.T).sum(axis=1).T
     corpus_norm = corpus.T.dot(matrix).multiply(corpus.T).sum(axis=1).T
     assert corpus_norm.min() >= 0.0, NON_NEGATIVE_NORM_ASSERTION_MESSAGE
-    if normalization == 'maintain':
+    if normalization == "maintain":
         corpus_norm /= corpus.T.multiply(corpus.T).sum(axis=1).T
     corpus_norm = np.sqrt(corpus_norm)
 
@@ -504,8 +522,17 @@ class SparseTermSimilarityMatrix(SaveLoad):
         A term similarity index that computes cosine similarities between word embeddings.
 
     """
-    def __init__(self, source, dictionary=None, tfidf=None, symmetric=True, dominant=False,
-            nonzero_limit=100, dtype=np.float32):
+
+    def __init__(
+        self,
+        source,
+        dictionary=None,
+        tfidf=None,
+        symmetric=True,
+        dominant=False,
+        nonzero_limit=100,
+        dtype=np.float32,
+    ):
 
         if not sparse.issparse(source):
             index = source
@@ -556,12 +583,16 @@ class SparseTermSimilarityMatrix(SaveLoad):
             return self.matrix.dtype.type(0.0)
 
         normalized_X, normalized_Y = normalized
-        valid_normalized_values = (True, False, 'maintain')
+        valid_normalized_values = (True, False, "maintain")
 
         if normalized_X not in valid_normalized_values:
-            raise ValueError('{} is not a valid value of normalize'.format(normalized_X))
+            raise ValueError(
+                "{} is not a valid value of normalize".format(normalized_X)
+            )
         if normalized_Y not in valid_normalized_values:
-            raise ValueError('{} is not a valid value of normalize'.format(normalized_Y))
+            raise ValueError(
+                "{} is not a valid value of normalize".format(normalized_Y)
+            )
 
         is_corpus_X, X = is_corpus(X)
         is_corpus_Y, Y = is_corpus(Y)
@@ -593,13 +624,17 @@ class SparseTermSimilarityMatrix(SaveLoad):
                 transposed = False
 
             dtype = self.matrix.dtype
-            expanded_X = corpus2csc([X], num_terms=self.matrix.shape[0], dtype=dtype).T.dot(self.matrix)
+            expanded_X = corpus2csc(
+                [X], num_terms=self.matrix.shape[0], dtype=dtype
+            ).T.dot(self.matrix)
             word_indices = np.array(sorted(expanded_X.nonzero()[1]))
             del expanded_X
 
             X = dict(X)
             X = np.array([X[i] if i in X else 0 for i in word_indices], dtype=dtype)
-            Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[word_indices, :].todense()
+            Y = corpus2csc(Y, num_terms=self.matrix.shape[0], dtype=dtype)[
+                word_indices, :
+            ].todense()
             matrix = self.matrix[word_indices[:, None], word_indices].todense()
 
             X = _normalize_dense_vector(X, matrix, normalized_X)
@@ -615,8 +650,12 @@ class SparseTermSimilarityMatrix(SaveLoad):
             return result
         else:  # if is_corpus_X and is_corpus_Y:
             dtype = self.matrix.dtype
-            X = corpus2csc(X if is_corpus_X else [X], num_terms=self.matrix.shape[0], dtype=dtype)
-            Y = corpus2csc(Y if is_corpus_Y else [Y], num_terms=self.matrix.shape[0], dtype=dtype)
+            X = corpus2csc(
+                X if is_corpus_X else [X], num_terms=self.matrix.shape[0], dtype=dtype
+            )
+            Y = corpus2csc(
+                Y if is_corpus_Y else [Y], num_terms=self.matrix.shape[0], dtype=dtype
+            )
             matrix = self.matrix
 
             X = _normalize_sparse_corpus(X, matrix, normalized_X)

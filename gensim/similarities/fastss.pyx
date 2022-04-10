@@ -14,7 +14,6 @@ import itertools
 
 from cpython.ref cimport PyObject
 
-
 DEF MAX_WORD_LENGTH = 1000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
 
 

@@ -9,7 +9,9 @@ import itertools
 import logging
 
 from gensim.topic_coherence.text_analysis import (
-    CorpusAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
+    CorpusAccumulator,
+    ParallelWordOccurrenceAccumulator,
+    WordOccurrenceAccumulator,
     WordVectorsAccumulator,
 )
 
@@ -75,7 +77,9 @@ def p_boolean_document(corpus, segmented_topics):
     return CorpusAccumulator(top_ids).accumulate(corpus)
 
 
-def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, processes=1):
+def p_boolean_sliding_window(
+    texts, segmented_topics, dictionary, window_size, processes=1
+):
     """Perform the boolean sliding window probability estimation.
 
     Parameters
@@ -156,7 +160,9 @@ def p_boolean_sliding_window(texts, segmented_topics, dictionary, window_size, p
     return accumulator.accumulate(texts, window_size)
 
 
-def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=1, model=None):
+def p_word2vec(
+    texts, segmented_topics, dictionary, window_size=None, processes=1, model=None
+):
     """Train word2vec model on `texts` if `model` is not None.
 
     Parameters
@@ -224,7 +230,8 @@ def p_word2vec(texts, segmented_topics, dictionary, window_size=None, processes=
     """
     top_ids = unique_ids_from_segments(segmented_topics)
     accumulator = WordVectorsAccumulator(
-        top_ids, dictionary, model, window=window_size, workers=processes)
+        top_ids, dictionary, model, window=window_size, workers=processes
+    )
     return accumulator.accumulate(texts, window_size)
 
 
@@ -255,7 +262,7 @@ def unique_ids_from_segments(segmented_topics):
     unique_ids = set()  # is a set of all the unique ids contained in topics.
     for s_i in segmented_topics:
         for word_id in itertools.chain.from_iterable(s_i):
-            if hasattr(word_id, '__iter__'):
+            if hasattr(word_id, "__iter__"):
                 unique_ids.update(word_id)
             else:
                 unique_ids.add(word_id)

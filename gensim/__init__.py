@@ -4,13 +4,20 @@ similarities between documents.
 
 """
 
-__version__ = '4.1.3.dev0'
+__version__ = "4.1.3.dev0"
 
 import logging
 
-from gensim import parsing, corpora, matutils, interfaces, models, similarities, utils  # noqa:F401
+from gensim import (
+    corpora,
+    interfaces,
+    matutils,
+    models,  # noqa:F401
+    parsing,
+    similarities,
+    utils,
+)
 
-
-logger = logging.getLogger('gensim')
+logger = logging.getLogger("gensim")
 if not logger.handlers:  # To ensure reload() doesn't add another one
     logger.addHandler(logging.NullHandler())

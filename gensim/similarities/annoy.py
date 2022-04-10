@@ -26,16 +26,17 @@ except ImportError:
     import pickle as _pickle
 
 from gensim import utils
-from gensim.models.doc2vec import Doc2Vec
-from gensim.models.word2vec import Word2Vec
-from gensim.models.fasttext import FastText
 from gensim.models import KeyedVectors
+from gensim.models.doc2vec import Doc2Vec
+from gensim.models.fasttext import FastText
+from gensim.models.word2vec import Word2Vec
+
+_NOANNOY = ImportError(
+    "Annoy not installed. To use the Annoy indexer, please run `pip install annoy`."
+)
 
 
-_NOANNOY = ImportError("Annoy not installed. To use the Annoy indexer, please run `pip install annoy`.")
-
-
-class AnnoyIndexer():
+class AnnoyIndexer:
     """This class allows the use of `Annoy <https://github.com/spotify/annoy>`_ for fast (approximate)
     vector retrieval in `most_similar()` calls of
     :class:`~gensim.models.word2vec.Word2Vec`, :class:`~gensim.models.doc2vec.Doc2Vec`,
@@ -81,8 +82,12 @@ class AnnoyIndexer():
             elif isinstance(self.model, (KeyedVectors,)):
                 kv = self.model
             else:
-                raise ValueError("Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used")
-            self._build_from_model(kv.get_normed_vectors(), kv.index_to_key, kv.vector_size)
+                raise ValueError(
+                    "Only a Word2Vec, Doc2Vec, FastText or KeyedVectors instance can be used"
+                )
+            self._build_from_model(
+                kv.get_normed_vectors(), kv.index_to_key, kv.vector_size
+            )
 
     def save(self, fname, protocol=utils.PICKLE_PROTOCOL):
         """Save AnnoyIndexer instance to disk.
@@ -102,8 +107,12 @@ class AnnoyIndexer():
 
         """
         self.index.save(fname)
-        d = {'f': self.model.vector_size, 'num_trees': self.num_trees, 'labels': self.labels}
-        with utils.open(fname + '.dict', 'wb') as fout:
+        d = {
+            "f": self.model.vector_size,
+            "num_trees": self.num_trees,
+            "labels": self.labels,
+        }
+        with utils.open(fname + ".dict", "wb") as fout:
             _pickle.dump(d, fout, protocol=protocol)
 
     def load(self, fname):
@@ -134,7 +143,7 @@ class AnnoyIndexer():
             >>> new_indexer.model = model
 
         """
-        fname_dict = fname + '.dict'
+        fname_dict = fname + ".dict"
         if not (os.path.exists(fname) and os.path.exists(fname_dict)):
             raise IOError(
                 f"Can't find index files '{fname}' and '{fname_dict}' - unable to restore AnnoyIndexer state."
@@ -144,12 +153,12 @@ class AnnoyIndexer():
         except ImportError:
             raise _NOANNOY
 
-        with utils.open(fname_dict, 'rb') as f:
+        with utils.open(fname_dict, "rb") as f:
             d = _pickle.loads(f.read())
-        self.num_trees = d['num_trees']
-        self.index = AnnoyIndex(d['f'], metric='angular')
+        self.num_trees = d["num_trees"]
+        self.index = AnnoyIndex(d["f"], metric="angular")
         self.index.load(fname)
-        self.labels = d['labels']
+        self.labels = d["labels"]
 
     def _build_from_model(self, vectors, labels, num_features):
         try:
@@ -157,7 +166,7 @@ class AnnoyIndexer():
         except ImportError:
             raise _NOANNOY
 
-        index = AnnoyIndex(num_features, metric='angular')
+        index = AnnoyIndex(num_features, metric="angular")
 
         for vector_num, vector in enumerate(vectors):
             index.add_item(vector_num, vector)
@@ -183,6 +192,7 @@ class AnnoyIndexer():
 
         """
         ids, distances = self.index.get_nns_by_vector(
-            vector, num_neighbors, include_distances=True)
+            vector, num_neighbors, include_distances=True
+        )
 
         return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]

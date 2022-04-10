@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class NormModel(interfaces.TransformationABC):
     """Objects of this class realize the explicit normalization of vectors (l1 and l2)."""
 
-    def __init__(self, corpus=None, norm='l2'):
+    def __init__(self, corpus=None, norm="l2"):
         r"""Compute the l1 or l2 normalization by normalizing separately for each document in a corpus.
 
         If :math:`v_{i,j}` is the 'i'th component of the vector representing document 'j', the l1 normalization is
@@ -42,7 +42,10 @@ class NormModel(interfaces.TransformationABC):
 
     def __str__(self):
         return "%s<num_docs=%s, num_nnz=%s, norm=%s>" % (
-            self.__class__.__name__, self.num_docs, self.num_nnz, self.norm
+            self.__class__.__name__,
+            self.num_docs,
+            self.num_nnz,
+            self.norm,
         )
 
     def calc_norm(self, corpus):

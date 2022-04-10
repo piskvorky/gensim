@@ -17,20 +17,16 @@ import numpy as np
 from gensim.utils import any2utf8
 
 cimport numpy as np
-
+from libcpp cimport bool as bool_t
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-from libcpp cimport bool as bool_t
 
-from gensim.models.word2vec_inner cimport (
-    w2v_fast_sentence_sg_hs,
-    w2v_fast_sentence_sg_neg,
-    w2v_fast_sentence_cbow_hs,
-    w2v_fast_sentence_cbow_neg,
-    random_int32,
-    init_w2v_config,
-    Word2VecConfig
-)
+from gensim.models.word2vec_inner cimport (Word2VecConfig, init_w2v_config,
+                                           random_int32,
+                                           w2v_fast_sentence_cbow_hs,
+                                           w2v_fast_sentence_cbow_neg,
+                                           w2v_fast_sentence_sg_hs,
+                                           w2v_fast_sentence_sg_neg)
 
 DEF MAX_SENTENCE_LEN = 10000
 

@@ -12,12 +12,11 @@
 
 import cython
 import numpy as np
-cimport numpy as np
 
+cimport numpy as np
+from libc.string cimport memcpy, memset
 from libcpp.string cimport string
 from libcpp.vector cimport vector
-
-from libc.string cimport memset, memcpy
 
 # scipy <= 0.15
 try:
@@ -26,27 +25,19 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from gensim.models.doc2vec_inner cimport (
-    fast_document_dbow_hs,
-    fast_document_dbow_neg,
-    fast_document_dm_hs,
-    fast_document_dm_neg,
-    fast_document_dmc_hs,
-    fast_document_dmc_neg,
-    init_d2v_config,
-    Doc2VecConfig
-)
-
-from gensim.models.word2vec_inner cimport random_int32, sscal, REAL_t, our_saxpy
-
-from gensim.models.word2vec_corpusfile cimport (
-    VocabItem,
-    CythonVocab,
-    CythonLineSentence,
-    get_alpha,
-    get_next_alpha,
-    cvocab_t
-)
+from gensim.models.doc2vec_inner cimport (Doc2VecConfig, fast_document_dbow_hs,
+                                          fast_document_dbow_neg,
+                                          fast_document_dm_hs,
+                                          fast_document_dm_neg,
+                                          fast_document_dmc_hs,
+                                          fast_document_dmc_neg,
+                                          init_d2v_config)
+from gensim.models.word2vec_corpusfile cimport (CythonLineSentence,
+                                                CythonVocab, VocabItem,
+                                                cvocab_t, get_alpha,
+                                                get_next_alpha)
+from gensim.models.word2vec_inner cimport (REAL_t, our_saxpy, random_int32,
+                                           sscal)
 
 DEF MAX_DOCUMENT_LEN = 10000
 

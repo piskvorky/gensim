@@ -43,10 +43,11 @@ class PorterStemmer:
         Word length.
 
     """
+
     def __init__(self):
         self.b = ""  # buffer for word to be stemmed
         self.k = 0
-        self.j = 0   # j is a general offset into the string
+        self.j = 0  # j is a general offset into the string
 
     def _cons(self, i):
         """Check if b[i] is a consonant letter.
@@ -77,7 +78,7 @@ class PorterStemmer:
         ch = self.b[i]
         if ch in "aeiou":
             return False
-        if ch == 'y':
+        if ch == "y":
             return i == 0 or not self._cons(i - 1)
         return True
 
@@ -257,7 +258,7 @@ class PorterStemmer:
         length = len(s)
         if length > (self.k + 1):
             return False
-        if self.b[self.k - length + 1:self.k + 1] != s:
+        if self.b[self.k - length + 1 : self.k + 1] != s:
             return False
         self.j = self.k - length
         return True
@@ -270,7 +271,7 @@ class PorterStemmer:
         s : str
 
         """
-        self.b = self.b[:self.j + 1] + s
+        self.b = self.b[: self.j + 1] + s
         self.k = len(self.b) - 1
 
     def _r(self, s):
@@ -280,31 +281,31 @@ class PorterStemmer:
     def _step1ab(self):
         """Get rid of plurals and -ed or -ing.
 
-           caresses  ->  caress
-           ponies    ->  poni
-           ties      ->  ti
-           caress    ->  caress
-           cats      ->  cat
+        caresses  ->  caress
+        ponies    ->  poni
+        ties      ->  ti
+        caress    ->  caress
+        cats      ->  cat
 
-           feed      ->  feed
-           agreed    ->  agree
-           disabled  ->  disable
+        feed      ->  feed
+        agreed    ->  agree
+        disabled  ->  disable
 
-           matting   ->  mat
-           mating    ->  mate
-           meeting   ->  meet
-           milling   ->  mill
-           messing   ->  mess
+        matting   ->  mat
+        mating    ->  mate
+        meeting   ->  meet
+        milling   ->  mill
+        messing   ->  mess
 
-           meetings  ->  meet
+        meetings  ->  meet
 
         """
-        if self.b[self.k] == 's':
+        if self.b[self.k] == "s":
             if self._ends("sses"):
                 self.k -= 2
             elif self._ends("ies"):
                 self._setto("i")
-            elif self.b[self.k - 1] != 's':
+            elif self.b[self.k - 1] != "s":
                 self.k -= 1
         if self._ends("eed"):
             if self._m() > 0:
@@ -326,7 +327,7 @@ class PorterStemmer:
     def _step1c(self):
         """Turn terminal 'y' to 'i' when there is another vowel in the stem."""
         if self._ends("y") and self._vowelinstem():
-            self.b = self.b[:self.k] + 'i'
+            self.b = self.b[: self.k] + "i"
 
     def _step2(self):
         """Map double suffices to single ones.
@@ -336,20 +337,20 @@ class PorterStemmer:
 
         """
         ch = self.b[self.k - 1]
-        if ch == 'a':
+        if ch == "a":
             if self._ends("ational"):
                 self._r("ate")
             elif self._ends("tional"):
                 self._r("tion")
-        elif ch == 'c':
+        elif ch == "c":
             if self._ends("enci"):
                 self._r("ence")
             elif self._ends("anci"):
                 self._r("ance")
-        elif ch == 'e':
+        elif ch == "e":
             if self._ends("izer"):
                 self._r("ize")
-        elif ch == 'l':
+        elif ch == "l":
             if self._ends("bli"):
                 self._r("ble")  # --DEPARTURE--
             # To match the published algorithm, replace this phrase with
@@ -362,14 +363,14 @@ class PorterStemmer:
                 self._r("e")
             elif self._ends("ousli"):
                 self._r("ous")
-        elif ch == 'o':
+        elif ch == "o":
             if self._ends("ization"):
                 self._r("ize")
             elif self._ends("ation"):
                 self._r("ate")
             elif self._ends("ator"):
                 self._r("ate")
-        elif ch == 's':
+        elif ch == "s":
             if self._ends("alism"):
                 self._r("al")
             elif self._ends("iveness"):
@@ -378,14 +379,14 @@ class PorterStemmer:
                 self._r("ful")
             elif self._ends("ousness"):
                 self._r("ous")
-        elif ch == 't':
+        elif ch == "t":
             if self._ends("aliti"):
                 self._r("al")
             elif self._ends("iviti"):
                 self._r("ive")
             elif self._ends("biliti"):
                 self._r("ble")
-        elif ch == 'g':  # --DEPARTURE--
+        elif ch == "g":  # --DEPARTURE--
             if self._ends("logi"):
                 self._r("log")
         # To match the published algorithm, delete this phrase
@@ -393,44 +394,44 @@ class PorterStemmer:
     def _step3(self):
         """Deal with -ic-, -full, -ness etc. Similar strategy to _step2."""
         ch = self.b[self.k]
-        if ch == 'e':
+        if ch == "e":
             if self._ends("icate"):
                 self._r("ic")
             elif self._ends("ative"):
                 self._r("")
             elif self._ends("alize"):
                 self._r("al")
-        elif ch == 'i':
+        elif ch == "i":
             if self._ends("iciti"):
                 self._r("ic")
-        elif ch == 'l':
+        elif ch == "l":
             if self._ends("ical"):
                 self._r("ic")
             elif self._ends("ful"):
                 self._r("")
-        elif ch == 's':
+        elif ch == "s":
             if self._ends("ness"):
                 self._r("")
 
     def _step4(self):
         """Takes off -ant, -ence etc., in context <c>vcvc<v>."""
         ch = self.b[self.k - 1]
-        if ch == 'a':
+        if ch == "a":
             if not self._ends("al"):
                 return
-        elif ch == 'c':
+        elif ch == "c":
             if not self._ends("ance") and not self._ends("ence"):
                 return
-        elif ch == 'e':
+        elif ch == "e":
             if not self._ends("er"):
                 return
-        elif ch == 'i':
+        elif ch == "i":
             if not self._ends("ic"):
                 return
-        elif ch == 'l':
+        elif ch == "l":
             if not self._ends("able") and not self._ends("ible"):
                 return
-        elif ch == 'n':
+        elif ch == "n":
             if self._ends("ant"):
                 pass
             elif self._ends("ement"):
@@ -441,7 +442,7 @@ class PorterStemmer:
                 pass
             else:
                 return
-        elif ch == 'o':
+        elif ch == "o":
             if self._ends("ion") and self.b[self.j] in "st":
                 pass
             elif self._ends("ou"):
@@ -449,19 +450,19 @@ class PorterStemmer:
             # takes care of -ous
             else:
                 return
-        elif ch == 's':
+        elif ch == "s":
             if not self._ends("ism"):
                 return
-        elif ch == 't':
+        elif ch == "t":
             if not self._ends("ate") and not self._ends("iti"):
                 return
-        elif ch == 'u':
+        elif ch == "u":
             if not self._ends("ous"):
                 return
-        elif ch == 'v':
+        elif ch == "v":
             if not self._ends("ive"):
                 return
-        elif ch == 'z':
+        elif ch == "z":
             if not self._ends("ize"):
                 return
         else:
@@ -472,11 +473,11 @@ class PorterStemmer:
     def _step5(self):
         """Remove a final -e if _m() > 1, and change -ll to -l if m() > 1."""
         k = self.j = self.k
-        if self.b[k] == 'e':
+        if self.b[k] == "e":
             a = self._m()
             if a > 1 or (a == 1 and not self._cvc(k - 1)):
                 self.k -= 1
-        if self.b[self.k] == 'l' and self._doublec(self.k) and self._m() > 1:
+        if self.b[self.k] == "l" and self._doublec(self.k) and self._m() > 1:
             self.k -= 1
 
     def stem(self, w):
@@ -521,7 +522,7 @@ class PorterStemmer:
         self._step3()
         self._step4()
         self._step5()
-        return self.b[:self.k + 1]
+        return self.b[: self.k + 1]
 
     def stem_sentence(self, txt):
         """Stem the sentence `txt`.
@@ -574,7 +575,7 @@ class PorterStemmer:
         return [self.stem_sentence(x) for x in docs]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     p = PorterStemmer()

@@ -7,7 +7,10 @@ Introduces Gensim's LDA model and demonstrates its use on the NIPS corpus.
 """
 
 import logging
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+logging.basicConfig(
+    format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+)
 
 ###############################################################################
 # The purpose of this tutorial is to demonstrate how to train and tune an LDA model.
@@ -65,13 +68,17 @@ import tarfile
 
 import smart_open
 
-def extract_documents(url='https://cs.nyu.edu/~roweis/data/nips12raw_str602.tgz'):
+
+def extract_documents(url="https://cs.nyu.edu/~roweis/data/nips12raw_str602.tgz"):
     with smart_open.open(url, "rb") as file:
         with tarfile.open(fileobj=file) as tar:
             for member in tar.getmembers():
-                if member.isfile() and re.search(r'nipstxt/nips\d+/\d+\.txt', member.name):
+                if member.isfile() and re.search(
+                    r"nipstxt/nips\d+/\d+\.txt", member.name
+                ):
                     member_bytes = tar.extractfile(member).read()
-                    yield member_bytes.decode('utf-8', errors='replace')
+                    yield member_bytes.decode("utf-8", errors="replace")
+
 
 docs = list(extract_documents())
 
@@ -109,7 +116,7 @@ print(docs[0][:500])
 from nltk.tokenize import RegexpTokenizer
 
 # Split the documents into tokens.
-tokenizer = RegexpTokenizer(r'\w+')
+tokenizer = RegexpTokenizer(r"\w+")
 for idx in range(len(docs)):
     docs[idx] = docs[idx].lower()  # Convert to lowercase.
     docs[idx] = tokenizer.tokenize(docs[idx])  # Split into words.
@@ -155,7 +162,7 @@ from gensim.models import Phrases
 bigram = Phrases(docs, min_count=20)
 for idx in range(len(docs)):
     for token in bigram[docs[idx]]:
-        if '_' in token:
+        if "_" in token:
             # Token is a bigram, add to document.
             docs[idx].append(token)
 
@@ -187,8 +194,8 @@ corpus = [dictionary.doc2bow(doc) for doc in docs]
 # Let's see how many tokens and documents we have to train on.
 #
 
-print('Number of unique tokens: %d' % len(dictionary))
-print('Number of documents: %d' % len(corpus))
+print("Number of unique tokens: %d" % len(dictionary))
+print("Number of documents: %d" % len(corpus))
 
 ###############################################################################
 # Training
@@ -253,12 +260,12 @@ model = LdaModel(
     corpus=corpus,
     id2word=id2word,
     chunksize=chunksize,
-    alpha='auto',
-    eta='auto',
+    alpha="auto",
+    eta="auto",
     iterations=iterations,
     num_topics=num_topics,
     passes=passes,
-    eval_every=eval_every
+    eval_every=eval_every,
 )
 
 ###############################################################################
@@ -278,13 +285,14 @@ model = LdaModel(
 # methods on the blog at http://rare-technologies.com/lda-training-tips/ !
 #
 
-top_topics = model.top_topics(corpus) #, num_words=20)
+top_topics = model.top_topics(corpus)  # , num_words=20)
 
 # Average topic coherence is the sum of topic coherences of all topics, divided by the number of topics.
 avg_topic_coherence = sum([t[1] for t in top_topics]) / num_topics
-print('Average topic coherence: %.4f.' % avg_topic_coherence)
+print("Average topic coherence: %.4f." % avg_topic_coherence)
 
 from pprint import pprint
+
 pprint(top_topics)
 
 ###############################################################################

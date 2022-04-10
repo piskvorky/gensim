@@ -3,8 +3,10 @@
 import subprocess
 import sys
 import tempfile
-if sys.platform in ('linux', 'darwin') and sys.version_info[:2] == (3, 10):
+
+if sys.platform in ("linux", "darwin") and sys.version_info[:2] == (3, 10):
     import urllib.request
-    with tempfile.NamedTemporaryFile(suffix='.py') as fout:
+
+    with tempfile.NamedTemporaryFile(suffix=".py") as fout:
         urllib.request.urlretrieve("https://bootstrap.pypa.io/get-pip.py", fout.name)
         subprocess.call([sys.executable, fout.name])

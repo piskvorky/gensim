@@ -57,6 +57,7 @@ class LowCorpus(IndexedCorpus):
         >>> loaded_corpus = LowCorpus(output_fname)
 
     """
+
     def __init__(self, fname, id2word=None, line2words=split_on_space):
         """
 
@@ -86,7 +87,9 @@ class LowCorpus(IndexedCorpus):
             self.use_wordids = False  # return documents as (word, wordCount) 2-tuples
             for doc in self:
                 all_terms.update(word for word, wordCnt in doc)
-            all_terms = sorted(all_terms)  # sort the list of all words; rank in that list = word's integer id
+            all_terms = sorted(
+                all_terms
+            )  # sort the list of all words; rank in that list = word's integer id
             # build a mapping of word id(int) -> word (string)
             self.id2word = dict(zip(range(len(all_terms)), all_terms))
         else:
@@ -97,7 +100,9 @@ class LowCorpus(IndexedCorpus):
 
         logger.info(
             "loaded corpus with %i documents and %i terms from %s",
-            self.num_docs, self.num_terms, fname
+            self.num_docs,
+            self.num_terms,
+            fname,
         )
 
     def _calculate_num_docs(self):
@@ -110,7 +115,7 @@ class LowCorpus(IndexedCorpus):
 
         """
         # the first line in input data is the number of documents (integer). throws exception on bad input.
-        with utils.open(self.fname, 'rb') as fin:
+        with utils.open(self.fname, "rb") as fin:
             try:
                 result = int(next(fin))
             except StopIteration:
@@ -170,7 +175,7 @@ class LowCorpus(IndexedCorpus):
             Document in BoW format.
 
         """
-        with utils.open(self.fname, 'rb') as fin:
+        with utils.open(self.fname, "rb") as fin:
             for lineno, line in enumerate(fin):
                 if lineno > 0:  # ignore the first line = number of documents
                     yield self.line2doc(line)
@@ -210,8 +215,8 @@ class LowCorpus(IndexedCorpus):
         logger.info("storing corpus in List-Of-Words format into %s" % fname)
         truncated = 0
         offsets = []
-        with utils.open(fname, 'wb') as fout:
-            fout.write(utils.to_utf8('%i\n' % len(corpus)))
+        with utils.open(fname, "wb") as fout:
+            fout.write(utils.to_utf8("%i\n" % len(corpus)))
             for doc in corpus:
                 words = []
                 for wordid, value in doc:
@@ -219,12 +224,13 @@ class LowCorpus(IndexedCorpus):
                         truncated += 1
                     words.extend([utils.to_unicode(id2word[wordid])] * int(value))
                 offsets.append(fout.tell())
-                fout.write(utils.to_utf8('%s\n' % ' '.join(words)))
+                fout.write(utils.to_utf8("%s\n" % " ".join(words)))
 
         if truncated:
             logger.warning(
                 "List-of-words format can only save vectors with integer elements; "
-                "%i float entries were truncated to integer value", truncated
+                "%i float entries were truncated to integer value",
+                truncated,
             )
         return offsets
 
@@ -256,7 +262,7 @@ class LowCorpus(IndexedCorpus):
             [(0, 1), (3, 1), (4, 1)]
 
         """
-        with utils.open(self.fname, 'rb') as f:
+        with utils.open(self.fname, "rb") as f:
             f.seek(offset)
             return self.line2doc(f.readline())
 

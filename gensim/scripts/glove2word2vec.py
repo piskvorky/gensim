@@ -57,13 +57,13 @@ Command line arguments
    :ellipsis: 0, -5
 
 """
-import sys
-import logging
 import argparse
+import logging
+import sys
 
 from gensim import utils
-from gensim.utils import deprecated
 from gensim.models.keyedvectors import KeyedVectors
+from gensim.utils import deprecated
 
 logger = logging.getLogger(__name__)
 
@@ -82,14 +82,16 @@ def get_glove_info(glove_file_name):
         Number of vectors (lines) of input file and its dimension.
 
     """
-    with utils.open(glove_file_name, 'rb') as f:
+    with utils.open(glove_file_name, "rb") as f:
         num_lines = sum(1 for _ in f)
-    with utils.open(glove_file_name, 'rb') as f:
+    with utils.open(glove_file_name, "rb") as f:
         num_dims = len(f.readline().split()) - 1
     return num_lines, num_dims
 
 
-@deprecated("KeyedVectors.load_word2vec_format(.., binary=False, no_header=True) loads GLoVE text vectors.")
+@deprecated(
+    "KeyedVectors.load_word2vec_format(.., binary=False, no_header=True) loads GLoVE text vectors."
+)
 def glove2word2vec(glove_input_file, word2vec_output_file):
     """Convert `glove_input_file` in GloVe format to word2vec format and write it to `word2vec_output_file`.
 
@@ -106,21 +108,37 @@ def glove2word2vec(glove_input_file, word2vec_output_file):
         Number of vectors (lines) of input file and its dimension.
 
     """
-    glovekv = KeyedVectors.load_word2vec_format(glove_input_file, binary=False, no_header=True)
+    glovekv = KeyedVectors.load_word2vec_format(
+        glove_input_file, binary=False, no_header=True
+    )
 
     num_lines, num_dims = len(glovekv), glovekv.vector_size
-    logger.info("converting %i vectors from %s to %s", num_lines, glove_input_file, word2vec_output_file)
+    logger.info(
+        "converting %i vectors from %s to %s",
+        num_lines,
+        glove_input_file,
+        word2vec_output_file,
+    )
     glovekv.save_word2vec_format(word2vec_output_file, binary=False)
     return num_lines, num_dims
 
 
 if __name__ == "__main__":
-    logging.basicConfig(format='%(asctime)s - %(module)s - %(levelname)s - %(message)s', level=logging.INFO)
-    parser = argparse.ArgumentParser(description=__doc__[:-135], formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("-i", "--input", required=True, help="Path to input file in GloVe format")
+    logging.basicConfig(
+        format="%(asctime)s - %(module)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
+    )
+    parser = argparse.ArgumentParser(
+        description=__doc__[:-135], formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "-i", "--input", required=True, help="Path to input file in GloVe format"
+    )
     parser.add_argument("-o", "--output", required=True, help="Path to output file")
     args = parser.parse_args()
 
-    logger.info("running %s", ' '.join(sys.argv))
+    logger.info("running %s", " ".join(sys.argv))
     num_lines, num_dims = glove2word2vec(args.input, args.output)
-    logger.info('Converted model with %i vectors and %i dimensions', num_lines, num_dims)
+    logger.info(
+        "Converted model with %i vectors and %i dimensions", num_lines, num_dims
+    )

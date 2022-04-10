@@ -25,6 +25,6 @@ class TestAggregation(unittest.TestCase):
         self.assertEqual(obtained, expected)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.root.setLevel(logging.WARNING)
     unittest.main()

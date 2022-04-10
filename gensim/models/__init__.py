@@ -3,28 +3,32 @@ This package contains algorithms for extracting document representations from th
 bag-of-word counts.
 """
 
+from gensim import interfaces, utils
+
+from .atmodel import AuthorTopicModel  # noqa:F401
+
 # bring model classes directly into package namespace, to save some typing
 from .coherencemodel import CoherenceModel  # noqa:F401
-from .hdpmodel import HdpModel  # noqa:F401
-from .ldamodel import LdaModel  # noqa:F401
-from .lsimodel import LsiModel  # noqa:F401
-from .tfidfmodel import TfidfModel  # noqa:F401
-from .rpmodel import RpModel  # noqa:F401
-from .logentropy_model import LogEntropyModel  # noqa:F401
-from .word2vec import Word2Vec, FAST_VERSION  # noqa:F401
 from .doc2vec import Doc2Vec  # noqa:F401
-from .keyedvectors import KeyedVectors  # noqa:F401
-from .ldamulticore import LdaMulticore  # noqa:F401
-from .phrases import Phrases  # noqa:F401
-from .normmodel import NormModel  # noqa:F401
-from .atmodel import AuthorTopicModel  # noqa:F401
-from .ldaseqmodel import LdaSeqModel  # noqa:F401
-from .fasttext import FastText  # noqa:F401
-from .translation_matrix import TranslationMatrix, BackMappingTranslationMatrix  # noqa:F401
 from .ensemblelda import EnsembleLda  # noqa:F401
+from .fasttext import FastText  # noqa:F401
+from .hdpmodel import HdpModel  # noqa:F401
+from .keyedvectors import KeyedVectors  # noqa:F401
+from .ldamodel import LdaModel  # noqa:F401
+from .ldamulticore import LdaMulticore  # noqa:F401
+from .ldaseqmodel import LdaSeqModel  # noqa:F401
+from .logentropy_model import LogEntropyModel  # noqa:F401
+from .lsimodel import LsiModel  # noqa:F401
 from .nmf import Nmf  # noqa:F401
-
-from gensim import interfaces, utils
+from .normmodel import NormModel  # noqa:F401
+from .phrases import Phrases  # noqa:F401
+from .rpmodel import RpModel  # noqa:F401
+from .tfidfmodel import TfidfModel  # noqa:F401
+from .translation_matrix import (
+    BackMappingTranslationMatrix,  # noqa:F401
+    TranslationMatrix,
+)
+from .word2vec import FAST_VERSION, Word2Vec  # noqa:F401
 
 
 class VocabTransform(interfaces.TransformationABC):
@@ -60,4 +64,8 @@ class VocabTransform(interfaces.TransformationABC):
         if is_corpus:
             return self._apply(bow)
 
-        return sorted((self.old2new[oldid], weight) for oldid, weight in bow if oldid in self.old2new)
+        return sorted(
+            (self.old2new[oldid], weight)
+            for oldid, weight in bow
+            if oldid in self.old2new
+        )

@@ -10,8 +10,9 @@ This module allows fast fuzzy search between strings, using kNN queries with Lev
 
 import logging
 
-from gensim.similarities.termsim import TermSimilarityIndex
 from gensim import utils
+from gensim.similarities.termsim import TermSimilarityIndex
+
 try:
     from gensim.similarities.fastss import FastSS, editdist  # noqa:F401
 except ImportError:
@@ -61,6 +62,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
        https://www.aclweb.org/anthology/S17-2051/.
 
     """
+
     def __init__(self, dictionary, alpha=1.8, beta=5.0, max_distance=2):
         self.dictionary = dictionary
         self.alpha = alpha
@@ -73,7 +75,7 @@ class LevenshteinSimilarityIndex(TermSimilarityIndex):
     def levsim(self, t1, t2, distance):
         """Calculate the Levenshtein similarity between two terms given their Levenshtein distance."""
         max_lengths = max(len(t1), len(t2)) or 1
-        return self.alpha * (1.0 - distance * 1.0 / max_lengths)**self.beta
+        return self.alpha * (1.0 - distance * 1.0 / max_lengths) ** self.beta
 
     def most_similar(self, t1, topn=10):
         """kNN fuzzy search: find the `topn` most similar terms from `self.dictionary` to `t1`."""

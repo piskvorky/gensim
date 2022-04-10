@@ -2,34 +2,30 @@ import logging
 import unittest
 
 from gensim.corpora.dictionary import Dictionary
-from gensim.topic_coherence.text_analysis import (
-    InvertedIndexAccumulator, WordOccurrenceAccumulator, ParallelWordOccurrenceAccumulator,
-    CorpusAccumulator)
 from gensim.test.utils import common_texts
+from gensim.topic_coherence.text_analysis import (
+    CorpusAccumulator,
+    InvertedIndexAccumulator,
+    ParallelWordOccurrenceAccumulator,
+    WordOccurrenceAccumulator,
+)
 
 
 class BaseTestCases:
-
     class TextAnalyzerTestBase(unittest.TestCase):
         texts = [
-            ['this', 'is', 'a'],
-            ['test', 'document'],
-            ['this', 'test', 'document'],
-            ['test', 'test', 'this']
+            ["this", "is", "a"],
+            ["test", "document"],
+            ["this", "test", "document"],
+            ["test", "test", "this"],
         ]
-        token2id = {
-            'this': 10,
-            'is': 15,
-            'a': 20,
-            'test': 21,
-            'document': 17
-        }
+        token2id = {"this": 10, "is": 15, "a": 20, "test": 21, "document": 17}
         dictionary = Dictionary(texts)
         dictionary.token2id = token2id
         dictionary.id2token = {v: k for k, v in token2id.items()}
         top_ids = set(token2id.values())
 
-        texts2 = common_texts + [['user', 'user']]
+        texts2 = common_texts + [["user", "user"]]
         dictionary2 = Dictionary(texts2)
         dictionary2.id2token = {v: k for k, v in dictionary2.token2id.items()}
         top_ids2 = set(dictionary2.token2id.values())
@@ -66,18 +62,26 @@ class BaseTestCases:
                 (2, ("graph", "trees")),
                 (4, ("user", "user")),
                 (3, ("graph", "graph")),
-                (0, ("time", "eps"))
+                (0, ("time", "eps")),
             ]
             for expected_count, (word1, word2) in cases:
                 # Verify co-occurrence counts are correct, regardless of word order.
-                self.assertEqual(expected_count, accumulator.get_co_occurrences(word1, word2))
-                self.assertEqual(expected_count, accumulator.get_co_occurrences(word2, word1))
+                self.assertEqual(
+                    expected_count, accumulator.get_co_occurrences(word1, word2)
+                )
+                self.assertEqual(
+                    expected_count, accumulator.get_co_occurrences(word2, word1)
+                )
 
                 # Also verify that using token ids instead of tokens works the same.
                 word_id1 = self.dictionary2.token2id[word1]
                 word_id2 = self.dictionary2.token2id[word2]
-                self.assertEqual(expected_count, accumulator.get_co_occurrences(word_id1, word_id2))
-                self.assertEqual(expected_count, accumulator.get_co_occurrences(word_id2, word_id1))
+                self.assertEqual(
+                    expected_count, accumulator.get_co_occurrences(word_id1, word_id2)
+                )
+                self.assertEqual(
+                    expected_count, accumulator.get_co_occurrences(word_id2, word_id1)
+                )
 
         def test_occurences_for_irrelevant_words(self):
             accumulator = self.init_accumulator().accumulate(self.texts, 2)
@@ -91,33 +95,23 @@ class TestInvertedIndexAccumulator(BaseTestCases.TextAnalyzerTestBase):
     accumulator_cls = InvertedIndexAccumulator
 
     def test_accumulate1(self):
-        accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary)\
-            .accumulate(self.texts, 2)
+        accumulator = InvertedIndexAccumulator(
+            self.top_ids, self.dictionary
+        ).accumulate(self.texts, 2)
         # [['this', 'is'], ['is', 'a'], ['test', 'document'], ['this', 'test'],
         #  ['test', 'document'], ['test', 'test'], ['test', 'this']]
         inverted_index = accumulator.index_to_dict()
-        expected = {
-            10: {0, 3, 6},
-            15: {0, 1},
-            20: {1},
-            21: {2, 3, 4, 5, 6},
-            17: {2, 4}
-        }
+        expected = {10: {0, 3, 6}, 15: {0, 1}, 20: {1}, 21: {2, 3, 4, 5, 6}, 17: {2, 4}}
         self.assertDictEqual(expected, inverted_index)
 
     def test_accumulate2(self):
-        accumulator = InvertedIndexAccumulator(self.top_ids, self.dictionary)\
-            .accumulate(self.texts, 3)
+        accumulator = InvertedIndexAccumulator(
+            self.top_ids, self.dictionary
+        ).accumulate(self.texts, 3)
         # [['this', 'is', 'a'], ['test', 'document'], ['this', 'test', 'document'],
         #  ['test', 'test', 'this']
         inverted_index = accumulator.index_to_dict()
-        expected = {
-            10: {0, 2, 3},
-            15: {0},
-            20: {0},
-            21: {1, 2, 3},
-            17: {1, 2}
-        }
+        expected = {10: {0, 2, 3}, 15: {0}, 20: {0}, 21: {1, 2, 3}, 17: {1, 2}}
         self.assertDictEqual(expected, inverted_index)
 
 
@@ -136,23 +130,18 @@ class TestParallelWordOccurrenceAccumulator(BaseTestCases.TextAnalyzerTestBase):
 
 
 class TestCorpusAnalyzer(unittest.TestCase):
-
     def setUp(self):
         self.dictionary = BaseTestCases.TextAnalyzerTestBase.dictionary
         self.top_ids = BaseTestCases.TextAnalyzerTestBase.top_ids
-        self.corpus = \
-            [self.dictionary.doc2bow(doc) for doc in BaseTestCases.TextAnalyzerTestBase.texts]
+        self.corpus = [
+            self.dictionary.doc2bow(doc)
+            for doc in BaseTestCases.TextAnalyzerTestBase.texts
+        ]
 
     def test_index_accumulation(self):
         accumulator = CorpusAccumulator(self.top_ids).accumulate(self.corpus)
         inverted_index = accumulator.index_to_dict()
-        expected = {
-            10: {0, 2, 3},
-            15: {0},
-            20: {0},
-            21: {1, 2, 3},
-            17: {1, 2}
-        }
+        expected = {10: {0, 2, 3}, 15: {0}, 20: {0}, 21: {1, 2, 3}, 17: {1, 2}}
         self.assertDictEqual(expected, inverted_index)
 
         self.assertEqual(3, accumulator.get_occurrences(10))
@@ -161,6 +150,6 @@ class TestCorpusAnalyzer(unittest.TestCase):
         self.assertEqual(1, accumulator.get_co_occurrences(10, 17))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.root.setLevel(logging.WARNING)
     unittest.main()

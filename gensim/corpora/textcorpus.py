@@ -45,8 +45,10 @@ import sys
 from gensim import interfaces, utils
 from gensim.corpora.dictionary import Dictionary
 from gensim.parsing.preprocessing import (
-    remove_stopword_tokens, remove_short_tokens,
-    lower_to_unicode, strip_multiple_whitespaces,
+    lower_to_unicode,
+    remove_short_tokens,
+    remove_stopword_tokens,
+    strip_multiple_whitespaces,
 )
 from gensim.utils import deaccent, simple_tokenize
 
@@ -108,8 +110,15 @@ class TextCorpus(interfaces.CorpusABC):
 
     """
 
-    def __init__(self, input=None, dictionary=None, metadata=False, character_filters=None,
-                 tokenizer=None, token_filters=None):
+    def __init__(
+        self,
+        input=None,
+        dictionary=None,
+        metadata=False,
+        character_filters=None,
+        tokenizer=None,
+        token_filters=None,
+    ):
         """
 
         Parameters
@@ -168,7 +177,11 @@ class TextCorpus(interfaces.CorpusABC):
 
         self.character_filters = character_filters
         if self.character_filters is None:
-            self.character_filters = [lower_to_unicode, deaccent, strip_multiple_whitespaces]
+            self.character_filters = [
+                lower_to_unicode,
+                deaccent,
+                strip_multiple_whitespaces,
+            ]
 
         self.tokenizer = tokenizer
         if self.tokenizer is None:
@@ -207,7 +220,9 @@ class TextCorpus(interfaces.CorpusABC):
             else:
                 logger.info("Input stream provided but dictionary already initialized")
         else:
-            logger.warning("No input document stream provided; assuming dictionary will be initialized some other way.")
+            logger.warning(
+                "No input document stream provided; assuming dictionary will be initialized some other way."
+            )
 
     def __iter__(self):
         """Iterate over the corpus.
@@ -349,7 +364,9 @@ class TextCorpus(interfaces.CorpusABC):
             length = len(self)
 
         if not n <= length:
-            raise ValueError("n {0:d} is larger/equal than length of corpus {1:d}.".format(n, length))
+            raise ValueError(
+                "n {0:d} is larger/equal than length of corpus {1:d}.".format(n, length)
+            )
         if not 0 <= n:
             raise ValueError("Negative sample size n {0:d}.".format(n))
 
@@ -370,7 +387,11 @@ class TextCorpus(interfaces.CorpusABC):
         if n != 0:
             # This means that length was set to be greater than number of items in corpus
             # and we were not able to sample enough documents before the stream ended.
-            raise ValueError("length {0:d} greater than number of documents in corpus {1:d}".format(length, i + 1))
+            raise ValueError(
+                "length {0:d} greater than number of documents in corpus {1:d}".format(
+                    length, i + 1
+                )
+            )
 
     def __len__(self):
         """Get length of corpus
@@ -398,8 +419,18 @@ class TextDirectoryCorpus(TextCorpus):
 
     """
 
-    def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
-                 pattern=None, exclude_pattern=None, lines_are_documents=False, **kwargs):
+    def __init__(
+        self,
+        input,
+        dictionary=None,
+        metadata=False,
+        min_depth=0,
+        max_depth=None,
+        pattern=None,
+        exclude_pattern=None,
+        lines_are_documents=False,
+        **kwargs
+    ):
         """
 
         Parameters
@@ -492,9 +523,13 @@ class TextDirectoryCorpus(TextCorpus):
         for depth, dirpath, dirnames, filenames in walk(self.input):
             if self.min_depth <= depth <= self.max_depth:
                 if self.pattern is not None:
-                    filenames = (n for n in filenames if self.pattern.match(n) is not None)
+                    filenames = (
+                        n for n in filenames if self.pattern.match(n) is not None
+                    )
                 if self.exclude_pattern is not None:
-                    filenames = (n for n in filenames if self.exclude_pattern.match(n) is None)
+                    filenames = (
+                        n for n in filenames if self.exclude_pattern.match(n) is None
+                    )
 
                 for name in filenames:
                     yield os.path.join(dirpath, name)
@@ -510,7 +545,7 @@ class TextDirectoryCorpus(TextCorpus):
         """
         num_texts = 0
         for path in self.iter_filepaths():
-            with open(path, 'rt') as f:
+            with open(path, "rt") as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()

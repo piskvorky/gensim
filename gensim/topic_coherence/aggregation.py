@@ -7,6 +7,7 @@
 """This module contains functions to perform aggregation on a list of values obtained from the confirmation measure."""
 
 import logging
+
 import numpy as np
 
 logger = logging.getLogger(__name__)

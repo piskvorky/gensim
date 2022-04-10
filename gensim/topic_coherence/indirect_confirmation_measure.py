@@ -36,12 +36,17 @@ import logging
 import numpy as np
 import scipy.sparse as sps
 
-from gensim.topic_coherence.direct_confirmation_measure import aggregate_segment_sims, log_ratio_measure
+from gensim.topic_coherence.direct_confirmation_measure import (
+    aggregate_segment_sims,
+    log_ratio_measure,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_support=False):
+def word2vec_similarity(
+    segmented_topics, accumulator, with_std=False, with_support=False
+):
     """For each topic segmentation, compute average cosine similarity using a
     :class:`~gensim.topic_coherence.text_analysis.WordVectorsAccumulator`.
 
@@ -93,9 +98,9 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
         segment_sims = []
         num_oov = 0
         for w_prime, w_star in topic_segments:
-            if not hasattr(w_prime, '__iter__'):
+            if not hasattr(w_prime, "__iter__"):
                 w_prime = [w_prime]
-            if not hasattr(w_star, '__iter__'):
+            if not hasattr(w_star, "__iter__"):
                 w_star = [w_star]
 
             try:
@@ -107,16 +112,27 @@ def word2vec_similarity(segmented_topics, accumulator, with_std=False, with_supp
             total_oov += 1
             logger.warning(
                 "%d terms for topic %d are not in word2vec model vocabulary",
-                num_oov, topic_index)
-        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+                num_oov,
+                topic_index,
+            )
+        topic_coherences.append(
+            aggregate_segment_sims(segment_sims, with_std, with_support)
+        )
 
     if total_oov > 0:
         logger.warning("%d terms for are not in word2vec model vocabulary", total_oov)
     return topic_coherences
 
 
-def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
-                      gamma=1, with_std=False, with_support=False):
+def cosine_similarity(
+    segmented_topics,
+    accumulator,
+    topics,
+    measure="nlr",
+    gamma=1,
+    with_std=False,
+    with_support=False,
+):
     """Calculate the indirect cosine measure.
 
     Parameters
@@ -177,7 +193,9 @@ def cosine_similarity(segmented_topics, accumulator, topics, measure='nlr',
             w_star_cv = context_vectors[w_star, topic_words]
             segment_sims[i] = _cossim(w_prime_cv, w_star_cv)
 
-        topic_coherences.append(aggregate_segment_sims(segment_sims, with_std, with_support))
+        topic_coherences.append(
+            aggregate_segment_sims(segment_sims, with_std, with_support)
+        )
 
     return topic_coherences
 
@@ -231,11 +249,12 @@ class ContextVectorComputer:
 
     def __init__(self, measure, topics, accumulator, gamma):
 
-        if measure == 'nlr':
+        if measure == "nlr":
             self.similarity = _pair_npmi
         else:
             raise ValueError(
-                "The direct confirmation measure you entered is not currently supported.")
+                "The direct confirmation measure you entered is not currently supported."
+            )
 
         self.mapping = _map_to_contiguous(topics)
         self.vocab_size = len(self.mapping)
@@ -286,7 +305,7 @@ class ContextVectorComputer:
 
         """
         context_vector = sps.lil_matrix((self.vocab_size, 1))
-        if not hasattr(segment_word_ids, '__iter__'):
+        if not hasattr(segment_word_ids, "__iter__"):
             segment_word_ids = (segment_word_ids,)
 
         for w_j in topic_word_ids:
@@ -324,7 +343,7 @@ def _cossim(cv1, cv2):
 
 
 def _magnitude(sparse_vec):
-    return np.sqrt(np.sum(sparse_vec.data ** 2))
+    return np.sqrt(np.sum(sparse_vec.data**2))
 
 
 def _map_to_contiguous(ids_iterable):
@@ -339,5 +358,5 @@ def _map_to_contiguous(ids_iterable):
 
 def _key_for_segment(segment, topic_words):
     """A segment may have a single number of an iterable of them."""
-    segment_key = tuple(segment) if hasattr(segment, '__iter__') else segment
+    segment_key = tuple(segment) if hasattr(segment, "__iter__") else segment
     return segment_key, topic_words

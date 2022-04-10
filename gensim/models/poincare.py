@@ -44,24 +44,28 @@ Initialize and train a model from a file containing one relation per line
 
 import csv
 import logging
-from numbers import Integral
 import sys
 import time
-from collections import defaultdict, Counter
+from collections import Counter, defaultdict
+from numbers import Integral
 
 import numpy as np
-from numpy import random as np_random, float32 as REAL
+from numpy import float32 as REAL
+from numpy import random as np_random
 from scipy.stats import spearmanr
+
 try:
-    from autograd import grad  # Only required for optionally verifying gradients while training
+    from autograd import (
+        grad,
+    )  # Only required for optionally verifying gradients while training
     from autograd import numpy as grad_np
+
     AUTOGRAD_PRESENT = True
 except ImportError:
     AUTOGRAD_PRESENT = False
 
-from gensim import utils, matutils
+from gensim import matutils, utils
 from gensim.models.keyedvectors import KeyedVectors
-
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +93,22 @@ class PoincareModel(utils.SaveLoad):
         See the documentation of its class for usage examples.
 
     """
-    def __init__(self, train_data, size=50, alpha=0.1, negative=10, workers=1, epsilon=1e-5, regularization_coeff=1.0,
-                 burn_in=10, burn_in_alpha=0.01, init_range=(-0.001, 0.001), dtype=np.float64, seed=0):
+
+    def __init__(
+        self,
+        train_data,
+        size=50,
+        alpha=0.1,
+        negative=10,
+        workers=1,
+        epsilon=1e-5,
+        regularization_coeff=1.0,
+        burn_in=10,
+        burn_in_alpha=0.01,
+        init_range=(-0.001, 0.001),
+        dtype=np.float64,
+        seed=0,
+    ):
         """Initialize and train a Poincare embedding model from an iterable of relations.
 
         Parameters
@@ -209,23 +227,38 @@ class PoincareModel(utils.SaveLoad):
         logger.info("loading relations from train data..")
         for relation in relations:
             if len(relation) != 2:
-                raise ValueError('Relation pair "%s" should have exactly two items' % repr(relation))
+                raise ValueError(
+                    'Relation pair "%s" should have exactly two items' % repr(relation)
+                )
             for item in relation:
                 if item in self.kv.key_to_index:
-                    self.kv.set_vecattr(item, 'count', self.kv.get_vecattr(item, 'count') + 1)
+                    self.kv.set_vecattr(
+                        item, "count", self.kv.get_vecattr(item, "count") + 1
+                    )
                 else:
                     self.kv.key_to_index[item] = len(self.kv.index_to_key)
                     self.kv.index_to_key.append(item)
-                    self.kv.set_vecattr(item, 'count', 1)
+                    self.kv.set_vecattr(item, "count", 1)
 
             node_1, node_2 = relation
-            node_1_index, node_2_index = self.kv.key_to_index[node_1], self.kv.key_to_index[node_2]
+            node_1_index, node_2_index = (
+                self.kv.key_to_index[node_1],
+                self.kv.key_to_index[node_2],
+            )
             self.node_relations[node_1_index].add(node_2_index)
             relation = (node_1_index, node_2_index)
             self.all_relations.append(relation)
-        logger.info("loaded %d relations from train data, %d nodes", len(self.all_relations), len(self.kv))
-        self.indices_set = set(range(len(self.kv.index_to_key)))  # Set of all node indices
-        self.indices_array = np.fromiter(range(len(self.kv.index_to_key)), dtype=int)  # Numpy array of all node indices
+        logger.info(
+            "loaded %d relations from train data, %d nodes",
+            len(self.all_relations),
+            len(self.kv),
+        )
+        self.indices_set = set(
+            range(len(self.kv.index_to_key))
+        )  # Set of all node indices
+        self.indices_array = np.fromiter(
+            range(len(self.kv.index_to_key)), dtype=int
+        )  # Numpy array of all node indices
         self._init_node_probabilities()
 
         if not update:
@@ -236,17 +269,21 @@ class PoincareModel(utils.SaveLoad):
     def _init_embeddings(self):
         """Randomly initialize vectors for the items in the vocab."""
         shape = (len(self.kv.index_to_key), self.size)
-        self.kv.vectors = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        self.kv.vectors = self._np_random.uniform(
+            self.init_range[0], self.init_range[1], shape
+        ).astype(self.dtype)
 
     def _update_embeddings(self, old_index_to_key_len):
         """Randomly initialize vectors for the items in the additional vocab."""
         shape = (len(self.kv.index_to_key) - old_index_to_key_len, self.size)
-        v = self._np_random.uniform(self.init_range[0], self.init_range[1], shape).astype(self.dtype)
+        v = self._np_random.uniform(
+            self.init_range[0], self.init_range[1], shape
+        ).astype(self.dtype)
         self.kv.vectors = np.concatenate([self.kv.vectors, v])
 
     def _init_node_probabilities(self):
         """Initialize a-priori probabilities."""
-        counts = self.kv.expandos['count'].astype(np.float64)
+        counts = self.kv.expandos["count"].astype(np.float64)
         self._node_counts_cumsum = np.cumsum(counts)
         self._node_probabilities = counts / counts.sum()
 
@@ -264,8 +301,12 @@ class PoincareModel(utils.SaveLoad):
             # this is to avoid floating point errors that result when the number of nodes is very high
             # for reference: https://github.com/RaRe-Technologies/gensim/issues/1917
             max_cumsum_value = self._node_counts_cumsum[-1]
-            uniform_numbers = self._np_random.randint(1, max_cumsum_value + 1, self._negatives_buffer_size)
-            cumsum_table_indices = np.searchsorted(self._node_counts_cumsum, uniform_numbers)
+            uniform_numbers = self._np_random.randint(
+                1, max_cumsum_value + 1, self._negatives_buffer_size
+            )
+            cumsum_table_indices = np.searchsorted(
+                self._node_counts_cumsum, uniform_numbers
+            )
             self._negatives_buffer = NegativesBuffer(cumsum_table_indices)
         return self._negatives_buffer.get_items(self.negative)
 
@@ -287,8 +328,8 @@ class PoincareModel(utils.SaveLoad):
         num_remaining_nodes = len(self.kv) - len(node_relations)
         if num_remaining_nodes < self.negative:
             raise ValueError(
-                'Cannot sample %d negative nodes from a set of %d negative nodes for %s' %
-                (self.negative, num_remaining_nodes, self.kv.index_to_key[node_index])
+                "Cannot sample %d negative nodes from a set of %d negative nodes for %s"
+                % (self.negative, num_remaining_nodes, self.kv.index_to_key[node_index])
             )
 
         positive_fraction = float(len(node_relations)) / len(self.kv)
@@ -298,19 +339,27 @@ class PoincareModel(utils.SaveLoad):
             indices = self._get_candidate_negatives()
             unique_indices = set(indices)
             times_sampled = 1
-            while (len(indices) != len(unique_indices)) or (unique_indices & node_relations):
+            while (len(indices) != len(unique_indices)) or (
+                unique_indices & node_relations
+            ):
                 times_sampled += 1
                 indices = self._get_candidate_negatives()
                 unique_indices = set(indices)
             if times_sampled > 1:
-                logger.debug('sampled %d times, positive fraction %.5f', times_sampled, positive_fraction)
+                logger.debug(
+                    "sampled %d times, positive fraction %.5f",
+                    times_sampled,
+                    positive_fraction,
+                )
         else:
             # If number of positive relations is a significant fraction of total nodes
             # subtract positively connected nodes from set of choices and sample from the remaining
             valid_negatives = np.array(list(self.indices_set - node_relations))
             probs = self._node_probabilities[valid_negatives]
             probs /= probs.sum()
-            indices = self._np_random.choice(valid_negatives, size=self.negative, p=probs, replace=False)
+            indices = self._np_random.choice(
+                valid_negatives, size=self.negative, p=probs, replace=False
+            )
 
         return list(indices)
 
@@ -341,13 +390,16 @@ class PoincareModel(utils.SaveLoad):
         norm = grad_np.linalg.norm(vector_u)
         all_norms = grad_np.linalg.norm(vectors_v, axis=1)
         poincare_dists = grad_np.arccosh(
-            1 + 2 * (
-                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
-            )
+            1 + 2 * ((euclidean_dists**2) / ((1 - norm**2) * (1 - all_norms**2)))
         )
         exp_negative_distances = grad_np.exp(-poincare_dists)
-        regularization_term = regularization_coeff * grad_np.linalg.norm(vectors_v[0]) ** 2
-        return -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum())) + regularization_term
+        regularization_term = (
+            regularization_coeff * grad_np.linalg.norm(vectors_v[0]) ** 2
+        )
+        return (
+            -grad_np.log(exp_negative_distances[0] / (exp_negative_distances.sum()))
+            + regularization_term
+        )
 
     @staticmethod
     def _clip_vectors(vectors, epsilon):
@@ -380,8 +432,12 @@ class PoincareModel(utils.SaveLoad):
             if (norms < threshold).all():
                 return vectors
             else:
-                vectors[norms >= threshold] *= (threshold / norms[norms >= threshold])[:, np.newaxis]
-                vectors[norms >= threshold] -= np.sign(vectors[norms >= threshold]) * epsilon
+                vectors[norms >= threshold] *= (threshold / norms[norms >= threshold])[
+                    :, np.newaxis
+                ]
+                vectors[norms >= threshold] -= (
+                    np.sign(vectors[norms >= threshold]) * epsilon
+                )
                 return vectors
 
     def save(self, *args, **kwargs):
@@ -400,8 +456,8 @@ class PoincareModel(utils.SaveLoad):
 
         """
         self._loss_grad = None  # Can't pickle autograd fn to disk
-        attrs_to_ignore = ['_node_probabilities', '_node_counts_cumsum']
-        kwargs['ignore'] = set(list(kwargs.get('ignore', [])) + attrs_to_ignore)
+        attrs_to_ignore = ["_node_probabilities", "_node_counts_cumsum"]
+        kwargs["ignore"] = set(list(kwargs.get("ignore", [])) + attrs_to_ignore)
         super(PoincareModel, self).save(*args, **kwargs)
 
     @classmethod
@@ -456,9 +512,13 @@ class PoincareModel(utils.SaveLoad):
             indices_v.extend(negatives)
 
         vectors_u = self.kv.vectors[indices_u]
-        vectors_v = self.kv.vectors[indices_v].reshape((batch_size, 1 + self.negative, self.size))
+        vectors_v = self.kv.vectors[indices_v].reshape(
+            (batch_size, 1 + self.negative, self.size)
+        )
         vectors_v = vectors_v.swapaxes(0, 1).swapaxes(1, 2)
-        batch = PoincareBatch(vectors_u, vectors_v, indices_u, indices_v, self.regularization_coeff)
+        batch = PoincareBatch(
+            vectors_u, vectors_v, indices_u, indices_v, self.regularization_coeff
+        )
         batch.compute_all()
 
         if check_gradients:
@@ -482,8 +542,10 @@ class PoincareModel(utils.SaveLoad):
 
         """
         if not AUTOGRAD_PRESENT:
-            logger.warning('autograd could not be imported, cannot do gradient checking')
-            logger.warning('please install autograd to enable gradient checking')
+            logger.warning(
+                "autograd could not be imported, cannot do gradient checking"
+            )
+            logger.warning("please install autograd to enable gradient checking")
             return
 
         if self._loss_grad is None:
@@ -493,15 +555,23 @@ class PoincareModel(utils.SaveLoad):
         for i, (relation, negatives) in enumerate(zip(relations, all_negatives)):
             u, v = relation
             auto_gradients = self._loss_grad(
-                np.vstack((self.kv.vectors[u], self.kv.vectors[[v] + negatives])), self.regularization_coeff)
-            computed_gradients = np.vstack((batch.gradients_u[:, i], batch.gradients_v[:, :, i]))
+                np.vstack((self.kv.vectors[u], self.kv.vectors[[v] + negatives])),
+                self.regularization_coeff,
+            )
+            computed_gradients = np.vstack(
+                (batch.gradients_u[:, i], batch.gradients_v[:, :, i])
+            )
             diff = np.abs(auto_gradients - computed_gradients).max()
             if diff > max_diff:
                 max_diff = diff
-        logger.info('max difference between computed gradients and autograd gradients: %.10f', max_diff)
+        logger.info(
+            "max difference between computed gradients and autograd gradients: %.10f",
+            max_diff,
+        )
         assert max_diff < tol, (
-            'Max difference between computed gradients and autograd gradients %.10f, '
-            'greater than tolerance %.10f' % (max_diff, tol))
+            "Max difference between computed gradients and autograd gradients %.10f, "
+            "greater than tolerance %.10f" % (max_diff, tol)
+        )
 
     def _sample_negatives_batch(self, nodes):
         """Get negative examples for each node.
@@ -536,7 +606,9 @@ class PoincareModel(utils.SaveLoad):
             The batch that was just trained on, contains computed loss for the batch.
 
         """
-        all_negatives = self._sample_negatives_batch(relation[0] for relation in relations)
+        all_negatives = self._sample_negatives_batch(
+            relation[0] for relation in relations
+        )
         batch = self._prepare_training_batch(relations, all_negatives, check_gradients)
         self._update_vectors_batch(batch)
         return batch
@@ -585,21 +657,27 @@ class PoincareModel(utils.SaveLoad):
         indices_u, indices_v = batch.indices_u, batch.indices_v
         batch_size = len(indices_u)
 
-        u_updates = (self.alpha * (batch.alpha ** 2) / 4 * grad_u).T
+        u_updates = (self.alpha * (batch.alpha**2) / 4 * grad_u).T
         self._handle_duplicates(u_updates, indices_u)
 
         self.kv.vectors[indices_u] -= u_updates
-        self.kv.vectors[indices_u] = self._clip_vectors(self.kv.vectors[indices_u], self.epsilon)
+        self.kv.vectors[indices_u] = self._clip_vectors(
+            self.kv.vectors[indices_u], self.epsilon
+        )
 
-        v_updates = self.alpha * (batch.beta ** 2)[:, np.newaxis] / 4 * grad_v
+        v_updates = self.alpha * (batch.beta**2)[:, np.newaxis] / 4 * grad_v
         v_updates = v_updates.swapaxes(1, 2).swapaxes(0, 1)
         v_updates = v_updates.reshape(((1 + self.negative) * batch_size, self.size))
         self._handle_duplicates(v_updates, indices_v)
 
         self.kv.vectors[indices_v] -= v_updates
-        self.kv.vectors[indices_v] = self._clip_vectors(self.kv.vectors[indices_v], self.epsilon)
+        self.kv.vectors[indices_v] = self._clip_vectors(
+            self.kv.vectors[indices_v], self.epsilon
+        )
 
-    def train(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
+    def train(
+        self, epochs, batch_size=10, print_every=1000, check_gradients_every=None
+    ):
         """Train Poincare embeddings using loaded data and model parameters.
 
         Parameters
@@ -628,34 +706,54 @@ class PoincareModel(utils.SaveLoad):
         if self.workers > 1:
             raise NotImplementedError("Multi-threaded version not implemented yet")
         # Some divide-by-zero results are handled explicitly
-        old_settings = np.seterr(divide='ignore', invalid='ignore')
+        old_settings = np.seterr(divide="ignore", invalid="ignore")
 
         logger.info(
             "training model of size %d with %d workers on %d relations for %d epochs and %d burn-in epochs, "
             "using lr=%.5f burn-in lr=%.5f negative=%d",
-            self.size, self.workers, len(self.all_relations), epochs, self.burn_in,
-            self.alpha, self.burn_in_alpha, self.negative
+            self.size,
+            self.workers,
+            len(self.all_relations),
+            epochs,
+            self.burn_in,
+            self.alpha,
+            self.burn_in_alpha,
+            self.negative,
         )
 
         if self.burn_in > 0 and not self._burn_in_done:
-            logger.info("starting burn-in (%d epochs)----------------------------------------", self.burn_in)
+            logger.info(
+                "starting burn-in (%d epochs)----------------------------------------",
+                self.burn_in,
+            )
             self.alpha = self.burn_in_alpha
             self._train_batchwise(
-                epochs=self.burn_in, batch_size=batch_size, print_every=print_every,
-                check_gradients_every=check_gradients_every)
+                epochs=self.burn_in,
+                batch_size=batch_size,
+                print_every=print_every,
+                check_gradients_every=check_gradients_every,
+            )
             self._burn_in_done = True
             logger.info("burn-in finished")
 
         self.alpha = self.train_alpha
-        logger.info("starting training (%d epochs)----------------------------------------", epochs)
+        logger.info(
+            "starting training (%d epochs)----------------------------------------",
+            epochs,
+        )
         self._train_batchwise(
-            epochs=epochs, batch_size=batch_size, print_every=print_every,
-            check_gradients_every=check_gradients_every)
+            epochs=epochs,
+            batch_size=batch_size,
+            print_every=print_every,
+            check_gradients_every=check_gradients_every,
+        )
         logger.info("training finished")
 
         np.seterr(**old_settings)
 
-    def _train_batchwise(self, epochs, batch_size=10, print_every=1000, check_gradients_every=None):
+    def _train_batchwise(
+        self, epochs, batch_size=10, print_every=1000, check_gradients_every=None
+    ):
         """Train Poincare embeddings using specified parameters.
 
         Parameters
@@ -680,21 +778,28 @@ class PoincareModel(utils.SaveLoad):
             last_time = time.time()
             for batch_num, i in enumerate(range(0, len(indices), batch_size), start=1):
                 should_print = not (batch_num % print_every)
-                check_gradients = bool(check_gradients_every) and (batch_num % check_gradients_every) == 0
-                batch_indices = indices[i:i + batch_size]
+                check_gradients = (
+                    bool(check_gradients_every)
+                    and (batch_num % check_gradients_every) == 0
+                )
+                batch_indices = indices[i : i + batch_size]
                 relations = [self.all_relations[idx] for idx in batch_indices]
-                result = self._train_on_batch(relations, check_gradients=check_gradients)
+                result = self._train_on_batch(
+                    relations, check_gradients=check_gradients
+                )
                 avg_loss += result.loss
                 if should_print:
                     avg_loss /= print_every
                     time_taken = time.time() - last_time
                     speed = print_every * batch_size / time_taken
                     logger.info(
-                        'training on epoch %d, examples #%d-#%d, loss: %.2f'
-                        % (epoch, i, i + batch_size, avg_loss))
+                        "training on epoch %d, examples #%d-#%d, loss: %.2f"
+                        % (epoch, i, i + batch_size, avg_loss)
+                    )
                     logger.info(
-                        'time taken for %d examples: %.2f s, %.2f examples / s'
-                        % (print_every * batch_size, time_taken, speed))
+                        "time taken for %d examples: %.2f s, %.2f examples / s"
+                        % (print_every * batch_size, time_taken, speed)
+                    )
                     last_time = time.time()
                     avg_loss = 0.0
 
@@ -705,7 +810,10 @@ class PoincareBatch:
     Store intermediate state to avoid recomputing multiple times.
 
     """
-    def __init__(self, vectors_u, vectors_v, indices_u, indices_v, regularization_coeff=1.0):
+
+    def __init__(
+        self, vectors_u, vectors_v, indices_u, indices_v, regularization_coeff=1.0
+    ):
         """
         Initialize instance with sets of vectors for which distances are to be computed.
 
@@ -763,14 +871,16 @@ class PoincareBatch:
         """Compute and store norms, euclidean distances and poincare distances between input vectors."""
         if self._distances_computed:
             return
-        euclidean_dists = np.linalg.norm(self.vectors_u - self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
+        euclidean_dists = np.linalg.norm(
+            self.vectors_u - self.vectors_v, axis=1
+        )  # (1 + neg_size, batch_size)
         norms_u = np.linalg.norm(self.vectors_u, axis=1)  # (1, batch_size)
         norms_v = np.linalg.norm(self.vectors_v, axis=1)  # (1 + neg_size, batch_size)
-        alpha = 1 - norms_u ** 2  # (1, batch_size)
-        beta = 1 - norms_v ** 2  # (1 + neg_size, batch_size)
+        alpha = 1 - norms_u**2  # (1, batch_size)
+        beta = 1 - norms_v**2  # (1 + neg_size, batch_size)
         gamma = 1 + 2 * (
-                (euclidean_dists ** 2) / (alpha * beta)
-            )  # (1 + neg_size, batch_size)
+            (euclidean_dists**2) / (alpha * beta)
+        )  # (1 + neg_size, batch_size)
         poincare_dists = np.arccosh(gamma)  # (1 + neg_size, batch_size)
         exp_negative_distances = np.exp(-poincare_dists)  # (1 + neg_size, batch_size)
         Z = exp_negative_distances.sum(axis=0)  # (batch_size)
@@ -796,13 +906,17 @@ class PoincareBatch:
         self.compute_distance_gradients()
 
         # (1 + neg_size, dim, batch_size)
-        gradients_v = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
+        gradients_v = (
+            -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_v
+        )
         gradients_v /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_v[0] += self.distance_gradients_v[0]
         gradients_v[0] += self.regularization_coeff * 2 * self.vectors_v[0]
 
         # (1 + neg_size, dim, batch_size)
-        gradients_u = -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
+        gradients_u = (
+            -self.exp_negative_distances[:, np.newaxis, :] * self.distance_gradients_u
+        )
         gradients_u /= self.Z  # (1 + neg_size, dim, batch_size)
         gradients_u = gradients_u.sum(axis=0)  # (dim, batch_size)
         gradients_u += self.distance_gradients_u[0]
@@ -820,12 +934,20 @@ class PoincareBatch:
             return
         self.compute_distances()
 
-        euclidean_dists_squared = self.euclidean_dists ** 2  # (1 + neg_size, batch_size)
+        euclidean_dists_squared = (
+            self.euclidean_dists**2
+        )  # (1 + neg_size, batch_size)
         # (1 + neg_size, 1, batch_size)
-        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma ** 2 - 1)))[:, np.newaxis, :]
+        c_ = (4 / (self.alpha * self.beta * np.sqrt(self.gamma**2 - 1)))[
+            :, np.newaxis, :
+        ]
         # (1 + neg_size, 1, batch_size)
-        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[:, np.newaxis, :]
-        distance_gradients_u = u_coeffs * self.vectors_u - self.vectors_v  # (1 + neg_size, dim, batch_size)
+        u_coeffs = ((euclidean_dists_squared + self.alpha) / self.alpha)[
+            :, np.newaxis, :
+        ]
+        distance_gradients_u = (
+            u_coeffs * self.vectors_u - self.vectors_v
+        )  # (1 + neg_size, dim, batch_size)
         distance_gradients_u *= c_  # (1 + neg_size, dim, batch_size)
 
         nan_gradients = self.gamma == 1  # (1 + neg_size, batch_size)
@@ -835,7 +957,9 @@ class PoincareBatch:
 
         # (1 + neg_size, 1, batch_size)
         v_coeffs = ((euclidean_dists_squared + self.beta) / self.beta)[:, np.newaxis, :]
-        distance_gradients_v = v_coeffs * self.vectors_v - self.vectors_u  # (1 + neg_size, dim, batch_size)
+        distance_gradients_v = (
+            v_coeffs * self.vectors_v - self.vectors_u
+        )  # (1 + neg_size, dim, batch_size)
         distance_gradients_v *= c_  # (1 + neg_size, dim, batch_size)
 
         if nan_gradients.any():
@@ -877,15 +1001,18 @@ class PoincareKeyedVectors(KeyedVectors):
         >>> wv = model.kv.get_vector('kangaroo.n.01')
 
     """
+
     def __init__(self, vector_size, vector_count, dtype=REAL):
-        super(PoincareKeyedVectors, self).__init__(vector_size, vector_count, dtype=dtype)
+        super(PoincareKeyedVectors, self).__init__(
+            vector_size, vector_count, dtype=dtype
+        )
         self.max_distance = 0
 
     def _load_specials(self, *args, **kwargs):
         super(PoincareKeyedVectors, self)._load_specials(*args, **kwargs)
         # fixup rename of syn0
-        if not hasattr(self, 'vectors'):
-            self.vectors = self.__dict__.pop('syn0')
+        if not hasattr(self, "vectors"):
+            self.vectors = self.__dict__.pop("syn0")
 
     @staticmethod
     def vector_distance(vector_1, vector_2):
@@ -904,7 +1031,9 @@ class PoincareKeyedVectors(KeyedVectors):
             Poincare distance between `vector_1` and `vector_2`.
 
         """
-        return PoincareKeyedVectors.vector_distance_batch(vector_1, vector_2[np.newaxis, :])[0]
+        return PoincareKeyedVectors.vector_distance_batch(
+            vector_1, vector_2[np.newaxis, :]
+        )[0]
 
     @staticmethod
     def vector_distance_batch(vector_1, vectors_all):
@@ -927,9 +1056,7 @@ class PoincareKeyedVectors(KeyedVectors):
         norm = np.linalg.norm(vector_1)
         all_norms = np.linalg.norm(vectors_all, axis=1)
         return np.arccosh(
-            1 + 2 * (
-                (euclidean_dists ** 2) / ((1 - norm ** 2) * (1 - all_norms ** 2))
-            )
+            1 + 2 * ((euclidean_dists**2) / ((1 - norm**2) * (1 - all_norms**2)))
         )
 
     def closest_child(self, node):
@@ -1154,7 +1281,13 @@ class PoincareKeyedVectors(KeyedVectors):
             nodes_to_use = self.index_to_key[:restrict_vocab]
             all_distances = self.distances(node_or_vector, nodes_to_use)
 
-        if isinstance(node_or_vector, (str, int,)):
+        if isinstance(
+            node_or_vector,
+            (
+                str,
+                int,
+            ),
+        ):
             node_index = self.get_index(node_or_vector)
         else:
             node_index = None
@@ -1164,7 +1297,8 @@ class PoincareKeyedVectors(KeyedVectors):
             closest_indices = matutils.argsort(all_distances, topn=1 + topn)
         result = [
             (self.index_to_key[index], float(all_distances[index]))
-            for index in closest_indices if (not node_index or index != node_index)  # ignore the input node
+            for index in closest_indices
+            if (not node_index or index != node_index)  # ignore the input node
         ]
         if topn:
             result = result[:topn]
@@ -1308,7 +1442,7 @@ class PoincareKeyedVectors(KeyedVectors):
 class PoincareRelations:
     """Stream relations for `PoincareModel` from a tsv-like file."""
 
-    def __init__(self, file_path, encoding='utf8', delimiter='\t'):
+    def __init__(self, file_path, encoding="utf8", delimiter="\t"):
         """Initialize instance from file containing a pair of nodes (a relation) per line.
 
         Parameters
@@ -1341,7 +1475,7 @@ class PoincareRelations:
             Relation from input file.
 
         """
-        with utils.open(self.file_path, 'rb') as file_obj:
+        with utils.open(self.file_path, "rb") as file_obj:
             if sys.version_info[0] < 3:
                 lines = file_obj
             else:
@@ -1421,10 +1555,10 @@ class ReconstructionEvaluation:
         """
         items = set()
         relations = defaultdict(set)
-        with utils.open(file_path, 'r') as f:
-            reader = csv.reader(f, delimiter='\t')
+        with utils.open(file_path, "r") as f:
+            reader = csv.reader(f, delimiter="\t")
             for row in reader:
-                assert len(row) == 2, 'Hypernym pair has more than two items'
+                assert len(row) == 2, "Hypernym pair has more than two items"
                 item_1_index = embedding.get_index(row[0])
                 item_2_index = embedding.get_index(row[1])
                 relations[item_1_index].add(item_2_index)
@@ -1455,9 +1589,11 @@ class ReconstructionEvaluation:
         negative_relation_distances = np.ma.array(all_distances, mask=False)
         negative_relation_distances.mask[positive_relations] = True
         # Compute how many negative relation distances are less than each positive relation distance, plus 1 for rank
-        ranks = (negative_relation_distances < positive_relation_distances[:, np.newaxis]).sum(axis=1) + 1
+        ranks = (
+            negative_relation_distances < positive_relation_distances[:, np.newaxis]
+        ).sum(axis=1) + 1
         map_ranks = np.sort(ranks) + np.arange(len(ranks))
-        avg_precision = ((np.arange(1, len(map_ranks) + 1) / np.sort(map_ranks)).mean())
+        avg_precision = (np.arange(1, len(map_ranks) + 1) / np.sort(map_ranks)).mean()
         return list(ranks), avg_precision
 
     def evaluate(self, max_n=None):
@@ -1475,7 +1611,7 @@ class ReconstructionEvaluation:
 
         """
         mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
-        return {'mean_rank': mean_rank, 'MAP': map_}
+        return {"mean_rank": mean_rank, "MAP": map_}
 
     def evaluate_mean_rank_and_map(self, max_n=None):
         """Evaluate mean rank and MAP for reconstruction.
@@ -1499,8 +1635,12 @@ class ReconstructionEvaluation:
             item_relations = list(self.relations[item])
             item_term = self.embedding.index_to_key[item]
             item_distances = self.embedding.distances(item_term)
-            positive_relation_ranks, avg_precision = \
-                self.get_positive_relation_ranks_and_avg_prec(item_distances, item_relations)
+            (
+                positive_relation_ranks,
+                avg_precision,
+            ) = self.get_positive_relation_ranks_and_avg_prec(
+                item_distances, item_relations
+            )
             ranks += positive_relation_ranks
             avg_precision_scores.append(avg_precision)
             if max_n is not None and i > max_n:
@@ -1525,13 +1665,13 @@ class LinkPredictionEvaluation:
 
         """
         items = set()
-        relations = {'known': defaultdict(set), 'unknown': defaultdict(set)}
-        data_files = {'known': train_path, 'unknown': test_path}
+        relations = {"known": defaultdict(set), "unknown": defaultdict(set)}
+        data_files = {"known": train_path, "unknown": test_path}
         for relation_type, data_file in data_files.items():
-            with utils.open(data_file, 'r') as f:
-                reader = csv.reader(f, delimiter='\t')
+            with utils.open(data_file, "r") as f:
+                reader = csv.reader(f, delimiter="\t")
                 for row in reader:
-                    assert len(row) == 2, 'Hypernym pair has more than two items'
+                    assert len(row) == 2, "Hypernym pair has more than two items"
                     item_1_index = embedding.get_index(row[0])
                     item_2_index = embedding.get_index(row[1])
                     relations[relation_type][item_1_index].add(item_2_index)
@@ -1541,7 +1681,9 @@ class LinkPredictionEvaluation:
         self.embedding = embedding
 
     @staticmethod
-    def get_unknown_relation_ranks_and_avg_prec(all_distances, unknown_relations, known_relations):
+    def get_unknown_relation_ranks_and_avg_prec(
+        all_distances, unknown_relations, known_relations
+    ):
         """Compute ranks and Average Precision of unknown positive relations.
 
         Parameters
@@ -1565,9 +1707,11 @@ class LinkPredictionEvaluation:
         negative_relation_distances.mask[unknown_relations] = True
         negative_relation_distances.mask[known_relations] = True
         # Compute how many negative relation distances are less than each unknown relation distance, plus 1 for rank
-        ranks = (negative_relation_distances < unknown_relation_distances[:, np.newaxis]).sum(axis=1) + 1
+        ranks = (
+            negative_relation_distances < unknown_relation_distances[:, np.newaxis]
+        ).sum(axis=1) + 1
         map_ranks = np.sort(ranks) + np.arange(len(ranks))
-        avg_precision = ((np.arange(1, len(map_ranks) + 1) / np.sort(map_ranks)).mean())
+        avg_precision = (np.arange(1, len(map_ranks) + 1) / np.sort(map_ranks)).mean()
         return list(ranks), avg_precision
 
     def evaluate(self, max_n=None):
@@ -1585,7 +1729,7 @@ class LinkPredictionEvaluation:
 
         """
         mean_rank, map_ = self.evaluate_mean_rank_and_map(max_n)
-        return {'mean_rank': mean_rank, 'MAP': map_}
+        return {"mean_rank": mean_rank, "MAP": map_}
 
     def evaluate_mean_rank_and_map(self, max_n=None):
         """Evaluate mean rank and MAP for link prediction.
@@ -1604,14 +1748,20 @@ class LinkPredictionEvaluation:
         ranks = []
         avg_precision_scores = []
         for i, item in enumerate(self.items, start=1):
-            if item not in self.relations['unknown']:  # No positive relations to predict for this node
+            if (
+                item not in self.relations["unknown"]
+            ):  # No positive relations to predict for this node
                 continue
-            unknown_relations = list(self.relations['unknown'][item])
-            known_relations = list(self.relations['known'][item])
+            unknown_relations = list(self.relations["unknown"][item])
+            known_relations = list(self.relations["known"][item])
             item_term = self.embedding.index_to_key[item]
             item_distances = self.embedding.distances(item_term)
-            unknown_relation_ranks, avg_precision = \
-                self.get_unknown_relation_ranks_and_avg_prec(item_distances, unknown_relations, known_relations)
+            (
+                unknown_relation_ranks,
+                avg_precision,
+            ) = self.get_unknown_relation_ranks_and_avg_prec(
+                item_distances, unknown_relations, known_relations
+            )
             ranks += unknown_relation_ranks
             avg_precision_scores.append(avg_precision)
             if max_n is not None and i > max_n:
@@ -1632,11 +1782,11 @@ class LexicalEntailmentEvaluation:
 
         """
         expected_scores = {}
-        with utils.open(filepath, 'r') as f:
-            reader = csv.DictReader(f, delimiter=' ')
+        with utils.open(filepath, "r") as f:
+            reader = csv.DictReader(f, delimiter=" ")
             for row in reader:
-                word_1, word_2 = row['WORD1'], row['WORD2']
-                expected_scores[(word_1, word_2)] = float(row['AVG_SCORE'])
+                word_1, word_2 = row["WORD1"], row["WORD2"]
+                expected_scores[(word_1, word_2)] = float(row["AVG_SCORE"])
         self.scores = expected_scores
         self.alpha = 1000
 
@@ -1664,7 +1814,9 @@ class LexicalEntailmentEvaluation:
             word_1_terms = self.find_matching_terms(trie, term_1)
             word_2_terms = self.find_matching_terms(trie, term_2)
         except KeyError:
-            raise ValueError("No matching terms found for either %s or %s" % (term_1, term_2))
+            raise ValueError(
+                "No matching terms found for either %s or %s" % (term_1, term_2)
+            )
         min_distance = np.inf
         min_term_1, min_term_2 = None, None
         for term_1 in word_1_terms:
@@ -1674,7 +1826,9 @@ class LexicalEntailmentEvaluation:
                     min_term_1, min_term_2 = term_1, term_2
                     min_distance = distance
         assert min_term_1 is not None and min_term_2 is not None
-        vector_1, vector_2 = embedding.get_vector(min_term_1), embedding.get_vector(min_term_2)
+        vector_1, vector_2 = embedding.get_vector(min_term_1), embedding.get_vector(
+            min_term_2
+        )
         norm_1, norm_2 = np.linalg.norm(vector_1), np.linalg.norm(vector_2)
         return -1 * (1 + self.alpha * (norm_2 - norm_1)) * min_distance
 
@@ -1695,8 +1849,8 @@ class LexicalEntailmentEvaluation:
             List of matching terms.
 
         """
-        matches = trie.items('%s.' % word)
-        matching_terms = [''.join(key_chars) for key_chars, value in matches]
+        matches = trie.items("%s." % word)
+        matching_terms = ["".join(key_chars) for key_chars, value in matches]
         return matching_terms
 
     @staticmethod
@@ -1718,7 +1872,8 @@ class LexicalEntailmentEvaluation:
             from pygtrie import Trie
         except ImportError:
             raise ImportError(
-                'pygtrie could not be imported, please install pygtrie in order to use LexicalEntailmentEvaluation')
+                "pygtrie could not be imported, please install pygtrie in order to use LexicalEntailmentEvaluation"
+            )
 
         vocab_trie = Trie()
         for key in embedding.key_to_index:
@@ -1746,13 +1901,15 @@ class LexicalEntailmentEvaluation:
         vocab_trie = self.create_vocab_trie(embedding)
         for (word_1, word_2), expected_score in self.scores.items():
             try:
-                predicted_score = self.score_function(embedding, vocab_trie, word_1, word_2)
+                predicted_score = self.score_function(
+                    embedding, vocab_trie, word_1, word_2
+                )
             except ValueError:
                 skipped += 1
                 continue
             count += 1
             predicted_scores.append(predicted_score)
             expected_scores.append(expected_score)
-        logger.info('skipped pairs: %d out of %d' % (skipped, len(self.scores)))
+        logger.info("skipped pairs: %d out of %d" % (skipped, len(self.scores)))
         spearman = spearmanr(expected_scores, predicted_scores)
         return spearman.correlation

@@ -8,7 +8,10 @@ Introduces the Annoy library for similarity queries on top of vectors learned by
 LOGS = False  # Set to True if you want to see progress in logs.
 if LOGS:
     import logging
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+    logging.basicConfig(
+        format="%(asctime)s : %(levelname)s : %(message)s", level=logging.INFO
+    )
 
 ###############################################################################
 # The `Annoy "Approximate Nearest Neighbors Oh Yeah"
@@ -37,7 +40,8 @@ if LOGS:
 # 1. Download Text8 corpus
 # ------------------------
 import gensim.downloader as api
-text8_path = api.load('text8', return_path=True)
+
+text8_path = api.load("text8", return_path=True)
 print("Using corpus from", text8_path)
 
 ###############################################################################
@@ -45,20 +49,20 @@ print("Using corpus from", text8_path)
 # ---------------------------
 #
 # For more details, see :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`.
-from gensim.models import Word2Vec, KeyedVectors
+from gensim.models import KeyedVectors, Word2Vec
 from gensim.models.word2vec import Text8Corpus
 
 # Using params from Word2Vec_FastText_Comparison
 params = {
-    'alpha': 0.05,
-    'vector_size': 100,
-    'window': 5,
-    'epochs': 5,
-    'min_count': 5,
-    'sample': 1e-4,
-    'sg': 1,
-    'hs': 0,
-    'negative': 5,
+    "alpha": 0.05,
+    "vector_size": 100,
+    "window": 5,
+    "epochs": 5,
+    "min_count": 5,
+    "sample": 1e-4,
+    "sg": 1,
+    "hs": 0,
+    "negative": 5,
 }
 model = Word2Vec(Text8Corpus(text8_path), **params)
 wv = model.wv
@@ -127,7 +131,9 @@ wv.most_similar([vector], topn=5, indexer=annoy_index)
 wv.most_similar([vector], topn=5)
 
 import time
+
 import numpy as np
+
 
 def avg_query_time(annoy_index=None, queries=1000):
     """Average query time of a most_similar method over 1000 random queries."""
@@ -139,6 +145,7 @@ def avg_query_time(annoy_index=None, queries=1000):
         total_time += time.process_time() - start_time
     return total_time / queries
 
+
 queries = 1000
 
 gensim_time = avg_query_time(queries=queries)
@@ -146,7 +153,11 @@ annoy_time = avg_query_time(annoy_index, queries=queries)
 print("Gensim (s/query):\t{0:.5f}".format(gensim_time))
 print("Annoy (s/query):\t{0:.5f}".format(annoy_time))
 speed_improvement = gensim_time / annoy_time
-print ("\nAnnoy is {0:.2f} times faster on average on this particular run".format(speed_improvement))
+print(
+    "\nAnnoy is {0:.2f} times faster on average on this particular run".format(
+        speed_improvement
+    )
+)
 
 ###############################################################################
 # **This speedup factor is by no means constant** and will vary greatly from
@@ -183,13 +194,14 @@ print ("\nAnnoy is {0:.2f} times faster on average on this particular run".forma
 # *fname.d*. Both files are needed to correctly restore all attributes. Before
 # loading an index, you will have to create an empty AnnoyIndexer object.
 #
-fname = '/tmp/mymodel.index'
+fname = "/tmp/mymodel.index"
 
 # Persist index to disk
 annoy_index.save(fname)
 
 # Load index back
 import os.path
+
 if os.path.exists(fname):
     annoy_index2 = AnnoyIndexer()
     annoy_index2.load(fname)
@@ -224,8 +236,9 @@ assert approximate_neighbors == approximate_neighbors2
 if LOGS:
     logging.disable(logging.CRITICAL)
 
-from multiprocessing import Process
 import os
+from multiprocessing import Process
+
 import psutil
 
 ###############################################################################
@@ -233,22 +246,30 @@ import psutil
 # own Annoy index from that model.
 #
 
-model.save('/tmp/mymodel.pkl')
+model.save("/tmp/mymodel.pkl")
+
 
 def f(process_id):
-    print('Process Id: {}'.format(os.getpid()))
+    print("Process Id: {}".format(os.getpid()))
     process = psutil.Process(os.getpid())
-    new_model = Word2Vec.load('/tmp/mymodel.pkl')
+    new_model = Word2Vec.load("/tmp/mymodel.pkl")
     vector = new_model.wv["science"]
     annoy_index = AnnoyIndexer(new_model, 100)
-    approximate_neighbors = new_model.wv.most_similar([vector], topn=5, indexer=annoy_index)
-    print('\nMemory used by process {}: {}\n---'.format(os.getpid(), process.memory_info()))
+    approximate_neighbors = new_model.wv.most_similar(
+        [vector], topn=5, indexer=annoy_index
+    )
+    print(
+        "\nMemory used by process {}: {}\n---".format(
+            os.getpid(), process.memory_info()
+        )
+    )
+
 
 # Create and run two parallel processes to share the same index file.
-p1 = Process(target=f, args=('1',))
+p1 = Process(target=f, args=("1",))
 p1.start()
 p1.join()
-p2 = Process(target=f, args=('2',))
+p2 = Process(target=f, args=("2",))
 p2.start()
 p2.join()
 
@@ -257,24 +278,32 @@ p2.join()
 # and memory-map the index.
 #
 
-model.save('/tmp/mymodel.pkl')
+model.save("/tmp/mymodel.pkl")
+
 
 def f(process_id):
-    print('Process Id: {}'.format(os.getpid()))
+    print("Process Id: {}".format(os.getpid()))
     process = psutil.Process(os.getpid())
-    new_model = Word2Vec.load('/tmp/mymodel.pkl')
+    new_model = Word2Vec.load("/tmp/mymodel.pkl")
     vector = new_model.wv["science"]
     annoy_index = AnnoyIndexer()
-    annoy_index.load('/tmp/mymodel.index')
+    annoy_index.load("/tmp/mymodel.index")
     annoy_index.model = new_model
-    approximate_neighbors = new_model.wv.most_similar([vector], topn=5, indexer=annoy_index)
-    print('\nMemory used by process {}: {}\n---'.format(os.getpid(), process.memory_info()))
+    approximate_neighbors = new_model.wv.most_similar(
+        [vector], topn=5, indexer=annoy_index
+    )
+    print(
+        "\nMemory used by process {}: {}\n---".format(
+            os.getpid(), process.memory_info()
+        )
+    )
+
 
 # Creating and running two parallel process to share the same index file.
-p1 = Process(target=f, args=('1',))
+p1 = Process(target=f, args=("1",))
 p1.start()
 p1.join()
-p2 = Process(target=f, args=('2',))
+p2 = Process(target=f, args=("2",))
 p2.start()
 p2.join()
 
@@ -288,7 +317,9 @@ import matplotlib.pyplot as plt
 # Build dataset of initialization times and accuracy measures:
 #
 
-exact_results = [element[0] for element in wv.most_similar([normed_vectors[0]], topn=100)]
+exact_results = [
+    element[0] for element in wv.most_similar([normed_vectors[0]], topn=100)
+]
 
 x_values = []
 y_values_init = []
@@ -299,7 +330,9 @@ for x in range(1, 300, 10):
     start_time = time.time()
     annoy_index = AnnoyIndexer(model, x)
     y_values_init.append(time.time() - start_time)
-    approximate_results = wv.most_similar([normed_vectors[0]], topn=100, indexer=annoy_index)
+    approximate_results = wv.most_similar(
+        [normed_vectors[0]], topn=100, indexer=annoy_index
+    )
     top_words = [result[0] for result in approximate_results]
     y_values_accuracy.append(len(set(top_words).intersection(exact_results)))
 
@@ -340,33 +373,34 @@ plt.show()
 #
 
 # To export our model as text
-wv.save_word2vec_format('/tmp/vectors.txt', binary=False)
+wv.save_word2vec_format("/tmp/vectors.txt", binary=False)
 
 from smart_open import open
+
 # View the first 3 lines of the exported file
 # The first line has the total number of entries and the vector dimension count.
 # The next lines have a key (a string) followed by its vector.
-with open('/tmp/vectors.txt', encoding='utf8') as myfile:
+with open("/tmp/vectors.txt", encoding="utf8") as myfile:
     for i in range(3):
         print(myfile.readline().strip())
 
 # To import a word2vec text model
-wv = KeyedVectors.load_word2vec_format('/tmp/vectors.txt', binary=False)
+wv = KeyedVectors.load_word2vec_format("/tmp/vectors.txt", binary=False)
 
 # To export a model as binary
-wv.save_word2vec_format('/tmp/vectors.bin', binary=True)
+wv.save_word2vec_format("/tmp/vectors.bin", binary=True)
 
 # To import a word2vec binary model
-wv = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)
+wv = KeyedVectors.load_word2vec_format("/tmp/vectors.bin", binary=True)
 
 # To create and save Annoy Index from a loaded `KeyedVectors` object (with 100 trees)
 annoy_index = AnnoyIndexer(wv, 100)
-annoy_index.save('/tmp/mymodel.index')
+annoy_index.save("/tmp/mymodel.index")
 
 # Load and test the saved word vectors and saved Annoy index
-wv = KeyedVectors.load_word2vec_format('/tmp/vectors.bin', binary=True)
+wv = KeyedVectors.load_word2vec_format("/tmp/vectors.bin", binary=True)
 annoy_index = AnnoyIndexer()
-annoy_index.load('/tmp/mymodel.index')
+annoy_index.load("/tmp/mymodel.index")
 annoy_index.model = wv
 
 vector = wv["cat"]

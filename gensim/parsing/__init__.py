@@ -1,8 +1,8 @@
 """This package contains functions to preprocess raw text"""
 
 from .porter import PorterStemmer  # noqa:F401
-from .preprocessing import (  # noqa:F401
-    preprocess_documents,
+from .preprocessing import (
+    preprocess_documents,  # noqa:F401
     preprocess_string,
     read_file,
     read_files,
