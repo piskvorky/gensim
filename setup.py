@@ -320,6 +320,9 @@ NUMPY_STR = 'numpy >= 1.17.0'
 #
 CYTHON_STR = 'Cython==0.29.28'
 
+# Allow overriding the Cython version requirement
+CYTHON_STR = os.environ.get('GENSIM_CYTHON_REQUIRES', CYTHON_STR)
+
 install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
