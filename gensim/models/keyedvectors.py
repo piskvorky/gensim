@@ -1860,7 +1860,10 @@ def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unico
     return processed_words, chunk[start:]
 
 
-def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size, encoding="utf-8"):
+def _word2vec_read_binary(
+        fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+        encoding="utf-8",
+    ):
     chunk = b''
     tot_processed_words = 0
 
