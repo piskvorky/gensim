@@ -373,6 +373,9 @@ class TestFastTextModel(unittest.TestCase):
         self.assertEqual(
             self.test_model.wv.most_similar_cosmul('nights'),
             self.test_model.wv.most_similar_cosmul(positive=['nights']))
+        self.assertEqual(
+            self.test_model.wv.most_similar_cosmul('the', 'and'),
+            self.test_model.wv.most_similar_cosmul(positive=['the'], negative=['and']))
 
     def test_lookup(self):
         # In vocab, sanity check
