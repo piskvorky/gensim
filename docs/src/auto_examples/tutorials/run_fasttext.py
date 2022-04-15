@@ -248,7 +248,7 @@ print(wv.evaluate_word_analogies(datapath('questions-words.txt')))
 # Word Movers distance
 # ^^^^^^^^^^^^^^^^^^^^
 #
-# You'll need the optional ``pyemd`` library for this section, ``pip install pyemd``.
+# You'll need the optional ``POT`` library for this section, ``pip install POT``.
 #
 # Let's start with two sentences:
 sentence_obama = 'Obama speaks to the media in Illinois'.lower().split()
