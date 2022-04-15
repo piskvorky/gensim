@@ -918,10 +918,8 @@ class KeyedVectors(utils.SaveLoad):
 
         When using this code, please consider citing the following papers:
 
-        * `Ofir Pele and Michael Werman "A linear time histogram metric for improved SIFT matching"
-          <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_
-        * `Ofir Pele and Michael Werman "Fast and robust earth mover's distances"
-          <https://ieeexplore.ieee.org/document/5459199/>`_
+        * `Rémi Flamary et al. "POT: Python Optimal Transport"
+          <https://jmlr.org/papers/v22/20-451.html>`_
         * `Matt Kusner et al. "From Word Embeddings To Document Distances"
           <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_.
 
@@ -942,7 +940,7 @@ class KeyedVectors(utils.SaveLoad):
 
         Warnings
         --------
-        This method only works if `pyemd <https://pypi.org/project/pyemd/>`_ is installed.
+        This method only works if `POT <https://pypi.org/project/POT/>`_ is installed.
 
         If one of the documents have no words that exist in the vocab, `float('inf')` (i.e. infinity)
         will be returned.
@@ -950,12 +948,11 @@ class KeyedVectors(utils.SaveLoad):
         Raises
         ------
         ImportError
-            If `pyemd <https://pypi.org/project/pyemd/>`_  isn't installed.
+            If `POT <https://pypi.org/project/POT/>`_  isn't installed.
 
         """
-        # If pyemd C extension is available, import it.
-        # If pyemd is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
-        from pyemd import emd
+        # If POT is attempted to be used, but isn't installed, ImportError will be raised in wmdistance
+        from ot import emd2
 
         # Remove out-of-vocabulary words.
         len_pre_oov1 = len(document1)
@@ -1002,12 +999,12 @@ class KeyedVectors(utils.SaveLoad):
                 d[idx] = freq / float(doc_len)  # Normalized word frequencies.
             return d
 
-        # Compute nBOW representation of documents. This is what pyemd expects on input.
+        # Compute nBOW representation of documents. This is what POT expects on input.
         d1 = nbow(document1)
         d2 = nbow(document2)
 
         # Compute WMD.
-        return emd(d1, d2, distance_matrix)
+        return emd2(d1, d2, distance_matrix)
 
     def most_similar_cosmul(
             self, positive=None, negative=None, topn=10, restrict_vocab=None
