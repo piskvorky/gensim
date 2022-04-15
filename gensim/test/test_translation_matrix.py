@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+
 from collections import namedtuple
 import unittest
 import logging
