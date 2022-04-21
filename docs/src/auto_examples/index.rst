@@ -211,27 +211,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s LDA model and demonstrates its use on the NIPS corpus.">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
-     :alt: LDA Model
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_lda
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
 
 .. only:: html
@@ -250,6 +229,27 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    :hidden:
 
    /auto_examples/tutorials/run_scm
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s LDA model and demonstrates its use on the NIPS corpus.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
+     :alt: LDA Model
+
+     :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_lda
 
 .. raw:: html
 
