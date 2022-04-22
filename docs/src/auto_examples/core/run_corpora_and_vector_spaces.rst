@@ -178,12 +178,12 @@ between the questions and ids is called a dictionary:
 
  .. code-block:: none
 
-    2022-04-22 08:48:57,970 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2022-04-22 08:48:57,970 : INFO : built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)
-    2022-04-22 08:48:58,005 : INFO : Dictionary lifecycle event {'msg': "built Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...) from 9 documents (total 29 corpus positions)", 'datetime': '2022-04-22T08:48:57.971079', 'gensim': '4.1.0.dev0', 'python': '3.9.7 (default, Sep  3 2021, 12:37:55) \n[Clang 12.0.5 (clang-1205.0.22.9)]', 'platform': 'macOS-11.6.5-x86_64-i386-64bit', 'event': 'created'}
-    2022-04-22 08:48:58,007 : INFO : Dictionary lifecycle event {'fname_or_handle': '/tmp/deerwester.dict', 'separately': 'None', 'sep_limit': 10485760, 'ignore': frozenset(), 'datetime': '2022-04-22T08:48:58.007756', 'gensim': '4.1.0.dev0', 'python': '3.9.7 (default, Sep  3 2021, 12:37:55) \n[Clang 12.0.5 (clang-1205.0.22.9)]', 'platform': 'macOS-11.6.5-x86_64-i386-64bit', 'event': 'saving'}
-    2022-04-22 08:48:58,011 : INFO : saved /tmp/deerwester.dict
-    Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
+    2022-04-22 19:16:03,056 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
+    2022-04-22 19:16:03,057 : INFO : built Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...> from 9 documents (total 29 corpus positions)
+    2022-04-22 19:16:03,068 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...> from 9 documents (total 29 corpus positions)", 'datetime': '2022-04-22T19:16:03.057201', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.4.0-104-generic-x86_64-with-glibc2.29', 'event': 'created'}
+    2022-04-22 19:16:03,069 : INFO : Dictionary lifecycle event {'fname_or_handle': '/tmp/deerwester.dict', 'separately': 'None', 'sep_limit': 10485760, 'ignore': frozenset(), 'datetime': '2022-04-22T19:16:03.069013', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.4.0-104-generic-x86_64-with-glibc2.29', 'event': 'saving'}
+    2022-04-22 19:16:03,069 : INFO : saved /tmp/deerwester.dict
+    Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...>
 
 
 
@@ -273,11 +273,11 @@ therefore reads: in the document `"Human computer interaction"`, the words `comp
 
  .. code-block:: none
 
-    2022-04-22 08:49:22,480 : INFO : storing corpus in Matrix Market format to /tmp/deerwester.mm
-    2022-04-22 08:49:22,484 : INFO : saving sparse matrix to /tmp/deerwester.mm
-    2022-04-22 08:49:22,484 : INFO : PROGRESS: saving document #0
-    2022-04-22 08:49:22,487 : INFO : saved 9x12 matrix, density=25.926% (28/108)
-    2022-04-22 08:49:22,488 : INFO : saving MmCorpus index to /tmp/deerwester.mm.index
+    2022-04-22 19:16:03,436 : INFO : storing corpus in Matrix Market format to /tmp/deerwester.mm
+    2022-04-22 19:16:03,446 : INFO : saving sparse matrix to /tmp/deerwester.mm
+    2022-04-22 19:16:03,447 : INFO : PROGRESS: saving document #0
+    2022-04-22 19:16:03,449 : INFO : saved 9x12 matrix, density=25.926% (28/108)
+    2022-04-22 19:16:03,449 : INFO : saving MmCorpus index to /tmp/deerwester.mm.index
     [[(0, 1), (1, 1), (2, 1)], [(0, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1)], [(2, 1), (5, 1), (7, 1), (8, 1)], [(1, 1), (5, 2), (8, 1)], [(3, 1), (6, 1), (7, 1)], [(9, 1)], [(9, 1), (10, 1)], [(9, 1), (10, 1), (11, 1)], [(4, 1), (10, 1), (11, 1)]]
 
 
@@ -372,7 +372,7 @@ then convert the tokens via a dictionary to their ids and yield the resulting sp
 
  .. code-block:: none
 
-    <__main__.MyCorpus object at 0x116409ee0>
+    <__main__.MyCorpus object at 0x7ff5d5552250>
 
 
 
@@ -450,10 +450,10 @@ Similarly, to construct the dictionary without loading all texts into memory:
 
  .. code-block:: none
 
-    2022-04-22 08:49:52,557 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2022-04-22 08:49:52,559 : INFO : built Dictionary(42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...) from 9 documents (total 69 corpus positions)
-    2022-04-22 08:49:52,560 : INFO : Dictionary lifecycle event {'msg': "built Dictionary(42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...) from 9 documents (total 69 corpus positions)", 'datetime': '2022-04-22T08:49:52.560063', 'gensim': '4.1.0.dev0', 'python': '3.9.7 (default, Sep  3 2021, 12:37:55) \n[Clang 12.0.5 (clang-1205.0.22.9)]', 'platform': 'macOS-11.6.5-x86_64-i386-64bit', 'event': 'created'}
-    Dictionary(12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...)
+    2022-04-22 19:16:05,452 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
+    2022-04-22 19:16:05,455 : INFO : built Dictionary<42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...> from 9 documents (total 69 corpus positions)
+    2022-04-22 19:16:05,455 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<42 unique tokens: ['abc', 'applications', 'computer', 'for', 'human']...> from 9 documents (total 69 corpus positions)", 'datetime': '2022-04-22T19:16:05.455728', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.4.0-104-generic-x86_64-with-glibc2.29', 'event': 'created'}
+    Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...>
 
 
 
@@ -502,11 +502,11 @@ create a toy corpus of 2 documents, as a plain Python list
 
  .. code-block:: none
 
-    2022-04-22 08:50:02,680 : INFO : storing corpus in Matrix Market format to /tmp/corpus.mm
-    2022-04-22 08:50:02,685 : INFO : saving sparse matrix to /tmp/corpus.mm
-    2022-04-22 08:50:02,685 : INFO : PROGRESS: saving document #0
-    2022-04-22 08:50:02,685 : INFO : saved 2x2 matrix, density=25.000% (1/4)
-    2022-04-22 08:50:02,686 : INFO : saving MmCorpus index to /tmp/corpus.mm.index
+    2022-04-22 19:16:05,705 : INFO : storing corpus in Matrix Market format to /tmp/corpus.mm
+    2022-04-22 19:16:05,708 : INFO : saving sparse matrix to /tmp/corpus.mm
+    2022-04-22 19:16:05,708 : INFO : PROGRESS: saving document #0
+    2022-04-22 19:16:05,708 : INFO : saved 2x2 matrix, density=25.000% (1/4)
+    2022-04-22 19:16:05,709 : INFO : saving MmCorpus index to /tmp/corpus.mm.index
 
 
 
@@ -537,16 +537,16 @@ Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>
 
  .. code-block:: none
 
-    2022-04-22 08:50:07,333 : INFO : converting corpus to SVMlight format: /tmp/corpus.svmlight
-    2022-04-22 08:50:07,345 : INFO : saving SvmLightCorpus index to /tmp/corpus.svmlight.index
-    2022-04-22 08:50:07,347 : INFO : no word id mapping provided; initializing from corpus
-    2022-04-22 08:50:07,347 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
-    2022-04-22 08:50:07,348 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
-    2022-04-22 08:50:07,350 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
-    2022-04-22 08:50:13,171 : INFO : no word id mapping provided; initializing from corpus
-    2022-04-22 08:50:13,173 : INFO : storing corpus in List-Of-Words format into /tmp/corpus.low
-    2022-04-22 08:50:13,202 : WARNING : List-of-words format can only save vectors with integer elements; 1 float entries were truncated to integer value
-    2022-04-22 08:50:13,203 : INFO : saving LowCorpus index to /tmp/corpus.low.index
+    2022-04-22 19:16:05,818 : INFO : converting corpus to SVMlight format: /tmp/corpus.svmlight
+    2022-04-22 19:16:05,820 : INFO : saving SvmLightCorpus index to /tmp/corpus.svmlight.index
+    2022-04-22 19:16:05,821 : INFO : no word id mapping provided; initializing from corpus
+    2022-04-22 19:16:05,821 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
+    2022-04-22 19:16:05,821 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
+    2022-04-22 19:16:05,822 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
+    2022-04-22 19:16:05,934 : INFO : no word id mapping provided; initializing from corpus
+    2022-04-22 19:16:05,936 : INFO : storing corpus in List-Of-Words format into /tmp/corpus.low
+    2022-04-22 19:16:05,937 : WARNING : List-of-words format can only save vectors with integer elements; 1 float entries were truncated to integer value
+    2022-04-22 19:16:05,937 : INFO : saving LowCorpus index to /tmp/corpus.low.index
 
 
 
@@ -572,9 +572,9 @@ Conversely, to load a corpus iterator from a Matrix Market file:
 
  .. code-block:: none
 
-    2022-04-22 08:50:19,947 : INFO : loaded corpus index from /tmp/corpus.mm.index
-    2022-04-22 08:50:19,949 : INFO : initializing cython corpus reader from /tmp/corpus.mm
-    2022-04-22 08:50:19,951 : INFO : accepted corpus with 2 documents, 2 features, 1 non-zero entries
+    2022-04-22 19:16:06,046 : INFO : loaded corpus index from /tmp/corpus.mm.index
+    2022-04-22 19:16:06,048 : INFO : initializing cython corpus reader from /tmp/corpus.mm
+    2022-04-22 19:16:06,048 : INFO : accepted corpus with 2 documents, 2 features, 1 non-zero entries
 
 
 
@@ -685,10 +685,10 @@ To save the same Matrix Market document stream in Blei's LDA-C format,
 
  .. code-block:: none
 
-    2022-04-22 08:50:53,978 : INFO : no word id mapping provided; initializing from corpus
-    2022-04-22 08:50:53,981 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
-    2022-04-22 08:50:53,982 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
-    2022-04-22 08:50:53,984 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
+    2022-04-22 19:16:06,823 : INFO : no word id mapping provided; initializing from corpus
+    2022-04-22 19:16:06,825 : INFO : storing corpus in Blei's LDA-C format into /tmp/corpus.lda-c
+    2022-04-22 19:16:06,834 : INFO : saving vocabulary of 2 words to /tmp/corpus.lda-c.vocab
+    2022-04-22 19:16:06,835 : INFO : saving BleiCorpus index to /tmp/corpus.lda-c.index
 
 
 
@@ -774,10 +774,9 @@ Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apir
 
 
 
-.. image-sg:: /auto_examples/core/images/sphx_glr_run_corpora_and_vector_spaces_001.png
-   :alt: run corpora and vector spaces
-   :srcset: /auto_examples/core/images/sphx_glr_run_corpora_and_vector_spaces_001.png
-   :class: sphx-glr-single-img
+.. image:: /auto_examples/core/images/sphx_glr_run_corpora_and_vector_spaces_001.png
+    :alt: run corpora and vector spaces
+    :class: sphx-glr-single-img
 
 
 
@@ -786,9 +785,9 @@ Optimize converting between corpora and NumPy/SciPy arrays?), see the :ref:`apir
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  36.161 seconds)
+   **Total running time of the script:** ( 0 minutes  5.212 seconds)
 
-**Estimated memory usage:**  40 MB
+**Estimated memory usage:**  47 MB
 
 
 .. _sphx_glr_download_auto_examples_core_run_corpora_and_vector_spaces.py:
