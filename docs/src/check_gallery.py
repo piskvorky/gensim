@@ -25,7 +25,7 @@ for root, dirs, files in os.walk(os.path.join(curr_dir, 'gallery')):
     for f in files:
         if f.endswith('.py'):
             source_path = os.path.join(root, f)
-            cache_path = source_path.replace('/docs/src/gallery/', '/docs/src/auto_examples/')
+            cache_path = source_path.replace('docs/src/gallery/', 'docs/src/auto_examples/')
 
             #
             # We check two things:
