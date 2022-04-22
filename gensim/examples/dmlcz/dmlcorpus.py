@@ -59,8 +59,9 @@ class DmlConfig:
         self.sources[sourceId] = source
 
     def __str__(self):
-        return ("DmlConfig(id=%s, sources=[%s], acceptLangs=[%s])" %
-                (self.configId, ', '.join(self.sources.iterkeys()), ', '.join(self.acceptLangs)))
+        return "%s<id=%s, sources=[%s], acceptLangs=[%s]>" % (
+            self.__class__.__name__, self.configId, ', '.join(self.sources.iterkeys()), ', '.join(self.acceptLangs)
+        )
 # endclass DmlConfig
 
 

@@ -25,7 +25,6 @@ Proceedings of the 27th Annual Conference of the Cognitive Science Society
 from __future__ import with_statement
 
 import logging
-import os.path
 import unittest
 from functools import partial
 
@@ -34,6 +33,7 @@ import numpy as np
 from gensim import corpora, models, utils, matutils
 from gensim.parsing.preprocessing import preprocess_documents, preprocess_string, DEFAULT_FILTERS
 
+from gensim.test.utils import datapath
 
 bg_corpus = None
 corpus = None
@@ -45,24 +45,23 @@ class TestLeeTest(unittest.TestCase):
         """setup lee test corpora"""
         global bg_corpus, corpus, human_sim_vector, bg_corpus2, corpus2
 
-        pre_path = os.path.join(os.path.dirname(__file__), 'test_data')
-        bg_corpus_file = 'lee_background.cor'
-        corpus_file = 'lee.cor'
-        sim_file = 'similarities0-1.txt'
+        bg_corpus_file = datapath('lee_background.cor')
+        corpus_file = datapath('lee.cor')
+        sim_file = datapath('similarities0-1.txt')
 
         # read in the corpora
         latin1 = partial(utils.to_unicode, encoding='latin1')
-        with utils.open(os.path.join(pre_path, bg_corpus_file), 'rb') as f:
+        with utils.open(bg_corpus_file, 'rb') as f:
             bg_corpus = preprocess_documents(latin1(line) for line in f)
-        with utils.open(os.path.join(pre_path, corpus_file), 'rb') as f:
+        with utils.open(corpus_file, 'rb') as f:
             corpus = preprocess_documents(latin1(line) for line in f)
-        with utils.open(os.path.join(pre_path, bg_corpus_file), 'rb') as f:
+        with utils.open(bg_corpus_file, 'rb') as f:
             bg_corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
-        with utils.open(os.path.join(pre_path, corpus_file), 'rb') as f:
+        with utils.open(corpus_file, 'rb') as f:
             corpus2 = [preprocess_string(latin1(s), filters=DEFAULT_FILTERS[:-1]) for s in f]
 
         # read the human similarity data
-        sim_matrix = np.loadtxt(os.path.join(pre_path, sim_file))
+        sim_matrix = np.loadtxt(sim_file)
         sim_m_size = np.shape(sim_matrix)[0]
         human_sim_vector = sim_matrix[np.triu_indices(sim_m_size, 1)]
 

@@ -27,6 +27,7 @@ Once the index has been initialized, you can query for document similarity simpl
 
 .. sourcecode:: pycon
 
+    >>> from gensim.similarities import Similarity
     >>> from gensim.test.utils import common_corpus, common_dictionary, get_tmpfile
     >>>
     >>> index_tmpfile = get_tmpfile("index")
@@ -146,7 +147,7 @@ class Shard(utils.SaveLoad):
         return result
 
     def __str__(self):
-        return "%s Shard(%i documents in %s)" % (self.cls.__name__, len(self), self.fullname())
+        return "%s<%i documents in %s>" % (self.cls.__name__, len(self), self.fullname())
 
     def get_index(self):
         """Load & get index.
@@ -358,8 +359,8 @@ class Similarity(interfaces.SimilarityABC):
         return len(self.fresh_docs) + sum(len(shard) for shard in self.shards)
 
     def __str__(self):
-        return "Similarity index with %i documents in %i shards (stored under %s)" % (
-            len(self), len(self.shards), self.output_prefix
+        return "%s<%i documents in %i shards stored under %s>" % (
+            self.__class__.__name__, len(self), len(self.shards), self.output_prefix
         )
 
     def add_documents(self, corpus):
@@ -1014,7 +1015,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         >>>
         >>> model = Word2Vec(common_texts, vector_size=20, min_count=1)  # train word-vectors
         >>>
-        >>> index = WmdSimilarity(common_texts, model)
+        >>> index = WmdSimilarity(common_texts, model.wv)
         >>> # Make query.
         >>> query = ['trees']
         >>> sims = index[query]
@@ -1095,7 +1096,7 @@ class WmdSimilarity(interfaces.SimilarityABC):
         return result
 
     def __str__(self):
-        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.w2v_model.wv.syn0.shape[1])
+        return "%s<%i docs, %i features>" % (self.__class__.__name__, len(self), self.wv.vectors.shape[1])
 
 
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
@@ -1175,7 +1176,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                        matutils.unitvec(v)) for v in corpus)
             self.index = matutils.corpus2csc(
                 corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
-                dtype=dtype, printprogress=10000
+                dtype=dtype, printprogress=10000,
             ).T
 
             # convert to Compressed Sparse Row for efficient row slicing and multiplications

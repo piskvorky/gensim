@@ -5,14 +5,16 @@
 
 Computation times
 =================
-**02:47.007** total execution time for **auto_examples_tutorials** files:
+**04:13.971** total execution time for **auto_examples_tutorials** files:
 
 +-------------------------------------------------------------------------------------+-----------+----------+
-| :ref:`sphx_glr_auto_examples_tutorials_run_lda.py` (``run_lda.py``)                 | 02:47.007 | 657.5 MB |
+| :ref:`sphx_glr_auto_examples_tutorials_run_lda.py` (``run_lda.py``)                 | 04:13.971 | 664.3 MB |
 +-------------------------------------------------------------------------------------+-----------+----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py` (``run_annoy.py``)             | 00:00.000 | 0.0 MB   |
 +-------------------------------------------------------------------------------------+-----------+----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py` (``run_doc2vec_lee.py``) | 00:00.000 | 0.0 MB   |
++-------------------------------------------------------------------------------------+-----------+----------+
+| :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py` (``run_ensemblelda.py``) | 00:00.000 | 0.0 MB   |
 +-------------------------------------------------------------------------------------+-----------+----------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py` (``run_fasttext.py``)       | 00:00.000 | 0.0 MB   |
 +-------------------------------------------------------------------------------------+-----------+----------+

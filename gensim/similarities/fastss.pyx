@@ -15,13 +15,13 @@ import itertools
 from cpython.ref cimport PyObject
 
 
-DEF MAX_WORD_LENGTH = 10000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
+DEF MAX_WORD_LENGTH = 1000  # Maximum allowed word length, in characters. Must fit in the C `int` range.
 
 
 cdef extern from *:
     """
     #define WIDTH int
-    #define MAX_WORD_LENGTH 10000
+    #define MAX_WORD_LENGTH 1000
 
     int ceditdist(PyObject * s1, PyObject * s2, WIDTH maximum) {
         WIDTH row1[MAX_WORD_LENGTH + 1];
@@ -137,6 +137,15 @@ def bytes2set(b):
 
 
 class FastSS:
+    """
+    Fast implementation of FastSS (Fast Similarity Search): https://fastss.csg.uzh.ch/
+
+    FastSS enables fuzzy search of a dynamic query (a word, string) against a static
+    dictionary (a set of words, strings). The "fuziness" is configurable by means
+    of a maximum edit distance (Levenshtein) between the query string and any of the
+    dictionary words.
+
+    """
 
     def __init__(self, words=None, max_dist=2):
         """
