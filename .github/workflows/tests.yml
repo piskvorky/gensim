@@ -28,6 +28,9 @@ jobs:
       # - name: Run flake8 linter (documentation)
       #   run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
 
+      - name: Check Sphinx Gallery cache
+        run: python docs/src/check_gallery.py
+
   docs:
     name: build documentation
     timeout-minutes: 10
