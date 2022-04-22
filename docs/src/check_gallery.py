@@ -41,6 +41,7 @@ for root, dirs, files in os.walk(os.path.join(curr_dir, 'gallery')):
             #
             if different(source_path, cache_path):
                 stale.append(cache_path)
+                continue
 
             actual_md5 = hashlib.md5()
             with open(source_path, 'rb') as fin:

@@ -245,7 +245,7 @@ passes = 20
 iterations = 400
 eval_every = None  # Don't evaluate model perplexity, takes too much time.
 
-# Make a index to word dictionary.
+# Make an index to word dictionary.
 temp = dictionary[0]  # This is only to "load" the dictionary.
 id2word = dictionary.id2token
 
@@ -278,7 +278,7 @@ model = LdaModel(
 # methods on the blog at http://rare-technologies.com/lda-training-tips/ !
 #
 
-top_topics = model.top_topics(corpus) #, num_words=20)
+top_topics = model.top_topics(corpus)
 
 # Average topic coherence is the sum of topic coherences of all topics, divided by the number of topics.
 avg_topic_coherence = sum([t[1] for t in top_topics]) / num_topics
