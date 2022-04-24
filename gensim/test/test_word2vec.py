@@ -580,9 +580,9 @@ class TestWord2VecModel(unittest.TestCase):
         pearson = correlation[0][0]
         spearman = correlation[1][0]
         oov = correlation[2]
-        self.assertTrue(0.1 < pearson < 1.0, "pearson {pearson} not between 0.1 & 1.0")
-        self.assertTrue(0.1 < spearman < 1.0, "spearman {spearman} not between 0.1 and 1.0")
-        self.assertTrue(0.0 <= oov < 90.0, "OOV {oov} not between 0.0 and 90.0")
+        self.assertTrue(0.1 < pearson < 1.0, f"pearson {pearson} not between 0.1 & 1.0")
+        self.assertTrue(0.1 < spearman < 1.0, f"spearman {spearman} not between 0.1 and 1.0")
+        self.assertTrue(0.0 <= oov < 90.0, f"OOV {oov} not between 0.0 and 90.0")
 
     def test_evaluate_word_pairs_from_file(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
