@@ -11,7 +11,7 @@ import requests
 import time
 
 
-def throttle_get(*args, seconds=3, **kwargs):
+def throttle_get(*args, seconds=10, **kwargs):
     result = requests.get(*args, **kwargs)
     result.raise_for_status()
 
