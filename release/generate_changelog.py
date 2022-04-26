@@ -6,7 +6,6 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 
 """Generate changelog entries for all PRs merged since the last release."""
-import os
 import re
 import requests
 import time
@@ -29,8 +28,6 @@ def throttle_get(*args, seconds=3, **kwargs):
 get = throttle_get('https://api.github.com/repos/RaRe-Technologies/gensim/releases')
 most_recent_release = get.json()[0]
 release_timestamp = most_recent_release['published_at']
-
-throttle()
 
 
 def iter_merged_prs(since=release_timestamp):
@@ -70,6 +67,7 @@ def iter_closed_issues(since=release_timestamp):
             if 'pull_request' not in issue and issue['closed_at'] > since:
                 yield issue
         page += 1
+
 
 fixed_issue_numbers = set()
 for pr in iter_merged_prs(since=release_timestamp):
