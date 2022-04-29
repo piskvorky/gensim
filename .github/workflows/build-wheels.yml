@@ -37,7 +37,7 @@ jobs:
       - name: Check Sphinx Gallery cache
         run: python docs/src/check_gallery.py
   build:
-    timeout-minutes: 30
+    timeout-minutes: 35
     runs-on: ${{ matrix.os }}
     defaults:
       run:
