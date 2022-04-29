@@ -4,7 +4,7 @@ Changes
 ## Unreleased
 
 
-## 5.0.0, 2022-04-29
+## 4.2.0, 2022-04-29
 
 ### :+1: New features
 
