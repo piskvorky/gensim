@@ -3,6 +3,7 @@ Changes
 
 ## Unreleased
 
+
 ## 5.0.0, 2022-04-29
 
 ### :+1: New features
@@ -68,59 +69,16 @@ Changes
 * [#3281](https://github.com/RaRe-Technologies/gensim/pull/3281): adjust test_parallel bound, by [@austereantelope](https://github.com/austereantelope)
 * [#3297](https://github.com/RaRe-Technologies/gensim/pull/3297): Use gensim.test.utils datapath() to construct paths to the test data, by [@pabs3](https://github.com/pabs3)
 
-### :question: Closed issues
-
-**I've sorted the issues to the best of my ability.
-Most of them appear irrelevant to the release.
-I think we can get rid of this section altogether.**
-
-Duplicates:
-
-* [#3266](https://github.com/RaRe-Technologies/gensim/issues/3266): Incorrect CBOW implementation in Gensim leads to inferior performance
-
-Junk (not a bug report, cannot reproduce, etc):
-
-* [#3015](https://github.com/RaRe-Technologies/gensim/issues/3015): Add convenience `get_sentence_vector()`-like methods for FastText, other models
-* [#3036](https://github.com/RaRe-Technologies/gensim/issues/3036): import gensim segmentation fault (macOS Big Sur, Apple M1/Apple Silicon/ARM)
-* [#3162](https://github.com/RaRe-Technologies/gensim/issues/3162): Doc2Vec: when we have string tags, build_vocab with update removes previous index
-* [#3226](https://github.com/RaRe-Technologies/gensim/issues/3226): numpy 1.19.2 incompatible with gensim 4.1.0
-* [#3233](https://github.com/RaRe-Technologies/gensim/issues/3233): Ask travis-ci.com for more credits
-* [#3240](https://github.com/RaRe-Technologies/gensim/issues/3240): Trying to get in touch regarding a security issue
-* [#3241](https://github.com/RaRe-Technologies/gensim/issues/3241): I cannot import remove_stopword_tokens
-* [#3242](https://github.com/RaRe-Technologies/gensim/issues/3242): Computing WmdSimilarity each-with-each
-* [#3243](https://github.com/RaRe-Technologies/gensim/issues/3243): default estimation method of gensim's word2vec skipgram?
-* [#3245](https://github.com/RaRe-Technologies/gensim/issues/3245): Log level control
-* [#3248](https://github.com/RaRe-Technologies/gensim/issues/3248): LdaMallet error returned non-zero exit status 1.
-* [#3249](https://github.com/RaRe-Technologies/gensim/issues/3249): Installing older version of Gensim gives a newer version
-* [#3267](https://github.com/RaRe-Technologies/gensim/issues/3267): ImportError : Ensemble LDA
-* [#3268](https://github.com/RaRe-Technologies/gensim/issues/3268): Can't suppress lifecycle events
-* [#3277](https://github.com/RaRe-Technologies/gensim/issues/3277): All the vocab model files are not saved
-* [#3285](https://github.com/RaRe-Technologies/gensim/issues/3285): Infer vectors for each word of a new document
-* [#3296](https://github.com/RaRe-Technologies/gensim/issues/3296): LSI add_documents
-* [#3306](https://github.com/RaRe-Technologies/gensim/issues/3306): Text8corpuse error output causing OOM
-* [#3313](https://github.com/RaRe-Technologies/gensim/issues/3313): Unable to find equivalent of doctag_syn0 in version 3 in version 4
-* [#3319](https://github.com/RaRe-Technologies/gensim/issues/3319): PorterStemmer doesn't install
-* [#3321](https://github.com/RaRe-Technologies/gensim/issues/3321): Improve models dump
-* [#3325](https://github.com/RaRe-Technologies/gensim/issues/3325): AttributeError: 'KeyedVectors' object has no attribute 'add'
-* [#3333](https://github.com/RaRe-Technologies/gensim/issues/3333): KeyedVector most_similar() use too much CPU
-* [#3337](https://github.com/RaRe-Technologies/gensim/issues/3337): Problem with numpy=1.21.5 and gensim
-* [#483](https://github.com/RaRe-Technologies/gensim/issues/483): Doc2Vec.infer_vector: AttributeError: 'Doc2Vec' object has no attribute 'syn1'
-
-Closed by one of the PRs mentioned above:
-
-* [#2535](https://github.com/RaRe-Technologies/gensim/issues/2535): streamlining most_similar_cosmul
-* [#3181](https://github.com/RaRe-Technologies/gensim/issues/3181): Mismatch get_coherence_per_topic and get_coherence for single topic
-* [#3246](https://github.com/RaRe-Technologies/gensim/issues/3246): Partial support of compressed corpora in FastText model
-* [#3288](https://github.com/RaRe-Technologies/gensim/issues/3288): Python 3.10 wheels
-* [#3316](https://github.com/RaRe-Technologies/gensim/issues/3316): corpora.TextDirectoryCorpus fails on utf-8 encoded files on windows
 
 ## 4.1.2, 2021-09-17
 
 This is a bugfix release that addresses left over compatibility issues with older versions of numpy and MacOS.
 
+
 ## 4.1.1, 2021-09-14
 
 This is a bugfix release that addresses compatibility issues with older versions of numpy.
+
 
 ## 4.1.0, 2021-08-15
 
