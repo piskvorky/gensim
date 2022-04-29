@@ -968,11 +968,6 @@ class FastTextKeyedVectors(KeyedVectors):
         buckets_word : list of np.array
             For each key (by its index), report bucket slots their subwords map to.
 
-        When used in training, FastTextKeyedVectors may be decorated with
-        extra attributes that closely associate with its core attributes,
-        such as the experimental vectors_vocab_lockf and vectors_ngrams_lockf
-        training-update-dampening factors.
-
         """
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size, count=count, dtype=dtype)
         self.min_n = min_n
