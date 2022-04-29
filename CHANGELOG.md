@@ -25,6 +25,7 @@ Changes
 * [#3289](https://github.com/RaRe-Technologies/gensim/pull/3289): Typos, text and code fix in LDA tutorial, by [@davebulaval](https://github.com/davebulaval)
 * [#3301](https://github.com/RaRe-Technologies/gensim/pull/3301): Remove unused Jupyter screenshots, by [@pabs3](https://github.com/pabs3)
 * [#3307](https://github.com/RaRe-Technologies/gensim/pull/3307): Documentation fixes, by [@piskvorky](https://github.com/piskvorky)
+* [#3339](https://github.com/RaRe-Technologies/gensim/pull/3339): fix parsing error in FastText Docs, by [@MattYoon](https://github.com/MattYoon)
 
 ### :red_circle: Bug fixes
 
