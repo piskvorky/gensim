@@ -15,6 +15,8 @@ Changes
 * [#3271](https://github.com/RaRe-Technologies/gensim/pull/3271): Added new ValueError in place of assertion error for no model data provided in lsi model, by [@mark-todd](https://github.com/mark-todd)
 * [#3299](https://github.com/RaRe-Technologies/gensim/pull/3299): Enable test_word2vec_stand_alone_script by using sys.executable for python, by [@pabs3](https://github.com/pabs3)
 * [#3317](https://github.com/RaRe-Technologies/gensim/pull/3317): Added `encoding` parameter to TextDirectoryCorpus, by [@Sandman-Ren](https://github.com/Sandman-Ren)
+* [#2656](https://github.com/RaRe-Technologies/gensim/pull/2656): Streamlining most_similar_cosmul and evaluate_word_analogies, by [@n3hrox](https://github.com/n3hrox)
+
 
 ### :books: Tutorials and docs
 
@@ -26,7 +28,8 @@ Changes
 * [#3289](https://github.com/RaRe-Technologies/gensim/pull/3289): Typos, text and code fix in LDA tutorial, by [@davebulaval](https://github.com/davebulaval)
 * [#3301](https://github.com/RaRe-Technologies/gensim/pull/3301): Remove unused Jupyter screenshots, by [@pabs3](https://github.com/pabs3)
 * [#3307](https://github.com/RaRe-Technologies/gensim/pull/3307): Documentation fixes, by [@piskvorky](https://github.com/piskvorky)
-* [#3339](https://github.com/RaRe-Technologies/gensim/pull/3339): fix parsing error in FastText Docs, by [@MattYoon](https://github.com/MattYoon)
+* [#3339](https://github.com/RaRe-Technologies/gensim/pull/3339): Fix parsing error in FastText docs, by [@MattYoon](https://github.com/MattYoon)
+* [#3251](https://github.com/RaRe-Technologies/gensim/pull/3251): Apply new convention of delimiting instance params in str function, by [@menshikh-iv](https://github.com/menshikh-iv)
 
 ### :red_circle: Bug fixes
 
@@ -55,13 +58,6 @@ Changes
 * [#3308](https://github.com/RaRe-Technologies/gensim/pull/3308): get rid of tox, build things via github actions directly, by [@mpenkov](https://github.com/mpenkov)
 * [#3318](https://github.com/RaRe-Technologies/gensim/pull/3318): Clean up evaluate_word_pairs code, by [@piskvorky](https://github.com/piskvorky)
 * [#3329](https://github.com/RaRe-Technologies/gensim/pull/3329): Check gallery up to date as part of CI, by [@mpenkov](https://github.com/mpenkov)
-
-### Minor improvements
-
-**I'm not sure if these belong here in the change log, as such changes aren't really visible to the regular users**
-
-* [#2656](https://github.com/RaRe-Technologies/gensim/pull/2656): streamlining most_similar_cosmul and evaluate_word_analogies, by [@n3hrox](https://github.com/n3hrox)
-* [#3251](https://github.com/RaRe-Technologies/gensim/pull/3251): Apply new convention of delimiting instance params in str function, by [@menshikh-iv](https://github.com/menshikh-iv)
 * [#3254](https://github.com/RaRe-Technologies/gensim/pull/3254): Skip blinking test `test_translate_gc` on OSX + py3.9, by [@menshikh-iv](https://github.com/menshikh-iv)
 * [#3258](https://github.com/RaRe-Technologies/gensim/pull/3258): Adding another check to _check_corpus_sanity for compressed files, adding test, by [@dchaplinsky](https://github.com/dchaplinsky)
 * [#3278](https://github.com/RaRe-Technologies/gensim/pull/3278): Tighten test_parallel bound, by [@austereantelope](https://github.com/austereantelope)
