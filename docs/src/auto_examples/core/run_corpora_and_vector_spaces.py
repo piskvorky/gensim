@@ -222,7 +222,7 @@ corpora.MmCorpus.serialize('/tmp/corpus.mm', corpus)
 
 ###############################################################################
 # Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>`_,
-# `Blei's LDA-C format <http://www.cs.princeton.edu/~blei/lda-c/>`_ and
+# `Blei's LDA-C format <https://github.com/blei-lab/lda-c>`_ and
 # `GibbsLDA++ format <http://gibbslda.sourceforge.net/>`_.
 
 corpora.SvmLightCorpus.serialize('/tmp/corpus.svmlight', corpus)

@@ -169,27 +169,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
-     :alt: FastText Model
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_fasttext
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s EnsembleLda model">
 
 .. only:: html
@@ -208,6 +187,27 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    :hidden:
 
    /auto_examples/tutorials/run_ensemblelda
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
+     :alt: FastText Model
+
+     :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_fasttext
 
 .. raw:: html
 
@@ -253,27 +253,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_scm_thumb.png
-     :alt: Soft Cosine Measure
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_scm.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_scm
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
 
 .. only:: html
@@ -292,6 +271,27 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    :hidden:
 
    /auto_examples/tutorials/run_wmd
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_scm_thumb.png
+     :alt: Soft Cosine Measure
+
+     :ref:`sphx_glr_auto_examples_tutorials_run_scm.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_scm
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

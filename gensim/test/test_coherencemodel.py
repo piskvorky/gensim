@@ -50,6 +50,11 @@ class TestCoherenceModel(unittest.TestCase):
             ['not a token', 'not an id', 'tests using', "this list"],
             ['should raise', 'an error', 'to pass', 'correctly']
         ]
+        # list of topics with unseen words in the dictionary
+        self.topics5 = [
+            ['aaaaa', 'bbbbb', 'ccccc', 'eeeee'],
+            ['ddddd', 'fffff', 'ggggh', 'hhhhh']
+        ]
         self.topicIds1 = []
         for topic in self.topics1:
             self.topicIds1.append([self.dictionary.token2id[token] for token in topic])
@@ -70,8 +75,14 @@ class TestCoherenceModel(unittest.TestCase):
         cm2 = CoherenceModel(topics=self.topics2, **kwargs)
         cm3 = CoherenceModel(topics=self.topics3, **kwargs)
         cm4 = CoherenceModel(topics=self.topicIds1, **kwargs)
+
+        # check if the same topic always returns the same coherence value
+        cm5 = CoherenceModel(topics=[self.topics1[0]], **kwargs)
+
         self.assertRaises(ValueError, lambda: CoherenceModel(topics=self.topics4, **kwargs))
+        self.assertRaises(ValueError, lambda: CoherenceModel(topics=self.topics5, **kwargs))
         self.assertEqual(cm1.get_coherence(), cm4.get_coherence())
+        self.assertEqual(cm1.get_coherence_per_topic()[0], cm5.get_coherence())
         self.assertIsInstance(cm3.get_coherence(), np.double)
         self.assertGreater(cm1.get_coherence(), cm2.get_coherence())
 
