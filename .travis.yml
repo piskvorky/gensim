@@ -35,14 +35,6 @@ matrix:
       #
     - os: linux
       env:
-        - MB_PYTHON_VERSION=3.6
-        #
-        # scipy 1.7.0 wheels not available for Py3.6, so we have to build using
-        # an older version.
-        #
-        - BUILD_DEPENDS="numpy==1.19.2 scipy==1.5.3"
-    - os: linux
-      env:
         - MB_PYTHON_VERSION=3.7
         - BUILD_DEPENDS="numpy==1.19.2 scipy==1.7.0"
     - os: linux
