@@ -26,7 +26,7 @@ env:
         # them here for now.  They'll get picked up by the multibuild stuff
         # running in multibuild/common_utils.sh.
         #
-      - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
+      - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
 
 matrix:
       #
