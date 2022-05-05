@@ -14,7 +14,7 @@
 import numpy as np
 cimport numpy as np
 
-from word2vec_inner cimport REAL_t
+from gensim.models.word2vec_inner cimport REAL_t
 
 
 DEF MAX_SENTENCE_LEN = 10000
