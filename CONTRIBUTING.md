@@ -20,11 +20,9 @@ Also, please check the [Gensim FAQ](https://github.com/RaRe-Technologies/gensim/
       - For windows: `pip install -e .[test-win]`
 5. Implement your changes
 6. Check that everything's OK in your branch:
-   - Check it for PEP8: `tox -e flake8`
-   - Build its documentation (works only for MacOS/Linux): `tox -e docs` (documentation stored in `docs/src/_build`)
-   - Run unit tests: `tox -e py{version}-{os}`, for example `tox -e py35-linux` or `tox -e py36-win` where
-      - `{version}` is one of `35`, `36`
-      - `{os}` is either `win` or `linux`
+   - Check it for PEP8: `flake8 --ignore E12,W503 --max-line-length 120 --show-source gensim`
+   - Build its documentation (works only for MacOS/Linux): `make -C docs/src html` (documentation stored in `docs/src/_build`)
+   - Run unit tests: `pytest -v gensim/test`
 7. Add files, commit and push: `git add ... ; git commit -m "my commit message"; git push origin my-feature`
 8. [Create a PR](https://help.github.com/articles/creating-a-pull-request/) on Github. Write a **clear description** for your PR, including all the context and relevant information, such as:
    - The issue that you fixed, e.g. `Fixes #123`

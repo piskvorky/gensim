@@ -234,9 +234,7 @@ class CoherenceMetric(Metric):
             Key word arguments to override the object's internal attributes.
             One of the following parameters are expected:
 
-                * `model` - pre-trained topic model of type :class:`~gensim.models.ldamodel.LdaModel`, or one
-                  of its wrappers, such as :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
-                  :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit`.
+                * `model` - pre-trained topic model of type :class:`~gensim.models.ldamodel.LdaModel`.
                 * `topics` - list of tokenized topics.
 
         Returns
@@ -290,10 +288,8 @@ class PerplexityMetric(Metric):
         ----------
         **kwargs
             Key word arguments to override the object's internal attributes.
-            A trained topic model is expected using the 'model' key. This can be of type
-            :class:`~gensim.models.ldamodel.LdaModel`, or one of its wrappers, such as
-            :class:`~gensim.models.wrappers.ldamallet.LdaMallet` or
-            :class:`~gensim.models.wrapper.ldavowpalwabbit.LdaVowpalWabbit`.
+            A trained topic model is expected using the 'model' key.
+            This must be of type :class:`~gensim.models.ldamodel.LdaModel`.
 
         Returns
         -------
@@ -354,8 +350,8 @@ class DiffMetric(Metric):
         ----------
         **kwargs
             Key word arguments to override the object's internal attributes.
-            Two models of type :class:`~gensim.models.ldamodelLdaModel` or its wrappers are expected using the keys
-            `model` and `other_model`.
+            Two models of type :class:`~gensim.models.ldamodelLdaModel`
+            are expected using the keys `model` and `other_model`.
 
         Returns
         -------
@@ -424,8 +420,8 @@ class ConvergenceMetric(Metric):
         ----------
         **kwargs
             Key word arguments to override the object's internal attributes.
-            Two models of type :class:`~gensim.models.ldamodel.LdaModel` or its wrappers are expected using the keys
-            `model` and `other_model`.
+            Two models of type :class:`~gensim.models.ldamodel.LdaModel`
+            are expected using the keys `model` and `other_model`.
 
         Returns
         -------
