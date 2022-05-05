@@ -1863,7 +1863,7 @@ def keep_vocab_item(word, count, min_count, trim_rule=None):
 def check_output(stdout=subprocess.PIPE, *popenargs, **kwargs):
     r"""Run OS command with the given arguments and return its output as a byte string.
 
-    Backported from Python 2.7 with a few minor modifications. Widely used for :mod:`gensim.models.wrappers`.
+    Backported from Python 2.7 with a few minor modifications. Used in word2vec/glove2word2vec tests.
     Behaves very similar to https://docs.python.org/2/library/subprocess.html#subprocess.check_output.
 
     Examples

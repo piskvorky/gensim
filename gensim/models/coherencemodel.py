@@ -132,8 +132,7 @@ class CoherenceModel(interfaces.TransformationABC):
         model : :class:`~gensim.models.basemodel.BaseTopicModel`, optional
             Pre-trained topic model, should be provided if topics is not provided.
             Currently supports :class:`~gensim.models.ldamodel.LdaModel`,
-            :class:`~gensim.models.ldamulticore.LdaMulticore`, :class:`~gensim.models.wrappers.ldamallet.LdaMallet` and
-            :class:`~gensim.models.wrappers.ldavowpalwabbit.LdaVowpalWabbit`.
+            :class:`~gensim.models.ldamulticore.LdaMulticore`.
             Use `topics` parameter to plug in an as yet unsupported model.
         topics : list of list of str, optional
             List of tokenized topics, if this is preferred over model - dictionary should be provided.
