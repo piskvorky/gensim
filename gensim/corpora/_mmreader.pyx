@@ -1,5 +1,6 @@
 # Copyright (C) 2018 Radim Rehurek <radimrehurek@seznam.cz>
 # cython: embedsignature=True
+# cython: language_level=3
 
 """Reader for corpus in the Matrix Market format."""
 import logging

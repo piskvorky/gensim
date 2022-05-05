@@ -1,6 +1,7 @@
 #!/usr/bin/env cython
 # coding: utf-8
 # cython: embedsignature=True
+# cython: language_level=3
 
 from __future__ import division
 cimport cython
