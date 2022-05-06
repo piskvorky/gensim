@@ -26,6 +26,8 @@ c_extensions = {
     'gensim._matutils': 'gensim/_matutils.c',
     'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
     'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
+    'gensim.models.ldaseq_sslm_inner': 'gensim/models/ldaseq_sslm_inner.c',
+    'gensim.models.ldaseq_posterior_inner': 'gensim/models/ldaseq_posterior_inner.c'
 }
 
 cpp_extensions = {
