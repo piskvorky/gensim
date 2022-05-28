@@ -1174,7 +1174,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             num_topics = min(num_topics, self.num_topics)
 
             # add a little random jitter, to randomize results around the same alpha
-            sort_alpha = self.alpha + 0.0001 * self.random_state.rand(len(self.alpha))
+            sort_alpha = self.alpha + 0.0001 * self.random_state.integers(low=0, high=1, size=len(self.alpha))
             # random_state.rand returns float64, but converting back to dtype won't speed up anything
 
             sorted_topics = list(matutils.argsort(sort_alpha))

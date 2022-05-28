@@ -489,7 +489,10 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
         c[0].cum_table = <np.uint32_t *>(np.PyArray_DATA(model.cum_table))
         c[0].cum_table_len = len(model.cum_table)
     if c[0].negative or c[0].sample:
-        c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
+        if isinstance(model.random, np.random.Generator):
+            c[0].next_random = (2**24) * model.random.integers(0, 2**24) + model.random.integers(0, 2**24)
+        else:
+            c[0].next_random = (2**24) * model.random.randint(0, 2**24) + model.random.randint(0, 2**24)
 
     # convert Python structures to primitive types, so we can release the GIL
     c[0].work = <REAL_t *>np.PyArray_DATA(_work)
@@ -567,8 +570,12 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
 
     # precompute "reduced window" offsets in a single randint() call
     if model.shrink_windows:
-        for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
-            c.reduced_windows[i] = item
+        if isinstance(model.random, np.random.Generator):
+            for i, item in enumerate(model.random.integers(0, c.window, effective_words)):
+                c.reduced_windows[i] = item
+        else:
+            for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+                c.reduced_windows[i] = item
     else:
         for i in range(effective_words):
             c.reduced_windows[i] = 0
@@ -667,8 +674,12 @@ def train_batch_cbow(model, sentences, alpha, _work, _neu1, compute_loss):
 
     # precompute "reduced window" offsets in a single randint() call
     if model.shrink_windows:
-        for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
-            c.reduced_windows[i] = item
+        if isinstance(model.random, np.random.Generator):
+            for i, item in enumerate(model.random.integers(0, c.window, effective_words)):
+                c.reduced_windows[i] = item
+        else:
+            for i, item in enumerate(model.random.randint(0, c.window, effective_words)):
+                c.reduced_windows[i] = item
     else:
         for i in range(effective_words):
             c.reduced_windows[i] = 0

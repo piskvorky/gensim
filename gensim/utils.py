@@ -87,10 +87,10 @@ def get_random_state(seed):
 
     """
     if seed is None or seed is np.random:
-        return np.random.mtrand._rand
+        return np.random.default_rng(4)
     if isinstance(seed, (numbers.Integral, np.integer)):
-        return np.random.RandomState(seed)
-    if isinstance(seed, np.random.RandomState):
+        return np.random.default_rng(seed)
+    if isinstance(seed, np.random.Generator):
         return seed
     raise ValueError('%r cannot be used to seed a np.random.RandomState instance' % seed)
 
