@@ -397,7 +397,7 @@ Predictive Evaluation Methods
 
 Given a document, our ``Doc2Vec`` models output a vector representation of the document.
 How useful is a particular model?
-In case of sentiment analysis, we want the ouput vector to reflect the sentiment in the input document.
+In case of sentiment analysis, we want the output vector to reflect the sentiment in the input document.
 So, in vector space, positive documents should be distant from negative documents.
 
 We train a logistic regression from the training set:
