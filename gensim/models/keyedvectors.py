@@ -1167,7 +1167,7 @@ class KeyedVectors(utils.SaveLoad):
 
     def distances(self, word_or_vector, other_words=()):
         """Compute cosine distances from given word or vector to all words in `other_words`.
-        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
+        If `other_words` is empty, return distance between `word_or_vector` and all words in vocab.
 
         Parameters
         ----------
