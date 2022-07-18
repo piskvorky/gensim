@@ -253,27 +253,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
-     :alt: Word Mover's Distance
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_wmd
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
 
 .. only:: html
@@ -292,6 +271,27 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
    :hidden:
 
    /auto_examples/tutorials/run_scm
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
+     :alt: Word Mover's Distance
+
+     :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/tutorials/run_wmd
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
