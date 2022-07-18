@@ -968,11 +968,6 @@ class FastTextKeyedVectors(KeyedVectors):
         buckets_word : list of np.array
             For each key (by its index), report bucket slots their subwords map to.
 
-        When used in training, FastTextKeyedVectors may be decorated with
-        extra attributes that closely associate with its core attributes,
-        such as the experimental vectors_vocab_lockf and vectors_ngrams_lockf
-        training-update-dampening factors.
-
         """
         super(FastTextKeyedVectors, self).__init__(vector_size=vector_size, count=count, dtype=dtype)
         self.min_n = min_n
@@ -1045,7 +1040,7 @@ class FastTextKeyedVectors(KeyedVectors):
 
         Note
         ----
-        This method **always** returns True, because of the way FastText works.
+        This method **always** returns True with char ngrams, because of the way FastText works.
 
         If you want to check if a word is an in-vocabulary term, use this instead:
 
@@ -1059,7 +1054,10 @@ class FastTextKeyedVectors(KeyedVectors):
             False
 
         """
-        return True
+        if self.bucket == 0:  # check for the case when char ngrams not used
+            return word in self.key_to_index
+        else:
+            return True
 
     def save(self, *args, **kwargs):
         """Save object.
@@ -1130,6 +1128,23 @@ class FastTextKeyedVectors(KeyedVectors):
                 return word_vec / np.linalg.norm(word_vec)
             else:
                 return word_vec / len(ngram_hashes)
+
+    def get_sentence_vector(self, sentence):
+        """Get a single 1-D vector representation for a given `sentence`.
+        This function is workalike of the official fasttext's get_sentence_vector().
+
+        Parameters
+        ----------
+        sentence : list of (str or int)
+            list of words specified by string or int ids.
+
+        Returns
+        -------
+        numpy.ndarray
+            1-D numpy array representation of the `sentence`.
+
+        """
+        return super(FastTextKeyedVectors, self).get_mean_vector(sentence)
 
     def resize_vectors(self, seed=0):
         """Make underlying vectors match 'index_to_key' size; random-initialize any new rows."""

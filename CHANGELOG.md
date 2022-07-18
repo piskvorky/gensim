@@ -3,22 +3,78 @@ Changes
 
 ## Unreleased
 
+
+## 4.2.0, 2022-04-29
+
+### :+1: New features
+
+* [#3188](https://github.com/RaRe-Technologies/gensim/pull/3188): Add get_sentence_vector() to FastText and get_mean_vector() to KeyedVectors, by [@rock420](https://github.com/rock420)
 * [#3194](https://github.com/RaRe-Technologies/gensim/pull/3194): Added random_seed parameter to make LsiModel reproducible, by [@parashardhapola](https://github.com/parashardhapola)
-* [#3251](https://github.com/RaRe-Technologies/gensim/pull/3251): Apply new convention of delimiting instance params in str function, by [@menshikh-iv](https://github.com/menshikh-iv)
-* [#3227](https://github.com/RaRe-Technologies/gensim/pull/3227): Fix FastText doc-comment example for `build_vocab` and `train` to use correct argument names, by [@HLasse](https://github.com/HLasse)
 * [#3247](https://github.com/RaRe-Technologies/gensim/pull/3247): Sparse2Corpus: update __getitem__ to work on slices, lists and ellipsis, by [@PrimozGodec](https://github.com/PrimozGodec)
+* [#3264](https://github.com/RaRe-Technologies/gensim/pull/3264): Detect when a fasttext executable is available in PATH, by [@pabs3](https://github.com/pabs3)
+* [#3271](https://github.com/RaRe-Technologies/gensim/pull/3271): Added new ValueError in place of assertion error for no model data provided in lsi model, by [@mark-todd](https://github.com/mark-todd)
+* [#3299](https://github.com/RaRe-Technologies/gensim/pull/3299): Enable test_word2vec_stand_alone_script by using sys.executable for python, by [@pabs3](https://github.com/pabs3)
+* [#3317](https://github.com/RaRe-Technologies/gensim/pull/3317): Added `encoding` parameter to TextDirectoryCorpus, by [@Sandman-Ren](https://github.com/Sandman-Ren)
+* [#2656](https://github.com/RaRe-Technologies/gensim/pull/2656): Streamlining most_similar_cosmul and evaluate_word_analogies, by [@n3hrox](https://github.com/n3hrox)
+
+
+### :books: Tutorials and docs
+
+* [#3227](https://github.com/RaRe-Technologies/gensim/pull/3227): Fix FastText doc-comment example for `build_vocab` and `train` to use correct argument names, by [@HLasse](https://github.com/HLasse)
+* [#3235](https://github.com/RaRe-Technologies/gensim/pull/3235): Fix TFIDF docs, by [@piskvorky](https://github.com/piskvorky)
+* [#3257](https://github.com/RaRe-Technologies/gensim/pull/3257): Dictionary doc: ref FAQ entry about filter_extremes corpus migration, by [@zacchiro](https://github.com/zacchiro)
+* [#3279](https://github.com/RaRe-Technologies/gensim/pull/3279): Add the FastSS and Levenshtein modules to docs, by [@piskvorky](https://github.com/piskvorky)
+* [#3284](https://github.com/RaRe-Technologies/gensim/pull/3284): Documentation fixes + added CITATION.cff, by [@piskvorky](https://github.com/piskvorky)
+* [#3289](https://github.com/RaRe-Technologies/gensim/pull/3289): Typos, text and code fix in LDA tutorial, by [@davebulaval](https://github.com/davebulaval)
+* [#3301](https://github.com/RaRe-Technologies/gensim/pull/3301): Remove unused Jupyter screenshots, by [@pabs3](https://github.com/pabs3)
+* [#3307](https://github.com/RaRe-Technologies/gensim/pull/3307): Documentation fixes, by [@piskvorky](https://github.com/piskvorky)
+* [#3339](https://github.com/RaRe-Technologies/gensim/pull/3339): Fix parsing error in FastText docs, by [@MattYoon](https://github.com/MattYoon)
+* [#3251](https://github.com/RaRe-Technologies/gensim/pull/3251): Apply new convention of delimiting instance params in str function, by [@menshikh-iv](https://github.com/menshikh-iv)
+
+### :red_circle: Bug fixes
+
+* [#3117](https://github.com/RaRe-Technologies/gensim/pull/3117): Ensure next_index available when loading old stored KeyedVectors models, by [@gojomo](https://github.com/gojomo)
+* [#3182](https://github.com/RaRe-Technologies/gensim/pull/3182): Fix error message when Doc2Vec does not receive corpus_file or corpus iterable, by [@blainedietrich](https://github.com/blainedietrich)
+* [#3190](https://github.com/RaRe-Technologies/gensim/pull/3190): Fix broken external link for LDA implementation, by [@ahaya3776](https://github.com/ahaya3776)
+* [#3197](https://github.com/RaRe-Technologies/gensim/pull/3197): Fix computation of topic coherence, by [@silviatti](https://github.com/silviatti)
 * [#3250](https://github.com/RaRe-Technologies/gensim/pull/3250): Make negative ns_exponent work correctly, by [@menshikh-iv](https://github.com/menshikh-iv)
-* [#3258](https://github.com/RaRe-Technologies/gensim/pull/3258): Adding another check to _check_corpus_sanity for compressed files, adding test, by [@dchaplinsky](https://github.com/dchaplinsky)
-* [#3274](https://github.com/RaRe-Technologies/gensim/pull/3274): Migrate setup.py from distutils to setuptools, by [@geojacobm6](https://github.com/geojacobm6)
+* [#3282](https://github.com/RaRe-Technologies/gensim/pull/3282): Fix `str()` method in WmdSimilarity, by [@DingQK](https://github.com/DingQK)
 * [#3286](https://github.com/RaRe-Technologies/gensim/pull/3286): Fixes 'not enough arguments for format string' error, by [@gilbertfrancois](https://github.com/gilbertfrancois)
+* [#3309](https://github.com/RaRe-Technologies/gensim/pull/3309): Respect encoding when reading binary keyed vectors, by [@alhoo](https://github.com/alhoo)
+* [#3332](https://github.com/RaRe-Technologies/gensim/pull/3332): Missing `f` prefix on f-strings fix, by [@code-review-doctor](https://github.com/code-review-doctor)
+
+### :warning: Removed functionality & deprecations
+
+### 🔮 Testing, CI, housekeeping
+
+* [#3230](https://github.com/RaRe-Technologies/gensim/pull/3230): Adding lifecycle configuration, by [@mpenkov](https://github.com/mpenkov)
+* [#3252](https://github.com/RaRe-Technologies/gensim/pull/3252): Add Codecov to gensim repo, by [@menshikh-iv](https://github.com/menshikh-iv)
+* [#3255](https://github.com/RaRe-Technologies/gensim/pull/3255): Move windows tests from azure to github actions, by [@menshikh-iv](https://github.com/menshikh-iv)
+* [#3263](https://github.com/RaRe-Technologies/gensim/pull/3263): Remove commented out pytest-rerunfailures test dependency, by [@pabs3](https://github.com/pabs3)
+* [#3274](https://github.com/RaRe-Technologies/gensim/pull/3274): Migrate setup.py from distutils to setuptools, by [@geojacobm6](https://github.com/geojacobm6)
+* [#3298](https://github.com/RaRe-Technologies/gensim/pull/3298): test and build wheels for Py3.{7,8,9,10}, by [@mpenkov](https://github.com/mpenkov)
+* [#3300](https://github.com/RaRe-Technologies/gensim/pull/3300): Fix code formatting for FT_CMD definition, by [@pabs3](https://github.com/pabs3)
+* [#3303](https://github.com/RaRe-Technologies/gensim/pull/3303): add GitHub URL for PyPi, by [@andriyor](https://github.com/andriyor)
+* [#3308](https://github.com/RaRe-Technologies/gensim/pull/3308): get rid of tox, build things via github actions directly, by [@mpenkov](https://github.com/mpenkov)
+* [#3318](https://github.com/RaRe-Technologies/gensim/pull/3318): Clean up evaluate_word_pairs code, by [@piskvorky](https://github.com/piskvorky)
+* [#3329](https://github.com/RaRe-Technologies/gensim/pull/3329): Check gallery up to date as part of CI, by [@mpenkov](https://github.com/mpenkov)
+* [#3254](https://github.com/RaRe-Technologies/gensim/pull/3254): Skip blinking test `test_translate_gc` on OSX + py3.9, by [@menshikh-iv](https://github.com/menshikh-iv)
+* [#3258](https://github.com/RaRe-Technologies/gensim/pull/3258): Adding another check to _check_corpus_sanity for compressed files, adding test, by [@dchaplinsky](https://github.com/dchaplinsky)
+* [#3278](https://github.com/RaRe-Technologies/gensim/pull/3278): Tighten test_parallel bound, by [@austereantelope](https://github.com/austereantelope)
+* [#3280](https://github.com/RaRe-Technologies/gensim/pull/3280): tighten test_topic_word, by [@austereantelope](https://github.com/austereantelope)
+* [#3281](https://github.com/RaRe-Technologies/gensim/pull/3281): adjust test_parallel bound, by [@austereantelope](https://github.com/austereantelope)
+* [#3297](https://github.com/RaRe-Technologies/gensim/pull/3297): Use gensim.test.utils datapath() to construct paths to the test data, by [@pabs3](https://github.com/pabs3)
+
 
 ## 4.1.2, 2021-09-17
 
 This is a bugfix release that addresses left over compatibility issues with older versions of numpy and MacOS.
 
+
 ## 4.1.1, 2021-09-14
 
 This is a bugfix release that addresses compatibility issues with older versions of numpy.
+
 
 ## 4.1.0, 2021-08-15
 
@@ -100,11 +156,11 @@ Plus a large number of smaller improvements and fixes, as usual.
 * [#3142](https://github.com/RaRe-Technologies/gensim/pull/3142): Use more permanent pdf link and update code link, by [@dymil](https://github.com/dymil)
 * [#3141](https://github.com/RaRe-Technologies/gensim/pull/3141): Update link for online LDA paper, by [@dymil](https://github.com/dymil)
 * [#3133](https://github.com/RaRe-Technologies/gensim/pull/3133): Update link to Hoffman paper (online VB LDA), by [@jonaschn](https://github.com/jonaschn)
-* [#3129](https://github.com/RaRe-Technologies/gensim/pull/3129): [MRG] Add bronze sponsor: TechTarget, by [@piskvorky](https://github.com/piskvorky)
+* [#3129](https://github.com/RaRe-Technologies/gensim/pull/3129): Add bronze sponsor: TechTarget, by [@piskvorky](https://github.com/piskvorky)
 * [#3126](https://github.com/RaRe-Technologies/gensim/pull/3126): Fix typos in make_wiki_online.py and make_wikicorpus.py, by [@nicolasassi](https://github.com/nicolasassi)
 * [#3125](https://github.com/RaRe-Technologies/gensim/pull/3125): Improve & unify docs for dirichlet priors, by [@jonaschn](https://github.com/jonaschn)
 * [#3123](https://github.com/RaRe-Technologies/gensim/pull/3123): Fix hyperlink for doc2vec tutorial, by [@AdityaSoni19031997](https://github.com/AdityaSoni19031997)
-* [#3121](https://github.com/RaRe-Technologies/gensim/pull/3121): [MRG] Add bronze sponsor: eaccidents.com, by [@piskvorky](https://github.com/piskvorky)
+* [#3121](https://github.com/RaRe-Technologies/gensim/pull/3121): Add bronze sponsor: eaccidents.com, by [@piskvorky](https://github.com/piskvorky)
 * [#3120](https://github.com/RaRe-Technologies/gensim/pull/3120): Fix URL for ldamodel.py, by [@jonaschn](https://github.com/jonaschn)
 * [#3118](https://github.com/RaRe-Technologies/gensim/pull/3118): Fix URL in doc string, by [@jonaschn](https://github.com/jonaschn)
 * [#3107](https://github.com/RaRe-Technologies/gensim/pull/3107): Draw attention to sponsoring in README, by [@piskvorky](https://github.com/piskvorky)

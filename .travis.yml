@@ -26,21 +26,13 @@ env:
         # them here for now.  They'll get picked up by the multibuild stuff
         # running in multibuild/common_utils.sh.
         #
-      - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures Morfessor==2.0.2a4 python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
+      - TEST_DEPENDS="pytest mock cython nmslib pyemd testfixtures python-levenshtein==0.12.0 visdom==0.1.8.9 scikit-learn"
 
 matrix:
       #
       # See .github/workflows/build-wheels.yml for a discussion of why we
       # handle numpy versions explicitly.
       #
-    - os: linux
-      env:
-        - MB_PYTHON_VERSION=3.6
-        #
-        # scipy 1.7.0 wheels not available for Py3.6, so we have to build using
-        # an older version.
-        #
-        - BUILD_DEPENDS="numpy==1.19.2 scipy==1.5.3"
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.7

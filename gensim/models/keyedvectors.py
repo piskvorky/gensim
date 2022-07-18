@@ -9,8 +9,7 @@
  and various similarity look-ups.
 
 Since trained word vectors are independent from the way they were trained (:class:`~gensim.models.word2vec.Word2Vec`,
-:class:`~gensim.models.fasttext.FastText`,
-:class:`~gensim.models.wrappers.varembed.VarEmbed` etc), they can be represented by a standalone structure,
+:class:`~gensim.models.fasttext.FastText` etc), they can be represented by a standalone structure,
 as implemented in this module.
 
 The structure is called "KeyedVectors" and is essentially a mapping between *keys*
@@ -174,8 +173,8 @@ from numbers import Integral
 from typing import Iterable
 
 from numpy import (
-    dot, float32 as REAL, double, array, zeros, vstack,
-    ndarray, sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
+    dot, float32 as REAL, double, zeros, vstack, ndarray,
+    sum as np_sum, prod, argmax, dtype, ascontiguousarray, frombuffer,
 )
 import numpy as np
 from scipy import stats
@@ -202,6 +201,9 @@ def _ensure_list(value):
 
     if isinstance(value, _KEY_TYPES) or (isinstance(value, ndarray) and len(value.shape) == 1):
         return [value]
+
+    if isinstance(value, ndarray) and len(value.shape) == 2:
+        return list(value)
 
     return value
 
@@ -253,6 +255,9 @@ class KeyedVectors(utils.SaveLoad):
 
         self.mapfile_path = mapfile_path
 
+    def __str__(self):
+        return f"{self.__class__.__name__}<vector_size={self.vector_size}, {len(self)} keys>"
+
     def _load_specials(self, *args, **kwargs):
         """Handle special requirements of `.load()` protocol, usually up-converting older versions."""
         super(KeyedVectors, self)._load_specials(*args, **kwargs)
@@ -274,6 +279,9 @@ class KeyedVectors(utils.SaveLoad):
         # fixup rename of vocab into map
         if 'key_to_index' not in self.__dict__:
             self._upconvert_old_vocab()
+        # ensure older instances have next_index
+        if not hasattr(self, 'next_index'):
+            self.next_index = len(self)
 
     def _upconvert_old_vocab(self):
         """Convert a loaded, pre-gensim-4.0.0 version instance that had a 'vocab' dict of data objects."""
@@ -449,6 +457,71 @@ class KeyedVectors(utils.SaveLoad):
     def word_vec(self, *args, **kwargs):
         """Compatibility alias for get_vector(); must exist so subclass calls reach subclass get_vector()."""
         return self.get_vector(*args, **kwargs)
+
+    def get_mean_vector(self, keys, weights=None, pre_normalize=True, post_normalize=False, ignore_missing=True):
+        """Get the mean vector for a given list of keys.
+
+        Parameters
+        ----------
+
+        keys : list of (str or int or ndarray)
+            Keys specified by string or int ids or numpy array.
+        weights : list of float or numpy.ndarray, optional
+            1D array of same size of `keys` specifying the weight for each key.
+        pre_normalize : bool, optional
+            Flag indicating whether to normalize each keyvector before taking mean.
+            If False, individual keyvector will not be normalized.
+        post_normalize: bool, optional
+            Flag indicating whether to normalize the final mean vector.
+            If True, normalized mean vector will be return.
+        ignore_missing : bool, optional
+            If False, will raise error if a key doesn't exist in vocabulary.
+
+        Returns
+        -------
+
+        numpy.ndarray
+            Mean vector for the list of keys.
+
+        Raises
+        ------
+
+        ValueError
+            If the size of the list of `keys` and `weights` doesn't match.
+        KeyError
+            If any of the key doesn't exist in vocabulary and `ignore_missing` is false.
+
+        """
+        if len(keys) == 0:
+            raise ValueError("cannot compute mean with no input")
+        if isinstance(weights, list):
+            weights = np.array(weights)
+        if weights is None:
+            weights = np.ones(len(keys))
+        if len(keys) != weights.shape[0]:  # weights is a 1-D numpy array
+            raise ValueError(
+                "keys and weights array must have same number of elements"
+            )
+
+        mean = np.zeros(self.vector_size, self.vectors.dtype)
+
+        total_weight = 0
+        for idx, key in enumerate(keys):
+            if isinstance(key, ndarray):
+                mean += weights[idx] * key
+                total_weight += abs(weights[idx])
+            elif self.__contains__(key):
+                vec = self.get_vector(key, norm=pre_normalize)
+                mean += weights[idx] * vec
+                total_weight += abs(weights[idx])
+            elif not ignore_missing:
+                raise KeyError(f"Key '{key}' not present in vocabulary")
+
+        if(total_weight > 0):
+            mean = mean / total_weight
+        if post_normalize:
+            mean = matutils.unitvec(mean).astype(REAL)
+        return mean
 
     def add_vector(self, key, vector):
         """Add one new vector at the given key, into existing slot if available.
@@ -714,10 +787,10 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        positive : list of (str or int or ndarray), optional
-            List of keys that contribute positively.
-        negative : list of (str or int or ndarray), optional
-            List of keys that contribute negatively.
+        positive : list of (str or int or ndarray) or list of ((str,float) or (int,float) or (ndarray,float)), optional
+            List of keys that contribute positively. If tuple, second element specifies the weight (default `1.0`)
+        negative : list of (str or int or ndarray) or list of ((str,float) or (int,float) or (ndarray,float)), optional
+            List of keys that contribute negatively. If tuple, second element specifies the weight (default `-1.0`)
         topn : int or None, optional
             Number of top-N similar keys to return, when `topn` is int. When `topn` is None,
             then similarities for all keys are returned.
@@ -755,27 +828,20 @@ class KeyedVectors(utils.SaveLoad):
             clip_end = restrict_vocab
 
         # add weights for each key, if not already present; default to 1.0 for positive and -1.0 for negative keys
-        positive = [
-            (item, 1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
-            for item in positive
-        ]
-        negative = [
-            (item, -1.0) if isinstance(item, _EXTENDED_KEY_TYPES) else item
-            for item in negative
-        ]
+        keys = []
+        weight = np.concatenate((np.ones(len(positive)), -1.0 * np.ones(len(negative))))
+        for idx, item in enumerate(positive + negative):
+            if isinstance(item, _EXTENDED_KEY_TYPES):
+                keys.append(item)
+            else:
+                keys.append(item[0])
+                weight[idx] = item[1]
 
         # compute the weighted average of all keys
-        all_keys, mean = set(), []
-        for key, weight in positive + negative:
-            if isinstance(key, ndarray):
-                mean.append(weight * key)
-            else:
-                mean.append(weight * self.get_vector(key, norm=True))
-                if self.has_index_for(key):
-                    all_keys.add(self.get_index(key))
-        if not mean:
-            raise ValueError("cannot compute similarity with no input")
-        mean = matutils.unitvec(array(mean).mean(axis=0)).astype(REAL)
+        mean = self.get_mean_vector(keys, weight, pre_normalize=True, post_normalize=True, ignore_missing=False)
+        all_keys = [
+            self.get_index(key) for key in keys if isinstance(key, _KEY_TYPES) and self.has_index_for(key)
+        ]
 
         if indexer is not None and isinstance(topn, int):
             return indexer.most_similar(mean, topn)
@@ -943,7 +1009,9 @@ class KeyedVectors(utils.SaveLoad):
         # Compute WMD.
         return emd(d1, d2, distance_matrix)
 
-    def most_similar_cosmul(self, positive=None, negative=None, topn=10):
+    def most_similar_cosmul(
+            self, positive=None, negative=None, topn=10, restrict_vocab=None
+        ):
         """Find the top-N most similar words, using the multiplicative combination objective,
         proposed by `Omer Levy and Yoav Goldberg "Linguistic Regularities in Sparse and Explicit Word Representations"
         <http://www.aclweb.org/anthology/W14-1618>`_. Positive words still contribute positively towards the similarity,
@@ -956,6 +1024,9 @@ class KeyedVectors(utils.SaveLoad):
         With a single positive example, rankings will be the same as in the default
         :meth:`~gensim.models.keyedvectors.KeyedVectors.most_similar`.
 
+        Allows calls like most_similar_cosmul('dog', 'cat'), as a shorthand for
+        most_similar_cosmul(['dog'], ['cat']) where 'dog' is positive and 'cat' negative
+
         Parameters
         ----------
         positive : list of str, optional
@@ -965,6 +1036,11 @@ class KeyedVectors(utils.SaveLoad):
         topn : int or None, optional
             Number of top-N similar words to return, when `topn` is int. When `topn` is None,
             then similarities for all words are returned.
+        restrict_vocab : int or None, optional
+            Optional integer which limits the range of vectors which are searched for most-similar values.
+            For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
+            This may be meaningful if vocabulary is sorted by descending frequency.
+
 
         Returns
         -------
@@ -982,7 +1058,14 @@ class KeyedVectors(utils.SaveLoad):
         positive = _ensure_list(positive)
         negative = _ensure_list(negative)
 
-        self.fill_norms()
+        self.init_sims()
+
+        if isinstance(positive, str):
+            # allow calls like most_similar_cosmul('dog'), as a shorthand for most_similar_cosmul(['dog'])
+            positive = [positive]
+
+        if isinstance(negative, str):
+            negative = [negative]
 
         all_words = {
             self.get_index(word) for word in positive + negative
@@ -1039,7 +1122,7 @@ class KeyedVectors(utils.SaveLoad):
         if not used_words:
             raise ValueError("cannot select a word from an empty list")
         vectors = vstack([self.get_vector(word, norm=use_norm) for word in used_words]).astype(REAL)
-        mean = matutils.unitvec(vectors.mean(axis=0)).astype(REAL)
+        mean = self.get_mean_vector(vectors, post_normalize=True)
         dists = dot(vectors, mean)
         return sorted(zip(dists, used_words), reverse=True)
 
@@ -1171,9 +1254,9 @@ class KeyedVectors(utils.SaveLoad):
         """
         if not(len(ws1) and len(ws2)):
             raise ZeroDivisionError('At least one of the passed list is empty.')
-        v1 = [self[key] for key in ws1]
-        v2 = [self[key] for key in ws2]
-        return dot(matutils.unitvec(array(v1).mean(axis=0)), matutils.unitvec(array(v2).mean(axis=0)))
+        mean1 = self.get_mean_vector(ws1, pre_normalize=False)
+        mean2 = self.get_mean_vector(ws2, pre_normalize=False)
+        return dot(matutils.unitvec(mean1), matutils.unitvec(mean2))
 
     @staticmethod
     def _log_evaluate_word_analogies(section):
@@ -1202,7 +1285,9 @@ class KeyedVectors(utils.SaveLoad):
         logger.info("%s: %.1f%% (%i/%i)", section['section'], 100.0 * score, correct, correct + incorrect)
         return score
 
-    def evaluate_word_analogies(self, analogies, restrict_vocab=300000, case_insensitive=True, dummy4unknown=False):
+    def evaluate_word_analogies(
+            self, analogies, restrict_vocab=300000, case_insensitive=True,
+            dummy4unknown=False, similarity_function='most_similar'):
         """Compute performance of the model on an analogy test set.
 
         The accuracy is reported (printed to log and returned as a score) for each section separately,
@@ -1228,6 +1313,8 @@ class KeyedVectors(utils.SaveLoad):
         dummy4unknown : bool, optional
             If True - produce zero accuracies for 4-tuples with out-of-vocabulary words.
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
+        similarity_function : str, optional
+            Function name used for similarity calculation.
 
         Returns
         -------
@@ -1283,6 +1370,7 @@ class KeyedVectors(utils.SaveLoad):
                     predicted = None
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
+
                     sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
                     self.key_to_index = original_key_to_index
                     for element in sims:
@@ -1334,7 +1422,8 @@ class KeyedVectors(utils.SaveLoad):
         logger.info('Pairs with unknown words ratio: %.1f%%', oov)
 
     def evaluate_word_pairs(
-            self, pairs, delimiter='\t', restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
+            self, pairs, delimiter='\t', encoding='utf8',
+            restrict_vocab=300000, case_insensitive=True, dummy4unknown=False,
         ):
         """Compute correlation of the model with human similarity judgments.
 
@@ -1385,16 +1474,12 @@ class KeyedVectors(utils.SaveLoad):
         similarity_model = []
         oov = 0
 
-        original_key_to_index = self.key_to_index
-        self.key_to_index = ok_vocab
-
-        with utils.open(pairs, 'rb') as fin:
-            for line_no, line in enumerate(fin):
-                line = utils.to_unicode(line)
-                if line.startswith('#'):
-                    # May be a comment
-                    continue
-                else:
+        original_key_to_index, self.key_to_index = self.key_to_index, ok_vocab
+        try:
+            with utils.open(pairs, encoding=encoding) as fin:
+                for line_no, line in enumerate(fin):
+                    if not line or line.startswith('#'):  # Ignore lines with comments.
+                        continue
                     try:
                         if case_insensitive:
                             a, b, sim = [word.upper() for word in line.split(delimiter)]
@@ -1404,19 +1489,27 @@ class KeyedVectors(utils.SaveLoad):
                     except (ValueError, TypeError):
                         logger.info('Skipping invalid line #%d in %s', line_no, pairs)
                         continue
+
                     if a not in ok_vocab or b not in ok_vocab:
                         oov += 1
                         if dummy4unknown:
                             logger.debug('Zero similarity for line #%d with OOV words: %s', line_no, line.strip())
                             similarity_model.append(0.0)
                             similarity_gold.append(sim)
-                            continue
                         else:
-                            logger.debug('Skipping line #%d with OOV words: %s', line_no, line.strip())
-                            continue
+                            logger.info('Skipping line #%d with OOV words: %s', line_no, line.strip())
+                        continue
                     similarity_gold.append(sim)  # Similarity from the dataset
                     similarity_model.append(self.similarity(a, b))  # Similarity from the model
-        self.key_to_index = original_key_to_index
+        finally:
+            self.key_to_index = original_key_to_index
+
+        assert len(similarity_gold) == len(similarity_model)
+        if not similarity_gold:
+            raise ValueError(
+                f"No valid similarity judgements found in {pairs}: either invalid format or "
+                f"all are out-of-vocabulary in {self}"
+            )
         spearman = stats.spearmanr(similarity_gold, similarity_model)
         pearson = stats.pearsonr(similarity_gold, similarity_model)
         if dummy4unknown:
@@ -1833,7 +1926,7 @@ def _add_word_to_kv(kv, counts, word, weights, vocab_size):
     kv.set_vecattr(word, 'count', word_count)
 
 
-def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors):
+def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors, encoding):
     start = 0
     processed_words = 0
     bytes_per_vector = vector_size * dtype(REAL).itemsize
@@ -1846,7 +1939,7 @@ def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unico
         if i_space == -1 or (len(chunk) - i_vector) < bytes_per_vector:
             break
 
-        word = chunk[start:i_space].decode("utf-8", errors=unicode_errors)
+        word = chunk[start:i_space].decode(encoding, errors=unicode_errors)
         # Some binary files are reported to have obsolete new line in the beginning of word, remove it
         word = word.lstrip('\n')
         vector = frombuffer(chunk, offset=i_vector, count=vector_size, dtype=REAL).astype(datatype)
@@ -1857,7 +1950,10 @@ def _add_bytes_to_kv(kv, counts, chunk, vocab_size, vector_size, datatype, unico
     return processed_words, chunk[start:]
 
 
-def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size):
+def _word2vec_read_binary(
+        fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+        encoding="utf-8",
+    ):
     chunk = b''
     tot_processed_words = 0
 
@@ -1865,7 +1961,7 @@ def _word2vec_read_binary(fin, kv, counts, vocab_size, vector_size, datatype, un
         new_chunk = fin.read(binary_chunk_size)
         chunk += new_chunk
         processed_words, chunk = _add_bytes_to_kv(
-            kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors)
+            kv, counts, chunk, vocab_size, vector_size, datatype, unicode_errors, encoding)
         tot_processed_words += processed_words
         if len(new_chunk) < binary_chunk_size:
             break
@@ -1970,7 +2066,7 @@ def _load_word2vec_format(
 
         if binary:
             _word2vec_read_binary(
-                fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size,
+                fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, binary_chunk_size, encoding
             )
         else:
             _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unicode_errors, encoding)

@@ -452,8 +452,10 @@ def extract_pages(f, filter_namespaces=False, filter_articles=None):
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
-                    token_max_len=TOKEN_MAX_LEN, lower=True):
+def process_article(
+        args, tokenizer_func=tokenize, token_min_len=TOKEN_MIN_LEN,
+        token_max_len=TOKEN_MAX_LEN, lower=True,
+    ):
     """Parse a Wikipedia article, extract all tokens.
 
     Notes
@@ -525,7 +527,7 @@ def _process_article(args):
 
     return process_article(
         args, tokenizer_func=tokenizer_func, token_min_len=token_min_len,
-        token_max_len=token_max_len, lower=lower
+        token_max_len=token_max_len, lower=lower,
     )
 
 
@@ -567,9 +569,11 @@ class WikiCorpus(TextCorpus):
         >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
-    def __init__(self, fname, processes=None, lemmatize=None, dictionary=None,
-                 filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
-                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None):
+    def __init__(
+            self, fname, processes=None, lemmatize=None, dictionary=None, metadata=False,
+            filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
+            token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, filter_articles=None,
+        ):
         """Initialize the corpus.
 
         Unless a dictionary is provided, this scans the corpus once,
@@ -602,6 +606,9 @@ class WikiCorpus(TextCorpus):
             If set, each XML article element will be passed to this callable before being processed. Only articles
             where the callable returns an XML element are processed, returning None allows filtering out
             some articles based on customised rules.
+        metadata: bool
+            Have the `get_texts()` method yield `(content_tokens, (page_id, page_title))` tuples, instead
+            of just `content_tokens`.
 
         Warnings
         --------
@@ -618,7 +625,7 @@ class WikiCorpus(TextCorpus):
         self.fname = fname
         self.filter_namespaces = filter_namespaces
         self.filter_articles = filter_articles
-        self.metadata = False
+        self.metadata = metadata
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes

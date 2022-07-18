@@ -204,46 +204,6 @@ don't tend to be useful, and the dataset contains a lot of them.
 
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/feature_extraction/image.py:167: DeprecationWarning: `np.int` is a deprecated alias for the builtin `int`. To silence this warning, use `int` by itself. Doing this will not modify any behavior and is safe. When replacing `np.int`, you may wish to use e.g. `np.int64` or `np.int32` to specify the precision. If you wish to review your current use, check the release note link for additional information.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      dtype=np.int):
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:35: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=np.finfo(np.float).eps,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:597: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=np.finfo(np.float).eps, copy_X=True, fit_path=True,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:836: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=np.finfo(np.float).eps, copy_X=True, fit_path=True,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:862: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=np.finfo(np.float).eps, positive=False):
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1074: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      max_n_alphas=1000, n_jobs=1, eps=np.finfo(np.float).eps,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1306: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      max_n_alphas=1000, n_jobs=1, eps=np.finfo(np.float).eps,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/least_angle.py:1442: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=np.finfo(np.float).eps, copy_X=True, positive=False):
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/randomized_l1.py:152: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      precompute=False, eps=np.finfo(np.float).eps,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/randomized_l1.py:318: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=np.finfo(np.float).eps, random_state=None,
-    /home/jonaschn/.pyenv/versions/anaconda3-5.3.1/lib/python3.7/site-packages/sklearn/linear_model/randomized_l1.py:575: DeprecationWarning: `np.float` is a deprecated alias for the builtin `float`. To silence this warning, use `float` by itself. Doing this will not modify any behavior and is safe. If you specifically wanted the numpy scalar type, use `np.float64` here.
-    Deprecated in NumPy 1.20; for more details and guidance: https://numpy.org/devdocs/release/1.20.0-notes.html#deprecations
-      eps=4 * np.finfo(np.float).eps, n_jobs=1,
-
 
 
 
@@ -315,13 +275,11 @@ original data, because we would like to keep the words "machine" and
 
  .. code-block:: none
 
-    /home/jonaschn/Projects/gensim/gensim/similarities/__init__.py:11: UserWarning: The gensim.similarities.levenshtein submodule is disabled, because the optional Levenshtein package <https://pypi.org/project/python-Levenshtein/> is unavailable. Install Levenhstein (e.g. `pip install python-Levenshtein`) to suppress this warning.
-      "The gensim.similarities.levenshtein submodule is disabled, because the optional "
-    2021-03-19 14:09:53,817 : INFO : collecting all words and their counts
-    2021-03-19 14:09:53,817 : INFO : PROGRESS: at sentence #0, processed 0 words and 0 word types
-    2021-03-19 14:09:59,172 : INFO : collected 1120198 token types (unigram + bigrams) from a corpus of 4629808 words and 1740 sentences
-    2021-03-19 14:09:59,172 : INFO : merged Phrases<1120198 vocab, min_count=20, threshold=10.0, max_vocab_size=40000000>
-    2021-03-19 14:09:59,190 : INFO : Phrases lifecycle event {'msg': 'built Phrases<1120198 vocab, min_count=20, threshold=10.0, max_vocab_size=40000000> in 5.36s', 'datetime': '2021-03-19T14:09:59.189253', 'gensim': '4.0.0.rc1', 'python': '3.7.0 (default, Jun 28 2018, 13:15:42) \n[GCC 7.2.0]', 'platform': 'Linux-4.15.0-136-generic-x86_64-with-debian-buster-sid', 'event': 'created'}
+    2022-04-22 17:42:29,962 : INFO : collecting all words and their counts
+    2022-04-22 17:42:29,963 : INFO : PROGRESS: at sentence #0, processed 0 words and 0 word types
+    2022-04-22 17:42:37,368 : INFO : collected 1120198 token types (unigram + bigrams) from a corpus of 4629808 words and 1740 sentences
+    2022-04-22 17:42:37,368 : INFO : merged Phrases<1120198 vocab, min_count=20, threshold=10.0, max_vocab_size=40000000>
+    2022-04-22 17:42:37,426 : INFO : Phrases lifecycle event {'msg': 'built Phrases<1120198 vocab, min_count=20, threshold=10.0, max_vocab_size=40000000> in 7.41s', 'datetime': '2022-04-22T17:42:37.369061', 'gensim': '4.1.3.dev0', 'python': '3.9.7 (default, Sep  3 2021, 12:37:55) \n[Clang 12.0.5 (clang-1205.0.22.9)]', 'platform': 'macOS-11.6.5-x86_64-i386-64bit', 'event': 'created'}
 
 
 
@@ -358,12 +316,12 @@ frequency, or maybe combining that with this approach.
 
  .. code-block:: none
 
-    2021-03-19 14:10:07,280 : INFO : adding document #0 to Dictionary(0 unique tokens: [])
-    2021-03-19 14:10:09,906 : INFO : built Dictionary(79429 unique tokens: ['1ooooo', '1st', '25oo', '2o00', '4ooo']...) from 1740 documents (total 4953968 corpus positions)
-    2021-03-19 14:10:09,906 : INFO : Dictionary lifecycle event {'msg': "built Dictionary(79429 unique tokens: ['1ooooo', '1st', '25oo', '2o00', '4ooo']...) from 1740 documents (total 4953968 corpus positions)", 'datetime': '2021-03-19T14:10:09.906597', 'gensim': '4.0.0.rc1', 'python': '3.7.0 (default, Jun 28 2018, 13:15:42) \n[GCC 7.2.0]', 'platform': 'Linux-4.15.0-136-generic-x86_64-with-debian-buster-sid', 'event': 'created'}
-    2021-03-19 14:10:10,101 : INFO : discarding 70785 tokens: [('1ooooo', 1), ('25oo', 2), ('2o00', 6), ('4ooo', 2), ('64k', 6), ('a', 1740), ('aaditional', 1), ('above', 1114), ('abstract', 1740), ('acase', 1)]...
-    2021-03-19 14:10:10,102 : INFO : keeping 8644 tokens which were in no less than 20 and no more than 870 (=50.0%) documents
-    2021-03-19 14:10:10,128 : INFO : resulting dictionary: Dictionary(8644 unique tokens: ['1st', '5oo', '7th', 'a2', 'a_well']...)
+    2022-04-22 17:42:50,414 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
+    2022-04-22 17:42:54,959 : INFO : built Dictionary<79429 unique tokens: ['1ooooo', '1st', '25oo', '2o00', '4ooo']...> from 1740 documents (total 4953968 corpus positions)
+    2022-04-22 17:42:54,960 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<79429 unique tokens: ['1ooooo', '1st', '25oo', '2o00', '4ooo']...> from 1740 documents (total 4953968 corpus positions)", 'datetime': '2022-04-22T17:42:54.960496', 'gensim': '4.1.3.dev0', 'python': '3.9.7 (default, Sep  3 2021, 12:37:55) \n[Clang 12.0.5 (clang-1205.0.22.9)]', 'platform': 'macOS-11.6.5-x86_64-i386-64bit', 'event': 'created'}
+    2022-04-22 17:42:55,733 : INFO : discarding 70785 tokens: [('1ooooo', 1), ('25oo', 2), ('2o00', 6), ('4ooo', 2), ('64k', 6), ('a', 1740), ('aaditional', 1), ('above', 1114), ('abstract', 1740), ('acase', 1)]...
+    2022-04-22 17:42:55,734 : INFO : keeping 8644 tokens which were in no less than 20 and no more than 870 (=50.0%) documents
+    2022-04-22 17:42:55,779 : INFO : resulting dictionary: Dictionary<8644 unique tokens: ['1st', '5oo', '7th', 'a2', 'a_well']...>
 
 
 
@@ -479,7 +437,7 @@ the model that we usually would have to specify explicitly.
     iterations = 400
     eval_every = None  # Don't evaluate model perplexity, takes too much time.
 
-    # Make a index to word dictionary.
+    # Make an index to word dictionary.
     temp = dictionary[0]  # This is only to "load" the dictionary.
     id2word = dictionary.id2token
 
@@ -505,170 +463,170 @@ the model that we usually would have to specify explicitly.
 
  .. code-block:: none
 
-    2021-03-19 14:10:12,273 : INFO : using autotuned alpha, starting with [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-    2021-03-19 14:10:12,278 : INFO : using serial LDA version on this node
-    2021-03-19 14:10:12,478 : INFO : running online (multi-pass) LDA training, 10 topics, 20 passes over the supplied corpus of 1740 documents, updating model once every 1740 documents, evaluating perplexity every 0 documents, iterating 400x with a convergence threshold of 0.001000
-    2021-03-19 14:10:12,482 : INFO : PROGRESS: pass 0, at document #1740/1740
-    2021-03-19 14:10:27,000 : INFO : optimized alpha [0.06386429, 0.07352975, 0.10417274, 0.09618805, 0.09326739, 0.07658379, 0.05232423, 0.09257348, 0.05156824, 0.064680815]
-    2021-03-19 14:10:27,050 : INFO : topic #8 (0.052): 0.004*"layer" + 0.004*"action" + 0.003*"generalization" + 0.003*"image" + 0.002*"dynamic" + 0.002*"sample" + 0.002*"optimal" + 0.002*"matrix" + 0.002*"net" + 0.002*"classifier"
-    2021-03-19 14:10:27,051 : INFO : topic #6 (0.052): 0.006*"image" + 0.005*"hidden" + 0.004*"recognition" + 0.003*"component" + 0.003*"field" + 0.003*"dynamic" + 0.002*"map" + 0.002*"solution" + 0.002*"net" + 0.002*"generalization"
-    2021-03-19 14:10:27,051 : INFO : topic #4 (0.093): 0.004*"class" + 0.003*"rule" + 0.003*"hidden" + 0.003*"neuron" + 0.003*"layer" + 0.003*"field" + 0.002*"noise" + 0.002*"net" + 0.002*"image" + 0.002*"node"
-    2021-03-19 14:10:27,051 : INFO : topic #3 (0.096): 0.006*"image" + 0.003*"gaussian" + 0.003*"layer" + 0.003*"neuron" + 0.003*"field" + 0.003*"matrix" + 0.003*"circuit" + 0.003*"class" + 0.002*"threshold" + 0.002*"recognition"
-    2021-03-19 14:10:27,051 : INFO : topic #2 (0.104): 0.005*"neuron" + 0.004*"image" + 0.004*"control" + 0.004*"layer" + 0.004*"hidden" + 0.003*"recognition" + 0.003*"object" + 0.003*"signal" + 0.003*"response" + 0.003*"class"
-    2021-03-19 14:10:27,051 : INFO : topic diff=1.190941, rho=1.000000
-    2021-03-19 14:10:27,063 : INFO : PROGRESS: pass 1, at document #1740/1740
-    2021-03-19 14:10:36,200 : INFO : optimized alpha [0.05691391, 0.05848132, 0.0764488, 0.07592632, 0.07411411, 0.06465285, 0.046124753, 0.06826302, 0.043833494, 0.05291034]
-    2021-03-19 14:10:36,207 : INFO : topic #8 (0.044): 0.007*"action" + 0.004*"robot" + 0.004*"control" + 0.003*"optimal" + 0.003*"policy" + 0.003*"reinforcement" + 0.003*"generalization" + 0.003*"dynamic" + 0.003*"layer" + 0.003*"trajectory"
-    2021-03-19 14:10:36,207 : INFO : topic #6 (0.046): 0.007*"image" + 0.007*"hidden" + 0.005*"recognition" + 0.003*"hidden_unit" + 0.003*"energy" + 0.003*"component" + 0.003*"map" + 0.003*"generalization" + 0.003*"net" + 0.003*"layer"
-    2021-03-19 14:10:36,207 : INFO : topic #4 (0.074): 0.005*"class" + 0.004*"rule" + 0.003*"hidden" + 0.003*"layer" + 0.003*"net" + 0.003*"classifier" + 0.002*"node" + 0.002*"word" + 0.002*"context" + 0.002*"architecture"
-    2021-03-19 14:10:36,207 : INFO : topic #3 (0.076): 0.007*"image" + 0.004*"circuit" + 0.003*"layer" + 0.003*"field" + 0.003*"analog" + 0.003*"chip" + 0.003*"threshold" + 0.003*"gaussian" + 0.003*"class" + 0.003*"matrix"
-    2021-03-19 14:10:36,208 : INFO : topic #2 (0.076): 0.005*"control" + 0.005*"recognition" + 0.005*"image" + 0.005*"object" + 0.004*"speech" + 0.004*"layer" + 0.004*"signal" + 0.004*"neuron" + 0.004*"hidden" + 0.003*"word"
-    2021-03-19 14:10:36,208 : INFO : topic diff=0.297702, rho=0.577350
-    2021-03-19 14:10:36,218 : INFO : PROGRESS: pass 2, at document #1740/1740
-    2021-03-19 14:10:43,026 : INFO : optimized alpha [0.05407287, 0.051192053, 0.06480061, 0.06461501, 0.06359977, 0.05890888, 0.042885136, 0.056735355, 0.039943077, 0.04743726]
-    2021-03-19 14:10:43,033 : INFO : topic #8 (0.040): 0.008*"action" + 0.006*"control" + 0.005*"robot" + 0.005*"reinforcement" + 0.005*"policy" + 0.004*"optimal" + 0.004*"dynamic" + 0.003*"trajectory" + 0.003*"reinforcement_learning" + 0.003*"controller"
-    2021-03-19 14:10:43,033 : INFO : topic #6 (0.043): 0.008*"image" + 0.008*"hidden" + 0.005*"recognition" + 0.004*"hidden_unit" + 0.003*"energy" + 0.003*"layer" + 0.003*"net" + 0.003*"generalization" + 0.003*"map" + 0.003*"solution"
-    2021-03-19 14:10:43,034 : INFO : topic #4 (0.064): 0.005*"class" + 0.004*"rule" + 0.004*"hidden" + 0.004*"layer" + 0.003*"net" + 0.003*"classifier" + 0.003*"node" + 0.003*"word" + 0.003*"context" + 0.002*"architecture"
-    2021-03-19 14:10:43,034 : INFO : topic #3 (0.065): 0.008*"image" + 0.004*"circuit" + 0.004*"chip" + 0.004*"analog" + 0.004*"threshold" + 0.004*"layer" + 0.003*"field" + 0.003*"node" + 0.003*"class" + 0.003*"net"
-    2021-03-19 14:10:43,034 : INFO : topic #2 (0.065): 0.006*"recognition" + 0.006*"speech" + 0.005*"control" + 0.005*"object" + 0.005*"image" + 0.005*"layer" + 0.005*"signal" + 0.004*"word" + 0.004*"hidden" + 0.003*"classification"
-    2021-03-19 14:10:43,034 : INFO : topic diff=0.256329, rho=0.500000
-    2021-03-19 14:10:43,044 : INFO : PROGRESS: pass 3, at document #1740/1740
-    2021-03-19 14:10:48,846 : INFO : optimized alpha [0.053115886, 0.046841364, 0.05838778, 0.05814584, 0.05758646, 0.05547897, 0.040862918, 0.05055692, 0.037515096, 0.044183854]
-    2021-03-19 14:10:48,853 : INFO : topic #8 (0.038): 0.010*"action" + 0.008*"control" + 0.006*"reinforcement" + 0.006*"robot" + 0.005*"policy" + 0.005*"optimal" + 0.004*"controller" + 0.004*"dynamic" + 0.004*"reinforcement_learning" + 0.004*"trajectory"
-    2021-03-19 14:10:48,853 : INFO : topic #6 (0.041): 0.009*"hidden" + 0.008*"image" + 0.006*"recognition" + 0.004*"hidden_unit" + 0.004*"layer" + 0.004*"energy" + 0.003*"net" + 0.003*"generalization" + 0.003*"field" + 0.003*"map"
-    2021-03-19 14:10:48,853 : INFO : topic #4 (0.058): 0.005*"class" + 0.005*"hidden" + 0.004*"rule" + 0.004*"layer" + 0.004*"net" + 0.004*"classifier" + 0.003*"node" + 0.003*"propagation" + 0.003*"architecture" + 0.003*"context"
-    2021-03-19 14:10:48,854 : INFO : topic #3 (0.058): 0.009*"image" + 0.005*"chip" + 0.005*"circuit" + 0.005*"analog" + 0.004*"threshold" + 0.004*"layer" + 0.003*"field" + 0.003*"bit" + 0.003*"node" + 0.003*"net"
-    2021-03-19 14:10:48,854 : INFO : topic #2 (0.058): 0.007*"recognition" + 0.007*"speech" + 0.006*"object" + 0.006*"image" + 0.005*"word" + 0.005*"layer" + 0.005*"control" + 0.005*"signal" + 0.004*"hidden" + 0.003*"face"
-    2021-03-19 14:10:48,854 : INFO : topic diff=0.230126, rho=0.447214
-    2021-03-19 14:10:48,864 : INFO : PROGRESS: pass 4, at document #1740/1740
-    2021-03-19 14:10:54,097 : INFO : optimized alpha [0.052869715, 0.044183813, 0.0546517, 0.054109406, 0.053801704, 0.053375203, 0.0394719, 0.04672288, 0.035995413, 0.04192354]
-    2021-03-19 14:10:54,105 : INFO : topic #8 (0.036): 0.010*"action" + 0.010*"control" + 0.007*"reinforcement" + 0.006*"robot" + 0.006*"policy" + 0.005*"optimal" + 0.005*"controller" + 0.005*"dynamic" + 0.004*"reinforcement_learning" + 0.004*"trajectory"
-    2021-03-19 14:10:54,105 : INFO : topic #6 (0.039): 0.009*"hidden" + 0.008*"image" + 0.006*"recognition" + 0.005*"hidden_unit" + 0.004*"layer" + 0.004*"energy" + 0.003*"net" + 0.003*"digit" + 0.003*"field" + 0.003*"generalization"
-    2021-03-19 14:10:54,105 : INFO : topic #4 (0.054): 0.005*"class" + 0.005*"hidden" + 0.005*"rule" + 0.005*"net" + 0.005*"layer" + 0.004*"classifier" + 0.004*"node" + 0.003*"propagation" + 0.003*"architecture" + 0.003*"sequence"
-    2021-03-19 14:10:54,106 : INFO : topic #3 (0.054): 0.009*"image" + 0.006*"chip" + 0.006*"circuit" + 0.006*"analog" + 0.004*"threshold" + 0.004*"layer" + 0.003*"field" + 0.003*"bit" + 0.003*"node" + 0.003*"net"
-    2021-03-19 14:10:54,106 : INFO : topic #2 (0.055): 0.008*"recognition" + 0.008*"speech" + 0.007*"object" + 0.006*"word" + 0.006*"image" + 0.005*"layer" + 0.005*"signal" + 0.005*"control" + 0.004*"hidden" + 0.004*"face"
-    2021-03-19 14:10:54,106 : INFO : topic diff=0.214075, rho=0.408248
-    2021-03-19 14:10:54,116 : INFO : PROGRESS: pass 5, at document #1740/1740
-    2021-03-19 14:10:59,195 : INFO : optimized alpha [0.05290075, 0.042460088, 0.052235015, 0.051339325, 0.05138389, 0.05190376, 0.038578223, 0.044312876, 0.035001513, 0.040355477]
-    2021-03-19 14:10:59,202 : INFO : topic #8 (0.035): 0.011*"control" + 0.011*"action" + 0.007*"reinforcement" + 0.006*"policy" + 0.006*"robot" + 0.005*"controller" + 0.005*"optimal" + 0.005*"dynamic" + 0.005*"reinforcement_learning" + 0.005*"trajectory"
-    2021-03-19 14:10:59,202 : INFO : topic #6 (0.039): 0.010*"hidden" + 0.008*"image" + 0.006*"recognition" + 0.005*"hidden_unit" + 0.005*"layer" + 0.004*"energy" + 0.004*"digit" + 0.004*"character" + 0.004*"net" + 0.003*"field"
-    2021-03-19 14:10:59,203 : INFO : topic #5 (0.052): 0.021*"neuron" + 0.012*"cell" + 0.007*"response" + 0.007*"spike" + 0.006*"synaptic" + 0.006*"stimulus" + 0.005*"activity" + 0.005*"firing" + 0.005*"signal" + 0.004*"memory"
-    2021-03-19 14:10:59,203 : INFO : topic #2 (0.052): 0.009*"recognition" + 0.008*"speech" + 0.007*"object" + 0.007*"word" + 0.006*"image" + 0.006*"signal" + 0.005*"layer" + 0.004*"hidden" + 0.004*"control" + 0.004*"face"
-    2021-03-19 14:10:59,203 : INFO : topic #0 (0.053): 0.005*"gaussian" + 0.005*"noise" + 0.005*"matrix" + 0.005*"hidden" + 0.004*"approximation" + 0.004*"sample" + 0.004*"estimate" + 0.004*"variance" + 0.004*"bayesian" + 0.003*"prior"
-    2021-03-19 14:10:59,203 : INFO : topic diff=0.202368, rho=0.377964
-    2021-03-19 14:10:59,214 : INFO : PROGRESS: pass 6, at document #1740/1740
-    2021-03-19 14:11:04,013 : INFO : optimized alpha [0.053310633, 0.041254587, 0.050613035, 0.04936813, 0.049790192, 0.05083673, 0.038025398, 0.042830754, 0.034370847, 0.039269455]
-    2021-03-19 14:11:04,020 : INFO : topic #8 (0.034): 0.012*"control" + 0.011*"action" + 0.008*"reinforcement" + 0.007*"policy" + 0.006*"robot" + 0.006*"controller" + 0.005*"optimal" + 0.005*"dynamic" + 0.005*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:04,020 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"recognition" + 0.005*"hidden_unit" + 0.005*"layer" + 0.004*"energy" + 0.004*"character" + 0.004*"digit" + 0.004*"net" + 0.004*"field"
-    2021-03-19 14:11:04,021 : INFO : topic #2 (0.051): 0.010*"recognition" + 0.009*"speech" + 0.007*"word" + 0.007*"object" + 0.007*"image" + 0.006*"signal" + 0.006*"layer" + 0.004*"hidden" + 0.004*"face" + 0.004*"classification"
-    2021-03-19 14:11:04,021 : INFO : topic #5 (0.051): 0.021*"neuron" + 0.012*"cell" + 0.007*"response" + 0.007*"spike" + 0.006*"synaptic" + 0.006*"stimulus" + 0.006*"activity" + 0.005*"firing" + 0.005*"signal" + 0.004*"frequency"
-    2021-03-19 14:11:04,021 : INFO : topic #0 (0.053): 0.006*"gaussian" + 0.005*"noise" + 0.005*"matrix" + 0.005*"hidden" + 0.004*"approximation" + 0.004*"estimate" + 0.004*"sample" + 0.004*"bayesian" + 0.004*"variance" + 0.004*"prior"
-    2021-03-19 14:11:04,021 : INFO : topic diff=0.192693, rho=0.353553
-    2021-03-19 14:11:04,032 : INFO : PROGRESS: pass 7, at document #1740/1740
-    2021-03-19 14:11:08,718 : INFO : optimized alpha [0.053891532, 0.040544394, 0.049499568, 0.047873296, 0.04881682, 0.0500006, 0.037689965, 0.04181969, 0.03393164, 0.038607482]
-    2021-03-19 14:11:08,725 : INFO : topic #8 (0.034): 0.013*"control" + 0.012*"action" + 0.008*"reinforcement" + 0.007*"policy" + 0.006*"robot" + 0.006*"controller" + 0.005*"dynamic" + 0.005*"optimal" + 0.005*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:08,725 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"recognition" + 0.005*"layer" + 0.005*"hidden_unit" + 0.005*"character" + 0.004*"energy" + 0.004*"digit" + 0.004*"net" + 0.004*"field"
-    2021-03-19 14:11:08,726 : INFO : topic #2 (0.049): 0.011*"recognition" + 0.009*"speech" + 0.008*"word" + 0.007*"object" + 0.007*"image" + 0.006*"signal" + 0.006*"layer" + 0.004*"face" + 0.004*"hidden" + 0.004*"classification"
-    2021-03-19 14:11:08,726 : INFO : topic #5 (0.050): 0.022*"neuron" + 0.012*"cell" + 0.007*"response" + 0.007*"spike" + 0.007*"synaptic" + 0.006*"stimulus" + 0.006*"activity" + 0.005*"firing" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:08,726 : INFO : topic #0 (0.054): 0.006*"gaussian" + 0.005*"noise" + 0.005*"matrix" + 0.004*"approximation" + 0.004*"hidden" + 0.004*"estimate" + 0.004*"sample" + 0.004*"bayesian" + 0.004*"variance" + 0.004*"prior"
-    2021-03-19 14:11:08,726 : INFO : topic diff=0.183651, rho=0.333333
-    2021-03-19 14:11:08,737 : INFO : PROGRESS: pass 8, at document #1740/1740
-    2021-03-19 14:11:13,510 : INFO : optimized alpha [0.0545965, 0.040113404, 0.048812777, 0.0467447, 0.048271947, 0.049433745, 0.03755086, 0.04124074, 0.033623673, 0.038269136]
-    2021-03-19 14:11:13,518 : INFO : topic #8 (0.034): 0.014*"control" + 0.012*"action" + 0.008*"reinforcement" + 0.007*"policy" + 0.006*"controller" + 0.006*"robot" + 0.006*"dynamic" + 0.006*"optimal" + 0.005*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:13,518 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"recognition" + 0.005*"layer" + 0.005*"hidden_unit" + 0.005*"character" + 0.004*"energy" + 0.004*"digit" + 0.004*"net" + 0.004*"field"
-    2021-03-19 14:11:13,518 : INFO : topic #2 (0.049): 0.011*"recognition" + 0.009*"speech" + 0.008*"word" + 0.008*"object" + 0.007*"image" + 0.006*"signal" + 0.006*"layer" + 0.004*"face" + 0.004*"classification" + 0.004*"hidden"
-    2021-03-19 14:11:13,518 : INFO : topic #5 (0.049): 0.022*"neuron" + 0.013*"cell" + 0.008*"response" + 0.007*"spike" + 0.007*"synaptic" + 0.006*"stimulus" + 0.006*"activity" + 0.006*"firing" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:13,519 : INFO : topic #0 (0.055): 0.006*"gaussian" + 0.005*"noise" + 0.005*"matrix" + 0.004*"approximation" + 0.004*"estimate" + 0.004*"hidden" + 0.004*"sample" + 0.004*"bayesian" + 0.004*"likelihood" + 0.004*"variance"
-    2021-03-19 14:11:13,519 : INFO : topic diff=0.175043, rho=0.316228
-    2021-03-19 14:11:13,530 : INFO : PROGRESS: pass 9, at document #1740/1740
-    2021-03-19 14:11:18,487 : INFO : optimized alpha [0.055368014, 0.039957594, 0.048399936, 0.045934383, 0.04802085, 0.049097233, 0.037513737, 0.040929828, 0.0334422, 0.038141657]
-    2021-03-19 14:11:18,495 : INFO : topic #8 (0.033): 0.014*"control" + 0.012*"action" + 0.008*"reinforcement" + 0.007*"policy" + 0.006*"controller" + 0.006*"robot" + 0.006*"dynamic" + 0.006*"optimal" + 0.005*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:18,495 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"layer" + 0.006*"recognition" + 0.005*"character" + 0.005*"hidden_unit" + 0.004*"digit" + 0.004*"energy" + 0.004*"field" + 0.004*"net"
-    2021-03-19 14:11:18,496 : INFO : topic #2 (0.048): 0.012*"recognition" + 0.010*"speech" + 0.009*"word" + 0.008*"image" + 0.008*"object" + 0.006*"signal" + 0.006*"layer" + 0.004*"face" + 0.004*"classification" + 0.004*"trained"
-    2021-03-19 14:11:18,496 : INFO : topic #5 (0.049): 0.022*"neuron" + 0.013*"cell" + 0.008*"spike" + 0.008*"response" + 0.007*"synaptic" + 0.006*"stimulus" + 0.006*"activity" + 0.006*"firing" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:18,496 : INFO : topic #0 (0.055): 0.006*"gaussian" + 0.005*"noise" + 0.005*"matrix" + 0.005*"estimate" + 0.005*"approximation" + 0.004*"hidden" + 0.004*"sample" + 0.004*"bayesian" + 0.004*"likelihood" + 0.004*"prior"
-    2021-03-19 14:11:18,496 : INFO : topic diff=0.166410, rho=0.301511
-    2021-03-19 14:11:18,507 : INFO : PROGRESS: pass 10, at document #1740/1740
-    2021-03-19 14:11:23,641 : INFO : optimized alpha [0.056234606, 0.039904997, 0.04814231, 0.045396697, 0.048054837, 0.048870783, 0.037563145, 0.04080154, 0.03336996, 0.03815883]
-    2021-03-19 14:11:23,650 : INFO : topic #8 (0.033): 0.015*"control" + 0.012*"action" + 0.008*"reinforcement" + 0.008*"policy" + 0.007*"controller" + 0.006*"robot" + 0.006*"dynamic" + 0.006*"optimal" + 0.005*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:23,651 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"layer" + 0.006*"character" + 0.005*"recognition" + 0.005*"hidden_unit" + 0.004*"digit" + 0.004*"energy" + 0.004*"field" + 0.004*"net"
-    2021-03-19 14:11:23,651 : INFO : topic #2 (0.048): 0.012*"recognition" + 0.010*"speech" + 0.009*"word" + 0.008*"image" + 0.008*"object" + 0.006*"signal" + 0.006*"layer" + 0.005*"face" + 0.004*"classification" + 0.004*"trained"
-    2021-03-19 14:11:23,651 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.013*"cell" + 0.008*"spike" + 0.008*"response" + 0.007*"synaptic" + 0.006*"activity" + 0.006*"stimulus" + 0.006*"firing" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:23,651 : INFO : topic #0 (0.056): 0.006*"gaussian" + 0.005*"noise" + 0.005*"estimate" + 0.005*"matrix" + 0.005*"approximation" + 0.004*"bayesian" + 0.004*"likelihood" + 0.004*"sample" + 0.004*"hidden" + 0.004*"prior"
-    2021-03-19 14:11:23,651 : INFO : topic diff=0.157726, rho=0.288675
-    2021-03-19 14:11:23,663 : INFO : PROGRESS: pass 11, at document #1740/1740
-    2021-03-19 14:11:28,247 : INFO : optimized alpha [0.05706192, 0.039978355, 0.04797657, 0.044978894, 0.048209604, 0.048704833, 0.03767563, 0.04074631, 0.033347335, 0.038310345]
-    2021-03-19 14:11:28,255 : INFO : topic #8 (0.033): 0.015*"control" + 0.012*"action" + 0.008*"reinforcement" + 0.008*"policy" + 0.007*"controller" + 0.006*"robot" + 0.006*"dynamic" + 0.006*"optimal" + 0.006*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:28,256 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"layer" + 0.006*"character" + 0.005*"recognition" + 0.005*"hidden_unit" + 0.004*"digit" + 0.004*"energy" + 0.004*"field" + 0.004*"net"
-    2021-03-19 14:11:28,256 : INFO : topic #4 (0.048): 0.008*"hidden" + 0.007*"net" + 0.006*"layer" + 0.006*"rule" + 0.005*"node" + 0.004*"classifier" + 0.004*"hidden_unit" + 0.004*"class" + 0.004*"propagation" + 0.004*"sequence"
-    2021-03-19 14:11:28,256 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.013*"cell" + 0.008*"spike" + 0.008*"response" + 0.007*"synaptic" + 0.006*"activity" + 0.006*"firing" + 0.006*"stimulus" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:28,256 : INFO : topic #0 (0.057): 0.006*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"matrix" + 0.005*"approximation" + 0.004*"likelihood" + 0.004*"bayesian" + 0.004*"prior" + 0.004*"sample" + 0.004*"hidden"
-    2021-03-19 14:11:28,256 : INFO : topic diff=0.149091, rho=0.277350
-    2021-03-19 14:11:28,268 : INFO : PROGRESS: pass 12, at document #1740/1740
-    2021-03-19 14:11:32,844 : INFO : optimized alpha [0.057841934, 0.040147286, 0.047984846, 0.04466845, 0.048510514, 0.048608452, 0.037831437, 0.04078982, 0.03338453, 0.038538743]
-    2021-03-19 14:11:32,852 : INFO : topic #8 (0.033): 0.015*"control" + 0.012*"action" + 0.008*"reinforcement" + 0.008*"policy" + 0.007*"controller" + 0.006*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:32,852 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"layer" + 0.006*"character" + 0.005*"recognition" + 0.005*"hidden_unit" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"field"
-    2021-03-19 14:11:32,853 : INFO : topic #4 (0.049): 0.008*"hidden" + 0.007*"net" + 0.006*"layer" + 0.006*"rule" + 0.005*"node" + 0.004*"hidden_unit" + 0.004*"classifier" + 0.004*"class" + 0.004*"propagation" + 0.004*"sequence"
-    2021-03-19 14:11:32,853 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.013*"cell" + 0.008*"spike" + 0.008*"response" + 0.007*"synaptic" + 0.006*"firing" + 0.006*"activity" + 0.006*"stimulus" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:32,853 : INFO : topic #0 (0.058): 0.006*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"approximation" + 0.005*"matrix" + 0.004*"likelihood" + 0.004*"bayesian" + 0.004*"prior" + 0.004*"variance" + 0.004*"sample"
-    2021-03-19 14:11:32,853 : INFO : topic diff=0.140596, rho=0.267261
-    2021-03-19 14:11:32,865 : INFO : PROGRESS: pass 13, at document #1740/1740
-    2021-03-19 14:11:37,447 : INFO : optimized alpha [0.058551796, 0.040399875, 0.048106886, 0.044424307, 0.04896659, 0.04858641, 0.03804483, 0.040931225, 0.03344661, 0.038809597]
-    2021-03-19 14:11:37,455 : INFO : topic #8 (0.033): 0.016*"control" + 0.013*"action" + 0.008*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.006*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:37,455 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"layer" + 0.006*"character" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"field"
-    2021-03-19 14:11:37,456 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.013*"cell" + 0.008*"spike" + 0.008*"response" + 0.007*"synaptic" + 0.006*"firing" + 0.006*"activity" + 0.006*"stimulus" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:37,456 : INFO : topic #4 (0.049): 0.008*"hidden" + 0.007*"net" + 0.006*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"classifier" + 0.004*"class" + 0.004*"sequence" + 0.004*"propagation"
-    2021-03-19 14:11:37,456 : INFO : topic #0 (0.059): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"approximation" + 0.005*"matrix" + 0.005*"likelihood" + 0.004*"bayesian" + 0.004*"prior" + 0.004*"variance" + 0.004*"sample"
-    2021-03-19 14:11:37,456 : INFO : topic diff=0.132327, rho=0.258199
-    2021-03-19 14:11:37,467 : INFO : PROGRESS: pass 14, at document #1740/1740
-    2021-03-19 14:11:41,536 : INFO : optimized alpha [0.05925279, 0.040705983, 0.04832607, 0.04427085, 0.049501013, 0.048644915, 0.038285527, 0.04113948, 0.03352695, 0.039150245]
-    2021-03-19 14:11:41,544 : INFO : topic #8 (0.034): 0.016*"control" + 0.013*"action" + 0.009*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.006*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:41,544 : INFO : topic #6 (0.038): 0.010*"hidden" + 0.009*"image" + 0.006*"character" + 0.006*"layer" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"net"
-    2021-03-19 14:11:41,544 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.013*"cell" + 0.008*"spike" + 0.008*"response" + 0.007*"synaptic" + 0.006*"firing" + 0.006*"activity" + 0.006*"stimulus" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:41,545 : INFO : topic #4 (0.050): 0.008*"hidden" + 0.008*"net" + 0.006*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"sequence" + 0.004*"propagation" + 0.004*"architecture" + 0.004*"activation"
-    2021-03-19 14:11:41,545 : INFO : topic #0 (0.059): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"approximation" + 0.005*"likelihood" + 0.005*"matrix" + 0.004*"prior" + 0.004*"bayesian" + 0.004*"variance" + 0.004*"density"
-    2021-03-19 14:11:41,545 : INFO : topic diff=0.124371, rho=0.250000
-    2021-03-19 14:11:41,556 : INFO : PROGRESS: pass 15, at document #1740/1740
-    2021-03-19 14:11:45,592 : INFO : optimized alpha [0.05994643, 0.041028578, 0.048593685, 0.04419364, 0.05009154, 0.048734292, 0.03856185, 0.041424613, 0.033627965, 0.039535556]
-    2021-03-19 14:11:45,600 : INFO : topic #8 (0.034): 0.016*"control" + 0.013*"action" + 0.009*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.007*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.005*"reinforcement_learning"
-    2021-03-19 14:11:45,600 : INFO : topic #6 (0.039): 0.010*"hidden" + 0.009*"image" + 0.006*"character" + 0.006*"layer" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"dynamic"
-    2021-03-19 14:11:45,600 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.014*"cell" + 0.008*"spike" + 0.008*"response" + 0.008*"synaptic" + 0.006*"firing" + 0.006*"activity" + 0.006*"stimulus" + 0.005*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:45,600 : INFO : topic #4 (0.050): 0.008*"hidden" + 0.008*"net" + 0.007*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"sequence" + 0.004*"architecture" + 0.004*"propagation" + 0.004*"activation"
-    2021-03-19 14:11:45,601 : INFO : topic #0 (0.060): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"likelihood" + 0.005*"approximation" + 0.005*"matrix" + 0.004*"prior" + 0.004*"bayesian" + 0.004*"variance" + 0.004*"density"
-    2021-03-19 14:11:45,601 : INFO : topic diff=0.116794, rho=0.242536
-    2021-03-19 14:11:45,611 : INFO : PROGRESS: pass 16, at document #1740/1740
-    2021-03-19 14:11:49,737 : INFO : optimized alpha [0.06068379, 0.041378528, 0.048856508, 0.0441432, 0.05072476, 0.0488511, 0.038870405, 0.041741073, 0.03375229, 0.039979585]
-    2021-03-19 14:11:49,745 : INFO : topic #8 (0.034): 0.016*"control" + 0.013*"action" + 0.009*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.007*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.006*"reinforcement_learning"
-    2021-03-19 14:11:49,745 : INFO : topic #6 (0.039): 0.010*"hidden" + 0.009*"image" + 0.006*"character" + 0.006*"layer" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"dynamic"
-    2021-03-19 14:11:49,745 : INFO : topic #5 (0.049): 0.023*"neuron" + 0.014*"cell" + 0.008*"spike" + 0.008*"response" + 0.008*"synaptic" + 0.006*"firing" + 0.006*"activity" + 0.006*"stimulus" + 0.006*"signal" + 0.005*"frequency"
-    2021-03-19 14:11:49,746 : INFO : topic #4 (0.051): 0.008*"hidden" + 0.008*"net" + 0.007*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"sequence" + 0.004*"architecture" + 0.004*"activation" + 0.004*"propagation"
-    2021-03-19 14:11:49,746 : INFO : topic #0 (0.061): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"likelihood" + 0.005*"approximation" + 0.005*"prior" + 0.004*"bayesian" + 0.004*"matrix" + 0.004*"variance" + 0.004*"density"
-    2021-03-19 14:11:49,746 : INFO : topic diff=0.109661, rho=0.235702
-    2021-03-19 14:11:49,756 : INFO : PROGRESS: pass 17, at document #1740/1740
-    2021-03-19 14:11:53,841 : INFO : optimized alpha [0.061406724, 0.04174132, 0.0491224, 0.044116188, 0.05141323, 0.049025778, 0.03920408, 0.04207979, 0.033907466, 0.04045379]
-    2021-03-19 14:11:53,850 : INFO : topic #8 (0.034): 0.016*"control" + 0.013*"action" + 0.009*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.007*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.006*"reinforcement_learning"
-    2021-03-19 14:11:53,850 : INFO : topic #6 (0.039): 0.010*"hidden" + 0.009*"image" + 0.007*"character" + 0.006*"layer" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"dynamic"
-    2021-03-19 14:11:53,850 : INFO : topic #2 (0.049): 0.014*"recognition" + 0.011*"speech" + 0.010*"word" + 0.010*"image" + 0.008*"object" + 0.006*"signal" + 0.005*"layer" + 0.005*"face" + 0.005*"classification" + 0.005*"trained"
-    2021-03-19 14:11:53,851 : INFO : topic #4 (0.051): 0.009*"hidden" + 0.008*"net" + 0.007*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"architecture" + 0.004*"sequence" + 0.004*"activation" + 0.004*"propagation"
-    2021-03-19 14:11:53,851 : INFO : topic #0 (0.061): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"likelihood" + 0.005*"approximation" + 0.005*"prior" + 0.005*"bayesian" + 0.004*"matrix" + 0.004*"variance" + 0.004*"density"
-    2021-03-19 14:11:53,851 : INFO : topic diff=0.102938, rho=0.229416
-    2021-03-19 14:11:53,862 : INFO : PROGRESS: pass 18, at document #1740/1740
-    2021-03-19 14:11:57,816 : INFO : optimized alpha [0.062154472, 0.042110436, 0.04939213, 0.044109803, 0.05212181, 0.049227104, 0.039544087, 0.04246847, 0.03410476, 0.040957462]
-    2021-03-19 14:11:57,823 : INFO : topic #8 (0.034): 0.016*"control" + 0.013*"action" + 0.009*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.007*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.006*"reinforcement_learning"
-    2021-03-19 14:11:57,824 : INFO : topic #6 (0.040): 0.010*"hidden" + 0.008*"image" + 0.007*"character" + 0.006*"layer" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"energy" + 0.004*"attractor" + 0.004*"dynamic"
-    2021-03-19 14:11:57,824 : INFO : topic #2 (0.049): 0.014*"recognition" + 0.011*"speech" + 0.010*"word" + 0.010*"image" + 0.008*"object" + 0.006*"signal" + 0.005*"layer" + 0.005*"face" + 0.005*"classification" + 0.005*"trained"
-    2021-03-19 14:11:57,824 : INFO : topic #4 (0.052): 0.009*"hidden" + 0.008*"net" + 0.007*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"architecture" + 0.004*"sequence" + 0.004*"activation" + 0.004*"propagation"
-    2021-03-19 14:11:57,824 : INFO : topic #0 (0.062): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"likelihood" + 0.005*"approximation" + 0.005*"prior" + 0.005*"bayesian" + 0.004*"matrix" + 0.004*"density" + 0.004*"variance"
-    2021-03-19 14:11:57,825 : INFO : topic diff=0.096678, rho=0.223607
-    2021-03-19 14:11:57,835 : INFO : PROGRESS: pass 19, at document #1740/1740
-    2021-03-19 14:12:01,856 : INFO : optimized alpha [0.06292996, 0.04251684, 0.049703237, 0.044167582, 0.052860808, 0.049467582, 0.039925203, 0.042864826, 0.03433462, 0.0415304]
-    2021-03-19 14:12:01,864 : INFO : topic #8 (0.034): 0.016*"control" + 0.013*"action" + 0.009*"policy" + 0.008*"reinforcement" + 0.007*"controller" + 0.007*"dynamic" + 0.006*"robot" + 0.006*"optimal" + 0.006*"trajectory" + 0.006*"reinforcement_learning"
-    2021-03-19 14:12:01,864 : INFO : topic #6 (0.040): 0.010*"hidden" + 0.008*"image" + 0.007*"character" + 0.006*"layer" + 0.005*"hidden_unit" + 0.005*"recognition" + 0.005*"digit" + 0.004*"attractor" + 0.004*"energy" + 0.004*"dynamic"
-    2021-03-19 14:12:01,864 : INFO : topic #2 (0.050): 0.014*"recognition" + 0.011*"speech" + 0.010*"word" + 0.010*"image" + 0.008*"object" + 0.006*"signal" + 0.005*"layer" + 0.005*"classification" + 0.005*"face" + 0.005*"trained"
-    2021-03-19 14:12:01,865 : INFO : topic #4 (0.053): 0.009*"hidden" + 0.008*"net" + 0.007*"layer" + 0.006*"rule" + 0.006*"node" + 0.005*"hidden_unit" + 0.004*"architecture" + 0.004*"activation" + 0.004*"sequence" + 0.004*"propagation"
-    2021-03-19 14:12:01,865 : INFO : topic #0 (0.063): 0.007*"gaussian" + 0.006*"noise" + 0.005*"estimate" + 0.005*"likelihood" + 0.005*"approximation" + 0.005*"prior" + 0.005*"bayesian" + 0.004*"density" + 0.004*"mixture" + 0.004*"variance"
-    2021-03-19 14:12:01,865 : INFO : topic diff=0.090853, rho=0.218218
-    2021-03-19 14:12:01,877 : INFO : LdaModel lifecycle event {'msg': 'trained LdaModel(num_terms=8644, num_topics=10, decay=0.5, chunksize=2000) in 109.40s', 'datetime': '2021-03-19T14:12:01.877604', 'gensim': '4.0.0.rc1', 'python': '3.7.0 (default, Jun 28 2018, 13:15:42) \n[GCC 7.2.0]', 'platform': 'Linux-4.15.0-136-generic-x86_64-with-debian-buster-sid', 'event': 'created'}
+    2022-04-22 17:43:05,111 : INFO : using autotuned alpha, starting with [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+    2022-04-22 17:43:05,115 : INFO : using serial LDA version on this node
+    2022-04-22 17:43:05,137 : INFO : running online (multi-pass) LDA training, 10 topics, 20 passes over the supplied corpus of 1740 documents, updating model once every 1740 documents, evaluating perplexity every 0 documents, iterating 400x with a convergence threshold of 0.001000
+    2022-04-22 17:43:05,148 : INFO : PROGRESS: pass 0, at document #1740/1740
+    2022-04-22 17:43:21,190 : INFO : optimized alpha [0.0578294, 0.07125457, 0.07889137, 0.09016259, 0.077791244, 0.0792375, 0.097086295, 0.061600033, 0.095310934, 0.060617708]
+    2022-04-22 17:43:21,202 : INFO : topic #0 (0.058): 0.007*"hidden" + 0.006*"word" + 0.005*"recognition" + 0.004*"gaussian" + 0.003*"hidden_unit" + 0.003*"rule" + 0.003*"component" + 0.003*"layer" + 0.003*"image" + 0.002*"connection"
+    2022-04-22 17:43:21,202 : INFO : topic #9 (0.061): 0.015*"neuron" + 0.007*"cell" + 0.005*"signal" + 0.005*"spike" + 0.004*"layer" + 0.004*"response" + 0.004*"firing" + 0.004*"noise" + 0.003*"density" + 0.003*"hidden"
+    2022-04-22 17:43:21,202 : INFO : topic #3 (0.090): 0.006*"image" + 0.005*"class" + 0.003*"classifier" + 0.003*"classification" + 0.003*"recognition" + 0.003*"component" + 0.003*"kernel" + 0.003*"noise" + 0.003*"sequence" + 0.002*"rule"
+    2022-04-22 17:43:21,203 : INFO : topic #8 (0.095): 0.004*"hidden" + 0.003*"signal" + 0.003*"rule" + 0.003*"dynamic" + 0.002*"control" + 0.002*"prediction" + 0.002*"net" + 0.002*"sequence" + 0.002*"speech" + 0.002*"matrix"
+    2022-04-22 17:43:21,203 : INFO : topic #6 (0.097): 0.006*"image" + 0.005*"cell" + 0.004*"neuron" + 0.004*"layer" + 0.004*"field" + 0.004*"object" + 0.003*"recognition" + 0.003*"signal" + 0.003*"noise" + 0.003*"class"
+    2022-04-22 17:43:21,203 : INFO : topic diff=1.159133, rho=1.000000
+    2022-04-22 17:43:21,212 : INFO : PROGRESS: pass 1, at document #1740/1740
+    2022-04-22 17:43:30,981 : INFO : optimized alpha [0.05010912, 0.057179544, 0.06367695, 0.07760008, 0.061386272, 0.06139503, 0.06987214, 0.050920427, 0.08028384, 0.05094144]
+    2022-04-22 17:43:30,987 : INFO : topic #0 (0.050): 0.009*"word" + 0.009*"hidden" + 0.008*"recognition" + 0.005*"gaussian" + 0.005*"speech" + 0.004*"hidden_unit" + 0.004*"mixture" + 0.003*"layer" + 0.003*"component" + 0.003*"likelihood"
+    2022-04-22 17:43:30,987 : INFO : topic #9 (0.051): 0.019*"neuron" + 0.009*"cell" + 0.009*"spike" + 0.007*"signal" + 0.006*"response" + 0.005*"firing" + 0.005*"stimulus" + 0.005*"noise" + 0.004*"layer" + 0.004*"visual"
+    2022-04-22 17:43:30,987 : INFO : topic #6 (0.070): 0.007*"image" + 0.006*"cell" + 0.005*"object" + 0.005*"field" + 0.004*"motion" + 0.004*"visual" + 0.004*"signal" + 0.004*"direction" + 0.004*"layer" + 0.004*"filter"
+    2022-04-22 17:43:30,988 : INFO : topic #3 (0.078): 0.008*"image" + 0.006*"class" + 0.005*"classifier" + 0.004*"classification" + 0.003*"kernel" + 0.003*"recognition" + 0.003*"component" + 0.003*"noise" + 0.003*"estimate" + 0.003*"gaussian"
+    2022-04-22 17:43:30,988 : INFO : topic #8 (0.080): 0.004*"hidden" + 0.004*"rule" + 0.003*"sequence" + 0.003*"prediction" + 0.003*"net" + 0.003*"bound" + 0.003*"optimal" + 0.003*"signal" + 0.003*"dynamic" + 0.002*"hidden_unit"
+    2022-04-22 17:43:30,988 : INFO : topic diff=0.292768, rho=0.577350
+    2022-04-22 17:43:30,996 : INFO : PROGRESS: pass 2, at document #1740/1740
+    2022-04-22 17:43:38,324 : INFO : optimized alpha [0.046267115, 0.049782153, 0.055386752, 0.070311576, 0.054385237, 0.052613482, 0.0592381, 0.044921257, 0.07121881, 0.045337107]
+    2022-04-22 17:43:38,330 : INFO : topic #7 (0.045): 0.009*"chip" + 0.006*"analog" + 0.006*"neuron" + 0.006*"noise" + 0.006*"memory" + 0.005*"layer" + 0.004*"connection" + 0.004*"signal" + 0.004*"circuit" + 0.004*"image"
+    2022-04-22 17:43:38,331 : INFO : topic #9 (0.045): 0.021*"neuron" + 0.011*"spike" + 0.011*"cell" + 0.007*"signal" + 0.007*"response" + 0.007*"stimulus" + 0.006*"firing" + 0.005*"noise" + 0.004*"visual" + 0.004*"layer"
+    2022-04-22 17:43:38,331 : INFO : topic #6 (0.059): 0.009*"image" + 0.007*"object" + 0.006*"cell" + 0.006*"visual" + 0.006*"motion" + 0.005*"field" + 0.005*"direction" + 0.004*"filter" + 0.004*"signal" + 0.004*"response"
+    2022-04-22 17:43:38,331 : INFO : topic #3 (0.070): 0.007*"image" + 0.007*"class" + 0.005*"classifier" + 0.004*"classification" + 0.003*"kernel" + 0.003*"sample" + 0.003*"estimate" + 0.003*"gaussian" + 0.003*"component" + 0.003*"noise"
+    2022-04-22 17:43:38,331 : INFO : topic #8 (0.071): 0.005*"hidden" + 0.005*"rule" + 0.003*"sequence" + 0.003*"net" + 0.003*"bound" + 0.003*"prediction" + 0.003*"optimal" + 0.003*"generalization" + 0.003*"hidden_unit" + 0.002*"tree"
+    2022-04-22 17:43:38,331 : INFO : topic diff=0.259048, rho=0.500000
+    2022-04-22 17:43:38,339 : INFO : PROGRESS: pass 3, at document #1740/1740
+    2022-04-22 17:43:44,815 : INFO : optimized alpha [0.04398281, 0.045212083, 0.050260257, 0.066244416, 0.050919566, 0.047668763, 0.053777307, 0.041211806, 0.06501518, 0.041524593]
+    2022-04-22 17:43:44,821 : INFO : topic #7 (0.041): 0.010*"chip" + 0.007*"analog" + 0.007*"neuron" + 0.006*"memory" + 0.006*"noise" + 0.005*"circuit" + 0.005*"signal" + 0.005*"layer" + 0.004*"voltage" + 0.004*"connection"
+    2022-04-22 17:43:44,821 : INFO : topic #9 (0.042): 0.021*"neuron" + 0.012*"spike" + 0.012*"cell" + 0.008*"signal" + 0.008*"stimulus" + 0.008*"response" + 0.007*"firing" + 0.005*"noise" + 0.004*"visual" + 0.004*"activity"
+    2022-04-22 17:43:44,821 : INFO : topic #6 (0.054): 0.011*"image" + 0.008*"object" + 0.007*"visual" + 0.007*"motion" + 0.006*"field" + 0.006*"cell" + 0.005*"direction" + 0.005*"filter" + 0.004*"signal" + 0.004*"response"
+    2022-04-22 17:43:44,822 : INFO : topic #8 (0.065): 0.005*"rule" + 0.005*"hidden" + 0.003*"sequence" + 0.003*"generalization" + 0.003*"net" + 0.003*"bound" + 0.003*"prediction" + 0.003*"hidden_unit" + 0.003*"optimal" + 0.003*"machine"
+    2022-04-22 17:43:44,822 : INFO : topic #3 (0.066): 0.007*"image" + 0.007*"class" + 0.005*"classifier" + 0.005*"classification" + 0.004*"gaussian" + 0.004*"sample" + 0.003*"estimate" + 0.003*"kernel" + 0.003*"noise" + 0.003*"component"
+    2022-04-22 17:43:44,822 : INFO : topic diff=0.235399, rho=0.447214
+    2022-04-22 17:43:44,830 : INFO : PROGRESS: pass 4, at document #1740/1740
+    2022-04-22 17:43:50,907 : INFO : optimized alpha [0.042409703, 0.0423433, 0.04680129, 0.06358971, 0.049375836, 0.044652227, 0.0507185, 0.038540646, 0.06110631, 0.038821314]
+    2022-04-22 17:43:50,913 : INFO : topic #7 (0.039): 0.011*"chip" + 0.008*"analog" + 0.008*"neuron" + 0.007*"circuit" + 0.007*"memory" + 0.006*"noise" + 0.006*"signal" + 0.005*"voltage" + 0.005*"layer" + 0.004*"vlsi"
+    2022-04-22 17:43:50,914 : INFO : topic #9 (0.039): 0.021*"neuron" + 0.013*"spike" + 0.013*"cell" + 0.009*"stimulus" + 0.009*"signal" + 0.009*"response" + 0.007*"firing" + 0.006*"noise" + 0.004*"activity" + 0.004*"visual"
+    2022-04-22 17:43:50,914 : INFO : topic #6 (0.051): 0.013*"image" + 0.009*"object" + 0.008*"visual" + 0.007*"motion" + 0.007*"field" + 0.006*"cell" + 0.006*"direction" + 0.005*"filter" + 0.005*"response" + 0.004*"map"
+    2022-04-22 17:43:50,914 : INFO : topic #8 (0.061): 0.006*"rule" + 0.005*"hidden" + 0.004*"generalization" + 0.004*"sequence" + 0.003*"net" + 0.003*"prediction" + 0.003*"hidden_unit" + 0.003*"bound" + 0.003*"machine" + 0.003*"tree"
+    2022-04-22 17:43:50,914 : INFO : topic #3 (0.064): 0.007*"class" + 0.006*"image" + 0.005*"classifier" + 0.005*"classification" + 0.004*"gaussian" + 0.004*"sample" + 0.004*"estimate" + 0.003*"kernel" + 0.003*"density" + 0.003*"prior"
+    2022-04-22 17:43:50,915 : INFO : topic diff=0.220905, rho=0.408248
+    2022-04-22 17:43:50,922 : INFO : PROGRESS: pass 5, at document #1740/1740
+    2022-04-22 17:43:57,459 : INFO : optimized alpha [0.04136415, 0.040443134, 0.04439863, 0.062082667, 0.048723623, 0.042787064, 0.048876576, 0.036657482, 0.058343116, 0.03701785]
+    2022-04-22 17:43:57,465 : INFO : topic #7 (0.037): 0.012*"chip" + 0.009*"analog" + 0.008*"neuron" + 0.008*"circuit" + 0.007*"memory" + 0.006*"signal" + 0.006*"noise" + 0.006*"voltage" + 0.005*"vlsi" + 0.004*"layer"
+    2022-04-22 17:43:57,465 : INFO : topic #9 (0.037): 0.022*"neuron" + 0.013*"spike" + 0.013*"cell" + 0.009*"stimulus" + 0.009*"signal" + 0.009*"response" + 0.008*"firing" + 0.006*"noise" + 0.004*"activity" + 0.004*"channel"
+    2022-04-22 17:43:57,466 : INFO : topic #6 (0.049): 0.015*"image" + 0.010*"object" + 0.009*"visual" + 0.007*"motion" + 0.007*"field" + 0.006*"direction" + 0.006*"cell" + 0.005*"filter" + 0.005*"map" + 0.005*"response"
+    2022-04-22 17:43:57,466 : INFO : topic #8 (0.058): 0.006*"rule" + 0.005*"hidden" + 0.004*"generalization" + 0.004*"sequence" + 0.003*"net" + 0.003*"hidden_unit" + 0.003*"prediction" + 0.003*"bound" + 0.003*"machine" + 0.003*"tree"
+    2022-04-22 17:43:57,466 : INFO : topic #3 (0.062): 0.007*"class" + 0.006*"image" + 0.005*"classifier" + 0.005*"classification" + 0.004*"gaussian" + 0.004*"sample" + 0.004*"estimate" + 0.004*"density" + 0.004*"prior" + 0.003*"bayesian"
+    2022-04-22 17:43:57,467 : INFO : topic diff=0.210451, rho=0.377964
+    2022-04-22 17:43:57,477 : INFO : PROGRESS: pass 6, at document #1740/1740
+    2022-04-22 17:44:02,657 : INFO : optimized alpha [0.040722344, 0.039083496, 0.04264549, 0.061218463, 0.048731733, 0.041630186, 0.047772773, 0.03532755, 0.0563227, 0.03579225]
+    2022-04-22 17:44:02,663 : INFO : topic #7 (0.035): 0.012*"chip" + 0.010*"analog" + 0.009*"circuit" + 0.009*"neuron" + 0.007*"memory" + 0.007*"signal" + 0.006*"voltage" + 0.006*"noise" + 0.005*"vlsi" + 0.004*"implementation"
+    2022-04-22 17:44:02,663 : INFO : topic #9 (0.036): 0.022*"neuron" + 0.014*"spike" + 0.013*"cell" + 0.010*"stimulus" + 0.009*"signal" + 0.009*"response" + 0.008*"firing" + 0.006*"noise" + 0.005*"channel" + 0.005*"activity"
+    2022-04-22 17:44:02,664 : INFO : topic #4 (0.049): 0.008*"matrix" + 0.006*"gradient" + 0.005*"solution" + 0.004*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.003*"optimization" + 0.003*"neuron" + 0.003*"eq"
+    2022-04-22 17:44:02,664 : INFO : topic #8 (0.056): 0.007*"rule" + 0.005*"hidden" + 0.004*"generalization" + 0.004*"sequence" + 0.004*"net" + 0.003*"hidden_unit" + 0.003*"prediction" + 0.003*"tree" + 0.003*"machine" + 0.003*"bound"
+    2022-04-22 17:44:02,664 : INFO : topic #3 (0.061): 0.007*"class" + 0.005*"classifier" + 0.005*"image" + 0.005*"gaussian" + 0.005*"classification" + 0.004*"sample" + 0.004*"estimate" + 0.004*"density" + 0.004*"prior" + 0.004*"bayesian"
+    2022-04-22 17:44:02,664 : INFO : topic diff=0.201353, rho=0.353553
+    2022-04-22 17:44:02,673 : INFO : PROGRESS: pass 7, at document #1740/1740
+    2022-04-22 17:44:08,716 : INFO : optimized alpha [0.040365368, 0.038083963, 0.041339714, 0.06076524, 0.04909782, 0.040898465, 0.047129765, 0.034341704, 0.054831598, 0.034885667]
+    2022-04-22 17:44:08,722 : INFO : topic #7 (0.034): 0.013*"chip" + 0.010*"circuit" + 0.010*"analog" + 0.009*"neuron" + 0.007*"memory" + 0.007*"signal" + 0.007*"voltage" + 0.006*"noise" + 0.005*"vlsi" + 0.005*"implementation"
+    2022-04-22 17:44:08,723 : INFO : topic #9 (0.035): 0.022*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.010*"stimulus" + 0.010*"signal" + 0.010*"response" + 0.008*"firing" + 0.006*"noise" + 0.005*"channel" + 0.005*"activity"
+    2022-04-22 17:44:08,723 : INFO : topic #4 (0.049): 0.009*"matrix" + 0.006*"gradient" + 0.005*"solution" + 0.004*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.003*"optimization" + 0.003*"eq" + 0.003*"neuron"
+    2022-04-22 17:44:08,723 : INFO : topic #8 (0.055): 0.007*"rule" + 0.005*"hidden" + 0.005*"generalization" + 0.004*"sequence" + 0.004*"hidden_unit" + 0.004*"net" + 0.003*"prediction" + 0.003*"tree" + 0.003*"machine" + 0.003*"bound"
+    2022-04-22 17:44:08,723 : INFO : topic #3 (0.061): 0.007*"class" + 0.005*"classifier" + 0.005*"gaussian" + 0.005*"classification" + 0.005*"sample" + 0.005*"image" + 0.004*"estimate" + 0.004*"density" + 0.004*"prior" + 0.004*"bayesian"
+    2022-04-22 17:44:08,724 : INFO : topic diff=0.192330, rho=0.333333
+    2022-04-22 17:44:08,732 : INFO : PROGRESS: pass 8, at document #1740/1740
+    2022-04-22 17:44:13,585 : INFO : optimized alpha [0.040182494, 0.037441313, 0.04036209, 0.060601927, 0.049758103, 0.04055522, 0.046829112, 0.03359148, 0.053864058, 0.03418947]
+    2022-04-22 17:44:13,591 : INFO : topic #7 (0.034): 0.013*"chip" + 0.011*"circuit" + 0.011*"analog" + 0.009*"neuron" + 0.007*"signal" + 0.007*"memory" + 0.007*"voltage" + 0.006*"vlsi" + 0.006*"noise" + 0.005*"implementation"
+    2022-04-22 17:44:13,592 : INFO : topic #9 (0.034): 0.022*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.010*"stimulus" + 0.010*"signal" + 0.010*"response" + 0.008*"firing" + 0.006*"noise" + 0.005*"channel" + 0.005*"frequency"
+    2022-04-22 17:44:13,592 : INFO : topic #4 (0.050): 0.009*"matrix" + 0.006*"gradient" + 0.005*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.003*"optimization" + 0.003*"eq" + 0.003*"descent"
+    2022-04-22 17:44:13,592 : INFO : topic #8 (0.054): 0.007*"rule" + 0.006*"hidden" + 0.005*"generalization" + 0.004*"sequence" + 0.004*"hidden_unit" + 0.004*"net" + 0.003*"prediction" + 0.003*"tree" + 0.003*"machine" + 0.003*"trained"
+    2022-04-22 17:44:13,592 : INFO : topic #3 (0.061): 0.007*"class" + 0.005*"classifier" + 0.005*"gaussian" + 0.005*"sample" + 0.005*"classification" + 0.004*"estimate" + 0.004*"density" + 0.004*"image" + 0.004*"prior" + 0.004*"bayesian"
+    2022-04-22 17:44:13,593 : INFO : topic diff=0.182985, rho=0.316228
+    2022-04-22 17:44:13,601 : INFO : PROGRESS: pass 9, at document #1740/1740
+    2022-04-22 17:44:19,306 : INFO : optimized alpha [0.040097952, 0.036957335, 0.039702885, 0.060680483, 0.050588053, 0.040437363, 0.046769954, 0.033025023, 0.053330485, 0.033663847]
+    2022-04-22 17:44:19,312 : INFO : topic #7 (0.033): 0.013*"chip" + 0.012*"circuit" + 0.011*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.007*"memory" + 0.007*"voltage" + 0.006*"vlsi" + 0.005*"noise" + 0.005*"implementation"
+    2022-04-22 17:44:19,312 : INFO : topic #9 (0.034): 0.022*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.010*"stimulus" + 0.010*"signal" + 0.010*"response" + 0.008*"firing" + 0.007*"noise" + 0.006*"channel" + 0.005*"frequency"
+    2022-04-22 17:44:19,313 : INFO : topic #4 (0.051): 0.009*"matrix" + 0.006*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.003*"optimization" + 0.003*"descent"
+    2022-04-22 17:44:19,313 : INFO : topic #8 (0.053): 0.008*"rule" + 0.006*"hidden" + 0.005*"generalization" + 0.004*"sequence" + 0.004*"hidden_unit" + 0.004*"net" + 0.004*"prediction" + 0.003*"tree" + 0.003*"machine" + 0.003*"trained"
+    2022-04-22 17:44:19,313 : INFO : topic #3 (0.061): 0.007*"class" + 0.005*"gaussian" + 0.005*"classifier" + 0.005*"sample" + 0.005*"classification" + 0.005*"estimate" + 0.004*"density" + 0.004*"prior" + 0.004*"bayesian" + 0.004*"mixture"
+    2022-04-22 17:44:19,313 : INFO : topic diff=0.173278, rho=0.301511
+    2022-04-22 17:44:19,321 : INFO : PROGRESS: pass 10, at document #1740/1740
+    2022-04-22 17:44:23,819 : INFO : optimized alpha [0.040098477, 0.036638554, 0.03923829, 0.060877353, 0.051485594, 0.04045682, 0.04686068, 0.032584008, 0.05302629, 0.03327818]
+    2022-04-22 17:44:23,825 : INFO : topic #7 (0.033): 0.013*"chip" + 0.012*"circuit" + 0.011*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.007*"memory" + 0.007*"voltage" + 0.006*"vlsi" + 0.005*"noise" + 0.005*"implementation"
+    2022-04-22 17:44:23,825 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.011*"stimulus" + 0.010*"signal" + 0.010*"response" + 0.008*"firing" + 0.007*"noise" + 0.006*"channel" + 0.006*"frequency"
+    2022-04-22 17:44:23,826 : INFO : topic #4 (0.051): 0.009*"matrix" + 0.006*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.004*"optimization" + 0.003*"descent"
+    2022-04-22 17:44:23,826 : INFO : topic #8 (0.053): 0.008*"rule" + 0.006*"hidden" + 0.005*"generalization" + 0.004*"hidden_unit" + 0.004*"sequence" + 0.004*"net" + 0.004*"prediction" + 0.004*"tree" + 0.003*"machine" + 0.003*"trained"
+    2022-04-22 17:44:23,826 : INFO : topic #3 (0.061): 0.007*"class" + 0.006*"gaussian" + 0.005*"classifier" + 0.005*"sample" + 0.005*"estimate" + 0.005*"classification" + 0.004*"density" + 0.004*"prior" + 0.004*"mixture" + 0.004*"bayesian"
+    2022-04-22 17:44:23,827 : INFO : topic diff=0.163348, rho=0.288675
+    2022-04-22 17:44:23,834 : INFO : PROGRESS: pass 11, at document #1740/1740
+    2022-04-22 17:44:29,135 : INFO : optimized alpha [0.040188633, 0.03646946, 0.038880475, 0.06112813, 0.05245481, 0.04061286, 0.047049697, 0.03229136, 0.05290524, 0.03296597]
+    2022-04-22 17:44:29,141 : INFO : topic #7 (0.032): 0.013*"chip" + 0.013*"circuit" + 0.011*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.007*"memory" + 0.007*"voltage" + 0.006*"vlsi" + 0.005*"noise" + 0.005*"implementation"
+    2022-04-22 17:44:29,141 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.011*"signal" + 0.011*"stimulus" + 0.010*"response" + 0.008*"firing" + 0.007*"noise" + 0.006*"frequency" + 0.006*"channel"
+    2022-04-22 17:44:29,142 : INFO : topic #4 (0.052): 0.009*"matrix" + 0.006*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.004*"optimization" + 0.003*"optimal"
+    2022-04-22 17:44:29,142 : INFO : topic #8 (0.053): 0.008*"rule" + 0.006*"hidden" + 0.005*"generalization" + 0.004*"hidden_unit" + 0.004*"sequence" + 0.004*"prediction" + 0.004*"net" + 0.004*"tree" + 0.003*"machine" + 0.003*"trained"
+    2022-04-22 17:44:29,142 : INFO : topic #3 (0.061): 0.007*"class" + 0.006*"gaussian" + 0.005*"classifier" + 0.005*"sample" + 0.005*"estimate" + 0.005*"classification" + 0.005*"density" + 0.004*"prior" + 0.004*"mixture" + 0.004*"bayesian"
+    2022-04-22 17:44:29,142 : INFO : topic diff=0.153485, rho=0.277350
+    2022-04-22 17:44:29,150 : INFO : PROGRESS: pass 12, at document #1740/1740
+    2022-04-22 17:44:33,545 : INFO : optimized alpha [0.04036388, 0.03635188, 0.038611963, 0.061483774, 0.05345723, 0.040894084, 0.04736741, 0.03211178, 0.05297828, 0.03274891]
+    2022-04-22 17:44:33,551 : INFO : topic #7 (0.032): 0.013*"circuit" + 0.013*"chip" + 0.011*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.007*"voltage" + 0.007*"memory" + 0.006*"vlsi" + 0.005*"implementation" + 0.005*"noise"
+    2022-04-22 17:44:33,552 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.011*"signal" + 0.011*"stimulus" + 0.011*"response" + 0.009*"firing" + 0.007*"noise" + 0.006*"frequency" + 0.006*"channel"
+    2022-04-22 17:44:33,552 : INFO : topic #8 (0.053): 0.008*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.004*"hidden_unit" + 0.004*"sequence" + 0.004*"prediction" + 0.004*"net" + 0.004*"tree" + 0.003*"machine" + 0.003*"trained"
+    2022-04-22 17:44:33,552 : INFO : topic #4 (0.053): 0.009*"matrix" + 0.006*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.003*"optimization" + 0.003*"optimal"
+    2022-04-22 17:44:33,552 : INFO : topic #3 (0.061): 0.007*"class" + 0.006*"gaussian" + 0.005*"sample" + 0.005*"classifier" + 0.005*"estimate" + 0.005*"density" + 0.005*"classification" + 0.004*"prior" + 0.004*"mixture" + 0.004*"bayesian"
+    2022-04-22 17:44:33,553 : INFO : topic diff=0.143831, rho=0.267261
+    2022-04-22 17:44:33,562 : INFO : PROGRESS: pass 13, at document #1740/1740
+    2022-04-22 17:44:39,235 : INFO : optimized alpha [0.040587135, 0.03631959, 0.03839379, 0.061911535, 0.05453887, 0.041285977, 0.047773384, 0.032027513, 0.05315258, 0.03261802]
+    2022-04-22 17:44:39,246 : INFO : topic #7 (0.032): 0.014*"circuit" + 0.013*"chip" + 0.011*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.007*"memory" + 0.006*"vlsi" + 0.005*"implementation" + 0.005*"noise"
+    2022-04-22 17:44:39,246 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.011*"signal" + 0.011*"stimulus" + 0.011*"response" + 0.009*"firing" + 0.007*"noise" + 0.007*"frequency" + 0.006*"channel"
+    2022-04-22 17:44:39,247 : INFO : topic #8 (0.053): 0.008*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.004*"hidden_unit" + 0.004*"sequence" + 0.004*"prediction" + 0.004*"net" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:44:39,247 : INFO : topic #4 (0.055): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.003*"optimization" + 0.003*"optimal"
+    2022-04-22 17:44:39,247 : INFO : topic #3 (0.062): 0.007*"class" + 0.006*"gaussian" + 0.005*"sample" + 0.005*"classifier" + 0.005*"estimate" + 0.005*"density" + 0.005*"classification" + 0.004*"prior" + 0.004*"mixture" + 0.004*"bayesian"
+    2022-04-22 17:44:39,248 : INFO : topic diff=0.134602, rho=0.258199
+    2022-04-22 17:44:39,258 : INFO : PROGRESS: pass 14, at document #1740/1740
+    2022-04-22 17:44:46,319 : INFO : optimized alpha [0.040821876, 0.036360793, 0.03824259, 0.062456302, 0.055688635, 0.041737743, 0.048259463, 0.032020763, 0.05343126, 0.03254091]
+    2022-04-22 17:44:46,325 : INFO : topic #7 (0.032): 0.014*"circuit" + 0.013*"chip" + 0.012*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.007*"memory" + 0.006*"vlsi" + 0.005*"implementation" + 0.005*"noise"
+    2022-04-22 17:44:46,326 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.011*"signal" + 0.011*"response" + 0.011*"stimulus" + 0.009*"firing" + 0.007*"noise" + 0.007*"frequency" + 0.006*"channel"
+    2022-04-22 17:44:46,327 : INFO : topic #8 (0.053): 0.008*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.004*"hidden_unit" + 0.004*"sequence" + 0.004*"prediction" + 0.004*"net" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:44:46,327 : INFO : topic #4 (0.056): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.004*"optimal" + 0.003*"optimization"
+    2022-04-22 17:44:46,327 : INFO : topic #3 (0.062): 0.007*"class" + 0.006*"gaussian" + 0.005*"sample" + 0.005*"classifier" + 0.005*"estimate" + 0.005*"density" + 0.004*"mixture" + 0.004*"classification" + 0.004*"prior" + 0.004*"bayesian"
+    2022-04-22 17:44:46,328 : INFO : topic diff=0.125871, rho=0.250000
+    2022-04-22 17:44:46,338 : INFO : PROGRESS: pass 15, at document #1740/1740
+    2022-04-22 17:44:53,655 : INFO : optimized alpha [0.04109236, 0.036467522, 0.0381424, 0.06306473, 0.056903645, 0.04227092, 0.04874864, 0.032058466, 0.053792715, 0.03251973]
+    2022-04-22 17:44:53,666 : INFO : topic #7 (0.032): 0.014*"circuit" + 0.013*"chip" + 0.012*"analog" + 0.010*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.007*"memory" + 0.006*"vlsi" + 0.005*"implementation" + 0.005*"bit"
+    2022-04-22 17:44:53,666 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"spike" + 0.014*"cell" + 0.011*"signal" + 0.011*"response" + 0.011*"stimulus" + 0.009*"firing" + 0.007*"frequency" + 0.007*"noise" + 0.006*"channel"
+    2022-04-22 17:44:53,667 : INFO : topic #8 (0.054): 0.008*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.004*"hidden_unit" + 0.004*"prediction" + 0.004*"sequence" + 0.004*"net" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:44:53,667 : INFO : topic #4 (0.057): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.004*"optimal" + 0.003*"optimization"
+    2022-04-22 17:44:53,667 : INFO : topic #3 (0.063): 0.007*"class" + 0.006*"gaussian" + 0.005*"sample" + 0.005*"estimate" + 0.005*"classifier" + 0.005*"density" + 0.005*"mixture" + 0.005*"prior" + 0.004*"classification" + 0.004*"bayesian"
+    2022-04-22 17:44:53,667 : INFO : topic diff=0.117670, rho=0.242536
+    2022-04-22 17:44:53,679 : INFO : PROGRESS: pass 16, at document #1740/1740
+    2022-04-22 17:45:00,393 : INFO : optimized alpha [0.041376065, 0.03660367, 0.0380804, 0.06374838, 0.058118302, 0.0428449, 0.049285352, 0.03212048, 0.054208644, 0.032528903]
+    2022-04-22 17:45:00,403 : INFO : topic #7 (0.032): 0.014*"circuit" + 0.013*"chip" + 0.012*"analog" + 0.011*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.008*"memory" + 0.006*"vlsi" + 0.006*"implementation" + 0.005*"bit"
+    2022-04-22 17:45:00,403 : INFO : topic #9 (0.033): 0.021*"neuron" + 0.014*"cell" + 0.014*"spike" + 0.012*"signal" + 0.011*"response" + 0.011*"stimulus" + 0.009*"firing" + 0.007*"frequency" + 0.007*"noise" + 0.007*"channel"
+    2022-04-22 17:45:00,404 : INFO : topic #8 (0.054): 0.008*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.004*"hidden_unit" + 0.004*"prediction" + 0.004*"sequence" + 0.004*"net" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:45:00,404 : INFO : topic #4 (0.058): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.004*"optimal" + 0.003*"optimization"
+    2022-04-22 17:45:00,404 : INFO : topic #3 (0.064): 0.007*"class" + 0.006*"gaussian" + 0.006*"sample" + 0.005*"estimate" + 0.005*"classifier" + 0.005*"density" + 0.005*"mixture" + 0.005*"prior" + 0.004*"classification" + 0.004*"bayesian"
+    2022-04-22 17:45:00,405 : INFO : topic diff=0.109988, rho=0.235702
+    2022-04-22 17:45:00,416 : INFO : PROGRESS: pass 17, at document #1740/1740
+    2022-04-22 17:45:09,386 : INFO : optimized alpha [0.041690826, 0.036777373, 0.038074017, 0.06447209, 0.059317604, 0.043464534, 0.04985148, 0.032209247, 0.05470903, 0.032565065]
+    2022-04-22 17:45:09,400 : INFO : topic #7 (0.032): 0.014*"circuit" + 0.013*"chip" + 0.012*"analog" + 0.011*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.008*"memory" + 0.006*"vlsi" + 0.006*"implementation" + 0.005*"bit"
+    2022-04-22 17:45:09,400 : INFO : topic #9 (0.033): 0.020*"neuron" + 0.014*"cell" + 0.014*"spike" + 0.012*"signal" + 0.011*"response" + 0.011*"stimulus" + 0.009*"firing" + 0.007*"frequency" + 0.007*"noise" + 0.007*"channel"
+    2022-04-22 17:45:09,401 : INFO : topic #8 (0.055): 0.008*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.004*"hidden_unit" + 0.004*"prediction" + 0.004*"sequence" + 0.004*"net" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:45:09,401 : INFO : topic #4 (0.059): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"let" + 0.004*"minimum" + 0.004*"eq" + 0.004*"optimal" + 0.003*"optimization"
+    2022-04-22 17:45:09,402 : INFO : topic #3 (0.064): 0.007*"class" + 0.006*"gaussian" + 0.006*"sample" + 0.005*"estimate" + 0.005*"classifier" + 0.005*"density" + 0.005*"mixture" + 0.005*"prior" + 0.004*"classification" + 0.004*"bayesian"
+    2022-04-22 17:45:09,402 : INFO : topic diff=0.102916, rho=0.229416
+    2022-04-22 17:45:09,423 : INFO : PROGRESS: pass 18, at document #1740/1740
+    2022-04-22 17:45:19,067 : INFO : optimized alpha [0.042022552, 0.037017036, 0.038090236, 0.06523256, 0.06052085, 0.044076443, 0.050475497, 0.03232651, 0.055261094, 0.032642473]
+    2022-04-22 17:45:19,077 : INFO : topic #7 (0.032): 0.015*"circuit" + 0.013*"chip" + 0.012*"analog" + 0.011*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.008*"memory" + 0.006*"vlsi" + 0.006*"implementation" + 0.005*"bit"
+    2022-04-22 17:45:19,077 : INFO : topic #9 (0.033): 0.020*"neuron" + 0.014*"cell" + 0.014*"spike" + 0.012*"signal" + 0.011*"response" + 0.011*"stimulus" + 0.009*"firing" + 0.008*"frequency" + 0.007*"noise" + 0.007*"channel"
+    2022-04-22 17:45:19,078 : INFO : topic #8 (0.055): 0.009*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.005*"hidden_unit" + 0.004*"prediction" + 0.004*"net" + 0.004*"sequence" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:45:19,078 : INFO : topic #4 (0.061): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"minimum" + 0.004*"let" + 0.004*"eq" + 0.004*"optimal" + 0.003*"optimization"
+    2022-04-22 17:45:19,078 : INFO : topic #3 (0.065): 0.007*"class" + 0.007*"gaussian" + 0.006*"sample" + 0.005*"estimate" + 0.005*"density" + 0.005*"classifier" + 0.005*"mixture" + 0.005*"prior" + 0.004*"classification" + 0.004*"likelihood"
+    2022-04-22 17:45:19,079 : INFO : topic diff=0.096362, rho=0.223607
+    2022-04-22 17:45:19,090 : INFO : PROGRESS: pass 19, at document #1740/1740
+    2022-04-22 17:45:26,202 : INFO : optimized alpha [0.042380035, 0.037280142, 0.03813037, 0.06597655, 0.0617652, 0.044686105, 0.051100377, 0.032451425, 0.05581024, 0.03274816]
+    2022-04-22 17:45:26,210 : INFO : topic #7 (0.032): 0.015*"circuit" + 0.013*"chip" + 0.012*"analog" + 0.011*"neuron" + 0.008*"signal" + 0.008*"voltage" + 0.008*"memory" + 0.006*"vlsi" + 0.006*"implementation" + 0.005*"bit"
+    2022-04-22 17:45:26,210 : INFO : topic #9 (0.033): 0.020*"neuron" + 0.015*"cell" + 0.014*"spike" + 0.012*"signal" + 0.011*"response" + 0.011*"stimulus" + 0.009*"firing" + 0.008*"frequency" + 0.007*"noise" + 0.007*"channel"
+    2022-04-22 17:45:26,210 : INFO : topic #8 (0.056): 0.009*"rule" + 0.006*"hidden" + 0.006*"generalization" + 0.005*"hidden_unit" + 0.004*"prediction" + 0.004*"net" + 0.004*"sequence" + 0.004*"tree" + 0.004*"machine" + 0.003*"trained"
+    2022-04-22 17:45:26,211 : INFO : topic #4 (0.062): 0.009*"matrix" + 0.007*"gradient" + 0.006*"solution" + 0.005*"convergence" + 0.004*"distance" + 0.004*"minimum" + 0.004*"let" + 0.004*"eq" + 0.004*"optimal" + 0.003*"energy"
+    2022-04-22 17:45:26,211 : INFO : topic #3 (0.066): 0.007*"class" + 0.007*"gaussian" + 0.006*"sample" + 0.005*"estimate" + 0.005*"density" + 0.005*"mixture" + 0.005*"classifier" + 0.005*"prior" + 0.004*"likelihood" + 0.004*"bayesian"
+    2022-04-22 17:45:26,211 : INFO : topic diff=0.090311, rho=0.218218
+    2022-04-22 17:45:26,222 : INFO : LdaModel lifecycle event {'msg': 'trained LdaModel<num_terms=8644, num_topics=10, decay=0.5, chunksize=2000> in 141.08s', 'datetime': '2022-04-22T17:45:26.222157', 'gensim': '4.1.3.dev0', 'python': '3.9.7 (default, Sep  3 2021, 12:37:55) \n[Clang 12.0.5 (clang-1205.0.22.9)]', 'platform': 'macOS-11.6.5-x86_64-i386-64bit', 'event': 'created'}
 
 
 
@@ -696,7 +654,7 @@ methods on the blog at http://rare-technologies.com/lda-training-tips/ !
 .. code-block:: default
 
 
-    top_topics = model.top_topics(corpus) #, num_words=20)
+    top_topics = model.top_topics(corpus)
 
     # Average topic coherence is the sum of topic coherences of all topics, divided by the number of topics.
     avg_topic_coherence = sum([t[1] for t in top_topics]) / num_topics
@@ -715,218 +673,218 @@ methods on the blog at http://rare-technologies.com/lda-training-tips/ !
 
  .. code-block:: none
 
-    2021-03-19 14:12:02,008 : INFO : CorpusAccumulator accumulated stats from 1000 documents
-    Average topic coherence: -1.1072.
-    [([(0.023360161, 'neuron'),
-       (0.013864572, 'cell'),
-       (0.0085508, 'spike'),
-       (0.007835109, 'response'),
-       (0.0077002184, 'synaptic'),
-       (0.006420619, 'firing'),
-       (0.0063291225, 'activity'),
-       (0.005894408, 'stimulus'),
-       (0.005635916, 'signal'),
-       (0.005319338, 'frequency'),
-       (0.0044079474, 'potential'),
-       (0.0042212, 'connection'),
-       (0.003969707, 'fig'),
-       (0.0038775448, 'phase'),
-       (0.0037467096, 'synapsis'),
-       (0.0035546266, 'channel'),
-       (0.0035464808, 'dynamic'),
-       (0.0035111816, 'memory'),
-       (0.003500412, 'simulation'),
-       (0.0033668294, 'temporal')],
-      -0.8843724877515563),
-     ([(0.007043698, 'gaussian'),
-       (0.0058810986, 'noise'),
-       (0.005357382, 'estimate'),
-       (0.005118217, 'likelihood'),
-       (0.004725707, 'approximation'),
-       (0.0047162576, 'prior'),
-       (0.004589121, 'bayesian'),
-       (0.0044163894, 'density'),
-       (0.004383228, 'mixture'),
-       (0.0043818722, 'variance'),
-       (0.004343727, 'matrix'),
-       (0.003920799, 'log'),
-       (0.0039041233, 'sample'),
-       (0.0038657538, 'posterior'),
-       (0.0038494268, 'hidden'),
-       (0.003747304, 'prediction'),
-       (0.0035524433, 'generalization'),
-       (0.003297515, 'em'),
-       (0.0031830291, 'optimal'),
-       (0.0029574349, 'estimation')],
-      -0.9201121458749306),
-     ([(0.013338742, 'visual'),
-       (0.011440194, 'cell'),
-       (0.010699649, 'field'),
-       (0.009350259, 'image'),
-       (0.008701173, 'motion'),
-       (0.008576538, 'map'),
-       (0.0077895345, 'direction'),
-       (0.0073878667, 'orientation'),
-       (0.006964441, 'eye'),
-       (0.0066007036, 'response'),
-       (0.0062312516, 'stimulus'),
-       (0.006194355, 'spatial'),
-       (0.0055934438, 'receptive'),
-       (0.005137706, 'receptive_field'),
-       (0.00512753, 'object'),
-       (0.004664231, 'layer'),
-       (0.0046304427, 'activity'),
-       (0.0045092506, 'position'),
-       (0.004168487, 'cortex'),
-       (0.0040872716, 'location')],
-      -0.9666086669197183),
-     ([(0.009677556, 'hidden'),
-       (0.008472348, 'image'),
-       (0.0066851787, 'character'),
-       (0.0064806826, 'layer'),
-       (0.005060741, 'hidden_unit'),
-       (0.004902215, 'recognition'),
-       (0.004825573, 'digit'),
-       (0.0043749292, 'attractor'),
-       (0.0043325345, 'energy'),
-       (0.00431843, 'dynamic'),
-       (0.0038877935, 'matrix'),
-       (0.003805258, 'net'),
-       (0.003757226, 'field'),
-       (0.0035065063, 'transformation'),
-       (0.0034933372, 'dimensional'),
-       (0.0034391459, 'distance'),
-       (0.0031490896, 'gradient'),
-       (0.0031419578, 'solution'),
-       (0.002954112, 'map'),
-       (0.0028736237, 'minimum')],
-      -1.011100924928429),
-     ([(0.010836434, 'circuit'),
-       (0.009359381, 'chip'),
-       (0.008903197, 'analog'),
-       (0.00655248, 'neuron'),
-       (0.006147317, 'threshold'),
-       (0.0050505013, 'image'),
-       (0.0048734145, 'bit'),
-       (0.0048433533, 'voltage'),
-       (0.004609887, 'memory'),
-       (0.004231914, 'vlsi'),
-       (0.0042090695, 'implementation'),
-       (0.004113957, 'net'),
-       (0.003907882, 'gate'),
-       (0.0038376434, 'layer'),
-       (0.0034949183, 'pp'),
-       (0.003291277, 'element'),
-       (0.0032199384, 'node'),
-       (0.0030992834, 'signal'),
-       (0.0029631325, 'design'),
-       (0.0028471586, 'processor')],
-      -1.0450720584710176),
-     ([(0.008781833, 'hidden'),
-       (0.008109003, 'net'),
-       (0.0069496827, 'layer'),
-       (0.006155399, 'rule'),
-       (0.005891262, 'node'),
-       (0.0051560537, 'hidden_unit'),
-       (0.0041502067, 'architecture'),
-       (0.0041317134, 'activation'),
-       (0.0041251457, 'sequence'),
-       (0.0040346556, 'propagation'),
-       (0.0036248995, 'back'),
-       (0.0035959794, 'recurrent'),
-       (0.0031377305, 'class'),
-       (0.0030542722, 'trained'),
-       (0.0030384492, 'code'),
-       (0.002923781, 'expert'),
-       (0.0028879363, 'string'),
-       (0.0027964872, 'learn'),
-       (0.0027678378, 'table'),
-       (0.0027654031, 'connection')],
-      -1.122278491657109),
-     ([(0.014161764, 'recognition'),
-       (0.011104057, 'speech'),
-       (0.010318562, 'word'),
-       (0.010277273, 'image'),
-       (0.00809512, 'object'),
-       (0.0063050594, 'signal'),
-       (0.0053472514, 'layer'),
-       (0.005024713, 'classification'),
-       (0.0050242324, 'face'),
-       (0.004580911, 'trained'),
-       (0.004409548, 'human'),
-       (0.0043301815, 'context'),
-       (0.0042581595, 'frame'),
-       (0.0040203724, 'hidden'),
-       (0.004008649, 'speaker'),
-       (0.0035841789, 'class'),
-       (0.0033736168, 'sequence'),
-       (0.0032663026, 'hmm'),
-       (0.0032505158, 'architecture'),
-       (0.0031761383, 'view')],
-      -1.1844643136695376),
-     ([(0.0071913837, 'matrix'),
-       (0.006639144, 'gradient'),
-       (0.0058832015, 'kernel'),
-       (0.0058791665, 'component'),
-       (0.0047264574, 'class'),
-       (0.0042780563, 'density'),
-       (0.004226884, 'xi'),
-       (0.004164046, 'convergence'),
-       (0.0041592806, 'source'),
-       (0.0040763966, 'loss'),
-       (0.00392406, 'basis'),
-       (0.0036241056, 'regression'),
-       (0.0035536229, 'approximation'),
-       (0.0033525354, 'independent'),
-       (0.0032649476, 'bound'),
-       (0.0031867179, 'mixture'),
-       (0.0031306876, 'let'),
-       (0.0030615225, 'signal'),
-       (0.0030061873, 'support'),
-       (0.0029361995, 'pca')],
-      -1.2550214906161075),
-     ([(0.012204602, 'tree'),
-       (0.010181904, 'node'),
-       (0.010171177, 'class'),
-       (0.007966109, 'classifier'),
-       (0.0075656017, 'decision'),
-       (0.005655141, 'rule'),
-       (0.0056041405, 'classification'),
-       (0.0054354756, 'sample'),
-       (0.0050921105, 'distance'),
-       (0.0046420856, 'bound'),
-       (0.0035473844, 'let'),
-       (0.0032015098, 'measure'),
-       (0.0031701634, 'cluster'),
-       (0.0030615227, 'clustering'),
-       (0.0030600468, 'graph'),
-       (0.003044858, 'neighbor'),
-       (0.0030077181, 'nearest'),
-       (0.0029182513, 'call'),
-       (0.0027482447, 'machine'),
-       (0.0027105191, 'hypothesis')],
-      -1.2831209969858721),
-     ([(0.016391048, 'control'),
-       (0.013031393, 'action'),
-       (0.009197483, 'policy'),
-       (0.008487638, 'reinforcement'),
-       (0.0068111503, 'controller'),
-       (0.0067618974, 'dynamic'),
-       (0.006282514, 'robot'),
-       (0.0061591244, 'optimal'),
-       (0.005933612, 'trajectory'),
-       (0.00556125, 'reinforcement_learning'),
-       (0.004895806, 'environment'),
-       (0.0044026882, 'goal'),
-       (0.0042024464, 'reward'),
-       (0.0037804258, 'position'),
-       (0.0037499247, 'arm'),
-       (0.003601292, 'motor'),
-       (0.0034139594, 'sutton'),
-       (0.0031908047, 'movement'),
-       (0.003142896, 'td'),
-       (0.0031323545, 'trial')],
-      -1.4003243935908478)]
+    2022-04-22 17:45:28,224 : INFO : CorpusAccumulator accumulated stats from 1000 documents
+    Average topic coherence: -1.2010.
+    [([(0.009335279, 'matrix'),
+       (0.006810243, 'gradient'),
+       (0.0058767716, 'solution'),
+       (0.0050566536, 'convergence'),
+       (0.0043554083, 'distance'),
+       (0.004101262, 'minimum'),
+       (0.0040506367, 'let'),
+       (0.0039807004, 'eq'),
+       (0.0038555989, 'optimal'),
+       (0.0034886731, 'energy'),
+       (0.0034828722, 'optimization'),
+       (0.0034504435, 'condition'),
+       (0.0033918922, 'approximation'),
+       (0.0033640305, 'descent'),
+       (0.0032366295, 'constraint'),
+       (0.0032220806, 'xi'),
+       (0.003061566, 'stochastic'),
+       (0.0029803582, 'component'),
+       (0.0028803074, 'dynamic'),
+       (0.00280652, 'graph')],
+      -1.0314809310847135),
+     ([(0.006758064, 'class'),
+       (0.006583767, 'gaussian'),
+       (0.005633773, 'sample'),
+       (0.0053001167, 'estimate'),
+       (0.0049426625, 'density'),
+       (0.0048573534, 'mixture'),
+       (0.004835742, 'classifier'),
+       (0.0046612574, 'prior'),
+       (0.004377199, 'likelihood'),
+       (0.004344127, 'bayesian'),
+       (0.0043293545, 'classification'),
+       (0.0037983125, 'regression'),
+       (0.0037747815, 'noise'),
+       (0.003772593, 'log'),
+       (0.0037171794, 'kernel'),
+       (0.003717116, 'approximation'),
+       (0.0037102823, 'variance'),
+       (0.0034671598, 'component'),
+       (0.0032801689, 'posterior'),
+       (0.003173915, 'em')],
+      -1.0736087121706135),
+     ([(0.02519838, 'image'),
+       (0.013268676, 'object'),
+       (0.011446378, 'visual'),
+       (0.009458303, 'field'),
+       (0.008084482, 'motion'),
+       (0.006914001, 'direction'),
+       (0.0060067754, 'map'),
+       (0.0055346545, 'position'),
+       (0.004941865, 'pixel'),
+       (0.004847295, 'spatial'),
+       (0.0047093197, 'face'),
+       (0.0046589067, 'eye'),
+       (0.0046168645, 'location'),
+       (0.0043804147, 'filter'),
+       (0.0042905244, 'response'),
+       (0.0041273055, 'view'),
+       (0.0040860246, 'orientation'),
+       (0.0038862277, 'receptive'),
+       (0.0038229467, 'human'),
+       (0.0038166828, 'recognition')],
+      -1.101159857337566),
+     ([(0.015339, 'layer'),
+       (0.014894987, 'node'),
+       (0.010977563, 'net'),
+       (0.0097472165, 'hidden'),
+       (0.0075573265, 'threshold'),
+       (0.006544599, 'class'),
+       (0.006098466, 'bound'),
+       (0.005063979, 'activation'),
+       (0.0047261445, 'dimension'),
+       (0.0046081766, 'hidden_unit'),
+       (0.004463069, 'theorem'),
+       (0.0043413443, 'region'),
+       (0.0040992484, 'polynomial'),
+       (0.003927951, 'propagation'),
+       (0.003906715, 'hidden_layer'),
+       (0.003902104, 'back'),
+       (0.0034719643, 'let'),
+       (0.0034161368, 'bit'),
+       (0.0033824549, 'connection'),
+       (0.003204875, 'back_propagation')],
+      -1.1578264561349325),
+     ([(0.020037105, 'neuron'),
+       (0.01450755, 'cell'),
+       (0.014472483, 'spike'),
+       (0.011981914, 'signal'),
+       (0.011293252, 'response'),
+       (0.010934215, 'stimulus'),
+       (0.008777942, 'firing'),
+       (0.0077151447, 'frequency'),
+       (0.007196151, 'noise'),
+       (0.006772501, 'channel'),
+       (0.004612463, 'temporal'),
+       (0.0043820725, 'auditory'),
+       (0.0043365704, 'activity'),
+       (0.0040383274, 'sound'),
+       (0.004009629, 'potential'),
+       (0.0039981017, 'correlation'),
+       (0.0038944164, 'fig'),
+       (0.0036725644, 'train'),
+       (0.0034477867, 'firing_rate'),
+       (0.0033127973, 'source')],
+      -1.175461993278655),
+     ([(0.015848655, 'neuron'),
+       (0.015059427, 'cell'),
+       (0.009022958, 'activity'),
+       (0.008109199, 'connection'),
+       (0.008041161, 'synaptic'),
+       (0.0057249856, 'memory'),
+       (0.0053059673, 'cortex'),
+       (0.0050525647, 'dynamic'),
+       (0.0047387453, 'cortical'),
+       (0.004596282, 'simulation'),
+       (0.004441938, 'inhibitory'),
+       (0.004316362, 'phase'),
+       (0.004202166, 'response'),
+       (0.004129471, 'excitatory'),
+       (0.0041026585, 'attractor'),
+       (0.0036624784, 'synapsis'),
+       (0.003452054, 'fig'),
+       (0.003326298, 'interaction'),
+       (0.003292976, 'layer'),
+       (0.003188004, 'oscillator')],
+      -1.224961800422038),
+     ([(0.014448352, 'control'),
+       (0.011206106, 'action'),
+       (0.008610181, 'policy'),
+       (0.0073960284, 'reinforcement'),
+       (0.0071460134, 'dynamic'),
+       (0.006695718, 'trajectory'),
+       (0.006001844, 'optimal'),
+       (0.005919467, 'controller'),
+       (0.005142686, 'robot'),
+       (0.0049040187, 'reinforcement_learning'),
+       (0.004231131, 'environment'),
+       (0.0038927419, 'reward'),
+       (0.0036765926, 'goal'),
+       (0.0032516345, 'forward'),
+       (0.0029738136, 'arm'),
+       (0.0029553284, 'adaptive'),
+       (0.0029314642, 'sutton'),
+       (0.0029179594, 'position'),
+       (0.0028270711, 'path'),
+       (0.002815493, 'motor')],
+      -1.280662748184417),
+     ([(0.01465422, 'circuit'),
+       (0.0134508265, 'chip'),
+       (0.012013224, 'analog'),
+       (0.010762642, 'neuron'),
+       (0.008197728, 'signal'),
+       (0.007833759, 'voltage'),
+       (0.0075949323, 'memory'),
+       (0.0062134205, 'vlsi'),
+       (0.005665418, 'implementation'),
+       (0.00510467, 'bit'),
+       (0.004741555, 'noise'),
+       (0.004108878, 'processor'),
+       (0.004068751, 'pulse'),
+       (0.00402028, 'digital'),
+       (0.003979967, 'design'),
+       (0.0037854807, 'hardware'),
+       (0.0036803125, 'transistor'),
+       (0.0036066298, 'block'),
+       (0.0035669305, 'device'),
+       (0.0035628842, 'synapse')],
+      -1.2836262379148498),
+     ([(0.016415589, 'recognition'),
+       (0.0136875985, 'speech'),
+       (0.01258169, 'word'),
+       (0.0104766805, 'hidden'),
+       (0.0063662766, 'layer'),
+       (0.0061339615, 'character'),
+       (0.0056002084, 'trained'),
+       (0.005490037, 'context'),
+       (0.0051139165, 'sequence'),
+       (0.004984547, 'architecture'),
+       (0.004967922, 'hmm'),
+       (0.004862166, 'speaker'),
+       (0.004366162, 'net'),
+       (0.0042531807, 'digit'),
+       (0.0039046167, 'classification'),
+       (0.0037942464, 'class'),
+       (0.0037750585, 'frame'),
+       (0.00358875, 'mixture'),
+       (0.003476494, 'phoneme'),
+       (0.0034512014, 'letter')],
+      -1.323380921633785),
+     ([(0.008542947, 'rule'),
+       (0.00631226, 'hidden'),
+       (0.00597873, 'generalization'),
+       (0.0045754625, 'hidden_unit'),
+       (0.0043068537, 'prediction'),
+       (0.0040594153, 'net'),
+       (0.003990005, 'sequence'),
+       (0.0038032297, 'tree'),
+       (0.0035338537, 'machine'),
+       (0.0034035398, 'trained'),
+       (0.003242104, 'recurrent'),
+       (0.0031919426, 'training_set'),
+       (0.0029770972, 'table'),
+       (0.0028571628, 'learn'),
+       (0.0028489903, 'language'),
+       (0.0028364619, 'target'),
+       (0.0026097689, 'architecture'),
+       (0.0025739158, 'string'),
+       (0.0025172615, 'symbol'),
+       (0.0024356844, 'teacher')],
+      -1.3578438548773115)]
 
 
 
@@ -959,9 +917,9 @@ References
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  47.007 seconds)
+   **Total running time of the script:** ( 4 minutes  13.971 seconds)
 
-**Estimated memory usage:**  658 MB
+**Estimated memory usage:**  664 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_lda.py:

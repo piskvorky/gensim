@@ -33,7 +33,6 @@ See Also
 
 """
 
-
 from __future__ import with_statement
 
 import logging
@@ -49,6 +48,8 @@ from gensim.parsing.preprocessing import (
     lower_to_unicode, strip_multiple_whitespaces,
 )
 from gensim.utils import deaccent, simple_tokenize
+
+from smart_open import open
 
 logger = logging.getLogger(__name__)
 
@@ -399,7 +400,7 @@ class TextDirectoryCorpus(TextCorpus):
     """
 
     def __init__(self, input, dictionary=None, metadata=False, min_depth=0, max_depth=None,
-                 pattern=None, exclude_pattern=None, lines_are_documents=False, **kwargs):
+                 pattern=None, exclude_pattern=None, lines_are_documents=False, encoding='utf-8', **kwargs):
         """
 
         Parameters
@@ -423,6 +424,8 @@ class TextDirectoryCorpus(TextCorpus):
             Regex to use for file name exclusion, all files matching this pattern will be ignored.
         lines_are_documents : bool, optional
             If True - each line is considered a document, otherwise - each file is one document.
+        encoding : str, optional
+            Encoding used to read the specified file or files in the specified directory.
         kwargs: keyword arguments passed through to the `TextCorpus` constructor.
             See :meth:`gemsim.corpora.textcorpus.TextCorpus.__init__` docstring for more details on these.
 
@@ -432,6 +435,7 @@ class TextDirectoryCorpus(TextCorpus):
         self.pattern = pattern
         self.exclude_pattern = exclude_pattern
         self.lines_are_documents = lines_are_documents
+        self.encoding = encoding
         super(TextDirectoryCorpus, self).__init__(input, dictionary, metadata, **kwargs)
 
     @property
@@ -510,7 +514,7 @@ class TextDirectoryCorpus(TextCorpus):
         """
         num_texts = 0
         for path in self.iter_filepaths():
-            with open(path, 'rt') as f:
+            with open(path, 'rt', encoding=self.encoding) as f:
                 if self.lines_are_documents:
                     for line in f:
                         yield line.strip()

@@ -4,7 +4,7 @@ similarities between documents.
 
 """
 
-__version__ = '4.1.3.dev0'
+__version__ = '4.2.1.dev0'
 
 import logging
 

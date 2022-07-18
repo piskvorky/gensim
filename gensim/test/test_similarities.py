@@ -373,6 +373,11 @@ class TestWmdSimilarity(_TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims >= 0.0))
             self.assertTrue(numpy.alltrue(sims <= 1.0))
 
+    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    def test_str(self):
+        index = self.cls(TEXTS, self.w2v_model)
+        self.assertTrue(str(index))
+
 
 class TestSoftCosineSimilarity(_TestSimilarityABC):
     def setUp(self):

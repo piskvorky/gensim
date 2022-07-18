@@ -446,7 +446,7 @@ class Word2Vec(utils.SaveLoad):
     def build_vocab(
             self, corpus_iterable=None, corpus_file=None, update=False, progress_per=10000,
             keep_raw_vocab=False, trim_rule=None, **kwargs,
-    ):
+        ):
         """Build vocabulary from a sequence of sentences (can be a once-only generator stream).
 
         Parameters
@@ -661,7 +661,7 @@ class Word2Vec(utils.SaveLoad):
                 "prepare_vocab",
                 msg=(
                     f"effective_min_count={self.effective_min_count} retains {len(retain_words)} unique "
-                    f"words ({retain_unique_pct}%% of original {original_unique_total}, drops {drop_unique})"
+                    f"words ({retain_unique_pct:.2f}% of original {original_unique_total}, drops {drop_unique})"
                 ),
             )
 
@@ -671,7 +671,7 @@ class Word2Vec(utils.SaveLoad):
                 "prepare_vocab",
                 msg=(
                     f"effective_min_count={self.effective_min_count} leaves {retain_total} word corpus "
-                    f"({retain_pct}%% of original {original_total}, drops {drop_total})"
+                    f"({retain_pct:.2f}% of original {original_total}, drops {drop_total})"
                 ),
             )
         else:
@@ -706,9 +706,9 @@ class Word2Vec(utils.SaveLoad):
             self.add_lifecycle_event(
                 "prepare_vocab",
                 msg=(
-                    f"added {len(new_words)} new unique words ({new_unique_pct}%% of original "
+                    f"added {len(new_words)} new unique words ({new_unique_pct:.2f}% of original "
                     f"{original_unique_total}) and increased the count of {len(pre_exist_words)} "
-                    f"pre-existing words ({pre_exist_unique_pct}%% of original {original_unique_total})"
+                    f"pre-existing words ({pre_exist_unique_pct:.2f}% of original {original_unique_total})"
                 ),
             )
             retain_words = new_words + pre_exist_words
@@ -1286,7 +1286,7 @@ class Word2Vec(utils.SaveLoad):
             report = progress_queue.get()  # blocks if workers too slow
             if report is None:  # a thread reporting that it finished
                 unfinished_worker_count -= 1
-                logger.info("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
+                logger.debug("worker thread finished; awaiting finish of %i more threads", unfinished_worker_count)
                 continue
             examples, trained_words, raw_words = report
             job_tally += 1
@@ -1593,14 +1593,14 @@ class Word2Vec(utils.SaveLoad):
             # examples-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% examples, %.0f words/s, in_qsize %i, out_qsize %i",
-                cur_epoch + 1, 100.0 * example_count / total_examples, trained_word_count / elapsed,
+                cur_epoch, 100.0 * example_count / total_examples, trained_word_count / elapsed,
                 -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
         else:
             # words-based progress %
             logger.info(
                 "EPOCH %i - PROGRESS: at %.2f%% words, %.0f words/s, in_qsize %i, out_qsize %i",
-                cur_epoch + 1, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
+                cur_epoch, 100.0 * raw_word_count / total_words, trained_word_count / elapsed,
                 -1 if job_queue is None else utils.qsize(job_queue), utils.qsize(progress_queue)
             )
 
@@ -1636,8 +1636,8 @@ class Word2Vec(utils.SaveLoad):
 
         """
         logger.info(
-            "EPOCH - %i : training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
-            cur_epoch + 1, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed,
+            "EPOCH %i: training on %i raw words (%i effective words) took %.1fs, %.0f effective words/s",
+            cur_epoch, raw_word_count, trained_word_count, elapsed, trained_word_count / elapsed,
         )
 
         # don't warn if training in file-based mode, because it's expected behavior
@@ -1647,12 +1647,12 @@ class Word2Vec(utils.SaveLoad):
         # check that the input corpus hasn't changed during iteration
         if total_examples and total_examples != example_count:
             logger.warning(
-                "EPOCH - %i : supplied example count (%i) did not equal expected count (%i)", cur_epoch + 1,
+                "EPOCH %i: supplied example count (%i) did not equal expected count (%i)", cur_epoch,
                 example_count, total_examples
             )
         if total_words and total_words != raw_word_count:
             logger.warning(
-                "EPOCH - %i : supplied raw word count (%i) did not equal expected count (%i)", cur_epoch + 1,
+                "EPOCH %i: supplied raw word count (%i) did not equal expected count (%i)", cur_epoch,
                 raw_word_count, total_words
             )
 

@@ -14,6 +14,7 @@ import os
 import bz2
 import sys
 import tempfile
+import subprocess
 
 import numpy as np
 
@@ -27,6 +28,7 @@ except (ImportError, ValueError):
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
+from gensim.utils import check_output
 from gensim.test.utils import (
     datapath, get_tmpfile, temporary_file, common_texts as sentences,
     LeeCorpus, lee_corpus_list,
@@ -555,6 +557,12 @@ class TestWord2VecModel(unittest.TestCase):
         """Test that evaluating analogies on KeyedVectors give sane results"""
         model = word2vec.Word2Vec(LeeCorpus())
         score, sections = model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
+        score_cosmul, sections_cosmul = model.wv.evaluate_word_analogies(
+            datapath('questions-words.txt'),
+            similarity_function='most_similar_cosmul'
+        )
+        self.assertEqual(score, score_cosmul)
+        self.assertEqual(sections, sections_cosmul)
         self.assertGreaterEqual(score, 0.0)
         self.assertLessEqual(score, 1.0)
         self.assertGreater(len(sections), 0)
@@ -572,9 +580,9 @@ class TestWord2VecModel(unittest.TestCase):
         pearson = correlation[0][0]
         spearman = correlation[1][0]
         oov = correlation[2]
-        self.assertTrue(0.1 < pearson < 1.0, "pearson {pearson} not between 0.1 & 1.0")
-        self.assertTrue(0.1 < spearman < 1.0, "spearman {spearman} not between 0.1 and 1.0")
-        self.assertTrue(0.0 <= oov < 90.0, "OOV {oov} not between 0.0 and 90.0")
+        self.assertTrue(0.1 < pearson < 1.0, f"pearson {pearson} not between 0.1 & 1.0")
+        self.assertTrue(0.1 < spearman < 1.0, f"spearman {spearman} not between 0.1 and 1.0")
+        self.assertTrue(0.0 <= oov < 90.0, f"OOV {oov} not between 0.0 and 90.0")
 
     def test_evaluate_word_pairs_from_file(self):
         """Test Spearman and Pearson correlation coefficients give sane results on similarity datasets"""
@@ -834,7 +842,7 @@ class TestWord2VecModel(unittest.TestCase):
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
             # so let's test only for top10
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
-            self.assertLess(neighbor_rank, 2)
+            self.assertLess(neighbor_rank, 5)
 
     def test_r_n_g(self):
         """Test word2vec results identical with identical RNG seed."""
@@ -1162,15 +1170,18 @@ class TestWord2VecSentenceIterators(unittest.TestCase):
 
 # endclass TestWord2VecSentenceIterators
 
-# TODO: get correct path to Python binary
-# class TestWord2VecScripts(unittest.TestCase):
-#     def test_word2vec_stand_alone_script(self):
-#         """Does Word2Vec script launch standalone?"""
-#         cmd = 'python -m gensim.scripts.word2vec_standalone -train ' + datapath('testcorpus.txt') + \
-#               ' -output vec.txt -size 200 -sample 1e-4 -binary 0 -iter 3 -min_count 1'
-#         output = check_output(cmd, stderr=PIPE)
-#         self.assertEqual(output, '0')
-# #endclass TestWord2VecScripts
+
+class TestWord2VecScripts(unittest.TestCase):
+    def test_word2vec_stand_alone_script(self):
+        """Does Word2Vec script launch standalone?"""
+        cmd = [
+            sys.executable, '-m', 'gensim.scripts.word2vec_standalone',
+            '-train', datapath('testcorpus.txt'),
+            '-output', 'vec.txt', '-size', '200', '-sample', '1e-4',
+            '-binary', '0', '-iter', '3', '-min_count', '1',
+        ]
+        output = check_output(args=cmd, stderr=subprocess.PIPE)
+        self.assertEqual(output, b'')
 
 
 if not hasattr(TestWord2VecModel, 'assertLess'):
