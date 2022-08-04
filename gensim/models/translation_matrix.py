@@ -14,7 +14,7 @@ Examples
 How to make translation between two set of word-vectors
 =======================================================
 
-Initialize a word-vector models
+Initialize two word-vector models
 
 .. sourcecode:: pycon
 
@@ -24,7 +24,7 @@ Initialize a word-vector models
     >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
     >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
 
-Define word pairs (that will be used for construction of translation matrix
+Define word pairs (that will be used for construction of translation matrix)
 
 .. sourcecode:: pycon
 
