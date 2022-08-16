@@ -314,7 +314,8 @@ class LdaState(utils.SaveLoad):
 
 
 class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
-    """Train and use Online Latent Dirichlet Allocation model as presented in `'Online Learning for LDA' by Hoffman et al.`_
+    """Train and use Online Latent Dirichlet Allocation model as presented in
+    `'Online Learning for LDA' by Hoffman et al.`_
 
     Examples
     -------
