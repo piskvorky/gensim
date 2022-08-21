@@ -745,7 +745,8 @@ class sslm(utils.SaveLoad):
         return self.zeta
 
     def compute_post_variance(self, word, chain_variance):
-        r"""Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        r"""Get the variance, based on the
+        `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
         <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
         This function accepts the word to compute variance for, along with the associated sslm class object,
