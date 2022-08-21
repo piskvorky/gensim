@@ -1137,7 +1137,8 @@ class TaggedBrownCorpus:
 
 class TaggedLineDocument:
     def __init__(self, source):
-        """Iterate over a file that contains documents: one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
+        """Iterate over a file that contains documents:
+        one line = :class:`~gensim.models.doc2vec.TaggedDocument` object.
 
         Words are expected to be already preprocessed and separated by whitespace. Document tags are constructed
         automatically from the document line number (each document gets a unique integer tag).
