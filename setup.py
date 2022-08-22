@@ -297,11 +297,17 @@ win_testenv = core_testenv[:]
 #   https://packaging.python.org/discussions/install-requires-vs-requirements/
 #
 
+#
+# We pin the Sphinx-related packages to specific versions here because we want
+# our documentation builds to be reproducible.  Different versions of Sphinx
+# can generate slightly different output, and because we keep some of the output
+# under version control, we want to keep these differences to a minimum.
+#
 docs_testenv = core_testenv + distributed_env + visdom_req + [
-    'sphinx',
-    'sphinx-gallery',
-    'sphinxcontrib.programoutput',
-    'sphinxcontrib-napoleon',
+    'sphinx==5.1.1',
+    'sphinx-gallery==0.11.1',
+    'sphinxcontrib.programoutput==0.17',
+    'sphinxcontrib-napoleon==0.7',
     'matplotlib',  # expected by sphinx-gallery
     'memory_profiler',
     'annoy',
