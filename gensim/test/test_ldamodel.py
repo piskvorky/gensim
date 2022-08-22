@@ -33,7 +33,7 @@ corpus = [dictionary.doc2bow(text) for text in common_texts]
 def test_random_state():
     testcases = [np.random.seed(0), None, np.random.RandomState(0), 0]
     for testcase in testcases:
-        assert(isinstance(utils.get_random_state(testcase), np.random.RandomState))
+        assert isinstance(utils.get_random_state(testcase), np.random.RandomState)
 
 
 class TestLdaModel(unittest.TestCase, basetmtests.TestBaseTopicModel):

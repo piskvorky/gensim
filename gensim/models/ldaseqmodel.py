@@ -4,7 +4,8 @@
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
 # Based on Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 
-"""Lda Sequence model, inspired by `David M. Blei, John D. Lafferty: "Dynamic Topic Models"
+"""Lda Sequence model, inspired by
+`David M. Blei, John D. Lafferty: "Dynamic Topic Models"
 <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 The original C/C++ implementation can be found on `blei-lab/dtm <https://github.com/blei-lab/dtm>`_.
 
@@ -744,7 +745,8 @@ class sslm(utils.SaveLoad):
         return self.zeta
 
     def compute_post_variance(self, word, chain_variance):
-        r"""Get the variance, based on the `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
+        r"""Get the variance, based on the
+        `Variational Kalman Filtering approach for Approximate Inference (section 3.1)
         <https://mimno.infosci.cornell.edu/info6150/readings/dynamic_topic_models.pdf>`_.
 
         This function accepts the word to compute variance for, along with the associated sslm class object,
