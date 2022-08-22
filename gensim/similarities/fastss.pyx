@@ -43,9 +43,11 @@ cdef extern from *:
         void * s1_data = PyUnicode_DATA(s1);
         void * s2_data = PyUnicode_DATA(s2);
 
-        for (WIDTH tmpi = 0; tmpi <= len_s1; tmpi++) row2[tmpi] = tmpi;
+        WIDTH tmpi;
+        for (tmpi = 0; tmpi <= len_s1; tmpi++) row2[tmpi] = tmpi;
 
-        for (WIDTH i2 = 0; i2 < len_s2; i2++) {
+        WIDTH i2;
+        for (i2 = 0; i2 < len_s2; i2++) {
             int all_bad = i2 >= maximum;
             const Py_UCS4 ch = PyUnicode_READ(kind2, s2_data, i2);
             row_flip = 1 - row_flip;
@@ -56,7 +58,8 @@ cdef extern from *:
             }
             *pos_new = i2 + 1;
 
-            for (WIDTH i1 = 0; i1 < len_s1; i1++) {
+            WIDTH i1;
+            for (i1 = 0; i1 < len_s1; i1++) {
                 WIDTH val = *(pos_old++);
                 if (ch != PyUnicode_READ(kind1, s1_data, i1)) {
                     const WIDTH _val1 = *pos_old;
