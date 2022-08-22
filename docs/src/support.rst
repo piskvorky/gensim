@@ -11,7 +11,7 @@ Open source support
 
 The main communication channel is the free `Gensim mailing list <https://groups.google.com/group/gensim>`_.
 
-This is the preferred way to ask for help, report problems and share insights with the community. Newbie questions are perfectly fine, as long as you've read the :ref:`tutorials <sphx_glr_auto_examples>` and `FAQ <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ>`_.
+This is the preferred way to ask for help, report problems and share insights with the community. Newbie questions are perfectly fine, as long as you've read the :ref:`tutorials <gallery_top>` and `FAQ <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ>`_.
 
 FAQ and some useful snippets of code are maintained on GitHub: https://github.com/RARE-Technologies/gensim/wiki/Recipes-&-FAQ.
 
