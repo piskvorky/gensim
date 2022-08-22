@@ -8,6 +8,7 @@ import itertools
 from FuzzyTM import FLSA_W, FLSA
 import gensim
 
+
 class FlsaModel:
     """
     Class to initialize and train fuzzy topic models with methods similar
