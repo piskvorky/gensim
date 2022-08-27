@@ -517,7 +517,7 @@ class KeyedVectors(utils.SaveLoad):
             elif not ignore_missing:
                 raise KeyError(f"Key '{key}' not present in vocabulary")
 
-        if(total_weight > 0):
+        if total_weight > 0:
             mean = mean / total_weight
         if post_normalize:
             mean = matutils.unitvec(mean).astype(REAL)
@@ -1167,7 +1167,7 @@ class KeyedVectors(utils.SaveLoad):
 
     def distances(self, word_or_vector, other_words=()):
         """Compute cosine distances from given word or vector to all words in `other_words`.
-        If `other_words` is empty, return distance between `word_or_vectors` and all words in vocab.
+        If `other_words` is empty, return distance between `word_or_vector` and all words in vocab.
 
         Parameters
         ----------
@@ -1252,7 +1252,7 @@ class KeyedVectors(utils.SaveLoad):
             Similarities between `ws1` and `ws2`.
 
         """
-        if not(len(ws1) and len(ws2)):
+        if not (len(ws1) and len(ws2)):
             raise ZeroDivisionError('At least one of the passed list is empty.')
         mean1 = self.get_mean_vector(ws1, pre_normalize=False)
         mean2 = self.get_mean_vector(ws2, pre_normalize=False)
