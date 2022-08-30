@@ -161,7 +161,7 @@ class OkapiBM25Model(BM25ABC):
     ----------
     .. [2] Robertson S. E., Walker S., Jones S., Hancock-Beaulieu M. M., Gatford M. (1995).
        `Okapi at TREC-3 <http://research.microsoft.com/pubs/67649/okapi_trec3.pdf>`_.
-       *NIST SPECIAL PUBLICATION SP*.
+       *NIST Special Publication 500-226*.
 
     """
     def __init__(self, corpus=None, dictionary=None, k1=1.5, b=0.75, epsilon=0.25):
