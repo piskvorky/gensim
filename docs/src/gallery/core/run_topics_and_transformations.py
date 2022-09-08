@@ -188,6 +188,20 @@ os.unlink(tmp.name)
 #
 #     model = models.TfidfModel(corpus, normalize=True)
 #
+# * `Okapi Best Matching, Okapi BM25 <https://en.wikipedia.org/wiki/Okapi_BM25>`_
+#   expects a bag-of-words (integer values) training corpus during initialization.
+#   During transformation, it will take a vector and return another vector of the
+#   same dimensionality, except that features which were rare in the training corpus
+#   will have their value increased. It therefore converts integer-valued
+#   vectors into real-valued ones, while leaving the number of dimensions intact.
+#
+#   Okapi BM25 is the standard ranking function used by search engines to estimate
+#   the relevance of documents to a given search query.
+#
+#  .. sourcecode:: pycon
+#
+#     model = models.OkapiBM25Model(corpus)
+#
 # * `Latent Semantic Indexing, LSI (or sometimes LSA) <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 #   transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
 #   a latent space of a lower dimensionality. For the toy corpus above we used only
