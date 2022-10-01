@@ -27,7 +27,7 @@ html_theme = 'sphinx_rtd_theme'
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinxcontrib.napoleon',
+    'sphinx.ext.napoleon',
     'sphinx.ext.imgmath',
     'sphinxcontrib.programoutput',
     'sphinx_gallery.gen_gallery',
