@@ -201,7 +201,7 @@ from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
 #
-# This unused import is "somehow" required to fix #3357
+# This import is required by pickle to load models stored by Gensim < 4.0, such as Gensim 3.8.3.
 #
 from gensim.models.keyedvectors import Vocab  # noqa
 
