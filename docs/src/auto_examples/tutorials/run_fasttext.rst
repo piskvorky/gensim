@@ -118,49 +118,32 @@ For the following examples, we'll use the Lee Corpus (which you already have if 
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    2022-04-15 18:28:44,999 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
-    2022-04-15 18:28:45,000 : INFO : built Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...> from 9 documents (total 29 corpus positions)
-    2022-04-15 18:28:45,011 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...> from 9 documents (total 29 corpus positions)", 'datetime': '2022-04-15T18:28:45.000439', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'created'}
-    2022-04-15 18:28:45,120 : INFO : FastText lifecycle event {'params': 'FastText<vocab=0, vector_size=100, alpha=0.025>', 'datetime': '2022-04-15T18:28:45.120058', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'created'}
-    2022-04-15 18:28:45,120 : INFO : collecting all words and their counts
-    2022-04-15 18:28:45,120 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
-    2022-04-15 18:28:45,141 : INFO : collected 10781 word types from a corpus of 59890 raw words and 300 sentences
-    2022-04-15 18:28:45,141 : INFO : Creating a fresh vocabulary
-    2022-04-15 18:28:45,154 : INFO : FastText lifecycle event {'msg': 'effective_min_count=5 retains 1762 unique words (16.343567387069847%% of original 10781, drops 9019)', 'datetime': '2022-04-15T18:28:45.154889', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'prepare_vocab'}
-    2022-04-15 18:28:45,155 : INFO : FastText lifecycle event {'msg': 'effective_min_count=5 leaves 46084 word corpus (76.94773751878444%% of original 59890, drops 13806)', 'datetime': '2022-04-15T18:28:45.155136', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'prepare_vocab'}
-    2022-04-15 18:28:45,179 : INFO : deleting the raw counts dictionary of 10781 items
-    2022-04-15 18:28:45,180 : INFO : sample=0.001 downsamples 45 most-common words
-    2022-04-15 18:28:45,180 : INFO : FastText lifecycle event {'msg': 'downsampling leaves estimated 32610.61883565215 word corpus (70.8%% of prior 46084)', 'datetime': '2022-04-15T18:28:45.180609', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'prepare_vocab'}
-    2022-04-15 18:28:45,236 : INFO : estimated required memory for 1762 words, 2000000 buckets and 100 dimensions: 802597824 bytes
-    2022-04-15 18:28:45,236 : INFO : resetting layer weights
-    2022-04-15 18:28:47,661 : INFO : FastText lifecycle event {'update': False, 'trim_rule': 'None', 'datetime': '2022-04-15T18:28:47.661728', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'build_vocab'}
-    2022-04-15 18:28:47,662 : INFO : FastText lifecycle event {'msg': 'training model with 3 workers on 1762 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5 shrink_windows=True', 'datetime': '2022-04-15T18:28:47.662150', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'train'}
-    2022-04-15 18:28:47,892 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2022-04-15 18:28:47,910 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2022-04-15 18:28:47,916 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2022-04-15 18:28:47,916 : INFO : EPOCH - 1 : training on 60387 raw words (32958 effective words) took 0.2s, 133954 effective words/s
-    2022-04-15 18:28:48,125 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2022-04-15 18:28:48,153 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2022-04-15 18:28:48,157 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2022-04-15 18:28:48,157 : INFO : EPOCH - 2 : training on 60387 raw words (32906 effective words) took 0.2s, 140644 effective words/s
-    2022-04-15 18:28:48,306 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2022-04-15 18:28:48,387 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2022-04-15 18:28:48,392 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2022-04-15 18:28:48,392 : INFO : EPOCH - 3 : training on 60387 raw words (32863 effective words) took 0.2s, 145877 effective words/s
-    2022-04-15 18:28:48,538 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2022-04-15 18:28:48,601 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2022-04-15 18:28:48,616 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2022-04-15 18:28:48,616 : INFO : EPOCH - 4 : training on 60387 raw words (32832 effective words) took 0.2s, 153286 effective words/s
-    2022-04-15 18:28:48,761 : INFO : worker thread finished; awaiting finish of 2 more threads
-    2022-04-15 18:28:48,818 : INFO : worker thread finished; awaiting finish of 1 more threads
-    2022-04-15 18:28:48,823 : INFO : worker thread finished; awaiting finish of 0 more threads
-    2022-04-15 18:28:48,824 : INFO : EPOCH - 5 : training on 60387 raw words (32827 effective words) took 0.2s, 165849 effective words/s
-    2022-04-15 18:28:48,824 : INFO : FastText lifecycle event {'msg': 'training on 301935 raw words (164386 effective words) took 1.2s, 141437 effective words/s', 'datetime': '2022-04-15T18:28:48.824584', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'train'}
-    <gensim.models.fasttext.FastText object at 0x7f16ec7b59a0>
+    2022-10-23 11:05:20,779 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
+    2022-10-23 11:05:20,779 : INFO : built Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...> from 9 documents (total 29 corpus positions)
+    2022-10-23 11:05:20,782 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<12 unique tokens: ['computer', 'human', 'interface', 'response', 'survey']...> from 9 documents (total 29 corpus positions)", 'datetime': '2022-10-23T11:05:20.780094', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'created'}
+    2022-10-23 11:05:20,858 : INFO : FastText lifecycle event {'params': 'FastText<vocab=0, vector_size=100, alpha=0.025>', 'datetime': '2022-10-23T11:05:20.858457', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'created'}
+    2022-10-23 11:05:20,858 : INFO : collecting all words and their counts
+    2022-10-23 11:05:20,858 : INFO : PROGRESS: at sentence #0, processed 0 words, keeping 0 word types
+    2022-10-23 11:05:20,874 : INFO : collected 10781 word types from a corpus of 59890 raw words and 300 sentences
+    2022-10-23 11:05:20,874 : INFO : Creating a fresh vocabulary
+    2022-10-23 11:05:20,882 : INFO : FastText lifecycle event {'msg': 'effective_min_count=5 retains 1762 unique words (16.34% of original 10781, drops 9019)', 'datetime': '2022-10-23T11:05:20.882842', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'prepare_vocab'}
+    2022-10-23 11:05:20,882 : INFO : FastText lifecycle event {'msg': 'effective_min_count=5 leaves 46084 word corpus (76.95% of original 59890, drops 13806)', 'datetime': '2022-10-23T11:05:20.882944', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'prepare_vocab'}
+    2022-10-23 11:05:20,892 : INFO : deleting the raw counts dictionary of 10781 items
+    2022-10-23 11:05:20,892 : INFO : sample=0.001 downsamples 45 most-common words
+    2022-10-23 11:05:20,893 : INFO : FastText lifecycle event {'msg': 'downsampling leaves estimated 32610.61883565215 word corpus (70.8%% of prior 46084)', 'datetime': '2022-10-23T11:05:20.893011', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'prepare_vocab'}
+    2022-10-23 11:05:20,927 : INFO : estimated required memory for 1762 words, 2000000 buckets and 100 dimensions: 802597824 bytes
+    2022-10-23 11:05:20,927 : INFO : resetting layer weights
+    2022-10-23 11:05:22,169 : INFO : FastText lifecycle event {'update': False, 'trim_rule': 'None', 'datetime': '2022-10-23T11:05:22.169699', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'build_vocab'}
+    2022-10-23 11:05:22,169 : INFO : FastText lifecycle event {'msg': 'training model with 3 workers on 1762 vocabulary and 100 features, using sg=0 hs=0 sample=0.001 negative=5 window=5 shrink_windows=True', 'datetime': '2022-10-23T11:05:22.169966', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'train'}
+    2022-10-23 11:05:22,273 : INFO : EPOCH 0: training on 60387 raw words (32958 effective words) took 0.1s, 355842 effective words/s
+    2022-10-23 11:05:22,369 : INFO : EPOCH 1: training on 60387 raw words (32906 effective words) took 0.1s, 369792 effective words/s
+    2022-10-23 11:05:22,466 : INFO : EPOCH 2: training on 60387 raw words (32863 effective words) took 0.1s, 361340 effective words/s
+    2022-10-23 11:05:22,563 : INFO : EPOCH 3: training on 60387 raw words (32832 effective words) took 0.1s, 363904 effective words/s
+    2022-10-23 11:05:22,662 : INFO : EPOCH 4: training on 60387 raw words (32827 effective words) took 0.1s, 355536 effective words/s
+    2022-10-23 11:05:22,662 : INFO : FastText lifecycle event {'msg': 'training on 301935 raw words (164386 effective words) took 0.5s, 333704 effective words/s', 'datetime': '2022-10-23T11:05:22.662680', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'train'}
+    <gensim.models.fasttext.FastText object at 0x7f112f39db70>
 
 
 
@@ -243,24 +226,22 @@ any other model in Gensim.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    2022-04-15 18:28:49,194 : INFO : FastText lifecycle event {'fname_or_handle': '/tmp/saved_model_gensim-ujg3006p', 'separately': '[]', 'sep_limit': 10485760, 'ignore': frozenset(), 'datetime': '2022-04-15T18:28:49.193949', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'saving'}
-    2022-04-15 18:28:49,195 : INFO : storing np array 'vectors_ngrams' to /tmp/saved_model_gensim-ujg3006p.wv.vectors_ngrams.npy
-    2022-04-15 18:28:50,644 : INFO : not storing attribute vectors
-    2022-04-15 18:28:50,645 : INFO : not storing attribute buckets_word
-    2022-04-15 18:28:50,645 : INFO : not storing attribute cum_table
-    2022-04-15 18:28:50,678 : INFO : saved /tmp/saved_model_gensim-ujg3006p
-    2022-04-15 18:28:50,679 : INFO : loading FastText object from /tmp/saved_model_gensim-ujg3006p
-    2022-04-15 18:28:50,684 : INFO : loading wv recursively from /tmp/saved_model_gensim-ujg3006p.wv.* with mmap=None
-    2022-04-15 18:28:50,684 : INFO : loading vectors_ngrams from /tmp/saved_model_gensim-ujg3006p.wv.vectors_ngrams.npy with mmap=None
-    2022-04-15 18:28:51,772 : INFO : setting ignored attribute vectors to None
-    2022-04-15 18:28:51,772 : INFO : setting ignored attribute buckets_word to None
-    2022-04-15 18:28:51,919 : INFO : setting ignored attribute cum_table to None
-    2022-04-15 18:28:51,956 : INFO : FastText lifecycle event {'fname': '/tmp/saved_model_gensim-ujg3006p', 'datetime': '2022-04-15T18:28:51.956167', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'loaded'}
-    <gensim.models.fasttext.FastText object at 0x7f16ddb4e940>
+    2022-10-23 11:05:22,826 : INFO : FastText lifecycle event {'fname_or_handle': '/tmp/saved_model_gensim-grsw1xyt', 'separately': '[]', 'sep_limit': 10485760, 'ignore': frozenset(), 'datetime': '2022-10-23T11:05:22.826086', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'saving'}
+    2022-10-23 11:05:22,827 : INFO : storing np array 'vectors_ngrams' to /tmp/saved_model_gensim-grsw1xyt.wv.vectors_ngrams.npy
+    2022-10-23 11:05:24,259 : INFO : not storing attribute vectors
+    2022-10-23 11:05:24,259 : INFO : not storing attribute buckets_word
+    2022-10-23 11:05:24,260 : INFO : not storing attribute cum_table
+    2022-10-23 11:05:24,289 : INFO : saved /tmp/saved_model_gensim-grsw1xyt
+    2022-10-23 11:05:24,289 : INFO : loading FastText object from /tmp/saved_model_gensim-grsw1xyt
+    2022-10-23 11:05:24,292 : INFO : loading wv recursively from /tmp/saved_model_gensim-grsw1xyt.wv.* with mmap=None
+    2022-10-23 11:05:24,292 : INFO : loading vectors_ngrams from /tmp/saved_model_gensim-grsw1xyt.wv.vectors_ngrams.npy with mmap=None
+    2022-10-23 11:05:24,594 : INFO : setting ignored attribute vectors to None
+    2022-10-23 11:05:24,594 : INFO : setting ignored attribute buckets_word to None
+    2022-10-23 11:05:24,673 : INFO : setting ignored attribute cum_table to None
+    2022-10-23 11:05:24,689 : INFO : FastText lifecycle event {'fname': '/tmp/saved_model_gensim-grsw1xyt', 'datetime': '2022-10-23T11:05:24.689800', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'loaded'}
+    <gensim.models.fasttext.FastText object at 0x7f112f022620>
 
 
 
@@ -303,11 +284,9 @@ attribute and discard `model`, to save space and RAM.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    <gensim.models.fasttext.FastTextKeyedVectors object at 0x7f16ec82b310>
+    <gensim.models.fasttext.FastTextKeyedVectors object at 0x7f112f39c2e0>
     True
 
 
@@ -324,8 +303,6 @@ attribute and discard `model`, to save space and RAM.
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -346,30 +323,28 @@ attribute and discard `model`, to save space and RAM.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    array([-0.22207159,  0.22077355, -0.27423275, -0.12641521,  0.07287006,
-            0.4083373 ,  0.21238557,  0.46251252,  0.25193176, -0.20717509,
-            0.01104122, -0.16850752, -0.1976137 ,  0.47486067, -0.39905465,
-           -0.54326177,  0.20709044, -0.2399467 , -0.43859157, -0.52974105,
-           -0.47117457, -0.07892875, -0.39079466, -0.13349132, -0.21139224,
-           -0.35893348, -0.73871654, -0.12033081, -0.36359233,  0.2941681 ,
-           -0.3433954 ,  0.32726443,  0.82508403, -0.26969045,  0.18187422,
-            0.41465673,  0.3357784 , -0.1352851 , -0.4158488 , -0.34467757,
-            0.43315125, -0.41209778,  0.02017804, -0.44057542, -0.49704787,
-           -0.26325086, -0.13446096,  0.11956058,  0.41598788, -0.00717945,
-            0.35173428, -0.41351745,  0.26581395, -0.3975636 , -0.15131967,
-           -0.17296672, -0.13397802, -0.15426044,  0.03024485, -0.3538838 ,
-           -0.3144943 , -0.44602963, -0.11996318,  0.359241  , -0.15560251,
-            0.6724791 ,  0.06538071,  0.05428659,  0.42706105,  0.18553604,
-           -0.24318866,  0.35659605,  0.47357708, -0.66754127,  0.35161147,
-           -0.14617886,  0.27490965, -0.01956096,  0.0580783 ,  0.41598275,
-            0.17644556, -0.5228533 , -0.82049775, -0.14422251, -0.11561928,
-           -0.8318165 ,  0.49774447,  0.17220779, -0.0035387 , -0.2084888 ,
-            0.01826598,  0.38385594, -0.08003889,  0.06094757, -0.15682602,
-            0.607231  , -0.2315485 , -0.34553114, -0.04828577, -0.2248888 ],
+    array([-0.19996722,  0.1813906 , -0.2631422 , -0.09450997,  0.0605551 ,
+            0.38595745,  0.30778143,  0.5067505 ,  0.23698695, -0.23913051,
+            0.02506454, -0.15320891, -0.2434152 ,  0.52560467, -0.38980618,
+           -0.55800015,  0.19291814, -0.23110117, -0.43341738, -0.53108984,
+           -0.4688596 , -0.04782811, -0.46767992, -0.1137548 , -0.20153292,
+           -0.31324366, -0.6708753 , -0.10945056, -0.31843412,  0.26011363,
+           -0.32820454,  0.32238692,  0.8404276 , -0.2502807 ,  0.19792764,
+            0.37759355,  0.40180317, -0.09189364, -0.36985794, -0.33649284,
+            0.46887243, -0.43174997,  0.04100857, -0.39025533, -0.51651365,
+           -0.32087606, -0.05997978,  0.14294061,  0.360094  , -0.02155857,
+            0.37047735, -0.44327876,  0.28450134, -0.4054028 , -0.19731535,
+           -0.21376207, -0.1685454 , -0.12901361,  0.03528974, -0.35231775,
+           -0.35454988, -0.43326724, -0.21185161,  0.3519939 , -0.11108   ,
+            0.69391364,  0.05785353,  0.05663215,  0.42399758,  0.24977471,
+           -0.24918619,  0.3934391 ,  0.5109367 , -0.6553013 ,  0.33610865,
+           -0.09825795,  0.25878346, -0.03377685,  0.06902322,  0.37547323,
+            0.17450804, -0.5030028 , -0.82190335, -0.15457787, -0.12070727,
+           -0.78729135,  0.49075758,  0.19234893, -0.01774574, -0.28116694,
+           -0.02472195,  0.40292844, -0.14185381,  0.07625303, -0.20744859,
+            0.59728205, -0.2217386 , -0.29148448, -0.01873052, -0.2401561 ],
           dtype=float32)
 
 
@@ -388,30 +363,28 @@ attribute and discard `model`, to save space and RAM.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    array([-0.19359249,  0.19266072, -0.23831715, -0.10963183,  0.06205885,
-            0.35349017,  0.18585438,  0.40367636,  0.21932858, -0.18163101,
-            0.01131329, -0.14488953, -0.17280772,  0.4104396 , -0.34801972,
-           -0.47257116,  0.17917019, -0.20796512, -0.37961343, -0.4608993 ,
-           -0.40641037, -0.06964058, -0.33943632, -0.11738791, -0.18228863,
-           -0.31037334, -0.6403033 , -0.10227475, -0.3155495 ,  0.25704917,
-           -0.29632765,  0.28378326,  0.71502787, -0.23392071,  0.15810877,
-            0.359666  ,  0.29306924, -0.11749208, -0.36147878, -0.29998863,
-            0.3754248 , -0.35710186,  0.01701352, -0.3821959 , -0.4325981 ,
-           -0.22746918, -0.11383997,  0.10449301,  0.3627854 , -0.00514597,
-            0.3071107 , -0.35944855,  0.23158357, -0.34526545, -0.13099143,
-           -0.14903384, -0.11835003, -0.13222367,  0.02756706, -0.30474514,
-           -0.27212575, -0.38782486, -0.10387871,  0.31152904, -0.13458222,
-            0.58513045,  0.05689588,  0.04451419,  0.37070122,  0.16232586,
-           -0.2117109 ,  0.30781513,  0.4124873 , -0.5797168 ,  0.3068925 ,
-           -0.12592888,  0.23819536, -0.01782229,  0.05022268,  0.36139277,
-            0.15376486, -0.45452076, -0.7120637 , -0.12636082, -0.09942135,
-           -0.72365934,  0.4322844 ,  0.1497761 , -0.00104655, -0.18171164,
-            0.01591134,  0.33218506, -0.07001692,  0.05357721, -0.13666429,
-            0.5276215 , -0.20245516, -0.2964478 , -0.04159901, -0.1961598 ],
+    array([-0.17333212,  0.15747589, -0.22726758, -0.08140025,  0.05103909,
+            0.33196837,  0.2670658 ,  0.43939307,  0.205082  , -0.20810795,
+            0.02336278, -0.13075203, -0.21126968,  0.45168898, -0.33789524,
+           -0.48235178,  0.16582203, -0.19900155, -0.3727986 , -0.4591713 ,
+           -0.401847  , -0.04239817, -0.40366223, -0.09961417, -0.17264459,
+           -0.26896393, -0.57774097, -0.09225026, -0.27459562,  0.22605109,
+           -0.28136173,  0.27779424,  0.72365224, -0.21562205,  0.17094932,
+            0.3253317 ,  0.34816158, -0.07930711, -0.31941393, -0.29101238,
+            0.40383977, -0.3717381 ,  0.03487907, -0.33628452, -0.4465965 ,
+           -0.27571818, -0.0488493 ,  0.12399682,  0.31216368, -0.01752434,
+            0.32131058, -0.38280696,  0.24619998, -0.34979105, -0.16987896,
+           -0.18326469, -0.14740779, -0.1095791 ,  0.03177686, -0.30144197,
+           -0.30499157, -0.37426412, -0.18248272,  0.3032632 , -0.09528783,
+            0.59990335,  0.05005969,  0.04626458,  0.36565247,  0.21673569,
+           -0.2155152 ,  0.33764148,  0.4421136 , -0.56542957,  0.29158652,
+           -0.08375975,  0.22272962, -0.02998246,  0.05934277,  0.3240713 ,
+            0.1511237 , -0.43450487, -0.7087094 , -0.13446207, -0.10318276,
+           -0.6806781 ,  0.42355484,  0.1661925 , -0.01327086, -0.2432955 ,
+           -0.02126789,  0.34654808, -0.12292334,  0.06645596, -0.1795192 ,
+            0.5156855 , -0.19275527, -0.24794976, -0.01581961, -0.2081413 ],
           dtype=float32)
 
 
@@ -442,8 +415,6 @@ Similarity operations work the same way as word2vec. **Out-of-vocabulary words c
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
     False
@@ -462,8 +433,6 @@ Similarity operations work the same way as word2vec. **Out-of-vocabulary words c
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -484,11 +453,9 @@ Similarity operations work the same way as word2vec. **Out-of-vocabulary words c
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    0.9999919
+    0.9999918
 
 
 
@@ -517,20 +484,18 @@ The example training corpus is a toy corpus, results are not expected to be good
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    [('night', 0.9999918937683105),
-     ('rights', 0.9999880194664001),
-     ('flights', 0.9999876022338867),
-     ('overnight', 0.9999872446060181),
-     ('fighting', 0.9999854564666748),
-     ('fighters', 0.99998539686203),
-     ('entered', 0.9999850988388062),
-     ('fight', 0.9999850988388062),
-     ('fighter', 0.9999849796295166),
-     ('eight', 0.9999846816062927)]
+    [('night', 0.9999918341636658),
+     ('rights', 0.9999877214431763),
+     ('flights', 0.9999877214431763),
+     ('overnight', 0.999987006187439),
+     ('fighting', 0.9999857544898987),
+     ('fighters', 0.9999855160713196),
+     ('fight', 0.9999852180480957),
+     ('entered', 0.9999851584434509),
+     ('fighter', 0.999984860420227),
+     ('eight', 0.999984622001648)]
 
 
 
@@ -547,11 +512,9 @@ The example training corpus is a toy corpus, results are not expected to be good
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    0.9999401
+    0.99993986
 
 
 
@@ -567,8 +530,6 @@ The example training corpus is a toy corpus, results are not expected to be good
 
 
 .. rst-class:: sphx-glr-script-out
-
- Out:
 
  .. code-block:: none
 
@@ -589,20 +550,18 @@ The example training corpus is a toy corpus, results are not expected to be good
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    [('capital,', 0.9996517896652222),
-     ('find', 0.9996505975723267),
-     ('findings', 0.9996435046195984),
-     ('field', 0.9996432662010193),
-     ('seekers.', 0.999640941619873),
-     ('finding', 0.9996404051780701),
-     ('abuse', 0.999639093875885),
-     ('storm', 0.9996387362480164),
-     ('had', 0.9996375441551208),
-     ('26-year-old', 0.9996355772018433)]
+    [('find', 0.9996394515037537),
+     ('capital,', 0.999639093875885),
+     ('findings', 0.9996339082717896),
+     ('seekers.', 0.9996323585510254),
+     ('field', 0.9996322393417358),
+     ('finding', 0.9996311664581299),
+     ('had', 0.9996305704116821),
+     ('abuse', 0.9996281862258911),
+     ('storm', 0.9996268153190613),
+     ('heading', 0.9996247291564941)]
 
 
 
@@ -619,21 +578,19 @@ The example training corpus is a toy corpus, results are not expected to be good
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    2022-04-15 18:29:00,063 : INFO : Evaluating word analogies for top 300000 words in the model on /home/thomas/Documents/FOSS/gensim-tlouf/gensim/test/test_data/questions-words.txt
-    2022-04-15 18:29:00,107 : INFO : family: 0.0% (0/2)
-    2022-04-15 18:29:00,141 : INFO : gram3-comparative: 8.3% (1/12)
-    2022-04-15 18:29:00,157 : INFO : gram4-superlative: 33.3% (4/12)
-    2022-04-15 18:29:00,176 : INFO : gram5-present-participle: 45.0% (9/20)
-    2022-04-15 18:29:00,201 : INFO : gram6-nationality-adjective: 30.0% (6/20)
-    2022-04-15 18:29:00,225 : INFO : gram7-past-tense: 5.0% (1/20)
-    2022-04-15 18:29:00,243 : INFO : gram8-plural: 33.3% (4/12)
-    2022-04-15 18:29:00,251 : INFO : Quadruplets with out-of-vocabulary words: 99.5%
-    2022-04-15 18:29:00,253 : INFO : NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use "dummy4unknown=True"
-    2022-04-15 18:29:00,253 : INFO : Total accuracy: 25.5% (25/98)
+    2022-10-23 11:05:26,790 : INFO : Evaluating word analogies for top 300000 words in the model on /home/thomas/Documents/FOSS/gensim-tlouf/gensim/test/test_data/questions-words.txt
+    2022-10-23 11:05:26,814 : INFO : family: 0.0% (0/2)
+    2022-10-23 11:05:26,822 : INFO : gram3-comparative: 8.3% (1/12)
+    2022-10-23 11:05:26,827 : INFO : gram4-superlative: 33.3% (4/12)
+    2022-10-23 11:05:26,832 : INFO : gram5-present-participle: 45.0% (9/20)
+    2022-10-23 11:05:26,845 : INFO : gram6-nationality-adjective: 30.0% (6/20)
+    2022-10-23 11:05:26,851 : INFO : gram7-past-tense: 5.0% (1/20)
+    2022-10-23 11:05:26,856 : INFO : gram8-plural: 33.3% (4/12)
+    2022-10-23 11:05:26,858 : INFO : Quadruplets with out-of-vocabulary words: 99.5%
+    2022-10-23 11:05:26,859 : INFO : NB: analogies containing OOV words were skipped from evaluation! To change this behavior, use "dummy4unknown=True"
+    2022-10-23 11:05:26,859 : INFO : Total accuracy: 25.5% (25/98)
     (0.25510204081632654,
      [{'correct': [], 'incorrect': [], 'section': 'capital-common-countries'},
       {'correct': [], 'incorrect': [], 'section': 'capital-world'},
@@ -911,14 +868,12 @@ Compute the Word Movers Distance between the two sentences.
 
 .. rst-class:: sphx-glr-script-out
 
- Out:
-
  .. code-block:: none
 
-    2022-04-15 18:29:01,199 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
-    2022-04-15 18:29:01,200 : INFO : built Dictionary<8 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'chicago']...> from 2 documents (total 8 corpus positions)
-    2022-04-15 18:29:01,200 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<8 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'chicago']...> from 2 documents (total 8 corpus positions)", 'datetime': '2022-04-15T18:29:01.200324', 'gensim': '4.1.3.dev0', 'python': '3.8.10 (default, Mar 15 2022, 12:22:08) \n[GCC 9.4.0]', 'platform': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.29', 'event': 'created'}
-    'Word Movers Distance is 0.015939769681979948 (lower means closer)'
+    2022-10-23 11:05:27,139 : INFO : adding document #0 to Dictionary<0 unique tokens: []>
+    2022-10-23 11:05:27,140 : INFO : built Dictionary<8 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'chicago']...> from 2 documents (total 8 corpus positions)
+    2022-10-23 11:05:27,140 : INFO : Dictionary lifecycle event {'msg': "built Dictionary<8 unique tokens: ['illinois', 'media', 'obama', 'speaks', 'chicago']...> from 2 documents (total 8 corpus positions)", 'datetime': '2022-10-23T11:05:27.140129', 'gensim': '4.2.1.dev0', 'python': '3.10.6 (main, Aug 10 2022, 11:40:04) [GCC 11.3.0]', 'platform': 'Linux-5.19.0-76051900-generic-x86_64-with-glibc2.35', 'event': 'created'}
+    'Word Movers Distance is 0.01600033861640832 (lower means closer)'
 
 
 
@@ -952,30 +907,25 @@ That's all! You've made it to the end of this tutorial.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  17.984 seconds)
+   **Total running time of the script:** ( 0 minutes  7.208 seconds)
 
-**Estimated memory usage:**  1616 MB
+**Estimated memory usage:**  1619 MB
 
 
 .. _sphx_glr_download_auto_examples_tutorials_run_fasttext.py:
 
+.. only:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-example
+  .. container:: sphx-glr-footer sphx-glr-footer-example
 
 
+    .. container:: sphx-glr-download sphx-glr-download-python
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+      :download:`Download Python source code: run_fasttext.py <run_fasttext.py>`
 
-     :download:`Download Python source code: run_fasttext.py <run_fasttext.py>`
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
-
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-     :download:`Download Jupyter notebook: run_fasttext.ipynb <run_fasttext.ipynb>`
+      :download:`Download Jupyter notebook: run_fasttext.ipynb <run_fasttext.ipynb>`
 
 
 .. only:: html
