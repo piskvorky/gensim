@@ -326,7 +326,7 @@ cdef void w2v_fast_sentence_cbow_hs(
 
         if _compute_loss == 1:
             sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
-            lprob = -1*sgn*f_dot
+            lprob = sgn*f_dot
             if lprob <= -MAX_EXP or lprob >= MAX_EXP:
                 continue
             lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
