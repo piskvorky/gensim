@@ -152,23 +152,6 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s EnsembleLda model">
-
-.. only:: html
-
-  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_ensemblelda_thumb.png
-    :alt: Ensemble LDA
-
-  :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py`
-
-.. raw:: html
-
-      <div class="sphx-glr-thumbnail-title">Ensemble LDA</div>
-    </div>
-
-
-.. raw:: html
-
     <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s fastText model and demonstrates its use on the Lee Corpus.">
 
 .. only:: html
@@ -181,6 +164,23 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 .. raw:: html
 
       <div class="sphx-glr-thumbnail-title">FastText Model</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s EnsembleLda model">
+
+.. only:: html
+
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_ensemblelda_thumb.png
+    :alt: Ensemble LDA
+
+  :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Ensemble LDA</div>
     </div>
 
 
@@ -220,7 +220,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
 
 .. only:: html
 
@@ -237,7 +237,7 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the WMD.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates using Gensim&#x27;s implemenation of the SCM.">
 
 .. only:: html
 

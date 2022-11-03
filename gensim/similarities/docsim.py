@@ -1014,10 +1014,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
     When using this code, please consider citing the following papers:
 
-    * `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
-      <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_
-    * `Ofir Pele and Michael Werman, "Fast and robust earth mover's distances"
-      <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_
+    * `Rémi Flamary et al. "POT: Python Optimal Transport"
+      <https://jmlr.org/papers/v22/20-451.html>`_
     * `Matt Kusner et al. "From Word Embeddings To Document Distances"
       <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_
 

@@ -274,7 +274,7 @@ core_testenv = [
 
 if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
     core_testenv.extend([
-        'pyemd',
+        'POT',
         'nmslib',
     ])
 
