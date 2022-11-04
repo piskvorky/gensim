@@ -1284,7 +1284,7 @@ class KeyedVectors(utils.SaveLoad):
 
     def evaluate_word_analogies(
             self, analogies, restrict_vocab=300000, case_insensitive=True,
-            dummy4unknown=False, similarity_function='most_similar'):
+            dummy4unknown=False, similarity_function='most_similar', from_topn=1):
         """Compute performance of the model on an analogy test set.
 
         The accuracy is reported (printed to log and returned as a score) for each section separately,
@@ -1312,6 +1312,8 @@ class KeyedVectors(utils.SaveLoad):
             Otherwise, these tuples are skipped entirely and not used in the evaluation.
         similarity_function : str, optional
             Function name used for similarity calculation.
+        from_topn : int, optional
+            If `similarity_function` is `most_similar`, use `from_topn` most similar words to calculate similarity.
 
         Returns
         -------
@@ -1368,14 +1370,19 @@ class KeyedVectors(utils.SaveLoad):
                     # find the most likely prediction using 3CosAdd (vector offset) method
                     # TODO: implement 3CosMul and set-based methods for solving analogies
 
-                    sims = self.most_similar(positive=[b, c], negative=[a], topn=5, restrict_vocab=restrict_vocab)
+                    sims = self.most_similar(positive=[b, c], negative=[a], topn=5+from_topn-1, restrict_vocab=restrict_vocab)
                     self.key_to_index = original_key_to_index
+                    attempts = 0
                     for element in sims:
                         predicted = element[0].upper() if case_insensitive else element[0]
                         if predicted in ok_vocab and predicted not in ignore:
                             if predicted != expected:
                                 logger.debug("%s: expected %s, predicted %s", line.strip(), expected, predicted)
-                            break
+                                attempts += 1
+                            else:
+                                break
+                            if attempts == from_topn - 1:
+                                break
                     if predicted == expected:
                         section['correct'].append((a, b, c, expected))
                     else:
