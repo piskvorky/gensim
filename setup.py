@@ -318,20 +318,20 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.17.0'
+NUMPY_STR = 'numpy >= 1.23.4'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.28'
+CYTHON_STR = 'Cython==0.29.32'
 
 # Allow overriding the Cython version requirement
 CYTHON_STR = os.environ.get('GENSIM_CYTHON_REQUIRES', CYTHON_STR)
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
+    'scipy >= 1.9.3',
     'smart_open >= 1.8.1',
 ]
 
