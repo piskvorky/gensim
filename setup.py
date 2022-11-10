@@ -331,7 +331,7 @@ CYTHON_STR = os.environ.get('GENSIM_CYTHON_REQUIRES', CYTHON_STR)
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 1.9.0',
+    'scipy >= 1.7.0',
     'smart_open >= 1.8.1',
 ]
 
