@@ -274,9 +274,9 @@ core_testenv = [
 
 if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 11):
     core_testenv.extend([
-            'POT',
-            'nmslib',
-        ])
+        'POT',
+        'nmslib',
+    ])
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req
