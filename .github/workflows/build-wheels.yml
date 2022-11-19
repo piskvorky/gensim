@@ -48,7 +48,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10','3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
@@ -206,6 +206,7 @@ jobs:
         find . -type f -name "*.egg" -exec rm -v {} \;
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
+
     #
     # We can't use multibuild on Windows, so we have to roll our own build script.
     # Adapted from
@@ -230,6 +231,7 @@ jobs:
         # For consistency with the multibuild step.
         #
         mv dist wheelhouse
+
     - name: Prepare for testing
       run: |
         #
@@ -239,6 +241,7 @@ jobs:
         #
         find . -type f -name "*.egg" -exec rm -v {} \;
         python -m venv test_environment
+
     #
     # Multibuild has a test step but it essentially just installs the wheel
     # and runs the test, and requires a lot of magic to get it working.
@@ -259,6 +262,7 @@ jobs:
         # If we remove that from the wheel, we'll need to rewrite this step.
         #
         pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
+
     #
     # We need a separate testing step for windows because the command for
     # activating the virtual environment is slightly different
@@ -273,6 +277,7 @@ jobs:
         cd test_environment
         python -c 'import gensim;print(gensim.__version__)'
         pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
+
     - name: Upload wheels to s3://gensim-wheels
       #
       # Only do this if the credentials are set.
