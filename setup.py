@@ -15,25 +15,26 @@ import os
 import platform
 import shutil
 import sys
+from collections import OrderedDict
 
 from setuptools import Extension, find_packages, setup, distutils
 from setuptools.command.build_ext import build_ext
 
-c_extensions = {
-    'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
-    'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
-    'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
-    'gensim._matutils': 'gensim/_matutils.c',
-    'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
-    'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
-}
+c_extensions = OrderedDict([
+    ('gensim.models.word2vec_inner', 'gensim/models/word2vec_inner.c'),
+    ('gensim.corpora._mmreader', 'gensim/corpora/_mmreader.c'),
+    ('gensim.models.fasttext_inner', 'gensim/models/fasttext_inner.c'),
+    ('gensim._matutils', 'gensim/_matutils.c'),
+    ('gensim.models.nmf_pgd', 'gensim/models/nmf_pgd.c'),
+    ('gensim.similarities.fastss', 'gensim/similarities/fastss.c'),
+])
 
-cpp_extensions = {
-    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.cpp',
-    'gensim.models.word2vec_corpusfile': 'gensim/models/word2vec_corpusfile.cpp',
-    'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
-    'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
-}
+cpp_extensions = OrderedDict([
+    ('gensim.models.doc2vec_inner', 'gensim/models/doc2vec_inner.cpp'),
+    ('gensim.models.word2vec_corpusfile', 'gensim/models/word2vec_corpusfile.cpp'),
+    ('gensim.models.fasttext_corpusfile', 'gensim/models/fasttext_corpusfile.cpp'),
+    ('gensim.models.doc2vec_corpusfile', 'gensim/models/doc2vec_corpusfile.cpp'),
+])
 
 
 def need_cython():
@@ -111,8 +112,8 @@ class CustomBuildExt(build_ext):
 
         if need_cython():
             import Cython.Build
-            Cython.Build.cythonize(list(make_c_ext(use_cython=True)))
-            Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
+            Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language_level=3)
+            Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)), language_level=3)
 
 
 class CleanExt(distutils.cmd.Command):
