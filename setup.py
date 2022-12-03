@@ -98,21 +98,14 @@ class CustomBuildExt(build_ext):
     importing them at module level, because they may not be available yet.
     """
     #
+    # Prevent numpy from thinking it is still in its setup process
     # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
     #
     def finalize_options(self):
         build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
-        try:
-            __builtins__.__NUMPY_SETUP__ = False
-        except:
-            try:
-                # For python 3
-                import builtins
-                builtins.__NUMPY_SETUP__ = False
-            except:
-                print("Skipping numpy hack; if installation fails, try installing numpy first")
+
+        import builtins
+        builtins.__NUMPY_SETUP__ = False
 
         import numpy
         self.include_dirs.append(numpy.get_include())
