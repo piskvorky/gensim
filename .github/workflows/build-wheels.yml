@@ -82,7 +82,7 @@ jobs:
         - os: ubuntu-latest
           manylinux-version: 2010
           python-version: 3.8
-          build-depends: numpy==1.18.5
+          build-depends: numpy==1.17.3
 
         - os: ubuntu-latest
           manylinux-version: 2010
