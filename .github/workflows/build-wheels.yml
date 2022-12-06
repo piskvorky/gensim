@@ -274,6 +274,6 @@ jobs:
       #
       if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
       run: |
-        pip install wheelhouse-uploader
+        python -m pip install wheelhouse-uploader
         ls wheelhouse/*.whl
         python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
