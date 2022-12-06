@@ -274,7 +274,7 @@ core_testenv = [
     'testfixtures',
 ]
 
-if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
+if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 11):
     core_testenv.extend([
         'POT',
         'nmslib',
@@ -282,7 +282,6 @@ if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req
-
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
 # See https://github.com/RaRe-Technologies/gensim/pull/2814
@@ -320,20 +319,20 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.17.0'
+NUMPY_STR = 'numpy >= 1.18.5'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.28'
+CYTHON_STR = 'Cython==0.29.32'
 
 # Allow overriding the Cython version requirement
 CYTHON_STR = os.environ.get('GENSIM_CYTHON_REQUIRES', CYTHON_STR)
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
+    'scipy >= 1.7.0',
     'smart_open >= 1.8.1',
 ]
 
@@ -378,9 +377,10 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
@@ -388,7 +388,7 @@ setup(
     ],
 
     test_suite="gensim.test",
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,

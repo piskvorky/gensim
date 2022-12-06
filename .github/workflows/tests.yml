@@ -9,10 +9,10 @@ jobs:
   linters:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
 
@@ -47,9 +47,9 @@ jobs:
     needs: [linters]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           #
           # We use Py3.8 here for historical reasons.
@@ -65,7 +65,6 @@ jobs:
           sudo apt-get -yq remove texlive-binaries --purge
           sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
           sudo apt-get -yq install build-essential python3.8-dev
-
       - name: Install gensim and its dependencies
         run: pip install -e .[docs]
 
@@ -73,7 +72,6 @@ jobs:
         run: |
           python setup.py build_ext --inplace
           make -C docs/src clean html
-
       #
       # FIXME: do we want to store the built documentation somewhere, or is
       # knowing that the docs built successfully enough?
@@ -90,15 +88,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: 3.7, os: ubuntu-20.04}
           - {python: 3.8, os: ubuntu-20.04}
           - {python: 3.9, os: ubuntu-20.04}
           - {python: '3.10', os: ubuntu-20.04}
+          - {python: '3.11', os: ubuntu-20.04}
 
-          - {python: 3.7, os: windows-2019}
           - {python: 3.8, os: windows-2019}
           - {python: 3.9, os: windows-2019}
           - {python: '3.10', os: windows-2019}
+          - {python: '3.11', os: windows-2019}
 
     #
     # Don't run this job unless the linters have succeeded.
@@ -108,9 +106,9 @@ jobs:
     needs: [linters]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Update pip
@@ -129,14 +127,12 @@ jobs:
           curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo apt-key add
           sudo apt-get update -y
           sudo apt-get install -y sbt
-
       - name: Install GDB & enable core dumps
         if: matrix.os == 'ubuntu-20.04'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
-
       - name: Install gensim and its dependencies
         if: matrix.os != 'windows'
         run: pip install -e .[test]
@@ -150,7 +146,6 @@ jobs:
           python --version
           pip --version
           python setup.py build_ext --inplace
-
       #
       # Some of our tests are hanging, and I strongly suspect it's because of the coverage plugin.
       #
