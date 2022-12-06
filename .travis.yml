@@ -35,10 +35,6 @@ matrix:
       #
     - os: linux
       env:
-        - MB_PYTHON_VERSION=3.7
-        - BUILD_DEPENDS="numpy==1.19.2 scipy==1.7.0"
-    - os: linux
-      env:
         - MB_PYTHON_VERSION=3.8
         - BUILD_DEPENDS="numpy==1.19.2 scipy==1.7.0"
     - os: linux
@@ -49,6 +45,14 @@ matrix:
         # (aarch64, Py3.9) explicitly, but I've double-checked that wheels for
         # this numpy release are available via PyPI.
         #
+        - BUILD_DEPENDS="numpy==1.19.3 scipy==1.7.0"
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.10
+        - BUILD_DEPENDS="numpy==1.19.3 scipy==1.7.0"
+    - os: linux
+      env:
+        - MB_PYTHON_VERSION=3.11
         - BUILD_DEPENDS="numpy==1.19.3 scipy==1.7.0"
 
 before_install:
