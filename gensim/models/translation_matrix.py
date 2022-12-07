@@ -5,7 +5,7 @@
 a standard nearest neighbour method or a globally corrected neighbour retrieval method [1]_.
 
 This method can be used to augment the existing phrase tables with more candidate translations, or
-filter out errors from the translation tables and known dictionaries [2]_. What's more, It also work
+filter out errors from the translation tables and known dictionaries [2]_. What's more, it also works
 for any two sets of named-vectors where there are some paired-guideposts to learn the transformation.
 
 Examples
@@ -14,7 +14,7 @@ Examples
 How to make translation between two set of word-vectors
 =======================================================
 
-Initialize a word-vector models
+Initialize two word-vector models
 
 .. sourcecode:: pycon
 
@@ -24,7 +24,7 @@ Initialize a word-vector models
     >>> model_en = KeyedVectors.load_word2vec_format(datapath("EN.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
     >>> model_it = KeyedVectors.load_word2vec_format(datapath("IT.1-10.cbow1_wind5_hs0_neg10_size300_smpl1e-05.txt"))
 
-Define word pairs (that will be used for construction of translation matrix
+Define word pairs (that will be used for construction of translation matrix)
 
 .. sourcecode:: pycon
 
@@ -143,12 +143,12 @@ class Space:
             Object that stored word-vectors
 
         """
-        # `words` to store all the word that
-        # `mat` to store all the word vector for the word in 'words' list
+        # `words` to store all the words
+        # `mat` to store the word vector for each word in the 'words' list
         words = []
         mat = []
         if lexicon is not None:
-            # if the lexicon is not provided, using the all the Keyedvectors's words as default
+            # if the lexicon is not provided, using all the Keyedvectors's words as default
             for item in lexicon:
                 words.append(item)
                 mat.append(lang_vec.vectors[lang_vec.get_index(item)])
@@ -161,18 +161,18 @@ class Space:
         return Space(mat, words)
 
     def normalize(self):
-        """Normalize the word vector's matrix."""
-        self.mat = self.mat / np.sqrt(np.sum(np.multiply(self.mat, self.mat), axis=1, keepdims=True))
+        """Normalize the word vectors matrix."""
+        self.mat = self.mat / np.sqrt(np.sum(np.square(self.mat), axis=1, keepdims=True))
 
 
 class TranslationMatrix(utils.SaveLoad):
-    """Objects of this class realize the translation matrix which map the source language to the target language.
+    """Objects of this class realize the translation matrix which maps the source language to the target language.
     The main methods are:
 
     We map it to the other language space by computing z = Wx, then return the
     word whose representation is close to z.
 
-    The details use seen the notebook [3]_
+    For details on use, see the tutorial notebook [3]_
 
     Examples
     --------
@@ -234,7 +234,7 @@ class TranslationMatrix(utils.SaveLoad):
             self.train(word_pairs)
 
     def train(self, word_pairs):
-        """Build the translation matrix that mapping from source space to target space.
+        """Build the translation matrix to map from source space to target space.
 
         Parameters
         ----------
@@ -289,7 +289,7 @@ class TranslationMatrix(utils.SaveLoad):
             Define translation algorithm, if `gc == 0` - use standard NN retrieval,
             otherwise, use globally corrected neighbour retrieval method (as described in [1]_).
         sample_num : int, optional
-            Number of word to sample from the source lexicon, if `gc == 1`, then `sample_num` **must** be provided.
+            Number of words to sample from the source lexicon, if `gc == 1`, then `sample_num` **must** be provided.
         source_lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
             New source language vectors for translation, by default, used the model's source language vector.
         target_lang_vec : :class:`~gensim.models.keyedvectors.KeyedVectors`, optional
@@ -366,15 +366,15 @@ class TranslationMatrix(utils.SaveLoad):
 
 
 class BackMappingTranslationMatrix(utils.SaveLoad):
-    """Realize the BackMapping translation matrix which map the source model's document vector
-    to the target model's document vector(old model).
+    """Realize the BackMapping translation matrix which maps the source model's document vector
+    to the target model's document vector (old model).
 
-    BackMapping translation matrix is used to learn a mapping for two document vector space which we
-    specify as source document vector and target document vector. The target document vector are trained
-    on superset corpus of source document vector, we can incrementally increase the vector in
+    BackMapping translation matrix is used to learn a mapping for two document vector spaces which we
+    specify as source document vector and target document vector. The target document vectors are trained
+    on a superset corpus of source document vectors; we can incrementally increase the vector in
     the old model through the BackMapping translation matrix.
 
-    the details use seen the notebook [3]_.
+    For details on use, see the tutorial notebook [3]_.
 
     Examples
     --------
@@ -421,7 +421,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
             self.train(tagged_docs)
 
     def train(self, tagged_docs):
-        """Build the translation matrix that mapping from the source model's vector to target model's vector
+        """Build the translation matrix to map from the source model's vectors to target model's vectors
 
         Parameters
         ----------
@@ -432,7 +432,7 @@ class BackMappingTranslationMatrix(utils.SaveLoad):
         Returns
         -------
         numpy.ndarray
-            Translation matrix that mapping from the source model's vector to target model's vector.
+            Translation matrix that maps from the source model's vectors to target model's vectors.
 
         """
         m1 = [self.source_lang_vec.dv[item.tags].flatten() for item in tagged_docs]

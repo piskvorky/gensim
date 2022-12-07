@@ -15,10 +15,10 @@ jobs:
   linters:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
 
@@ -48,7 +48,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10']
+        python-version: ['3.8', '3.9', '3.10', '3.11']
         os: [ubuntu-latest, macos-latest, windows-latest]
         platform: [x64]
         include:
@@ -76,11 +76,6 @@ jobs:
         #
         - os: ubuntu-latest
           manylinux-version: 2010
-          python-version: 3.7
-          build-depends: numpy==1.17.0
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
           python-version: 3.8
           build-depends: numpy==1.17.3
 
@@ -93,12 +88,11 @@ jobs:
           manylinux-version: 2014
           python-version: "3.10"
           build-depends: numpy==1.22.2 scipy==1.8.0
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: 3.7
-          build-depends: numpy==1.17.0
+        
+        - os: ubuntu-latest
+          manylinux-version: 2014
+          python-version: "3.11"
+          build-depends: numpy==1.23.2 scipy==1.9.2
 
         - os: macos-latest
           travis-os-name: osx
@@ -117,11 +111,12 @@ jobs:
           manylinux-version: 1
           python-version: "3.10"
           build-depends: numpy==1.22.2 scipy==1.8.0
-
-        - os: windows-latest
-          manylinux-version: 2010
-          python-version: 3.7
-          build-depends: numpy==1.17.0
+        
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: "3.11"
+          build-depends: numpy==1.23.2 scipy==1.9.2
 
         - os: windows-latest
           manylinux-version: 2010
@@ -137,6 +132,11 @@ jobs:
           manylinux-version: 2010
           python-version: "3.10"
           build-depends: numpy==1.22.2 scipy==1.8.0
+        
+        - os: windows-latest
+          manylinux-version: 2010
+          python-version: "3.11"
+          build-depends: numpy==1.23.2 scipy==1.9.2
 
     env:
       PKG_NAME: gensim
@@ -155,7 +155,7 @@ jobs:
       BUILD_DEPENDS: ${{ matrix.build-depends }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
@@ -168,7 +168,7 @@ jobs:
         echo "TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"
         echo "SKIP_NETWORK_TESTS: ${SKIP_NETWORK_TESTS}"
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -202,19 +202,15 @@ jobs:
         echo ::group::Set up dependencies
         python --version
         python -c "import struct; print(struct.calcsize('P') * 8)"
-
         python -m pip install -U pip setuptools wheel wheelhouse_uploader ${{ env.BUILD_DEPENDS }}
         echo ::endgroup::
-
         echo ::group::Build wheel
         python setup.py bdist_wheel
         echo ::endgroup
-
         echo ::group::Install run
         ls dist
         python continuous_integration/install_wheel.py
         echo ::endgroup::
-
         #
         # For consistency with the multibuild step.
         #
@@ -240,6 +236,7 @@ jobs:
       if: matrix.os != 'windows-latest'
       run: |
         . test_environment/bin/activate
+        python -m pip install --upgrade pip
         pip install pytest testfixtures mock
         pip install wheelhouse/*.whl
         cd test_environment
@@ -258,6 +255,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         test_environment/Scripts/activate.bat
+        python -m pip install --upgrade pip
         pip install pytest testfixtures mock
         pip install wheelhouse/*.whl
         cd test_environment
@@ -276,6 +274,6 @@ jobs:
       #
       if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
       run: |
-        pip install wheelhouse-uploader
+        python -m pip install wheelhouse-uploader
         ls wheelhouse/*.whl
         python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn

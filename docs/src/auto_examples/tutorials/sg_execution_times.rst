@@ -5,7 +5,6 @@
 
 Computation times
 =================
-**00:16.509** total execution time for **auto_examples_tutorials** files:
 
 +-------------------------------------------------------------------------------------+-----------+---------+
 | :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py` (``run_doc2vec_lee.py``) | 00:16.509 | 48.4 MB |
