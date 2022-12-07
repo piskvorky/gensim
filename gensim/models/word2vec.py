@@ -200,6 +200,9 @@ from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
 
+# This import is required by pickle to load models stored by Gensim < 4.0, such as Gensim 3.8.3.
+from gensim.models.keyedvectors import Vocab  # noqa
+
 from smart_open.compression import get_supported_extensions
 
 logger = logging.getLogger(__name__)
