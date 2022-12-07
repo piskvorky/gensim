@@ -68,7 +68,7 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
     >>> sims = model.wv.most_similar('computer', topn=10)  # get other similar words
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
-need the full model state any more (don't need to continue training), its state can discarded,
+need the full model state any more (don't need to continue training), its state can be discarded,
 keeping just the vectors and their keys proper.
 
 This results in a much smaller and faster object that can be mmapped for lightning

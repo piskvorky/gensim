@@ -1,5 +1,6 @@
 #!/usr/bin/env cython
 # distutils: language = c++
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -15,7 +16,7 @@
 import numpy as np
 cimport numpy as np
 
-from word2vec_inner cimport REAL_t
+from gensim.models.word2vec_inner cimport REAL_t
 
 DEF MAX_DOCUMENT_LEN = 10000
 

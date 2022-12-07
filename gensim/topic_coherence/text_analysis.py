@@ -293,7 +293,8 @@ class WindowedTextsAnalyzer(UsesDictionary):
             relevant_texts, window_size, ignore_below_size=False, include_doc_num=True)
 
         for doc_num, virtual_document in windows:
-            self.analyze_text(virtual_document, doc_num)
+            if len(virtual_document) > 0:
+                self.analyze_text(virtual_document, doc_num)
             self.num_docs += 1
         return self
 
