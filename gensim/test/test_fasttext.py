@@ -1782,6 +1782,28 @@ class UnpackTest(unittest.TestCase):
         self.assertTrue(np.all(np.array([6, 7, 8]) == n[2]))
 
 
+class FastTextKeyedVectorsTest(unittest.TestCase):
+    def test_add_vector(self):
+        wv = FastTextKeyedVectors(vector_size=2, min_n=3, max_n=6, bucket=2000000)
+        wv.add_vector("test_key", np.array([0, 0]))
+
+        self.assertEqual(wv.key_to_index["test_key"], 0)
+        self.assertEqual(wv.index_to_key[0], "test_key")
+        self.assertTrue(np.all(wv.vectors[0] == np.array([0, 0])))
+
+    def test_add_vectors(self):
+        wv = FastTextKeyedVectors(vector_size=2, min_n=3, max_n=6, bucket=2000000)
+        wv.add_vectors(["test_key1", "test_key2"], np.array([[0, 0], [1, 1]]))
+
+        self.assertEqual(wv.key_to_index["test_key1"], 0)
+        self.assertEqual(wv.index_to_key[0], "test_key1")
+        self.assertTrue(np.all(wv.vectors[0] == np.array([0, 0])))
+
+        self.assertEqual(wv.key_to_index["test_key2"], 1)
+        self.assertEqual(wv.index_to_key[1], "test_key2")
+        self.assertTrue(np.all(wv.vectors[1] == np.array([1, 1])))
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()

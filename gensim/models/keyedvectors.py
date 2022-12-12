@@ -592,7 +592,7 @@ class KeyedVectors(utils.SaveLoad):
 
         in_vocab_mask = np.zeros(len(keys), dtype=bool)
         for idx, key in enumerate(keys):
-            if key in self:
+            if key in self.key_to_index:
                 in_vocab_mask[idx] = True
 
         # add new entities to the vocab
