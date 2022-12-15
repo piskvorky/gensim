@@ -1986,9 +1986,6 @@ class Word2Vec(utils.SaveLoad):
             for a in ('hashfxn', 'layer1_size', 'seed', 'syn1neg', 'syn1'):
                 if hasattr(self.trainables, a):
                     setattr(self, a, getattr(self.trainables, a))
-            if hasattr(self, 'syn1'):
-                self.syn1 = self.syn1
-                del self.syn1
             del self.trainables
         if not hasattr(self, 'shrink_windows'):
             self.shrink_windows = True
