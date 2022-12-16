@@ -275,6 +275,13 @@ class TestWord2VecModel(unittest.TestCase):
         self.assertTrue(np.allclose(wv.vectors, loaded_wv.vectors))
         self.assertEqual(len(wv), len(loaded_wv))
 
+    def test_persistence_backwards_compatible(self):
+        """Can we still load a model created with an older gensim version?"""
+        path = datapath('model-from-gensim-3.8.0.w2v')
+        model = word2vec.Word2Vec.load(path)
+        x = model.score(['test'])
+        assert x is not None
+
     def test_persistence_from_file(self):
         """Test storing/loading the entire model trained with corpus_file argument."""
         with temporary_file(get_tmpfile('gensim_word2vec.tst')) as corpus_file:
