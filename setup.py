@@ -96,19 +96,26 @@ class CustomBuildExt(build_ext):
     """Custom build_ext action with bootstrapping.
 
     We need this in order to use numpy and Cython in this script without
-    importing them at module level, because they may not be available yet.
+    importing them at module level, because they may not be available at that time.
     """
-    #
-    # Prevent numpy from thinking it is still in its setup process
-    # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
-    #
     def finalize_options(self):
         build_ext.finalize_options(self)
 
         import builtins
-        builtins.__NUMPY_SETUP__ = False
-
         import numpy
+
+        #
+        # Prevent numpy from thinking it is still in its setup process
+        # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+        #
+        # Newer numpy versions don't support this hack, nor do they need it.
+        # https://github.com/pyvista/pyacvd/pull/23#issue-1298467701
+        #
+        try:
+            builtins.__NUMPY_SETUP__ = False
+        except Exception as ex:
+            print(f'could not use __NUMPY_SETUP__ hack (numpy version: {numpy.__version__}): {ex}')
+
         self.include_dirs.append(numpy.get_include())
 
         if need_cython():
