@@ -1,8 +1,45 @@
 Changes
 =======
 
-## Unreleased
+## 4.3.0, 2022-12-17
 
+### :star2: New Features
+
+* Added support for Python 3.11 and drop support for Python 3.7 (__[acul3](https://github.com/acul3)__, [#3402](https://github.com/RaRe-Technologies/gensim/pull/3402))
+* Added a new model: Flsamodel (__[ERijck](https://github.com/ERijck)__, [#3398](https://github.com/RaRe-Technologies/gensim/pull/3398))
+
+### :red_circle: Bug fixes
+
+* Fixed bug in loss computation for Word2Vec with hierarchical softmax (__[TalIfargan](https://github.com/TalIfargan)__, [#3397](https://github.com/RaRe-Technologies/gensim/pull/3397))
+* Patch Coherence Model to correctly handle empty documents (__[PrimozGodec](https://github.com/PrimozGodec)__, [#3406](https://github.com/RaRe-Technologies/gensim/pull/3406))
+* Fixed bug that prevents loading old models (__[funasshi](https://github.com/funasshi)__, [#3359](https://github.com/RaRe-Technologies/gensim/pull/3359))
+* Fixed deprecation warning from pytest (__[martino-vic](https://github.com/martino-vic)__, [#3354](https://github.com/RaRe-Technologies/gensim/pull/3354))
+* Fixed FastTextKeyedVectors handling in add_vector  (__[globba](https://github.com/globba)__, [#3389](https://github.com/RaRe-Technologies/gensim/pull/3389))
+* Fixed typo in word2vec and KeyedVectors docstrings (__[dymil](https://github.com/dymil)__, [#3365](https://github.com/RaRe-Technologies/gensim/pull/3365))
+* Fix backwards compatibility bug in Word2Vec, (**[@mpenkov](https://github.com/mpenkov)**, [#3415](https://github.com/RaRe-Technologies/gensim/pull/3415))
+* Fix numpy hack in setup.py, by (**[@mpenkov](https://github.com/mpenkov)**, [#3416](https://github.com/RaRe-Technologies/gensim/pull/3416))
+
+### :books: Tutorial and doc improvements
+
+* Clarified runtime expectations (__[gojomo](https://github.com/gojomo)__, [#3381](https://github.com/RaRe-Technologies/gensim/pull/3381))
+* Copyedit and fix outdated statements in translation matrix tutorial (__[dymil](https://github.com/dymil)__, [#3375](https://github.com/RaRe-Technologies/gensim/pull/3375))
+* Disabled the Gensim 3=>4 warning in docs (__[piskvorky](https://github.com/piskvorky)__, [#3346](https://github.com/RaRe-Technologies/gensim/pull/3346))
+* Fixed the broken link in readme.md (__[aswin2108](https://github.com/aswin2108)__, [#3409](https://github.com/RaRe-Technologies/gensim/pull/3409))
+* Giving missing credit in EnsembleLDA to Alex in docs (__[sezanzeb](https://github.com/sezanzeb)__, [#3393](https://github.com/RaRe-Technologies/gensim/pull/3393))
+
+### :+1: Improvements
+
+* Switched to Cython language level 3 (__[pabs3](https://github.com/pabs3)__, [#3344](https://github.com/RaRe-Technologies/gensim/pull/3344))
+* Declare variables prior to for loop in fastss.pyx for ANSI C compatibility (__[hstk30](https://github.com/hstk30)__, [#3378](https://github.com/RaRe-Technologies/gensim/pull/3378))
+* Implement numpy hack in setup.py to enable install under Poetry (__[jaymegordo](https://github.com/jaymegordo)__, [#3363](https://github.com/RaRe-Technologies/gensim/pull/3363))
+* Replaceed np.multiply with np.square and copyedit in translation_matrix.py (__[dymil](https://github.com/dymil)__, [#3374](https://github.com/RaRe-Technologies/gensim/pull/3374))
+
+### 🔮 Testing, CI, housekeeping
+
+* Clean up references to `Morfessor`, `tox` and `gensim.models.wrappers` (__[pabs3](https://github.com/pabs3)__, [#3345](https://github.com/RaRe-Technologies/gensim/pull/3345))
+* Pinned sphinx versions, add explicit gallery_top label (__[mpenkov](https://github.com/mpenkov)__, [#3383](https://github.com/RaRe-Technologies/gensim/pull/3383))
+* Updated Python module MANIFEST (__[pabs3](https://github.com/pabs3)__, [#3343](https://github.com/RaRe-Technologies/gensim/pull/3343))
+* Refactored wheel building and testing workflow (__[mpenkov](https://github.com/mpenkov)__, [#3410](https://github.com/RaRe-Technologies/gensim/pull/3410))
 
 ## 4.2.0, 2022-04-29
 

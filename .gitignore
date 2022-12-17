@@ -42,7 +42,6 @@ Thumbs.db
 
 # Other #
 #########
-.tox/
 .cache/
 .project
 .pydevproject

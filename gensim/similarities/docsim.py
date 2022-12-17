@@ -73,6 +73,7 @@ import logging
 import itertools
 import os
 import heapq
+import warnings
 
 import numpy
 import scipy.sparse
@@ -906,7 +907,8 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
     for more examples.
 
     """
-    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256, normalized=(True, True)):
+    def __init__(self, corpus, similarity_matrix, num_best=None, chunksize=256, normalized=None,
+                 normalize_queries=True, normalize_documents=True):
         """
 
         Parameters
@@ -919,12 +921,19 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
             The number of results to retrieve for a query, if None - return similarities with all elements from corpus.
         chunksize: int, optional
             Size of one corpus chunk.
-        normalized : tuple of {True, False, 'maintain'}, optional
-            First/second value specifies whether the query/document vectors in the inner product
-            will be L2-normalized (True; corresponds to the soft cosine similarity measure; default),
-            maintain their L2-norm during change of basis ('maintain'; corresponds to query
-            expansion with partial membership), or kept as-is (False;
-            corresponds to query expansion).
+        normalized : tuple of {True, False, 'maintain', None}, optional
+            A deprecated alias for `(normalize_queries, normalize_documents)`. If None, use
+            `normalize_queries` and `normalize_documents`. Default is None.
+        normalize_queries : {True, False, 'maintain'}, optional
+            Whether the query vector in the inner product will be L2-normalized (True; corresponds
+            to the soft cosine similarity measure; default), maintain their L2-norm during change of
+            basis ('maintain'; corresponds to queryexpansion with partial membership), or kept as-is
+            (False;  corresponds to query expansion).
+        normalize_documents : {True, False, 'maintain'}, optional
+            Whether the document vector in the inner product will be L2-normalized (True; corresponds
+            to the soft cosine similarity measure; default), maintain their L2-norm during change of
+            basis ('maintain'; corresponds to queryexpansion with partial membership), or kept as-is
+            (False;  corresponds to query expansion).
 
         See Also
         --------
@@ -941,7 +950,14 @@ class SoftCosineSimilarity(interfaces.SimilarityABC):
         self.corpus = list(corpus)
         self.num_best = num_best
         self.chunksize = chunksize
-        self.normalized = normalized
+        if normalized is not None:
+            warnings.warn(
+                'Parameter normalized will be removed in 5.0.0, use normalize_queries and normalize_documents instead',
+                category=DeprecationWarning,
+            )
+            self.normalized = normalized
+        else:
+            self.normalized = (normalize_queries, normalize_documents)
 
         # Normalization of features is undesirable, since soft cosine similarity requires special
         # normalization using the similarity matrix. Therefore, we would just be normalizing twice,
@@ -998,10 +1014,8 @@ class WmdSimilarity(interfaces.SimilarityABC):
 
     When using this code, please consider citing the following papers:
 
-    * `Ofir Pele and Michael Werman, "A linear time histogram metric for improved SIFT matching"
-      <http://www.cs.huji.ac.il/~werman/Papers/ECCV2008.pdf>`_
-    * `Ofir Pele and Michael Werman, "Fast and robust earth mover's distances"
-      <http://www.cs.huji.ac.il/~werman/Papers/ICCV2009.pdf>`_
+    * `Rémi Flamary et al. "POT: Python Optimal Transport"
+      <https://jmlr.org/papers/v22/20-451.html>`_
     * `Matt Kusner et al. "From Word Embeddings To Document Distances"
       <http://proceedings.mlr.press/v37/kusnerb15.pdf>`_
 
@@ -1102,6 +1116,50 @@ class WmdSimilarity(interfaces.SimilarityABC):
 class SparseMatrixSimilarity(interfaces.SimilarityABC):
     """Compute cosine similarity against a corpus of documents by storing the index matrix in memory.
 
+    Examples
+    --------
+    Here is how you would index and query a corpus of documents in the bag-of-words format using the
+    cosine similarity:
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.similarities import SparseMatrixSimilarity
+        >>> from gensim.test.utils import common_texts as corpus
+        >>>
+        >>> dictionary = Dictionary(corpus)  # fit dictionary
+        >>> bow_corpus = [dictionary.doc2bow(line) for line in corpus]  # convert corpus to BoW format
+        >>> index = SparseMatrixSimilarity(bm25_corpus, num_docs=len(corpus), num_terms=len(dictionary))
+        >>>
+        >>> query = 'graph trees computer'.split()  # make a query
+        >>> bow_query = dictionary.doc2bow(query)
+        >>> similarities = index[bow_query]  # calculate similarity of query to each doc from bow_corpus
+
+    Here is how you would index and query a corpus of documents using the Okapi BM25 scoring
+    function:
+
+    .. sourcecode:: pycon
+
+        >>> from gensim.corpora import Dictionary
+        >>> from gensim.models import TfidfModel, OkapiBM25Model
+        >>> from gensim.similarities import SparseMatrixSimilarity
+        >>> from gensim.test.utils import common_texts as corpus
+        >>>
+        >>> dictionary = Dictionary(corpus)  # fit dictionary
+        >>> query_model = TfidfModel(dictionary=dictionary, smartirs='bnn')  # enforce binary weights
+        >>> document_model = OkapiBM25Model(dictionary=dictionary)  # fit bm25 model
+        >>>
+        >>> bow_corpus = [dictionary.doc2bow(line) for line in corpus]  # convert corpus to BoW format
+        >>> bm25_corpus = document_model[bow_corpus]
+        >>> index = SparseMatrixSimilarity(bm25_corpus, num_docs=len(corpus), num_terms=len(dictionary),
+        ...                                normalize_queries=False, normalize_documents=False)
+        >>>
+        >>>
+        >>> query = 'graph trees computer'.split()  # make a query
+        >>> bow_query = dictionary.doc2bow(query)
+        >>> bm25_query = query_model[bow_query]
+        >>> similarities = index[bm25_query]  # calculate similarity of query to each doc from bow_corpus
+
     Notes
     -----
     Use this if your input corpus contains sparse vectors (such as TF-IDF documents) and fits into RAM.
@@ -1122,7 +1180,8 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
 
     """
     def __init__(self, corpus, num_features=None, num_terms=None, num_docs=None, num_nnz=None,
-                 num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False):
+                 num_best=None, chunksize=500, dtype=numpy.float32, maintain_sparsity=False,
+                 normalize_queries=True, normalize_documents=True):
         """
 
         Parameters
@@ -1146,10 +1205,15 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
             Data type of the internal matrix.
         maintain_sparsity : bool, optional
             Return sparse arrays from :meth:`~gensim.similarities.docsim.SparseMatrixSimilarity.get_similarities`?
-
+        normalize_queries : bool, optional
+            If queries are in bag-of-words (int, float) format, as opposed to a sparse or dense
+            2D arrays, they will be L2-normalized. Default is True.
+        normalize_documents : bool, optional
+            If `corpus` is in bag-of-words (int, float) format, as opposed to a sparse or dense
+            2D arrays, it will be L2-normalized. Default is True.
         """
         self.num_best = num_best
-        self.normalize = True
+        self.normalize = normalize_queries
         self.chunksize = chunksize
         self.maintain_sparsity = maintain_sparsity
 
@@ -1173,7 +1237,7 @@ class SparseMatrixSimilarity(interfaces.SimilarityABC):
                 raise ValueError("refusing to guess the number of sparse features: specify num_features explicitly")
             corpus = (matutils.scipy2sparse(v) if scipy.sparse.issparse(v) else
                       (matutils.full2sparse(v) if isinstance(v, numpy.ndarray) else
-                       matutils.unitvec(v)) for v in corpus)
+                       matutils.unitvec(v) if normalize_documents else v) for v in corpus)
             self.index = matutils.corpus2csc(
                 corpus, num_terms=num_terms, num_docs=num_docs, num_nnz=num_nnz,
                 dtype=dtype, printprogress=10000,

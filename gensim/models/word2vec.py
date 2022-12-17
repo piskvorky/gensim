@@ -68,7 +68,7 @@ The trained word vectors are stored in a :class:`~gensim.models.keyedvectors.Key
     >>> sims = model.wv.most_similar('computer', topn=10)  # get other similar words
 
 The reason for separating the trained vectors into `KeyedVectors` is that if you don't
-need the full model state any more (don't need to continue training), its state can discarded,
+need the full model state any more (don't need to continue training), its state can be discarded,
 keeping just the vectors and their keys proper.
 
 This results in a much smaller and faster object that can be mmapped for lightning
@@ -199,6 +199,9 @@ import numpy as np
 from gensim.utils import keep_vocab_item, call_on_class_only, deprecated
 from gensim.models.keyedvectors import KeyedVectors, pseudorandom_weak_vector
 from gensim import utils, matutils
+
+# This import is required by pickle to load models stored by Gensim < 4.0, such as Gensim 3.8.3.
+from gensim.models.keyedvectors import Vocab  # noqa
 
 from smart_open.compression import get_supported_extensions
 
@@ -1983,9 +1986,6 @@ class Word2Vec(utils.SaveLoad):
             for a in ('hashfxn', 'layer1_size', 'seed', 'syn1neg', 'syn1'):
                 if hasattr(self.trainables, a):
                     setattr(self, a, getattr(self.trainables, a))
-            if hasattr(self, 'syn1'):
-                self.syn1 = self.syn1
-                del self.syn1
             del self.trainables
         if not hasattr(self, 'shrink_windows'):
             self.shrink_windows = True

@@ -36,10 +36,10 @@ from gensim.similarities.docsim import _nlargest
 from gensim.similarities.fastss import editdist
 
 try:
-    from pyemd import emd  # noqa:F401
-    PYEMD_EXT = True
+    from ot import emd2  # noqa:F401
+    POT_EXT = True
 except (ImportError, ValueError):
-    PYEMD_EXT = False
+    POT_EXT = False
 
 SENTENCES = [doc2vec.TaggedDocument(words, [i]) for i, words in enumerate(TEXTS)]
 
@@ -88,8 +88,8 @@ class _TestSimilarityABC(unittest.TestCase):
             index.destroy()
 
     def test_num_best(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         for num_best in [None, 0, 1, 9, 1000]:
             self.testFull(num_best=num_best)
@@ -119,8 +119,8 @@ class _TestSimilarityABC(unittest.TestCase):
 
     def test_empty_query(self):
         index = self.factoryMethod()
-        if isinstance(index, similarities.WmdSimilarity) and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if isinstance(index, similarities.WmdSimilarity) and not POT_EXT:
+            self.skipTest("POT not installed")
 
         query = []
         try:
@@ -177,8 +177,8 @@ class _TestSimilarityABC(unittest.TestCase):
             index.destroy()
 
     def test_persistency(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -197,8 +197,8 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertEqual(index.num_best, index2.num_best)
 
     def test_persistency_compressed(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -217,8 +217,8 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertEqual(index.num_best, index2.num_best)
 
     def test_large(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -239,8 +239,8 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertEqual(index.num_best, index2.num_best)
 
     def test_large_compressed(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -261,8 +261,8 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertEqual(index.num_best, index2.num_best)
 
     def test_mmap(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index = self.factoryMethod()
@@ -284,8 +284,8 @@ class _TestSimilarityABC(unittest.TestCase):
             self.assertEqual(index.num_best, index2.num_best)
 
     def test_mmap_compressed(self):
-        if self.cls == similarities.WmdSimilarity and not PYEMD_EXT:
-            self.skipTest("pyemd not installed")
+        if self.cls == similarities.WmdSimilarity and not POT_EXT:
+            self.skipTest("POT not installed")
 
         fname = get_tmpfile('gensim_similarities.tst.pkl.gz')
         index = self.factoryMethod()
@@ -310,7 +310,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
         # Override factoryMethod.
         return self.cls(TEXTS, self.w2v_model)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_full(self, num_best=None):
         # Override testFull.
 
@@ -329,7 +329,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
             self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_non_increasing(self):
         ''' Check that similarities are non-increasing when `num_best` is not
         `None`.'''
@@ -345,7 +345,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
         cond = sum(numpy.diff(sims2) < 0) == len(sims2) - 1
         self.assertTrue(cond)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_chunking(self):
         # Override testChunking.
 
@@ -364,7 +364,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
                 self.assertTrue(numpy.alltrue(sim > 0.0))
                 self.assertTrue(numpy.alltrue(sim <= 1.0))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_iter(self):
         # Override testIter.
 
@@ -373,7 +373,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
             self.assertTrue(numpy.alltrue(sims >= 0.0))
             self.assertTrue(numpy.alltrue(sims <= 1.0))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_str(self):
         index = self.cls(TEXTS, self.w2v_model)
         self.assertTrue(str(index))

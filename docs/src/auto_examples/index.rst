@@ -1,23 +1,23 @@
 :orphan:
 
-
-
-.. _sphx_glr_auto_examples:
-
 Documentation
 =============
+
+.. _gallery_top:
 
 We welcome contributions to our documentation via GitHub pull requests, whether it's fixing a typo or authoring an entirely new tutorial or guide.
 If you're thinking about contributing documentation, please see :ref:`sphx_glr_auto_examples_howtos_run_doc.py`.
 
 
+
 .. raw:: html
 
-    <div class="sphx-glr-clear"></div>
+    <div class="sphx-glr-thumbnails">
 
 
+.. raw:: html
 
-.. _sphx_glr_auto_examples_core:
+    </div>
 
 Core Tutorials: New Users Start Here!
 -------------------------------------
@@ -29,24 +29,25 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="This tutorial introduces Documents, Corpora, Vectors and Models: the basic concepts and terms n...">
 
 .. only:: html
 
- .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_core_concepts_thumb.png
-     :alt: Core Concepts
+  .. image:: /auto_examples/core/images/thumb/sphx_glr_run_core_concepts_thumb.png
+    :alt: Core Concepts
 
-     :ref:`sphx_glr_auto_examples_core_run_core_concepts.py`
+  :ref:`sphx_glr_auto_examples_core_run_core_concepts.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Core Concepts</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/core/run_core_concepts
 
 .. raw:: html
 
@@ -54,20 +55,16 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
- .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_corpora_and_vector_spaces_thumb.png
-     :alt: Corpora and Vector Spaces
+  .. image:: /auto_examples/core/images/thumb/sphx_glr_run_corpora_and_vector_spaces_thumb.png
+    :alt: Corpora and Vector Spaces
 
-     :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`
+  :ref:`sphx_glr_auto_examples_core_run_corpora_and_vector_spaces.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Corpora and Vector Spaces</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/core/run_corpora_and_vector_spaces
 
 .. raw:: html
 
@@ -75,20 +72,16 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
- .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_topics_and_transformations_thumb.png
-     :alt: Topics and Transformations
+  .. image:: /auto_examples/core/images/thumb/sphx_glr_run_topics_and_transformations_thumb.png
+    :alt: Topics and Transformations
 
-     :ref:`sphx_glr_auto_examples_core_run_topics_and_transformations.py`
+  :ref:`sphx_glr_auto_examples_core_run_topics_and_transformations.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Topics and Transformations</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/core/run_topics_and_transformations
 
 .. raw:: html
 
@@ -96,27 +89,20 @@ Understanding this functionality is vital for using gensim effectively.
 
 .. only:: html
 
- .. figure:: /auto_examples/core/images/thumb/sphx_glr_run_similarity_queries_thumb.png
-     :alt: Similarity Queries
+  .. image:: /auto_examples/core/images/thumb/sphx_glr_run_similarity_queries_thumb.png
+    :alt: Similarity Queries
 
-     :ref:`sphx_glr_auto_examples_core_run_similarity_queries.py`
+  :ref:`sphx_glr_auto_examples_core_run_similarity_queries.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Similarity Queries</div>
+    </div>
+
 
 .. raw:: html
 
     </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/core/run_similarity_queries
-.. raw:: html
-
-    <div class="sphx-glr-clear"></div>
-
-
-
-.. _sphx_glr_auto_examples_tutorials:
 
 Tutorials: Learning Oriented Lessons
 ------------------------------------
@@ -127,24 +113,25 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s Word2Vec model and demonstrates its use on the `Lee Evaluation Corpus &lt;http...">
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_word2vec_thumb.png
-     :alt: Word2Vec Model
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_word2vec_thumb.png
+    :alt: Word2Vec Model
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_word2vec.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Word2Vec Model</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_word2vec
 
 .. raw:: html
 
@@ -152,41 +139,16 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
-     :alt: Doc2Vec Model
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_doc2vec_lee_thumb.png
+    :alt: Doc2Vec Model
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_doc2vec_lee.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Doc2Vec Model</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_doc2vec_lee
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s EnsembleLda model">
-
-.. only:: html
-
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_ensemblelda_thumb.png
-     :alt: Ensemble LDA
-
-     :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_ensemblelda
 
 .. raw:: html
 
@@ -194,20 +156,33 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
-     :alt: FastText Model
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_fasttext_thumb.png
+    :alt: FastText Model
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_fasttext.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">FastText Model</div>
     </div>
 
 
-.. toctree::
-   :hidden:
+.. raw:: html
 
-   /auto_examples/tutorials/run_fasttext
+    <div class="sphx-glr-thumbcontainer" tooltip="Introduces Gensim&#x27;s EnsembleLda model">
+
+.. only:: html
+
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_ensemblelda_thumb.png
+    :alt: Ensemble LDA
+
+  :ref:`sphx_glr_auto_examples_tutorials_run_ensemblelda.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Ensemble LDA</div>
+    </div>
+
 
 .. raw:: html
 
@@ -215,20 +190,16 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
-     :alt: Fast Similarity Queries with Annoy and Word2Vec
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_annoy_thumb.png
+    :alt: Fast Similarity Queries with Annoy and Word2Vec
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_annoy.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Fast Similarity Queries with Annoy and Word2Vec</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_annoy
 
 .. raw:: html
 
@@ -236,20 +207,16 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
-     :alt: LDA Model
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_lda_thumb.png
+    :alt: LDA Model
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_lda.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">LDA Model</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_lda
 
 .. raw:: html
 
@@ -257,20 +224,16 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
-     :alt: Word Mover's Distance
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_wmd_thumb.png
+    :alt: Word Mover's Distance
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_wmd.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">Word Mover's Distance</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_wmd
 
 .. raw:: html
 
@@ -278,27 +241,20 @@ Learning-oriented lessons that introduce a particular gensim feature, e.g. a mod
 
 .. only:: html
 
- .. figure:: /auto_examples/tutorials/images/thumb/sphx_glr_run_scm_thumb.png
-     :alt: Soft Cosine Measure
+  .. image:: /auto_examples/tutorials/images/thumb/sphx_glr_run_scm_thumb.png
+    :alt: Soft Cosine Measure
 
-     :ref:`sphx_glr_auto_examples_tutorials_run_scm.py`
+  :ref:`sphx_glr_auto_examples_tutorials_run_scm.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Soft Cosine Measure</div>
+    </div>
+
 
 .. raw:: html
 
     </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/tutorials/run_scm
-.. raw:: html
-
-    <div class="sphx-glr-clear"></div>
-
-
-
-.. _sphx_glr_auto_examples_howtos:
 
 How-to Guides: Solve a Problem
 ------------------------------
@@ -309,24 +265,25 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbnails">
+
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Demonstrates simple and quick access to common corpora and pretrained models.">
 
 .. only:: html
 
- .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_downloader_api_thumb.png
-     :alt: How to download pre-trained models and corpora
+  .. image:: /auto_examples/howtos/images/thumb/sphx_glr_run_downloader_api_thumb.png
+    :alt: How to download pre-trained models and corpora
 
-     :ref:`sphx_glr_auto_examples_howtos_run_downloader_api.py`
+  :ref:`sphx_glr_auto_examples_howtos_run_downloader_api.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">How to download pre-trained models and corpora</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_downloader_api
 
 .. raw:: html
 
@@ -334,20 +291,16 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
- .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc_thumb.png
-     :alt: How to Author Gensim Documentation
+  .. image:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc_thumb.png
+    :alt: How to Author Gensim Documentation
 
-     :ref:`sphx_glr_auto_examples_howtos_run_doc.py`
+  :ref:`sphx_glr_auto_examples_howtos_run_doc.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">How to Author Gensim Documentation</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_doc
 
 .. raw:: html
 
@@ -355,20 +308,16 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
- .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
-     :alt: How to reproduce the doc2vec 'Paragraph Vector' paper
+  .. image:: /auto_examples/howtos/images/thumb/sphx_glr_run_doc2vec_imdb_thumb.png
+    :alt: How to reproduce the doc2vec 'Paragraph Vector' paper
 
-     :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
+  :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py`
 
 .. raw:: html
 
+      <div class="sphx-glr-thumbnail-title">How to reproduce the doc2vec 'Paragraph Vector' paper</div>
     </div>
 
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_doc2vec_imdb
 
 .. raw:: html
 
@@ -376,27 +325,20 @@ These **goal-oriented guides** demonstrate how to **solve a specific problem** u
 
 .. only:: html
 
- .. figure:: /auto_examples/howtos/images/thumb/sphx_glr_run_compare_lda_thumb.png
-     :alt: How to Compare LDA Models
+  .. image:: /auto_examples/howtos/images/thumb/sphx_glr_run_compare_lda_thumb.png
+    :alt: How to Compare LDA Models
 
-     :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py`
+  :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">How to Compare LDA Models</div>
+    </div>
+
 
 .. raw:: html
 
     </div>
-
-
-.. toctree::
-   :hidden:
-
-   /auto_examples/howtos/run_compare_lda
-.. raw:: html
-
-    <div class="sphx-glr-clear"></div>
-
-
-
-.. _sphx_glr_auto_examples_other:
 
 Other Resources
 ---------------
@@ -433,27 +375,38 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
    - ? `Deep Inverse Regression with Yelp Reviews <https://github.com/RaRe-Technologies/gensim/blob/develop/docs/notebooks/deepir.ipynb>`__ (Document Classification using Bayesian Inversion and several word2vec models, one for each class)
 
 
+
 .. raw:: html
 
-    <div class="sphx-glr-clear"></div>
+    <div class="sphx-glr-thumbnails">
 
 
+.. raw:: html
 
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-gallery
+    </div>
 
 
-  .. container:: sphx-glr-download sphx-glr-download-python
+.. toctree::
+   :hidden:
+   :includehidden:
 
-    :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+   /auto_examples/core/index.rst
+   /auto_examples/tutorials/index.rst
+   /auto_examples/howtos/index.rst
+   /auto_examples/other/index.rst
 
 
+.. only:: html
 
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
+  .. container:: sphx-glr-footer sphx-glr-footer-gallery
 
-    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
+    .. container:: sphx-glr-download sphx-glr-download-python
+
+      :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+      :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
 
 
 .. only:: html
