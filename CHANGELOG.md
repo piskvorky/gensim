@@ -1,7 +1,7 @@
 Changes
 =======
 
-## 4.3.0, 2022-12-14
+## 4.3.0, 2022-12-17
 
 ### :star2: New Features
 
@@ -16,6 +16,8 @@ Changes
 * Fixed deprecation warning from pytest (__[martino-vic](https://github.com/martino-vic)__, [#3354](https://github.com/RaRe-Technologies/gensim/pull/3354))
 * Fixed FastTextKeyedVectors handling in add_vector  (__[globba](https://github.com/globba)__, [#3389](https://github.com/RaRe-Technologies/gensim/pull/3389))
 * Fixed typo in word2vec and KeyedVectors docstrings (__[dymil](https://github.com/dymil)__, [#3365](https://github.com/RaRe-Technologies/gensim/pull/3365))
+* Fix backwards compatibility bug in Word2Vec, (**[@mpenkov](https://github.com/mpenkov)**, [#3415](https://github.com/RaRe-Technologies/gensim/pull/3415))
+* Fix numpy hack in setup.py, by (**[@mpenkov](https://github.com/mpenkov)**, [#3416](https://github.com/RaRe-Technologies/gensim/pull/3416))
 
 ### :books: Tutorial and doc improvements
 
