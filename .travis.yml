@@ -49,11 +49,11 @@ matrix:
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.10
-        - BUILD_DEPENDS="numpy==1.22.2 scipy==1.8.0"
+        - BUILD_DEPENDS="numpy==1.22.2 scipy==1.8.0 importlib-metadata==5.1.0"
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.11
-        - BUILD_DEPENDS="numpy==1.23.2 scipy==1.9.2"
+        - BUILD_DEPENDS="numpy==1.23.2 scipy==1.9.2 importlib-metadata==5.1.0"
 
 before_install:
     - source multibuild/common_utils.sh
