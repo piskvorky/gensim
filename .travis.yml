@@ -19,7 +19,6 @@ env:
       - PLAT=aarch64
       - MB_ML_VER=2014
       - SKIP_NETWORK_TESTS=1
-      - DOCKER_TEST_IMAGE=multibuild/xenial_arm64v8
         #
         # The contents of this file mirror the linux_testenv list
         # in gensim's setup.py.  I can't think of a better way to include
