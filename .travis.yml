@@ -40,7 +40,7 @@ matrix:
       env:
         - MB_PYTHON_VERSION=3.8
         - BUILD_DEPENDS="numpy==1.19.2 scipy==1.7.0"
-        - DOCKER_TEST_IMAGE=multibuild/xenial_arm64v
+        - DOCKER_TEST_IMAGE=multibuild/xenial_arm64v8
     - os: linux
       env:
         - MB_PYTHON_VERSION=3.9
