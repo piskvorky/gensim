@@ -333,7 +333,6 @@ install_requires = [
     NUMPY_STR,
     'scipy >= 0.18.1',
     'smart_open >= 1.8.1',
-    'FuzzyTM >= 0.4.0'
 ]
 
 setup_requires = [NUMPY_STR]
