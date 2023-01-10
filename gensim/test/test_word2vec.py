@@ -21,10 +21,10 @@ import numpy as np
 from testfixtures import log_capture
 
 try:
-    from pyemd import emd  # noqa:F401
-    PYEMD_EXT = True
+    from ot import emd2  # noqa:F401
+    POT_EXT = True
 except (ImportError, ValueError):
-    PYEMD_EXT = False
+    POT_EXT = False
 
 from gensim import utils
 from gensim.models import word2vec, keyedvectors
@@ -274,6 +274,13 @@ class TestWord2VecModel(unittest.TestCase):
         loaded_wv = keyedvectors.KeyedVectors.load(tmpf)
         self.assertTrue(np.allclose(wv.vectors, loaded_wv.vectors))
         self.assertEqual(len(wv), len(loaded_wv))
+
+    def test_persistence_backwards_compatible(self):
+        """Can we still load a model created with an older gensim version?"""
+        path = datapath('model-from-gensim-3.8.0.w2v')
+        model = word2vec.Word2Vec.load(path)
+        x = model.score(['test'])
+        assert x is not None
 
     def test_persistence_from_file(self):
         """Test storing/loading the entire model trained with corpus_file argument."""
@@ -1084,7 +1091,7 @@ class TestWord2VecModel(unittest.TestCase):
 
 class TestWMD(unittest.TestCase):
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_nonzero(self):
         '''Test basic functionality with a test sentence.'''
 
@@ -1096,7 +1103,7 @@ class TestWMD(unittest.TestCase):
         # Check that distance is non-zero.
         self.assertFalse(distance == 0.0)
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_symmetry(self):
         '''Check that distance is symmetric.'''
 
@@ -1107,7 +1114,7 @@ class TestWMD(unittest.TestCase):
         distance2 = model.wv.wmdistance(sentence2, sentence1)
         self.assertTrue(np.allclose(distance1, distance2))
 
-    @unittest.skipIf(PYEMD_EXT is False, "pyemd not installed")
+    @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_identical_sentences(self):
         '''Check that the distance from a sentence to itself is zero.'''
 

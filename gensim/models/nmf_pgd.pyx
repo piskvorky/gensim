@@ -1,5 +1,6 @@
 # Author: Timofey Yefimov
 
+# cython: language_level=3
 # cython: cdivision=True
 # cython: boundscheck=False
 # cython: wraparound=False

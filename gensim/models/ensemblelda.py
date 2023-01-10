@@ -91,7 +91,7 @@ different hyperparameters:
 Citation
 --------
 BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
-Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
+Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Supervised by Alex Loosley. Available from:
 https://www.sezanzeb.de/machine_learning/ensemble_LDA/
 
 """

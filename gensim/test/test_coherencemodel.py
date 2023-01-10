@@ -305,6 +305,12 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertAlmostEqual(np.mean(coherence_topics2), coherence2, 4)
         self.assertAlmostEqual(coherence1, coherence2, places=4)
 
+    def testEmptyList(self):
+        """Test if CoherenceModel works with document without tokens"""
+        texts = self.texts + [[]]
+        cm = CoherenceModel(model=self.ldamodel, texts=texts, coherence="c_v", processes=1)
+        cm.get_coherence()
+
 
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)

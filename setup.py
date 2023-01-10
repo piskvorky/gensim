@@ -15,25 +15,26 @@ import os
 import platform
 import shutil
 import sys
+from collections import OrderedDict
 
 from setuptools import Extension, find_packages, setup, distutils
 from setuptools.command.build_ext import build_ext
 
-c_extensions = {
-    'gensim.models.word2vec_inner': 'gensim/models/word2vec_inner.c',
-    'gensim.corpora._mmreader': 'gensim/corpora/_mmreader.c',
-    'gensim.models.fasttext_inner': 'gensim/models/fasttext_inner.c',
-    'gensim._matutils': 'gensim/_matutils.c',
-    'gensim.models.nmf_pgd': 'gensim/models/nmf_pgd.c',
-    'gensim.similarities.fastss': 'gensim/similarities/fastss.c',
-}
+c_extensions = OrderedDict([
+    ('gensim.models.word2vec_inner', 'gensim/models/word2vec_inner.c'),
+    ('gensim.corpora._mmreader', 'gensim/corpora/_mmreader.c'),
+    ('gensim.models.fasttext_inner', 'gensim/models/fasttext_inner.c'),
+    ('gensim._matutils', 'gensim/_matutils.c'),
+    ('gensim.models.nmf_pgd', 'gensim/models/nmf_pgd.c'),
+    ('gensim.similarities.fastss', 'gensim/similarities/fastss.c'),
+])
 
-cpp_extensions = {
-    'gensim.models.doc2vec_inner': 'gensim/models/doc2vec_inner.cpp',
-    'gensim.models.word2vec_corpusfile': 'gensim/models/word2vec_corpusfile.cpp',
-    'gensim.models.fasttext_corpusfile': 'gensim/models/fasttext_corpusfile.cpp',
-    'gensim.models.doc2vec_corpusfile': 'gensim/models/doc2vec_corpusfile.cpp',
-}
+cpp_extensions = OrderedDict([
+    ('gensim.models.doc2vec_inner', 'gensim/models/doc2vec_inner.cpp'),
+    ('gensim.models.word2vec_corpusfile', 'gensim/models/word2vec_corpusfile.cpp'),
+    ('gensim.models.fasttext_corpusfile', 'gensim/models/fasttext_corpusfile.cpp'),
+    ('gensim.models.doc2vec_corpusfile', 'gensim/models/doc2vec_corpusfile.cpp'),
+])
 
 
 def need_cython():
@@ -95,24 +96,32 @@ class CustomBuildExt(build_ext):
     """Custom build_ext action with bootstrapping.
 
     We need this in order to use numpy and Cython in this script without
-    importing them at module level, because they may not be available yet.
+    importing them at module level, because they may not be available at that time.
     """
-    #
-    # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
-    #
     def finalize_options(self):
         build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        # https://docs.python.org/2/library/__builtin__.html#module-__builtin__
-        __builtins__.__NUMPY_SETUP__ = False
 
+        import builtins
         import numpy
+
+        #
+        # Prevent numpy from thinking it is still in its setup process
+        # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+        #
+        # Newer numpy versions don't support this hack, nor do they need it.
+        # https://github.com/pyvista/pyacvd/pull/23#issue-1298467701
+        #
+        try:
+            builtins.__NUMPY_SETUP__ = False
+        except Exception as ex:
+            print(f'could not use __NUMPY_SETUP__ hack (numpy version: {numpy.__version__}): {ex}')
+
         self.include_dirs.append(numpy.get_include())
 
         if need_cython():
             import Cython.Build
-            Cython.Build.cythonize(list(make_c_ext(use_cython=True)))
-            Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)))
+            Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language_level=3)
+            Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)), language_level=3)
 
 
 class CleanExt(distutils.cmd.Command):
@@ -272,15 +281,17 @@ core_testenv = [
     'testfixtures',
 ]
 
-if not (sys.platform.lower().startswith("win") and sys.version_info[:2] >= (3, 9)):
-    core_testenv.extend([
-        'pyemd',
-        'nmslib',
-    ])
+if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 11):
+    core_testenv.append('POT')
+
+if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 10):
+    #
+    # nmslib wheels not available for Python 3.10 and 3.11 as of Dec 2022
+    #
+    core_testenv.append('nmslib')
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req
-
 # Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
 # See https://github.com/RaRe-Technologies/gensim/pull/2814
@@ -318,22 +329,21 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.17.0'
+NUMPY_STR = 'numpy >= 1.18.5'
 #
 # We pin the Cython version for reproducibility.  We expect our extensions
 # to build with any sane version of Cython, so we should update this pin
 # periodically.
 #
-CYTHON_STR = 'Cython==0.29.28'
+CYTHON_STR = 'Cython==0.29.32'
 
 # Allow overriding the Cython version requirement
 CYTHON_STR = os.environ.get('GENSIM_CYTHON_REQUIRES', CYTHON_STR)
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 0.18.1',
+    'scipy >= 1.7.0',
     'smart_open >= 1.8.1',
-    
 ]
 
 setup_requires = [NUMPY_STR]
@@ -344,7 +354,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.2.1.dev0',
+    version='4.3.1.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -377,9 +387,10 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3 :: Only',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Topic :: Scientific/Engineering :: Information Analysis',
@@ -387,7 +398,7 @@ setup(
     ],
 
     test_suite="gensim.test",
-    python_requires='>=3.6',
+    python_requires='>=3.8',
     setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,
