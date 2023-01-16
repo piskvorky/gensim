@@ -52,45 +52,86 @@ jobs:
           manylinux-version: 2010
           python-version: "3.8"
           build-depends: numpy==1.17.3
+          platform: x86_64
 
         - os: ubuntu-latest
           manylinux-version: 2010
           python-version: "3.9"
           build-depends: numpy==1.19.3
+          platform: x86_64
 
         - os: ubuntu-latest
           manylinux-version: 2014
           python-version: "3.10"
           build-depends: numpy==1.22.2 scipy==1.8.0
+          platform: x86_64
         
         - os: ubuntu-latest
           manylinux-version: 2014
           python-version: "3.11"
           build-depends: numpy==1.23.2 scipy==1.9.2
+          platform: x86_64
+
+        - os: ubuntu-latest
+          manylinux-version: 2014
+          python-version: "3.10"
+          build-depends: numpy==1.22.2 scipy==1.8.0
+          platform: aarch64
+
+        - os: ubuntu-latest
+          manylinux-version: 2014
+          python-version: "3.11"
+          build-depends: numpy==1.23.2 scipy==1.9.2
+          platform: aarch64
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: "3.8"
           build-depends: numpy==1.17.3
+          platform: x86_64
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: "3.9"
           build-depends: numpy==1.19.3
+          platform: x86_64
 
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: "3.10"
           build-depends: numpy==1.22.2 scipy==1.8.0
+          platform: x86_64
         
         - os: macos-latest
           travis-os-name: osx
           manylinux-version: 1
           python-version: "3.11"
           build-depends: numpy==1.23.2 scipy==1.9.2
+          platform: x86_64
+
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: "3.9"
+          build-depends: numpy==1.19.3
+          platform: arm64
+
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: "3.10"
+          build-depends: numpy==1.22.2 scipy==1.8.0
+          platform: arm64
+
+        - os: macos-latest
+          travis-os-name: osx
+          manylinux-version: 1
+          python-version: "3.11"
+          build-depends: numpy==1.23.2 scipy==1.9.2
+          platform: arm64
 
     env:
       SKIP_NETWORK_TESTS: 1
@@ -105,16 +146,18 @@ jobs:
       MB_ML_VER: ${{ matrix.manylinux-version }}
       MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
       PKG_NAME: gensim
-      PLAT: x86_64
+      PLAT: ${{ matrix.platform }}
       REPO_DIR: gensim
       TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
       UNICODE_WIDTH: 32
 
     steps:
+
     - uses: actions/checkout@v3
       with:
         submodules: recursive
         fetch-depth: 0
+
     - name: Print environment variables
       run: |
         echo "PLAT: ${PLAT}"
@@ -123,14 +166,17 @@ jobs:
         echo "TEST_DEPENDS: ${TEST_DEPENDS}"
         echo "TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"
         echo "SKIP_NETWORK_TESTS: ${SKIP_NETWORK_TESTS}"
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install virtualenv
+
     - name: Build Wheel
       run: |
         echo ::group::Set up Multibuild
@@ -146,7 +192,12 @@ jobs:
         build_wheel $REPO_DIR ${{ matrix.PLAT }}
         echo ::endgroup::
 
+    # 
+    # Skip testing for arm64 and aarch64 as the runner does not support
+    # these platforms.
+    #
     - name: Prepare for testing
+      if: "!contains(fromJSON('[\"arm64\", \"aarch64\"]'), matrix.platform)"
       run: |
         #
         # FIXME: Why are these eggs here?
@@ -163,6 +214,7 @@ jobs:
     # So, we create our own simple test step here.
     #
     - name: Install and Test Wheel
+      if: "!contains(fromJSON('[\"arm64\", \"aarch64\"]'), matrix.platform)"
       run: |
         . test_environment/bin/activate
         python -m pip install --upgrade pip
