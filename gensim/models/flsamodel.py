@@ -18,9 +18,9 @@ from gensim.models.coherencemodel import CoherenceModel
 from gensim.models import Word2Vec
 try:
     from pyfume import Clustering
-except:
+except ImportError as e:
     raise ImportError("FlsaModel requires pyfume version 0.2.5, but pyfume could not be imported.",
-                      " Please install pyfume (e.g. with ``pip install pyfume==0.2.5``")
+                      " Please install pyfume (e.g. with ``pip install pyfume==0.2.5``") from e
 
 
 class FlsaModel():
