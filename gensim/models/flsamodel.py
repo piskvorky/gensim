@@ -13,10 +13,14 @@ import itertools
 import numpy as np
 from scipy.sparse.linalg import svds
 from scipy.sparse import dok_matrix
-from pyfume import Clustering
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
 from gensim.models import Word2Vec
+try:
+    from pyfume import Clustering
+except:
+    raise ImportError("FlsaModel requires pyfume version 0.2.5, but pyfume could not be imported.",
+                      " Please install pyfume (e.g. with ``pip install pyfume==0.2.5``")
 
 
 class FlsaModel():
