@@ -13,352 +13,54 @@ jobs:
   linters:
     uses: ./.github/workflows/linters.yml
 
-  multibuild:
-    timeout-minutes: 35
+  build_wheels:
+    needs: linters
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash
-
-    needs: [linters]
-
     strategy:
       fail-fast: false
       matrix:
-        include:
-        #
-        # We want the _oldest_ possible manylinux version to ensure our
-        # wheels work on the widest possible range of distros.  Version 1
-        # seems to break for certain Python versions under Linux and Windows,
-        # so we use 2010, which is the next oldest.
-        #
-        # When selecting the numpy version to build against, we need to satisfy
-        # two conditions.  First, we want the wheel to be available for the
-        # version of Python we're building against, because building numpy
-        # wheels on our own is too much work.
-        #
-        # Second, in order to guarantee compatibility with the greatest range
-        # of numpy versions, we want to build against the oldest possible numpy
-        # version, as long as it's 1.17.0 or newer.  Building versions earlier
-        # than 1.17.0 yields wheels that are incompatible with some newer
-        # versions of numpy.  See https://github.com/RaRe-Technologies/gensim/issues/3226
-        # for details.
-        #
-        # The logic for numpy version selection is based on
-        # https://github.com/scipy/oldest-supported-numpy/blob/master/setup.cfg
-        # with the exception that we enforce the minimum version to be 1.17.0.
-        #
-        - os: ubuntu-latest
-          manylinux-version: 2010
-          python-version: "3.8"
-          build-depends: numpy==1.17.3
-          platform: x86_64
-
-        - os: ubuntu-latest
-          manylinux-version: 2010
-          python-version: "3.9"
-          build-depends: numpy==1.19.3
-          platform: x86_64
-
-        - os: ubuntu-latest
-          manylinux-version: 2014
-          python-version: "3.10"
-          build-depends: numpy==1.22.2 scipy==1.8.0
-          platform: x86_64
-        
-        - os: ubuntu-latest
-          manylinux-version: 2014
-          python-version: "3.11"
-          build-depends: numpy==1.23.2 scipy==1.9.2
-          platform: x86_64
-
-        - os: ubuntu-latest
-          manylinux-version: 2014
-          python-version: "3.10"
-          build-depends: numpy==1.22.2 scipy==1.8.0
-          platform: aarch64
-
-        - os: ubuntu-latest
-          manylinux-version: 2014
-          python-version: "3.11"
-          build-depends: numpy==1.23.2 scipy==1.9.2
-          platform: aarch64
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.8"
-          build-depends: numpy==1.17.3
-          platform: x86_64
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.9"
-          build-depends: numpy==1.19.3
-          platform: x86_64
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.10"
-          build-depends: numpy==1.22.2 scipy==1.8.0
-          platform: x86_64
-        
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.11"
-          build-depends: numpy==1.23.2 scipy==1.9.2
-          platform: x86_64
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.9"
-          build-depends: numpy==1.19.3
-          platform: arm64
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.10"
-          build-depends: numpy==1.22.2 scipy==1.8.0
-          platform: arm64
-
-        - os: macos-latest
-          travis-os-name: osx
-          manylinux-version: 1
-          python-version: "3.11"
-          build-depends: numpy==1.23.2 scipy==1.9.2
-          platform: arm64
-
-    env:
-      SKIP_NETWORK_TESTS: 1
-      TEST_DEPENDS: pytest mock testfixtures
-      BUILD_DEPENDS: ${{ matrix.build-depends }}
-
-      #
-      # For multibuild
-      #
-      BUILD_COMMIT: HEAD
-      DOCKER_TEST_IMAGE: multibuild/xenial_x86_64
-      MB_ML_VER: ${{ matrix.manylinux-version }}
-      MB_PYTHON_VERSION: ${{ matrix.python-version }} # MB_PYTHON_VERSION is needed by Multibuild
-      PKG_NAME: gensim
-      PLAT: ${{ matrix.platform }}
-      REPO_DIR: gensim
-      TRAVIS_OS_NAME: ${{ matrix.travis-os-name }}
-      UNICODE_WIDTH: 32
-
+        os: [ubuntu-20.04, windows-2019, macos-11]
     steps:
 
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v3
 
-    - name: Print environment variables
-      run: |
-        echo "PLAT: ${PLAT}"
-        echo "MB_ML_VER: ${MB_ML_VER}"
-        echo "DOCKER_TEST_IMAGE: ${DOCKER_TEST_IMAGE}"
-        echo "TEST_DEPENDS: ${TEST_DEPENDS}"
-        echo "TRAVIS_OS_NAME: ${TRAVIS_OS_NAME}"
-        echo "SKIP_NETWORK_TESTS: ${SKIP_NETWORK_TESTS}"
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.12.0
+        env:
+          CIBW_ARCHS_LINUX: x86_64 aarch64
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_ARCHS_WINDOWS: AMD64 x86 ARM64
+          CIBW_BEFORE_BUILD: pip install numpy scipy
+          CIBW_SKIP: pp* cp36-* cp37-* *-win32 *_i686 *-musllinux_*
+          CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
+          CIBW_TEST_REQUIRES: pytest testfixtures mock
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install virtualenv
-
-    - name: Build Wheel
-      run: |
-        echo ::group::Set up Multibuild
-        source multibuild/common_utils.sh
-        source multibuild/travis_steps.sh
-        source config.sh
-        echo ::endgroup::
-        echo ::group::Before install
-        before_install
-        echo ::endgroup::
-        echo ::group::Build wheel
-        find . -type f -name "*.egg" -exec rm -v {} \;
-        build_wheel $REPO_DIR ${{ matrix.PLAT }}
-        echo ::endgroup::
-
-    # 
-    # Skip testing for arm64 and aarch64 as the runner does not support
-    # these platforms.
-    #
-    - name: Prepare for testing
-      if: "!contains(fromJSON('[\"arm64\", \"aarch64\"]'), matrix.platform)"
-      run: |
+      - name: Upload wheels to s3://gensim-wheels
         #
-        # FIXME: Why are these eggs here?
+        # Only do this if the credentials are set.
+        # This means that PRs will still build wheels, but not upload them.
+        # (PRs do not have access to secrets).
         #
-        # These eggs prevent the wheel from building and running on Py3.10
+        # The always() ensures this step runs even if a previous step fails.
+        # We want to upload wheels whenever possible (even if e.g. tests failed)
+        # because we don't want an innocuous test failure from blocking a release.
         #
-        find . -type f -name "*.egg" -exec rm -v {} \;
-        python -m venv test_environment
-
-    #
-    # Multibuild has a test step but it essentially just installs the wheel
-    # and runs the test, and requires a lot of magic to get it working.
-    # It also does not work under Windows.
-    # So, we create our own simple test step here.
-    #
-    - name: Install and Test Wheel
-      if: "!contains(fromJSON('[\"arm64\", \"aarch64\"]'), matrix.platform)"
-      run: |
-        . test_environment/bin/activate
-        python -m pip install --upgrade pip
-        pip install pytest testfixtures mock
-        pip install wheelhouse/*.whl
-        cd test_environment
-        python -c 'import gensim;print(gensim.__version__)'
-        #
-        # This part relies on the wheel containing tests and required data.
-        # If we remove that from the wheel, we'll need to rewrite this step.
-        #
-        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
-
-    - name: Upload wheels to s3://gensim-wheels
-      #
-      # Only do this if the credentials are set.
-      # This means that PRs will still build wheels, but not upload them.
-      # (PRs do not have access to secrets).
-      #
-      # The always() ensures this step runs even if a previous step fails.
-      # We want to upload wheels whenever possible (even if e.g. tests failed)
-      # because we don't want an innocuous test failure from blocking a release.
-      #
-      if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
-      run: |
-        python -m pip install wheelhouse-uploader
-        ls wheelhouse/*.whl
-        python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
-      env:
-        WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-
-  #
-  # The build process for windows is different to that of Linux and MacOS.
-  # First, we cannot use multibuild (it does not support Windows).
-  # This means we have to write our own building and testing steps, but in a
-  # way it's simpler, because we don't need to care about configuring
-  # multibuild ourselves.
-  # Second, the syntax to enable virtual environments, etc. is different.
-  #
-  build_windows:
-    timeout-minutes: 35
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: bash
-
-    needs: [linters]
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-        - python-version: "3.8"
-          build-depends: numpy==1.17.3
-
-        - python-version: "3.9"
-          build-depends: numpy==1.19.3
-
-        - python-version: "3.10"
-          build-depends: numpy==1.22.2 scipy==1.8.0
-        
-        - python-version: "3.11"
-          build-depends: numpy==1.23.2 scipy==1.9.2
-
-    env:
-      SKIP_NETWORK_TESTS: 1
-      TEST_DEPENDS: pytest mock testfixtures
-      BUILD_DEPENDS: ${{ matrix.build-depends }}
-
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        fetch-depth: 0
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install virtualenv
-
-    - name: Build Wheel
-      run: |
-        echo ::group::Set up dependencies
-        python --version
-        python -c "import struct; print(struct.calcsize('P') * 8)"
-        python -m pip install -U pip setuptools wheel wheelhouse_uploader ${{ env.BUILD_DEPENDS }}
-        echo ::endgroup::
-        echo ::group::Build wheel
-        python setup.py bdist_wheel
-        echo ::endgroup
-        echo ::group::Install run
-        ls dist
-        python continuous_integration/install_wheel.py
-        echo ::endgroup::
-        #
-        # For consistency with the multibuild step.  The wheel uploader expects
-        # the wheels to be under wheelhouse.
-        #
-        mv dist wheelhouse
-
-    - name: Prepare for testing
-      run: |
-        #
-        # FIXME: Why are these eggs here?
-        #
-        # These eggs prevent the wheel from building and running on Py3.10
-        #
-        find . -type f -name "*.egg" -exec rm -v {} \;
-        python -m venv test_environment
-
-    #
-    # We need a separate testing step for windows because the command for
-    # activating the virtual environment is slightly different
-    #
-    - name: Install and Test Wheel (Windows)
-      run: |
-        test_environment/Scripts/activate.bat
-        python -m pip install --upgrade pip
-        pip install pytest testfixtures mock
-        pip install wheelhouse/*.whl
-        cd test_environment
-        python -c 'import gensim;print(gensim.__version__)'
-        pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
-
-    - name: Upload wheels to s3://gensim-wheels
-      #
-      # Only do this if the credentials are set.
-      # This means that PRs will still build wheels, but not upload them.
-      # (PRs do not have access to secrets).
-      #
-      # The always() ensures this step runs even if a previous step fails.
-      # We want to upload wheels whenever possible (even if e.g. tests failed)
-      # because we don't want an innocuous test failure from blocking a release.
-      #
-      if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
-      run: |
-        python -m pip install wheelhouse-uploader
-        ls wheelhouse/*.whl
-        python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
-      env:
-        WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
+        run: |
+          python -m pip install wheelhouse-uploader
+          ls wheelhouse/*.whl
+          python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
+        env:
+          WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
