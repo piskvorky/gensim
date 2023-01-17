@@ -22,6 +22,7 @@ except:
     raise ImportError("FlsaModel requires pyfume version 0.2.5, but pyfume could not be imported."+
                       " Please install pyfume (e.g. with ``pip install pyfume==0.2.5``) and try again.")
 
+
 class FlsaModel():
     """
     Class to initialize and train fuzzy topic models with methods similar
