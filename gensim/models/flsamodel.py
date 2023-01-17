@@ -16,6 +16,7 @@ from scipy.sparse import dok_matrix
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
 from gensim.models import Word2Vec
+from abc import abstractmethod
 try:
     from pyfume import Clustering
 except:
@@ -183,6 +184,10 @@ class FlsaModel():
                     doc_list.append(id2token[tup[0]])
             data_list.append(doc_list)
         return data_list
+
+    @abstractmethod
+    def _get_matrices(self):
+        raise NotImplementedError
 
     def _check_variables(self):
         """
