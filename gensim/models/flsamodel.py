@@ -4,7 +4,7 @@ Created on Thu Oct 27 11:04:27 2022
 
 @author: 20200016
 """
-
+from abc import abstractmethod
 import math
 from collections import Counter
 import warnings
@@ -16,7 +16,6 @@ from scipy.sparse import dok_matrix
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
 from gensim.models import Word2Vec
-from abc import abstractmethod
 try:
     from pyfume import Clustering
 except:
