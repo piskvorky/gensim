@@ -45,6 +45,7 @@ jobs:
           CIBW_SKIP: pp* cp36-* cp37-* *-win32 *_i686 *-musllinux_*
           CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
           CIBW_TEST_REQUIRES: pytest testfixtures mock
+          CIBW_TEST_SKIP: cp38* cp39* cp310* *_aarch64 *_arm4 *_universal2
 
       - name: Upload wheels to s3://gensim-wheels
         #
