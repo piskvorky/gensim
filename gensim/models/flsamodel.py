@@ -174,8 +174,8 @@ class FlsaModel:
                 The corpus in FuzzyTM's required input format.
         """
         if self._check_bow(corpus):
-            if is2word is None:
-                raise ValueError("id2word must be specified when using a BoW input corpus.")
+            if id2word is None:
+                raise ValueError("Please feed an id2word.")
             return self._convert_bow(corpus, id2word)
         return corpus
 
@@ -231,8 +231,8 @@ class FlsaModel:
             str_doc = []
             for wordid, count in doc:
                 str_doc.extend([id2word[wordid]] * count)
-            data_list.append(str_doc)
-        return data_list
+            doc_list.append(str_doc)
+        return doc_list
 
     @abstractmethod
     def _get_matrices(self):
@@ -253,7 +253,7 @@ class FlsaModel:
             for j, word in enumerate(doc):
                 if not isinstance(word, str):
                     raise TypeError(f"Word {j} of document {i} is not a str")
-
+        #ERijck: the code above can be removed once we have BOW incorporated.
         if not isinstance(self.num_topics, int) or self.num_topics < 1:
             raise ValueError(f"Please use a positive int for num_topics, not {self.num_topics}")
         if not isinstance(self.num_words, int) or self.num_words < 1:
@@ -381,7 +381,7 @@ class FlsaModel:
                 word_to_index,
             )
         else:
-            raise ValueError('Invalid word weighting method')
+            raise ValueError(f'Unsupported word_weighting {word_weighting}')
         return sparse_local_term_weights.multiply(global_term_weights).tocsc()
 
     def _calculate_entropy(
