@@ -60,7 +60,6 @@ EVALUATION:
         interpretability = flsaw.get_interpretability_score()
         
 WARNING work-in-progress, do not use this module!
-
 """
 
 from abc import abstractmethod
@@ -178,6 +177,7 @@ class FlsaModel:
                 raise ValueError("Please feed an id2word.")
             return self._convert_bow(corpus, id2word)
         return corpus
+    #ERijck: this method can be removed once we have bow implemented.
 
     @staticmethod
     def _check_bow(corpus):
@@ -205,6 +205,8 @@ class FlsaModel:
                 if not isinstance(tup[0], int) or not isinstance(tup[1], int):
                     return False
         return True
+    #ERijck: this method can be removed once we have bow implemented. 
+    #   We can then just for this in the _check_variables method
 
     @staticmethod
     def _convert_bow(corpus, id2word):
@@ -254,6 +256,7 @@ class FlsaModel:
                 if not isinstance(word, str):
                     raise TypeError(f"Word {j} of document {i} is not a str")
         #ERijck: the code above can be removed once we have BOW incorporated.
+        #ERijck: then we should replace it by a check on the BOW and id2word.
         if not isinstance(self.num_topics, int) or self.num_topics < 1:
             raise ValueError(f"Please use a positive int for num_topics, not {self.num_topics}")
         if not isinstance(self.num_words, int) or self.num_words < 1:
@@ -382,6 +385,7 @@ class FlsaModel:
             )
         else:
             raise ValueError(f'Unsupported word_weighting {word_weighting}')
+        #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
         return sparse_local_term_weights.multiply(global_term_weights).tocsc()
 
     def _calculate_entropy(
@@ -526,7 +530,6 @@ class FlsaModel:
             word_to_index,
             )
         summed_binary_words_list = binary_sparse_dtm.sum(0).tolist()[0]
-
         return np.array([np.log2((num_documents - binary_word_count) / binary_word_count)
                          for binary_word_count in summed_binary_words_list])
 
@@ -617,7 +620,7 @@ class FlsaModel:
             svd_factors,
         ):
         """
-        Perform singular decomposition for dimensionality reduction.
+        Perform singular value decomposition for dimensionality reduction.
 
         (See: https://web.mit.edu/be.400/www/SVD/Singular_Value_Decomposition.htm)
         For SVD on a sparse matrix, the sparsesvd package is used
@@ -646,6 +649,7 @@ class FlsaModel:
             return svd_v.T
         else:
             raise ValueError(f'Invalid algorithm {algorithm}; must be one of "flsa" or "flsa-w".')
+        #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
 
     @staticmethod
     def _create_partition_matrix(
@@ -741,45 +745,6 @@ class FlsaModel:
         """
         return np.matmul(prob_topic_given_word_transpose.T, prob_word_i)
 
-    @staticmethod
-    def _check_passed_variables(
-            algorithm,
-            prob_topic_given_document_transpose,
-            prob_topic_given_word_transpose,
-            local_term_weights,
-            global_term_weights,
-        ):
-        """Check whether the algorithms are being fed the right attributes."""
-        if algorithm in ['flsa']:
-            if prob_topic_given_document_transpose is None:
-                raise ValueError(
-                    "The `prob_topic_given_document_transpose` parameter must be set when using `flsa` algorithm."
-                )
-            if global_term_weights is None:
-                raise ValueError(
-                    "The `global_term_weights` parameter must be set when using `flsa` algorithm."
-                )
-        elif algorithm in ['flsa-w']:
-            if prob_topic_given_word_transpose is None:
-                raise ValueError(
-                    "The `prob_topic_given_word_transpose` parameter must be set when using `flsa-w` algorithm."
-                )
-            if global_term_weights is None:
-                raise ValueError(
-                    "The `global_term_weights` parameter must be set when using `flsa-w` algorithm."
-                )
-        elif algorithm in ['flsa-e']:
-            if prob_topic_given_word_transpose is None:
-                raise ValueError(
-                    "The `prob_topic_given_word_transpose` parameter must be set when using `flsa-e` algorithm."
-                )
-            if local_term_weights is None:
-                raise ValueError(
-                    "The `local_term_weights` parameter must be set when using `flsa-e` algorithm."
-                )
-        else:
-            raise ValueError(f'Unsupported algorithm {algorithm}')
-
     def _create_probability_matrices(
             self,
             algorithm,
@@ -814,14 +779,6 @@ class FlsaModel:
             numpy.array : float
                 The probability of a topic given a document.
         """
-        # Check whether the right variable are passed into the method.
-        self._check_passed_variables(
-            algorithm,
-            prob_topic_given_document_transpose,
-            prob_topic_given_word_transpose,
-            local_term_weights,
-            global_term_weights,
-            )
 
         # Calculate the initial probabilities
         if algorithm in ['flsa', 'flsa-w']:
@@ -868,6 +825,7 @@ class FlsaModel:
             )
             return self._prob_word_given_topic, prob_topic_given_document
         raise ValueError(f'Unsupported algorithm {algorithm}')
+        #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
 
     @staticmethod
     def _create_dictlist_topn(
@@ -1064,12 +1022,12 @@ class FlsaModel:
                 Array in which each row gives the topic embedding for
                 the associated document.
         """
-        self._check_variables()
         if prob_word_given_topic is None:
             prob_word_given_topic = self._prob_word_given_topic
         top_dist = []
-        if method not in ['topn', 'percentile']:
-            raise ValueError(f"The `method` parameter must be one of {{'topn', 'percentile'}}, not {method}.")
+        allowed_methods = {'topn', 'percentile'}
+        if method not in allowed_methods:
+            raise ValueError(f"The `method` parameter must be one of {allowed_methods}, not {method}.")
         if method == 'topn':
             dictlist = self._create_dictlist_topn(topn, prob_word_given_topic, self._index_to_word)
         else:
