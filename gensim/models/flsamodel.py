@@ -61,10 +61,6 @@ EVALUATION:
         
 WARNING work-in-progress, do not use this module!
 
-
-
-FIXME add background info, links: what is this, who should use this and why?
-
 """
 
 from abc import abstractmethod
@@ -129,7 +125,6 @@ class FlsaModel:
             min_count=None,
             window=None,
             vector_size=None,
-            workers=None,
         ):
         self.corpus = self._set_corpus(corpus, id2word)
         self.num_topics = num_topics
@@ -142,7 +137,6 @@ class FlsaModel:
         self.min_count = min_count
         self.window = window
         self.vector_size = vector_size
-        self.workers = workers
         self._check_variables()
         self._vocabulary = set(el for lis in corpus for el in lis)
         self._index_to_word = list(self._vocabulary)
@@ -363,32 +357,6 @@ class FlsaModel:
                 sparse matrix representation of the global term weights.
         """
         num_documents = len(corpus)
-        if word_weighting in ['entropy', 'normal']:
-            if sparse_local_term_weights is None:
-                raise ValueError(
-                    f"The `sparse_local_term_weights` parameter must be specified when using the"
-                    f" {word_weighting} word weighting."
-                )
-        if word_weighting in ['entropy']:
-            if index_to_word is None:
-                # FIXME How is this different from self.index_to_word? Why is this needed?
-                raise ValueError(f"Please feed the algorithm 'index_to_word'")
-            if sum_words is None:
-                raise ValueError("Please feed the algorithm 'sum_words'")
-        if word_weighting in ['entropy', 'idf', 'probidf']:
-            if vocabulary_size is None:
-                raise ValueError(
-                    f"The `vocabulary_size` parameter must be specified when using the "
-                    f"{word_weighting} word weighting."
-                )
-        if word_weighting in ['idf', 'probidf']:
-            if word_to_index is None:
-                raise ValueError(
-                    f"The `word_to_index` parameter must be specified when using the "
-                    f" {word_weighting} word wighting.")
-        # FIXME is this the right place to check all the above conditions? This is an internal function; can't
-        # we guarantee that some of these invariants are met ourselves??
-
         if word_weighting == 'entropy':
             global_term_weights = self._calculate_entropy(
                 num_documents,
@@ -425,7 +393,8 @@ class FlsaModel:
             sum_words,
         ):
         """
-        Use the entropy word weighting method.
+        Use the entropy word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm. 
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -445,7 +414,7 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
-               FIXME what does this actually do and return?
+               A document-term matrix with globally weighted values.
         """
         p_log_p_ij = self._create_p_log_p_ij(
             num_documents,
@@ -465,7 +434,8 @@ class FlsaModel:
             word_to_index,
         ):
         """
-        Use the IDF word weighting method.
+        Use the IDF word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm. 
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -483,9 +453,12 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
+               A document-term matrix with globally weighted values.
         """
         # FIXME we already have streamed Bow / IDF methods implementd in Gensim, e.g. in the TfIdf models.
         # What's the overlap – is this really needed?
+        #ERijck: once we have BOW implemented in FlsaModel, 
+        #       I suggest we change to implemented Gensim models.
         binary_sparse_dtm = self._create_sparse_binary_dtm(
             num_documents,
             vocabulary_size,
@@ -498,7 +471,8 @@ class FlsaModel:
     @staticmethod
     def _calculate_normal(sparse_local_term_weights):
         """
-        Use the normal word weighting method.
+        Use the normal word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm. 
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -510,6 +484,7 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
+               A document-term matrix with globally weighted values.
         """
         squared_dtm = sparse_local_term_weights.multiply(sparse_local_term_weights)
         summed_words = squared_dtm.sum(0).tolist()[0]
@@ -523,7 +498,8 @@ class FlsaModel:
             word_to_index,
         ):
         """
-        Use the probidf word weighting method.
+        Use the probidf word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm. 
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -541,6 +517,7 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
+               A document-term matrix with globally weighted values.
         """
         binary_sparse_dtm = self._create_sparse_binary_dtm(
             num_documents,
@@ -812,12 +789,12 @@ class FlsaModel:
             global_term_weights=None,
         ):
         """
-        FIXME Whole description is useless; rewrite.
+        This method corresponds to FLSA and FLSA-W's step 5 and FLSA-E's step 3.
+        Given an algorithm, it performs the matrix multiplications needed to 
+        obtain the P(W|T) and P(T|D) matrices.
 
-        Method that performs matrix multiplications to obtain the output matrices.
-
-        The 'algorithm' parameter is generic and the other ones depend on the selected algorithm.
-        The other parameters passed into this method depend on the used algorithm.
+        The 'algorithm' parameter is needed for all algoriths. Whereas the other 
+        parameters depend on the selected algorithm.
 
         Parameters
         ----------
@@ -1009,19 +986,18 @@ class FlsaModel:
             num_words = self.num_words
         if index_to_word is None:
             index_to_word = self._index_to_word
-
-        # FIXME fix formatting and message of all these TypeErrors as per methods above.
         if not isinstance(prob_word_given_topic, np.ndarray):
             raise TypeError(
-                "Please feed the algorithm 'prob_word_given_topic' as a np.ndarray"
+                "Please feed a np.ndarray to 'prob_word_given_topic'"
             )
         if not isinstance(index_to_word, dict):
-            raise TypeError("Please feed the algorithm 'index_to_word' as a dict")
+            raise TypeError("Please feed a dict to 'index_to_word'")
         if not isinstance(num_words, int) or num_words <= 0:
             raise TypeError("Please use a positive int for 'num_words'.")
         if prob_word_given_topic.shape[0] < prob_word_given_topic.shape[1]:
             raise ValueError("'prob_word_given_topic' has more columns then rows,",
                              " probably you need to take the transpose.")  # FIXME What? Why?
+            #ERijck: A model with more topics than words makes no sense. 
         if prob_word_given_topic.shape[0] != len(index_to_word.keys()):
             raise ValueError(
                 f"The shape of prob_word_given_topic={prob_word_given_topic.shape} doesn't match "
@@ -1113,17 +1089,17 @@ class FlsaModel:
             coherence='c_v',
         ):
         """
-        Calculate the coherence score for the generated topic.
-        FIXME What "the generated topic"? What is this referring to?
-
+        Calculate the coherence score for a set of topics (https://dl.acm.org/doi/10.1145/2684822.2685324).
+        This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
+        In case of the first, the method can be called without passing any variables.
+        In case of the latter, the topics and corpus should be fed to the method. 
+        
         Parameters
         ----------
              corpus : list of lists of str
                 The input file used to initialize the model.
              topics : list of lists of str
-                 The words per topics,
-                 equivalent to self.show_topics(formatted=True).
-                 FIXME If it's equivalent, why don't we calculate it ourselves?
+                 The words per topics with the same format as produced by self.show_topics(formatted=True).
              coherence : str
                  The type of coherence to be calculated.
                  Choose from: 'u_mass', 'c_v', 'c_uci', 'c_npmi'.
@@ -1151,7 +1127,10 @@ class FlsaModel:
 
     def get_diversity_score(self, topics=None):
         """
-        Calculate the diversity score for the generated topic.
+        Calculate the diversity score for a set of topics.
+        This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
+        In case of the first, the method can be called without passing any variables.
+        In case of the latter, the topics and corpus should be fed to the method. 
 
         Diversity = number of unique words / number of total words.
         See: https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00325/96463/Topic-Modeling-in-Embedding-Spaces
@@ -1179,7 +1158,10 @@ class FlsaModel:
 
     def get_interpretability_score(self, corpus=None, topics=None, coherence='c_v'):
         """
-        Calculate the interpretability score for the generated topics.
+        Calculate the interpretability score for a set of topics.
+        This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
+        In case of the first, the method can be called without passing any variables.
+        In case of the latter, the topics and corpus should be fed to the method. 
 
         Interpretability = coherence * diversity.
         See: https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00325/96463/Topic-Modeling-in-Embedding-Spaces
@@ -1474,9 +1456,6 @@ class FlsaE(FlsaModel):
                 Maximum distance between the current and predicted word within a sentence.
             vector_size : int
                 Dimensionality of the word vectors.
-            workers : int
-                Use these many worker threads to train the model, for faster training on multicore machines.
-                FIXME Where is `workers` actually used? I don't see any threading in this module.
     """
 
     def __init__(
@@ -1488,11 +1467,12 @@ class FlsaE(FlsaModel):
             min_count=1,
             window=5,
             vector_size=20,
-            workers=4,
         ):
 
         self.model = ...   # FIXME what is this?
         self.word_embedding = ...  # FIXME what is this?
+        #ERijck: this way users can do post-analysis. But storing them as an attribute 
+        #       is not crucial.
 
         super().__init__(
             algorithm='flsa-e',
@@ -1503,7 +1483,6 @@ class FlsaE(FlsaModel):
             min_count=min_count,
             window=window,
             vector_size=vector_size,
-            workers=workers,
         )
 
     def get_word_embedding(
@@ -1512,7 +1491,6 @@ class FlsaE(FlsaModel):
             vector_size,
             window,
             min_count,
-            workers,
         ):
         """
             Train a word embedding on the corpus.
@@ -1527,18 +1505,15 @@ class FlsaE(FlsaModel):
                     Maximum distance between the current and predicted word within a sentence.
                 vector_size : int
                     Dimensionality of the word vectors.
-                workers : int
-                    Use these many worker threads to train the model
-                    ( = faster training with multicore machines).
         """
         self.model = Word2Vec(
             sentences=data,
             vector_size=vector_size,
             window=window,
             min_count=min_count,
-            workers=workers,
         )
         # FIXME is the whole Word2Vec model really needed? Why are we storing it as an attribute?
+        #ERijck: This way users can do a post analysis. However, it is not crucial and can be removed.
         return self.model.wv.vectors
 
     def _get_matrices(self):
@@ -1563,7 +1538,6 @@ class FlsaE(FlsaModel):
             min_count=self.min_count,
             vector_size=self.vector_size,
             window=self.window,
-            workers=self.workers,
         )
 
         partition_matrix = self._create_partition_matrix(
