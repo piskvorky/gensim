@@ -286,10 +286,12 @@ class FlsaModel:
             word_to_index,
         ):
         """
-        Create a sparse matrix showing the frequency of each words in documents.
+        Create a sparse (DOK) document-term matrix.
+        This is step 1 in the FLSA and FLSA-W algorithms. 
 
-        See: https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.dok_matrix.html
-
+        See: 
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.dok_matrix.html
+        
         Axes:
             rows: documents (size: number of documents in corpus)
             columns: words (size: vocabulary length)
@@ -330,7 +332,11 @@ class FlsaModel:
             sum_words=None,
         ):
         """
-        Apply a word_weighting method on the sparse_local_term_weights to create sparse_global_term_weights.
+        Apply a global word_weighting method on the sparse_local_term_weights to create sparse_global_term_weights.
+        This is step 2 in the FLSA and FLSA-W algorithms. 
+        
+        The best word_weighting method depends on the dataset. Hence, we recommend trying all.
+        
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
         Parameters
@@ -544,6 +550,9 @@ class FlsaModel:
         """
         Calculate probability of word i in document j, multiplied by its base-2 logarithm.
 
+        This method is only used when 'entropy' is calculated as the
+        word-weighting method.
+
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
         Parameters
@@ -586,6 +595,10 @@ class FlsaModel:
         """
         Create a binary sparse document-term-matrix (used for idf and probidf).
 
+        This method is only used when 'idf' and 'probidf' are calculated as the
+        word-weighting method.
+
+
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
         Parameters
@@ -621,6 +634,8 @@ class FlsaModel:
         ):
         """
         Perform singular value decomposition for dimensionality reduction.
+        
+        This is step 3 in the FLSA and FLSA-W algorithm.
 
         (See: https://web.mit.edu/be.400/www/SVD/Singular_Value_Decomposition.htm)
         For SVD on a sparse matrix, the sparsesvd package is used
@@ -658,8 +673,22 @@ class FlsaModel:
             method='fcm',
         ):
         """
-        Cluster the projected data.
-
+        Use fuzzy clustering on the projected data.
+        
+        The three clustering methods are:
+            1. fcm (Fuzzy C-Means)
+                (http://bitly.ws/zjs6)
+            2. gk (Gustafson & Kessel)
+                (http://bitly.ws/zjsj)
+            3. fst-pso (Fuzzy self-tuning particle swarm optimization)
+                (https://www.sciencedirect.com/science/article/pii/S2210650216303534)
+        
+        The best method depends on the algorithm/dataset. Typically, FST-PSO 
+        training times are longer. 
+        
+        See the following comparative work:
+            https://www.frontiersin.org/articles/10.3389/fdata.2022.846930/full
+            
         The pyFUME package is used for clustering: https://pyfume.readthedocs.io/en/latest/Clustering.html
 
         Parameters
@@ -685,7 +714,7 @@ class FlsaModel:
     @staticmethod
     def _create_prob_document_j(sparse_matrix):
         """
-        Get the probability of document j.
+        Get the probability of document j. Used for the last step in all the algoritms.
 
         Parameters
         ----------
@@ -706,7 +735,7 @@ class FlsaModel:
     @staticmethod
     def _create_prob_word_i(sparse_matrix):
         """
-        Get the probability of word i.
+        Get the probability of word i. Used for the last step in all the algoritms.
 
         Parameters
         ----------
@@ -729,7 +758,7 @@ class FlsaModel:
             prob_word_i,
         ):
         """
-        Get the probability of topic k.
+        Get the probability of topic k. Used for the last step in all the algoritms.
 
         Parameters
         ----------
@@ -835,7 +864,7 @@ class FlsaModel:
         ):
         """
         Create a list with dictionaries of word probabilities
-        per topic based on the top-n words.
+        per topic based on the top-n words. Used to create topic embeddings.
 
         Parameters
         ----------
@@ -918,7 +947,7 @@ class FlsaModel:
             index_to_word=None,
         ):
         """
-        Get a representation for topics.
+        Show the top words per topic after training.
 
         Parameters
         ----------
@@ -992,8 +1021,8 @@ class FlsaModel:
             perc=0.05,
         ):
         """
-        Create a topic embedding for each input document,
-        to be used as input to predictive models.
+        Create a topic embedding for each corpus document.
+        To be used as input to predictive models.
 
         Parameters
         ----------
@@ -1222,7 +1251,9 @@ class FlsaModel:
 
 class Flsa(FlsaModel):
     """
-    The FLSA algorithm.
+    The FLSA algorithm. Once this object is initialized, it automatically trains 
+    a model.
+    
     See https://link.springer.com/article/10.1007/s40815-017-0327-9
 
     Parameters
@@ -1307,7 +1338,8 @@ class Flsa(FlsaModel):
 
 class FlsaW(FlsaModel):
     """
-    Train the FLSA-W algorithm.
+    Train the FLSA-W algorithm. Once this object is initialized, it automatically trains 
+    a model. 
 
     See: https://ieeexplore.ieee.org/abstract/document/9660139
 
@@ -1394,7 +1426,8 @@ class FlsaW(FlsaModel):
 
 class FlsaE(FlsaModel):
     """
-    Train the FLSA-E algorithm.
+    Train the FLSA-E algorithm. Once this object is initialized, it automatically trains 
+    a model. 
 
     See: https://research.tue.nl/nl/publications/exploring-embedding-spaces-for-more-coherent-topic-modeling-in-el
 
