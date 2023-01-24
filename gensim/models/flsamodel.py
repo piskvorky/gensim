@@ -7,7 +7,61 @@
 """
 Fuzzy topic models.
 
+FlsaModel contains three topic modeling algorithms: FLSA, FLSA-W and FLSA-E. 
+
+1. FLSA - https://link.springer.com/article/10.1007/s40815-017-0327-9
+2. FLSA-W - https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9660139
+3. FLSA-E - https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9945594
+
+In experimental work, FLSA-W outperforms other topic modeling algorithms on
+various open datasets in terms of the coherence- and diversity score:
+    
+https://pure.tue.nl/ws/portalfiles/portal/222725628/Pure_ExperimentalStudyOfFlsa_wForTopicModeling.pdf
+
+The algorithms go through similar steps:
+
+FLSA-W:
+    1. Create a document-term matrix
+    2. Calculate global term weights. 
+    3. Perform SVD and obtain the V matrix
+    4. Perform fuzzy clustering (the default is fuzzy C-means) on the V matrix.
+        To obtain the partition matrix. 
+    5. Perform various matrix multiplications to obtain the output matrices
+        P(W|T) and P(T|D).
+
+FLSA: Works similar to FLSA-W. However, the U-matrix is used in step 3 and 4 and
+        for this reason the calculations in step 5 are different. 
+        
+FLSA-E:
+    1: Train a word embedding (currently, only Word2Vec is supported) on the corpus. 
+    2: Perform fuzzy clustering on the word embedding to obtain the partition matrix. 
+    3. Perform various matrix multiplications to obtain P(W|T) and P(T|D).
+
+Since these algorithms go through similar steps, the FlsaModel object contains 
+the operations shared by the algorithms. When one of the models is initialized, 
+it goes through the algorithm steps and calls FlsaModel to execute a step. 
+
+EXAMPLE: 
+    Suppose we have our dataset and id2word, then we can initialize/train a model with:
+
+flsaw = FlsaW(
+    corpus=corpus, 
+    id2word=idword)
+
+TOPICS: 
+    To see the produced topics:
+    
+    topics = flsaw.show_topics()
+    
+EVALUATION:
+    To evaluate the produced topics use:
+        coherence = flsaw.get_coherence_score()
+        diversity = flsaw.get_diversity_score()
+        interpretability = flsaw.get_interpretability_score()
+        
 WARNING work-in-progress, do not use this module!
+
+
 
 FIXME add background info, links: what is this, who should use this and why?
 
