@@ -7,7 +7,7 @@
 """
 Fuzzy topic models.
 
-FlsaModel contains three topic modeling algorithms: FLSA, FLSA-W and FLSA-E. 
+FlsaModel contains three topic modeling algorithms: FLSA, FLSA-W and FLSA-E.
 
 1. FLSA - https://link.springer.com/article/10.1007/s40815-017-0327-9
 2. FLSA-W - https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9660139
@@ -15,50 +15,50 @@ FlsaModel contains three topic modeling algorithms: FLSA, FLSA-W and FLSA-E.
 
 In experimental work, FLSA-W outperforms other topic modeling algorithms on
 various open datasets in terms of the coherence- and diversity score:
-    
+
 https://pure.tue.nl/ws/portalfiles/portal/222725628/Pure_ExperimentalStudyOfFlsa_wForTopicModeling.pdf
 
 The algorithms go through similar steps:
 
 FLSA-W:
-    1. Create a document-term matrix
-    2. Calculate global term weights. 
-    3. Perform SVD and obtain the V matrix
+    1. Create a document-term matrix.
+    2. Calculate global term weights.
+    3. Perform SVD and obtain the V matrix.
     4. Perform fuzzy clustering (the default is fuzzy C-means) on the V matrix.
-        To obtain the partition matrix. 
+        To obtain the partition matrix.
     5. Perform various matrix multiplications to obtain the output matrices
         P(W|T) and P(T|D).
 
 FLSA: Works similar to FLSA-W. However, the U-matrix is used in step 3 and 4 and
-        for this reason the calculations in step 5 are different. 
-        
+        for this reason the calculations in step 5 are different.
+
 FLSA-E:
-    1: Train a word embedding (currently, only Word2Vec is supported) on the corpus. 
-    2: Perform fuzzy clustering on the word embedding to obtain the partition matrix. 
+    1: Train a word embedding (currently, only Word2Vec is supported) on the corpus.
+    2: Perform fuzzy clustering on the word embedding to obtain the partition matrix.
     3. Perform various matrix multiplications to obtain P(W|T) and P(T|D).
 
-Since these algorithms go through similar steps, the FlsaModel object contains 
-the operations shared by the algorithms. When one of the models is initialized, 
-it goes through the algorithm steps and calls FlsaModel to execute a step. 
+Since these algorithms go through similar steps, the FlsaModel object contains
+the operations shared by the algorithms. When one of the models is initialized,
+it goes through the algorithm steps and calls FlsaModel to execute a step.
 
-EXAMPLE: 
+EXAMPLE:
     Suppose we have our dataset and id2word, then we can initialize/train a model with:
 
 flsaw = FlsaW(
-    corpus=corpus, 
+    corpus=corpus,
     id2word=idword)
 
-TOPICS: 
+TOPICS:
     To see the produced topics:
-    
+
     topics = flsaw.show_topics()
-    
+
 EVALUATION:
     To evaluate the produced topics use:
         coherence = flsaw.get_coherence_score()
         diversity = flsaw.get_diversity_score()
         interpretability = flsaw.get_interpretability_score()
-        
+
 WARNING work-in-progress, do not use this module!
 """
 
@@ -73,7 +73,9 @@ from scipy.sparse import dok_matrix
 try:
     from pyfume import Clustering
 except ImportError as e:
-    raise ImportError("FlsaModel requires pyfume; please install it with `pip install gensim[flsamodel]`")
+    raise ImportError(
+        "FlsaModel requires pyfume; please install it with `pip install gensim[flsamodel]`"
+        )
 
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
@@ -86,7 +88,7 @@ class FlsaModel:
 
     Parameters
     ----------
-            corpus : either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
+            corpus: either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
                 The input corpus.
                 FIXME: Accept only BoW = standard Gensim streaming format. No need for "list of list of str".
 
@@ -160,7 +162,7 @@ class FlsaModel:
 
         Parameters
         ----------
-            corpus : either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
+            corpus: either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
                 The input corpus.
 
             id2word: :class:`~gensim.corpora.dictionary.Dictionary`
@@ -186,7 +188,7 @@ class FlsaModel:
 
         Parameters
         ----------
-            corpus : either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
+            corpus: either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
                 The input corpus.
 
         Returns
@@ -205,7 +207,7 @@ class FlsaModel:
                 if not isinstance(tup[0], int) or not isinstance(tup[1], int):
                     return False
         return True
-    #ERijck: this method can be removed once we have bow implemented. 
+    #ERijck: this method can be removed once we have bow implemented.
     #   We can then just for this in the _check_variables method
 
     @staticmethod
@@ -251,7 +253,7 @@ class FlsaModel:
             if not isinstance(doc, list):
                 raise TypeError(f"corpus variable at index {i} is not a list")
             if not len(doc) > 0:
-                raise ValueError(f"The corpus has an empty list at index {i} and should contain at least one str value")
+                raise ValueError(f"The corpus has an empty list at index {i} and should contain at least one str")
             for j, word in enumerate(doc):
                 if not isinstance(word, str):
                     raise TypeError(f"Word {j} of document {i} is not a str")
@@ -287,11 +289,11 @@ class FlsaModel:
         ):
         """
         Create a sparse (DOK) document-term matrix.
-        This is step 1 in the FLSA and FLSA-W algorithms. 
+        This is step 1 in the FLSA and FLSA-W algorithms.
 
-        See: 
+        See:
         https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.dok_matrix.html
-        
+
         Axes:
             rows: documents (size: number of documents in corpus)
             columns: words (size: vocabulary length)
@@ -333,10 +335,10 @@ class FlsaModel:
         ):
         """
         Apply a global word_weighting method on the sparse_local_term_weights to create sparse_global_term_weights.
-        This is step 2 in the FLSA and FLSA-W algorithms. 
-        
+        This is step 2 in the FLSA and FLSA-W algorithms.
+
         The best word_weighting method depends on the dataset. Hence, we recommend trying all.
-        
+
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
         Parameters
@@ -404,7 +406,7 @@ class FlsaModel:
         ):
         """
         Use the entropy word weighting method, for the second step in the
-        FLSA-W and FLSA algorithm. 
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -445,7 +447,7 @@ class FlsaModel:
         ):
         """
         Use the IDF word weighting method, for the second step in the
-        FLSA-W and FLSA algorithm. 
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -467,7 +469,7 @@ class FlsaModel:
         """
         # FIXME we already have streamed Bow / IDF methods implementd in Gensim, e.g. in the TfIdf models.
         # What's the overlap – is this really needed?
-        #ERijck: once we have BOW implemented in FlsaModel, 
+        #ERijck: once we have BOW implemented in FlsaModel,
         #       I suggest we change to implemented Gensim models.
         binary_sparse_dtm = self._create_sparse_binary_dtm(
             num_documents,
@@ -482,7 +484,7 @@ class FlsaModel:
     def _calculate_normal(sparse_local_term_weights):
         """
         Use the normal word weighting method, for the second step in the
-        FLSA-W and FLSA algorithm. 
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -509,7 +511,7 @@ class FlsaModel:
         ):
         """
         Use the probidf word weighting method, for the second step in the
-        FLSA-W and FLSA algorithm. 
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -634,7 +636,7 @@ class FlsaModel:
         ):
         """
         Perform singular value decomposition for dimensionality reduction.
-        
+
         This is step 3 in the FLSA and FLSA-W algorithm.
 
         (See: https://web.mit.edu/be.400/www/SVD/Singular_Value_Decomposition.htm)
@@ -674,7 +676,7 @@ class FlsaModel:
         ):
         """
         Use fuzzy clustering on the projected data.
-        
+
         The three clustering methods are:
             1. fcm (Fuzzy C-Means)
                 (http://bitly.ws/zjs6)
@@ -682,13 +684,13 @@ class FlsaModel:
                 (http://bitly.ws/zjsj)
             3. fst-pso (Fuzzy self-tuning particle swarm optimization)
                 (https://www.sciencedirect.com/science/article/pii/S2210650216303534)
-        
-        The best method depends on the algorithm/dataset. Typically, FST-PSO 
-        training times are longer. 
-        
+
+        The best method depends on the algorithm/dataset. Typically, FST-PSO
+        training times are longer.
+
         See the following comparative work:
             https://www.frontiersin.org/articles/10.3389/fdata.2022.846930/full
-            
+
         The pyFUME package is used for clustering: https://pyfume.readthedocs.io/en/latest/Clustering.html
 
         Parameters
@@ -784,10 +786,10 @@ class FlsaModel:
         ):
         """
         This method corresponds to FLSA and FLSA-W's step 5 and FLSA-E's step 3.
-        Given an algorithm, it performs the matrix multiplications needed to 
+        Given an algorithm, it performs the matrix multiplications needed to
         obtain the P(W|T) and P(T|D) matrices.
 
-        The 'algorithm' parameter is needed for all algoriths. Whereas the other 
+        The 'algorithm' parameter is needed for all algoriths. Whereas the other
         parameters depend on the selected algorithm.
 
         Parameters
@@ -856,89 +858,6 @@ class FlsaModel:
         raise ValueError(f'Unsupported algorithm {algorithm}')
         #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
 
-    @staticmethod
-    def _create_dictlist_topn(
-            topn,
-            prob_word_given_topic,
-            index_to_word,
-        ):
-        """
-        Create a list with dictionaries of word probabilities
-        per topic based on the top-n words. Used to create topic embeddings.
-
-        Parameters
-        ----------
-             topn : int
-                The top-n words to include
-                (needs only to be used when 'method=topn').
-             prob_word_given_topic : numpy.array : float
-                Matrix that gives the probability of a word given a topic.
-             index_to_word : list of str
-                Maps each unique index number to a unique vocabulary word.
-
-        Returns
-        -------
-             list of dicts {int : float}
-                Keys: all the indices of words from prob_word_given_topic
-                with weights amongst the top percentage.
-                Values: the probability associated to a word.
-        """
-        if not isinstance(topn, int) or topn <= 0:
-            raise ValueError(f"`topn` must be a positive integer, not {topn}.")
-        top_dictionaries = []
-        for topic_index in range(prob_word_given_topic.shape[1]):
-            new_dict = dict()
-            highest_weight_indices = prob_word_given_topic[:, topic_index].argsort()[-topn:]
-            for word_index in highest_weight_indices:
-                new_dict[index_to_word[word_index]] = prob_word_given_topic[word_index, topic_index]
-            top_dictionaries.append(new_dict)
-        return top_dictionaries
-
-    @staticmethod
-    def _create_dictlist_percentile(
-            perc,
-            prob_word_given_topic,
-            index_to_word,
-        ):
-        """
-        Create a list with dictionaries of word probabilities per topic based on the percentile.
-         - Keys: all the indices of words from prob_word_given_topic
-             who's weight's are amongst the top percentage.
-         - Values: the probability associated to a word.
-
-        Parameters
-        ----------
-             perc : float
-                The top percentile words to include
-                (needs only to be used when 'method=percentile').
-             prob_word_given_topic : numpy.array : float
-                Matrix that gives the probability of a word given a topic.
-             index_to_word : list of str
-                Maps each unique index number to a unique vocabulary word.
-
-        Returns
-        -------
-             list of dicts {int : float}
-                Keys: all the indices of words from prob_word_given_topic
-                    with weights amongst the top percentage.
-                Values: the probability associated to a word.
-        """
-        if not isinstance(perc, float) and 0 <= perc <= 1:
-            raise ValueError("Please choose a number between 0 and 1 for 'perc'")
-        top_list = []
-        for top in range(prob_word_given_topic.shape[1]):
-            new_dict = dict()
-            count = 0
-            i = 0
-            weights = np.sort(prob_word_given_topic[:, top])[::-1]
-            word_indices = np.argsort(prob_word_given_topic[:, top])[::-1]
-            while count < perc:
-                new_dict[index_to_word[word_indices[i]]] = weights[i]
-                count += weights[i]
-                i += 1
-            top_list.append(new_dict)
-        return top_list
-
     def show_topics(
             self,
             formatted=True,
@@ -984,7 +903,7 @@ class FlsaModel:
         if prob_word_given_topic.shape[0] < prob_word_given_topic.shape[1]:
             raise ValueError("'prob_word_given_topic' has more columns then rows,",
                              " probably you need to take the transpose.")  # FIXME What? Why?
-            #ERijck: A model with more topics than words makes no sense. 
+            #ERijck: A model with more topics than words makes no sense.
         if prob_word_given_topic.shape[0] != len(index_to_word.keys()):
             raise ValueError(
                 f"The shape of prob_word_given_topic={prob_word_given_topic.shape} doesn't match "
@@ -1012,63 +931,6 @@ class FlsaModel:
                 topic_list.append(word_list)
             return topic_list
 
-    def get_topic_embedding(
-            self,
-            corpus,
-            prob_word_given_topic=None,
-            method='topn',
-            topn=20,
-            perc=0.05,
-        ):
-        """
-        Create a topic embedding for each corpus document.
-        To be used as input to predictive models.
-
-        Parameters
-        ----------
-            corpus : list of lists of str
-                The input file used to initialize the model.
-            prob_word_given_topic : numpy.array : float
-                Matrix that gives the probability of a word given a topic.
-            method : str
-                Method to select words to be included in the embedding.
-                (choose from 'topn', 'percentile'):
-                    - topn: for each topic the top n words with the highest
-                        probability are included.
-                    - percentile: for each topic all words with highest
-                        probabilities are assigned while the cumulative
-                        probability is lower than the percentile.
-            topn : int
-                The top-n words to include
-                (needs only to be used when 'method=topn').
-            perc: float
-                The benchmark percentile until which words need to be added
-                (between 0 and 1).
-
-        Returns
-        -------
-            numpy.array : float
-                Array in which each row gives the topic embedding for
-                the associated document.
-        """
-        if prob_word_given_topic is None:
-            prob_word_given_topic = self._prob_word_given_topic
-        top_dist = []
-        allowed_methods = {'topn', 'percentile'}
-        if method not in allowed_methods:
-            raise ValueError(f"The `method` parameter must be one of {allowed_methods}, not {method}.")
-        if method == 'topn':
-            dictlist = self._create_dictlist_topn(topn, prob_word_given_topic, self._index_to_word)
-        else:
-            dictlist = self._create_dictlist_percentile(perc, prob_word_given_topic, self._index_to_word)
-        for doc in corpus:
-            topic_weights = [0] * prob_word_given_topic.shape[1]
-            for word in doc:
-                for i in range(prob_word_given_topic.shape[1]):
-                    topic_weights[i] += dictlist[i].get(word, 0)
-            top_dist.append(topic_weights)
-        return np.array(top_dist)
-
     def get_coherence_score(
             self,
             corpus=None,
@@ -1079,8 +941,8 @@ class FlsaModel:
         Calculate the coherence score for a set of topics (https://dl.acm.org/doi/10.1145/2684822.2685324).
         This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
         In case of the first, the method can be called without passing any variables.
-        In case of the latter, the topics and corpus should be fed to the method. 
-        
+        In case of the latter, the topics and corpus should be fed to the method.
+
         Parameters
         ----------
              corpus : list of lists of str
@@ -1117,7 +979,7 @@ class FlsaModel:
         Calculate the diversity score for a set of topics.
         This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
         In case of the first, the method can be called without passing any variables.
-        In case of the latter, the topics and corpus should be fed to the method. 
+        In case of the latter, the topics and corpus should be fed to the method.
 
         Diversity = number of unique words / number of total words.
         See: https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00325/96463/Topic-Modeling-in-Embedding-Spaces
@@ -1148,7 +1010,7 @@ class FlsaModel:
         Calculate the interpretability score for a set of topics.
         This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
         In case of the first, the method can be called without passing any variables.
-        In case of the latter, the topics and corpus should be fed to the method. 
+        In case of the latter, the topics and corpus should be fed to the method.
 
         Interpretability = coherence * diversity.
         See: https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00325/96463/Topic-Modeling-in-Embedding-Spaces
@@ -1251,9 +1113,9 @@ class FlsaModel:
 
 class Flsa(FlsaModel):
     """
-    The FLSA algorithm. Once this object is initialized, it automatically trains 
+    The FLSA algorithm. Once this object is initialized, it automatically trains
     a model.
-    
+
     See https://link.springer.com/article/10.1007/s40815-017-0327-9
 
     Parameters
@@ -1307,13 +1169,13 @@ class Flsa(FlsaModel):
         """
         sparse_document_term_matrix = self._create_sparse_local_term_weights(
             self.corpus,
-            len(self.vocabulary),
+            len(self._vocabulary),
             self._word_to_index,
         )
         sparse_global_term_weighting = self._create_sparse_global_term_weights(
             corpus=self.corpus,
             word_weighting=self.word_weighting,
-            vocabulary_size=len(self.vocabulary),
+            vocabulary_size=len(self._vocabulary),
             sparse_local_term_weights=sparse_document_term_matrix,
             index_to_word=self._index_to_word,
             word_to_index=self._word_to_index,
@@ -1338,8 +1200,8 @@ class Flsa(FlsaModel):
 
 class FlsaW(FlsaModel):
     """
-    Train the FLSA-W algorithm. Once this object is initialized, it automatically trains 
-    a model. 
+    Train the FLSA-W algorithm. Once this object is initialized, it automatically trains
+    a model.
 
     See: https://ieeexplore.ieee.org/abstract/document/9660139
 
@@ -1395,13 +1257,13 @@ class FlsaW(FlsaModel):
         """
         sparse_document_term_matrix = self._create_sparse_local_term_weights(
             self.corpus,
-            len(self.vocabulary),
+            len(self._vocabulary),
             self._word_to_index,
         )
         sparse_global_term_weighting = self._create_sparse_global_term_weights(
             corpus=self.corpus,
             word_weighting=self.word_weighting,
-            vocabulary_size=len(self.vocabulary),
+            vocabulary_size=len(self._vocabulary),
             sparse_local_term_weights=sparse_document_term_matrix,
             index_to_word=self._index_to_word,
             word_to_index=self._word_to_index,
@@ -1426,8 +1288,8 @@ class FlsaW(FlsaModel):
 
 class FlsaE(FlsaModel):
     """
-    Train the FLSA-E algorithm. Once this object is initialized, it automatically trains 
-    a model. 
+    Train the FLSA-E algorithm. Once this object is initialized, it automatically trains
+    a model.
 
     See: https://research.tue.nl/nl/publications/exploring-embedding-spaces-for-more-coherent-topic-modeling-in-el
 
@@ -1462,7 +1324,7 @@ class FlsaE(FlsaModel):
 
         self.model = ...   # FIXME what is this?
         self.word_embedding = ...  # FIXME what is this?
-        #ERijck: this way users can do post-analysis. But storing them as an attribute 
+        #ERijck: this way users can do post-analysis. But storing them as an attribute
         #       is not crucial.
 
         super().__init__(
@@ -1520,7 +1382,7 @@ class FlsaE(FlsaModel):
         """
         sparse_document_term_matrix = self._create_sparse_local_term_weights(
             self.corpus,
-            len(self.vocabulary),
+            len(self._vocabulary),
             self._word_to_index,
         )
 
