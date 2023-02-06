@@ -65,6 +65,7 @@ WARNING work-in-progress, do not use this module!
 from abc import abstractmethod
 from collections import Counter
 import itertools
+import warnings
 
 import numpy as np
 from scipy.sparse.linalg import svds
@@ -391,9 +392,6 @@ class FlsaModel:
                 corpus,
                 word_to_index,
             )
-        else:
-            raise ValueError(f'Unsupported word_weighting {word_weighting}')
-        #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
         return sparse_local_term_weights.multiply(global_term_weights).tocsc()
 
     def _calculate_entropy(
@@ -679,9 +677,12 @@ class FlsaModel:
 
         The three clustering methods are:
             1. fcm (Fuzzy C-Means)
-                (http://bitly.ws/zjs6)
+                (https://books.google.nl/books?hl=en&lr=&id=z6XqBwAAQBAJ&oi=fnd&pg=PR14&dq=).+Pattern+Recognition+with+Fuzzy+
+                Objective+Function+A&ots=0i1LtXGmKs&sig=2LYrg4sLhlRUYIQrMvKU0QwrGDw&redir_esc=y#v=onepage&q=).
+                %20Pattern%20Recognition%20with%20Fuzzy%20Objective%20Function%20A&f=false)
             2. gk (Gustafson & Kessel)
-                (http://bitly.ws/zjsj)
+                (https://www.researchgate.net/profile/Donald-Gustafson/publication/224681053_Fuzzy_Clustering_with_a_Fuzzy_
+                 Covariance_Matrix/links/567aa2cf08ae19758380fc22/Fuzzy-Clustering-with-a-Fuzzy-Covariance-Matrix.pdf)
             3. fst-pso (Fuzzy self-tuning particle swarm optimization)
                 (https://www.sciencedirect.com/science/article/pii/S2210650216303534)
 
@@ -901,8 +902,8 @@ class FlsaModel:
         if not isinstance(num_words, int) or num_words <= 0:
             raise TypeError("Please use a positive int for 'num_words'.")
         if prob_word_given_topic.shape[0] < prob_word_given_topic.shape[1]:
-            raise ValueError("'prob_word_given_topic' has more columns then rows,",
-                             " probably you need to take the transpose.")  # FIXME What? Why?
+            warnings.warn("'prob_word_given_topic' has more columns then rows,",
+                             " probably you need to take the transpose.")
             #ERijck: A model with more topics than words makes no sense.
         if prob_word_given_topic.shape[0] != len(index_to_word.keys()):
             raise ValueError(
@@ -1322,10 +1323,7 @@ class FlsaE(FlsaModel):
             vector_size=20,
         ):
 
-        self.model = ...   # FIXME what is this?
-        self.word_embedding = ...  # FIXME what is this?
-        #ERijck: this way users can do post-analysis. But storing them as an attribute
-        #       is not crucial.
+        self.word_embedding = None
 
         super().__init__(
             algorithm='flsa-e',
@@ -1359,15 +1357,13 @@ class FlsaE(FlsaModel):
                 vector_size : int
                     Dimensionality of the word vectors.
         """
-        self.model = Word2Vec(
+        model = Word2Vec(
             sentences=data,
             vector_size=vector_size,
             window=window,
             min_count=min_count,
         )
-        # FIXME is the whole Word2Vec model really needed? Why are we storing it as an attribute?
-        #ERijck: This way users can do a post analysis. However, it is not crucial and can be removed.
-        return self.model.wv.vectors
+        return model.wv.vectors
 
     def _get_matrices(self):
         """
