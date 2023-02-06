@@ -73,10 +73,10 @@ from scipy.sparse import dok_matrix
 
 try:
     from pyfume import Clustering
-except ImportError as e:
+except ImportError as import_error:
     raise ImportError(
         "FlsaModel requires pyfume; please install it with `pip install gensim[flsamodel]`"
-        )
+        ) from import_error
 
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
@@ -677,12 +677,13 @@ class FlsaModel:
 
         The three clustering methods are:
             1. fcm (Fuzzy C-Means)
-                (https://books.google.nl/books?hl=en&lr=&id=z6XqBwAAQBAJ&oi=fnd&pg=PR14&dq=).+Pattern+Recognition+with+Fuzzy+
-                Objective+Function+A&ots=0i1LtXGmKs&sig=2LYrg4sLhlRUYIQrMvKU0QwrGDw&redir_esc=y#v=onepage&q=).
+                (https://books.google.nl/books?hl=en&lr=&id=z6XqBwAAQBAJ&oi=fnd&pg=PR14&dq=).+Pattern+Recognition+with+
+                Fuzzy+Objective+Function+A&ots=0i1LtXGmKs&sig=2LYrg4sLhlRUYIQrMvKU0QwrGDw&redir_esc=y#v=onepage&q=).
                 %20Pattern%20Recognition%20with%20Fuzzy%20Objective%20Function%20A&f=false)
             2. gk (Gustafson & Kessel)
-                (https://www.researchgate.net/profile/Donald-Gustafson/publication/224681053_Fuzzy_Clustering_with_a_Fuzzy_
-                 Covariance_Matrix/links/567aa2cf08ae19758380fc22/Fuzzy-Clustering-with-a-Fuzzy-Covariance-Matrix.pdf)
+                (https://www.researchgate.net/profile/Donald-Gustafson/publication/224681053_Fuzzy_Clustering_with_a_
+                 Fuzzy_Covariance_Matrix/links/567aa2cf08ae19758380fc22/Fuzzy-Clustering-with-a-Fuzzy-Covariance-Matrix.
+                 pdf)
             3. fst-pso (Fuzzy self-tuning particle swarm optimization)
                 (https://www.sciencedirect.com/science/article/pii/S2210650216303534)
 
