@@ -286,11 +286,11 @@ class Word2Vec(utils.SaveLoad):
             Training algorithm: 1 for skip-gram; otherwise CBOW.
         hs : {0, 1}, optional
             If 1, hierarchical softmax will be used for model training.
-            If 0, and `negative` is non-zero, negative sampling will be used.
+            If 0, hierarchical softmax will not be used for model training.
         negative : int, optional
             If > 0, negative sampling will be used, the int for negative specifies how many "noise words"
             should be drawn (usually between 5-20).
-            If set to 0, no negative sampling is used.
+            If 0, negative sampling will not be used.
         ns_exponent : float, optional
             The exponent used to shape the negative sampling distribution. A value of 1.0 samples exactly in proportion
             to the frequencies, 0.0 samples all words equally, while a negative value samples low-frequency words more
@@ -1536,6 +1536,17 @@ class Word2Vec(utils.SaveLoad):
             If the combination of input parameters is inconsistent.
 
         """
+        if (not self.hs) and (not self.negative):
+            raise ValueError(
+                "You must set either 'hs' or 'negative' to be positive for proper training. "
+                "When both 'hs=0' and 'negative=0', there will be no training."
+            )
+        if self.hs and self.negative:
+            logger.warning(
+                "Both hierarchical softmax and negative sampling are activated. "
+                "This is probably a mistake. You should set either 'hs=0' "
+                "or 'negative=0' to disable one of them. "
+            )
         if self.alpha > self.min_alpha_yet_reached:
             logger.warning("Effective 'alpha' higher than previous training cycles")
 
