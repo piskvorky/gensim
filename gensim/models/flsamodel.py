@@ -5,15 +5,17 @@ Created on Thu Oct 27 11:04:27 2022
 @author: 20200016
 """
 
-import math
 from collections import Counter
-import warnings
-import pickle
 import itertools
+import math
+import pickle
+import sys
+import warnings
+
 import numpy as np
 from scipy.sparse.linalg import svds
 from scipy.sparse import dok_matrix
-from pyfume import Clustering
+
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
 from gensim.models import Word2Vec
@@ -699,6 +701,19 @@ class FlsaModel():
         -------
             numpy.array : float
         """
+
+        try:
+            from pyfume import Clustering
+        except ImportError:
+            msg = (
+                "FlsaModel requires pyfume; install manually via "
+                "`pip install pyfume` or otherwise"
+            )
+            print('-' * len(msg), file=sys.stderr)
+            print(msg, file=sys.stderr)
+            print('-' * len(msg), file=sys.stderr)
+            raise
+
         clusterer = Clustering.Clusterer(
             nr_clus=number_of_clusters,
             data=data,
