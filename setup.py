@@ -282,10 +282,13 @@ core_testenv = [
 ]
 
 if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 11):
-    core_testenv.extend([
-        'POT',
-        'nmslib',
-    ])
+    core_testenv.append('POT')
+
+if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 10):
+    #
+    # nmslib wheels not available for Python 3.10 and 3.11 as of Dec 2022
+    #
+    core_testenv.append('nmslib')
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
 linux_testenv = core_testenv[:] + visdom_req
@@ -341,7 +344,6 @@ install_requires = [
     NUMPY_STR,
     'scipy >= 1.7.0',
     'smart_open >= 1.8.1',
-    'FuzzyTM >= 0.4.0'
 ]
 
 setup_requires = [NUMPY_STR]
@@ -352,7 +354,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.3.0',
+    version='4.3.1',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
