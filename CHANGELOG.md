@@ -6,7 +6,7 @@ Changes
 ### :red_circle: Bug fixes
 
 * [#3447](https://github.com/RaRe-Technologies/gensim/pull/3447): Remove unused FuzzyTM dependency, handle ImportError, by [@mpenkov](https://github.com/mpenkov)
-* [#3441](https://github.com/RaRe-Technologies/gensim/pull/3441): Fix incorrect conversion of cosine distance to cosine similarity, by [@monash849](https://github.com/monash849)
+* [#3441](https://github.com/RaRe-Technologies/gensim/pull/3441): Fix changed calculation of cosine distance in Annoy wrapper, by [@monash849](https://github.com/monash849)
 
 ### :+1: Improvements
 
