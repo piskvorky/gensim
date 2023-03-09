@@ -1,6 +1,25 @@
 Changes
 =======
 
+## 4.3.1, 2022-03-08
+
+### :red_circle: Bug fixes
+
+* [#3447](https://github.com/RaRe-Technologies/gensim/pull/3447): Remove unused FuzzyTM dependency, handle ImportError, by [@mpenkov](https://github.com/mpenkov)
+* [#3441](https://github.com/RaRe-Technologies/gensim/pull/3441): Fix changed calculation of cosine distance in Annoy wrapper, by [@monash849](https://github.com/monash849)
+
+### :+1: Improvements
+
+* [#3443](https://github.com/RaRe-Technologies/gensim/pull/3443): Sanity check for `hs` and `negative` in Word2Vec, by [@gau-nernst](https://github.com/gau-nernst)
+
+### 🔮 Testing, CI, housekeeping
+
+* [#3448](https://github.com/RaRe-Technologies/gensim/pull/3448): Enable arm64/aarch64 wheel builds, by [@nikaro](https://github.com/nikaro)
+
+### :books: Tutorial and doc improvements
+
+* [#3446](https://github.com/RaRe-Technologies/gensim/pull/3446): Update Python version in docs, by [@gliptak](https://github.com/gliptak)
+
 ## 4.3.0, 2022-12-17
 
 ### :star2: New Features
