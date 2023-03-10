@@ -47,21 +47,42 @@ jobs:
           CIBW_TEST_REQUIRES: pytest testfixtures mock
           CIBW_TEST_SKIP: cp38* cp39* cp310* *_aarch64 *_arm64 *_universal2
 
+      - name: Upload wheels as artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels-${{ matrix.os }}
+          path: wheelhouse/*.whl
+
+  upload:
+    name: Upload to S3
+    if: always()
+    needs: build_wheels
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Install wheel uploading tool
+        run: python -m pip install wheelhouse-uploader
+
+      - name: Downloads build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      - name: Check files
+        run: tree artifacts/
+
+      - name: Move all wheels into one folder
+        run: mkdir wheelhouse ; find artifacts/ -name '*.whl' -exec mv -v {} wheelhouse/ \;
+
       - name: Upload wheels to s3://gensim-wheels
         #
         # Only do this if the credentials are set.
         # This means that PRs will still build wheels, but not upload them.
         # (PRs do not have access to secrets).
         #
-        # The always() ensures this step runs even if a previous step fails.
-        # We want to upload wheels whenever possible (even if e.g. tests failed)
-        # because we don't want an innocuous test failure from blocking a release.
-        #
-        if: ${{ always() && env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
-        run: |
-          python -m pip install wheelhouse-uploader
-          ls wheelhouse/*.whl
-          python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
+        if: ${{ env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
+        run: python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
         env:
           WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
           WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
