@@ -354,7 +354,7 @@ if need_cython():
 
 setup(
     name='gensim',
-    version='4.3.1',
+    version='4.3.1.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
