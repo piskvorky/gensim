@@ -382,7 +382,7 @@ setup(
 
     zip_safe=False,
 
-    classifiers=[  # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[  # from https://pypi.org/classifiers/
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
