@@ -172,7 +172,7 @@ BibTeX entry:
   [Vector Space Model]: https://en.wikipedia.org/wiki/Vector_space_model
   [unsupervised document analysis]: https://en.wikipedia.org/wiki/Latent_semantic_indexing
   [NumPy and Scipy]: https://scipy.org/install/
-  [ATLAS]: http://math-atlas.sourceforge.net/
+  [ATLAS]: https://math-atlas.sourceforge.net/
   [OpenBLAS]: http://xianyi.github.io/OpenBLAS/
   [source tar.gz]: https://pypi.org/project/gensim/
   [documentation]: https://radimrehurek.com/gensim/#install
