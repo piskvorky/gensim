@@ -171,7 +171,7 @@ BibTeX entry:
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model
   [unsupervised document analysis]: http://en.wikipedia.org/wiki/Latent_semantic_indexing
-  [NumPy and Scipy]: http://www.scipy.org/Download
+  [NumPy and Scipy]: https://scipy.org/install/
   [ATLAS]: http://math-atlas.sourceforge.net/
   [OpenBLAS]: http://xianyi.github.io/OpenBLAS/
   [source tar.gz]: https://pypi.org/project/gensim/

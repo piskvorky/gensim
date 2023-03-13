@@ -199,7 +199,7 @@ document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on W
 Installation
 ------------
 
-This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
+This software depends on `NumPy and Scipy <https://scipy.org/install/>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
 It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
