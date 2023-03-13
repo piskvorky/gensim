@@ -11,7 +11,7 @@ The --with-color option needs the "rudolf" nose plugin. See:
 https://pypi.org/project/rudolf/
 
 Originally by Jeff Winkler, http://jeffwinkler.net
-Forked from wkral http://github.com/wkral/Nosy
+Forked from wkral https://github.com/wkral/Nosy
 """
 
 import os

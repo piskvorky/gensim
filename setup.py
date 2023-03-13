@@ -202,7 +202,7 @@ Installation
 This software depends on `NumPy and Scipy <https://scipy.org/install/>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <https://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
+It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <https://math-atlas.sourceforge.net/>`_ or `OpenBLAS <https://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
 
 Install the latest version of gensim::
 
