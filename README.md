@@ -175,4 +175,4 @@ BibTeX entry:
   [ATLAS]: http://math-atlas.sourceforge.net/
   [OpenBLAS]: http://xianyi.github.io/OpenBLAS/
   [source tar.gz]: http://pypi.python.org/pypi/gensim
-  [documentation]: http://radimrehurek.com/gensim/install.html
+  [documentation]: https://radimrehurek.com/gensim/#install
