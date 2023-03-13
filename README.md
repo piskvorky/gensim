@@ -174,5 +174,5 @@ BibTeX entry:
   [NumPy and Scipy]: http://www.scipy.org/Download
   [ATLAS]: http://math-atlas.sourceforge.net/
   [OpenBLAS]: http://xianyi.github.io/OpenBLAS/
-  [source tar.gz]: http://pypi.python.org/pypi/gensim
+  [source tar.gz]: https://pypi.org/project/gensim/
   [documentation]: https://radimrehurek.com/gensim/#install

@@ -179,7 +179,7 @@ class Projection(utils.SaveLoad):
         docs : {iterable of list of (int, float), scipy.sparse.csc}
             Corpus in BoW format or as sparse matrix.
         use_svdlibc : bool, optional
-            If True - will use `sparsesvd library <https://pypi.python.org/pypi/sparsesvd/>`_,
+            If True - will use `sparsesvd library <https://pypi.org/project/sparsesvd/>`_,
             otherwise - our own version will be used.
         power_iters: int, optional
             Number of power iteration steps to be used. Tune to improve accuracy.

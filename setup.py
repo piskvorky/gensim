@@ -170,9 +170,9 @@ gensim -- Topic Modelling in Python
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
 .. _GA: https://github.com/RaRe-Technologies/gensim/actions
-.. _Downloads: https://pypi.python.org/pypi/gensim
+.. _Downloads: https://pypi.org/project/gensim/
 .. _License: https://radimrehurek.com/gensim/intro.html#licensing
-.. _Wheel: https://pypi.python.org/pypi/gensim
+.. _Wheel: https://pypi.org/project/gensim/
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
@@ -208,7 +208,7 @@ Install the latest version of gensim::
 
     pip install --upgrade gensim
 
-Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package::
+Or, if you have instead downloaded and unzipped the `source tar.gz <https://pypi.org/project/gensim/>`_ package::
 
     python setup.py install
 
@@ -369,7 +369,7 @@ setup(
     project_urls={
         'Source': 'https://github.com/RaRe-Technologies/gensim',
     },
-    download_url='http://pypi.python.org/pypi/gensim',
+    download_url='https://pypi.org/project/gensim/',
 
     license='LGPL-2.1-only',
 

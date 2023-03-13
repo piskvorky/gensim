@@ -53,7 +53,7 @@ To install gensim, simply run::
   pip install --upgrade gensim
 
 Alternatively, you can download the source code from `Github <https://github.com/RARE-Technologies/gensim/>`__
-or the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
+or the `Python Package Index <https://pypi.org/project/gensim/>`_.
 
 After installation, learn how to use Gensim from its :ref:`sphx_glr_auto_examples_core_run_core_concepts.py` tutorials.
 
