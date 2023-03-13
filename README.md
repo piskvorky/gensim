@@ -169,8 +169,8 @@ BibTeX entry:
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
 
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
-  [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model
-  [unsupervised document analysis]: http://en.wikipedia.org/wiki/Latent_semantic_indexing
+  [Vector Space Model]: https://en.wikipedia.org/wiki/Vector_space_model
+  [unsupervised document analysis]: https://en.wikipedia.org/wiki/Latent_semantic_indexing
   [NumPy and Scipy]: https://scipy.org/install/
   [ATLAS]: http://math-atlas.sourceforge.net/
   [OpenBLAS]: http://xianyi.github.io/OpenBLAS/

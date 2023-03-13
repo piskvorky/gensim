@@ -24,8 +24,8 @@ Once these statistical patterns are found, any plain text documents (sentence, p
 
 .. note::
    If the previous paragraphs left you confused, you can read more about the `Vector
-   Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
-   document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
+   Space Model <https://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
+   document analysis <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 .. _design:
 

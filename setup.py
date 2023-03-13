@@ -193,8 +193,8 @@ Features
 
 
 If this feature list left you scratching your head, you can first read more about the `Vector
-Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
-document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
+Space Model <https://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
+document analysis <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 Installation
 ------------

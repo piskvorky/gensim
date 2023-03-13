@@ -21,8 +21,8 @@ against other documents, words or phrases.
 
 .. note::
    If the previous paragraphs left you confused, you can read more about the `Vector
-   Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
-   document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
+   Space Model <https://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
+   document analysis <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 
 .. _design:

@@ -72,10 +72,10 @@ pprint(texts)
 # by the features extracted from it, not by its "surface" string form: how you get to
 # the features is up to you. Below I describe one common, general-purpose approach (called
 # :dfn:`bag-of-words`), but keep in mind that different application domains call for
-# different features, and, as always, it's `garbage in, garbage out <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
+# different features, and, as always, it's `garbage in, garbage out <https://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
 #
 # To convert documents to vectors, we'll use a document representation called
-# `bag-of-words <http://en.wikipedia.org/wiki/Bag_of_words>`_. In this representation,
+# `bag-of-words <https://en.wikipedia.org/wiki/Bag_of_words>`_. In this representation,
 # each document is represented by one vector where each vector element represents
 # a question-answer pair, in the style of:
 #

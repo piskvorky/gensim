@@ -221,7 +221,7 @@ into LDA topic distributions:
     in your list appear to be meta topics, concerning the administration and
     cleanup of Wikipedia. These show up because you didn't exclude templates
     such as these, some of which are included in most articles for quality
-    control: http://en.wikipedia.org/wiki/Wikipedia:Template_messages/Cleanup
+    control: https://en.wikipedia.org/wiki/Wikipedia:Template_messages/Cleanup
 
     The fourth and fifth topics clearly shows the influence of bots that import
     massive databases of cities, countries, etc. and their statistics such as
@@ -232,7 +232,7 @@ into LDA topic distributions:
   So the top ten concepts are apparently dominated by Wikipedia robots and expanded
   templates; this is a good reminder that LSA is a powerful tool for data analysis,
   but no silver bullet. As always, it's `garbage in, garbage out
-  <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
+  <https://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
   By the way, improvements to the Wiki markup parsing code are welcome :-)
 
 .. [3] Hoffman, Blei, Bach. 2010. Online learning for Latent Dirichlet Allocation

@@ -96,10 +96,10 @@ vec_lsi = lsi[vec_bow]  # convert the query to LSI space
 print(vec_lsi)
 
 ###############################################################################
-# In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
+# In addition, we will be considering `cosine similarity <https://en.wikipedia.org/wiki/Cosine_similarity>`_
 # to determine the similarity of two vectors. Cosine similarity is a standard measure
 # in Vector Space Modeling, but wherever the vectors represent probability distributions,
-# `different similarity measures <http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Symmetrised_divergence>`_
+# `different similarity measures <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Symmetrised_divergence>`_
 # may be more appropriate.
 #
 # Initializing query structures

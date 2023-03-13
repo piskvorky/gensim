@@ -10,7 +10,7 @@ Why distributed computing?
 
 Need to build semantic representation of a corpus that is millions of documents large and it's
 taking forever? Have several idle machines at your disposal that you could use?
-`Distributed computing <http://en.wikipedia.org/wiki/Distributed_computing>`_ tries
+`Distributed computing <https://en.wikipedia.org/wiki/Distributed_computing>`_ tries
 to accelerate computations by splitting a given task into several smaller subtasks,
 passing them on to several computing nodes in parallel.
 
@@ -23,7 +23,7 @@ much communication going on), so the network is allowed to be of relatively high
   The primary reason for using distributed computing is making things run faster. In `gensim`,
   most of the time consuming stuff is done inside low-level routines for linear algebra, inside
   NumPy, independent of any `gensim` code.
-  **Installing a fast** `BLAS (Basic Linear Algebra) <http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_ **library
+  **Installing a fast** `BLAS (Basic Linear Algebra) <https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms>`_ **library
   for NumPy can improve performance up to 15 times!** So before you start buying those extra computers,
   consider installing a fast, threaded BLAS that is optimized for your particular machine
   (as opposed to a generic, binary-distributed library).
@@ -71,7 +71,7 @@ inside `gensim` will try to look for and enslave all available worker nodes.
   Cluster
     Several nodes which communicate over TCP/IP. Currently, network broadcasting
     is used to discover and connect all communicating nodes, so the nodes must lie
-    within the same `broadcast domain <http://en.wikipedia.org/wiki/Broadcast_domain>`_.
+    within the same `broadcast domain <https://en.wikipedia.org/wiki/Broadcast_domain>`_.
 
   Worker
     A process which is created on each node. To remove a node from your cluster,
