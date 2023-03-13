@@ -162,7 +162,7 @@ BibTeX entry:
 
   [citing gensim in academic papers and theses]: https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C
 
-  [design goals]: http://radimrehurek.com/gensim/about.html
+  [design goals]: https://radimrehurek.com/gensim/intro.html#design-principles
   [RaRe Technologies]: http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
   [rare\_tech]: //rare-technologies.com
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100

@@ -171,7 +171,7 @@ gensim -- Topic Modelling in Python
 
 .. _GA: https://github.com/RaRe-Technologies/gensim/actions
 .. _Downloads: https://pypi.python.org/pypi/gensim
-.. _License: http://radimrehurek.com/gensim/about.html
+.. _License: https://radimrehurek.com/gensim/intro.html#licensing
 .. _Wheel: https://pypi.python.org/pypi/gensim
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
@@ -224,7 +224,7 @@ How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't
 
 Many scientific algorithms can be expressed in terms of large matrix operations (see the BLAS note above). Gensim taps into these low-level BLAS libraries, by means of its dependency on NumPy. So while gensim-the-top-level-code is pure Python, it actually executes highly optimized Fortran/C under the hood, including multithreading (if your BLAS is so configured).
 
-Memory-wise, gensim makes heavy use of Python's built-in generators and iterators for streamed data processing. Memory efficiency was one of gensim's `design goals <http://radimrehurek.com/gensim/about.html>`_, and is a central feature of gensim, rather than something bolted on as an afterthought.
+Memory-wise, gensim makes heavy use of Python's built-in generators and iterators for streamed data processing. Memory efficiency was one of gensim's `design goals <https://radimrehurek.com/gensim/intro.html#design-principles>`_, and is a central feature of gensim, rather than something bolted on as an afterthought.
 
 Documentation
 -------------
