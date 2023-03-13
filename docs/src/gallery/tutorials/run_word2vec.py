@@ -322,7 +322,7 @@ model = gensim.models.Word2Vec(sentences, workers=4)
 # one core because of the `GIL
 # <https://wiki.python.org/moin/GlobalInterpreterLock>`_ (and ``word2vec``
 # training will be `miserably slow
-# <http://rare-technologies.com/word2vec-in-python-part-two-optimizing/>`_\ ).
+# <https://rare-technologies.com/word2vec-in-python-part-two-optimizing/>`_\ ).
 #
 
 ###############################################################################

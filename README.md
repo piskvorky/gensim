@@ -121,7 +121,7 @@ Adopters
 
 | Company | Logo | Industry | Use of Gensim |
 |---------|------|----------|---------------|
-| [RARE Technologies](http://rare-technologies.com) | ![rare](docs/src/readme_images/rare.png) | ML & NLP consulting | Creators of Gensim – this is us! |
+| [RARE Technologies](https://rare-technologies.com/) | ![rare](docs/src/readme_images/rare.png) | ML & NLP consulting | Creators of Gensim – this is us! |
 | [Amazon](http://www.amazon.com/) |  ![amazon](docs/src/readme_images/amazon.png) | Retail |  Document similarity. |
 | [National Institutes of Health](https://github.com/NIHOPA/pipeline_word2vec) | ![nih](docs/src/readme_images/nih.png) | Health | Processing grants and publications with word2vec. |
 | [Cisco Security](http://www.cisco.com/c/en/us/products/security/index.html) | ![cisco](docs/src/readme_images/cisco.png) | Security |  Large-scale fraud detection. |
@@ -163,7 +163,7 @@ BibTeX entry:
   [citing gensim in academic papers and theses]: https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C
 
   [design goals]: https://radimrehurek.com/gensim/intro.html#design-principles
-  [RaRe Technologies]: http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
+  [RaRe Technologies]: https://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
   [rare\_tech]: //rare-technologies.com
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
