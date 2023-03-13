@@ -213,9 +213,9 @@ Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.
     python setup.py install
 
 
-For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/#install>`_.
+For alternative modes of installation, see the `documentation <https://radimrehurek.com/gensim/#install>`_.
 
-Gensim is being `continuously tested <http://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
+Gensim is being `continuously tested <https://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 
@@ -261,7 +261,7 @@ Copyright (c) 2009-now Radim Rehurek
 
 .. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
 .. _Analytics: https://github.com/igrigorik/ga-beacon
-.. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
+.. _Official Documentation and Walkthrough: https://radimrehurek.com/gensim/
 .. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
 .. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
 .. _QuickStart: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html

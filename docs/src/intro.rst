@@ -104,9 +104,9 @@ Historically, Gensim started off as a collection of Python scripts for the Czech
 
 I (Radim) also wanted to try these fancy "Latent Semantic Methods", but the libraries that realized the necessary computation were `not much fun to work with <http://soi.stanford.edu/~rmunk/PROPACK/>`_.
 
-Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <http://radimrehurek.com/lrec2010_final.pdf>`_ describes the initial design decisions behind Gensim: **clarity, efficiency and scalability**. It is fairly representative of how Gensim works even today.
+Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <https://radimrehurek.com/lrec2010_final.pdf>`_ describes the initial design decisions behind Gensim: **clarity, efficiency and scalability**. It is fairly representative of how Gensim works even today.
 
-Later versions of Gensim improved this efficiency and scalability tremendously. In fact, I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <http://radimrehurek.com/phd_rehurek.pdf>`_.
+Later versions of Gensim improved this efficiency and scalability tremendously. In fact, I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <https://radimrehurek.com/phd_rehurek.pdf>`_.
 
 By now, Gensim is---to my knowledge---the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands

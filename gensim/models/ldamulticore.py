@@ -17,7 +17,7 @@ The training algorithm:
 * runs in **constant memory** w.r.t. the number of documents: size of the
   training corpus does not affect memory footprint, can process corpora larger than RAM
 
-Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_ (2G corpus positions,
+Wall-clock `performance on the English Wikipedia <https://radimrehurek.com/gensim/wiki.html>`_ (2G corpus positions,
 3.5M documents, 100K features, 0.54G non-zero entries in the final bag-of-words matrix), requesting 100 topics:
 
 

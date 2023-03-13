@@ -270,7 +270,7 @@ corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
 # Compatibility with NumPy and SciPy
 # ----------------------------------
 #
-# Gensim also contains `efficient utility functions <http://radimrehurek.com/gensim/matutils.html>`_
+# Gensim also contains `efficient utility functions <https://radimrehurek.com/gensim/matutils.html>`_
 # to help converting from/to numpy matrices
 
 import gensim

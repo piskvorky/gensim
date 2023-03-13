@@ -53,8 +53,8 @@ Available distributed algorithms
 [1]: http://en.wikipedia.org/wiki/Distributed_computing
 [2]: http://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms
 [3]: http://pypi.python.org/pypi/Pyro4
-[4]: http://radimrehurek.com/gensim/intro.html#design
-[5]: http://radimrehurek.com/gensim/distributed.html#term-worker
+[4]: https://radimrehurek.com/gensim/intro.html#design
+[5]: https://radimrehurek.com/gensim/distributed.html#term-worker
 [6]: http://en.wikipedia.org/wiki/Broadcast_domain
-[7]: http://radimrehurek.com/gensim/dist_lsi.html
-[8]: http://radimrehurek.com/gensim/dist_lda.html
+[7]: https://radimrehurek.com/gensim/dist_lsi.html
+[8]: https://radimrehurek.com/gensim/dist_lda.html

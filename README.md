@@ -73,7 +73,7 @@ package:
 
 For alternative modes of installation, see the [documentation].
 
-Gensim is being [continuously tested](http://radimrehurek.com/gensim/#testing) under all
+Gensim is being [continuously tested](https://radimrehurek.com/gensim/#testing) under all
 [supported Python versions](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
@@ -101,8 +101,8 @@ Documentation
 
   [QuickStart]: https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
-  [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
-  [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
+  [Official Documentation and Walkthrough]: https://radimrehurek.com/gensim/
+  [Official API Documentation]: https://radimrehurek.com/gensim/apiref.html
 
 Support
 -------
