@@ -177,10 +177,10 @@ for doc_position, doc_score in sims:
 # That doesn't mean it's perfect though:
 #
 # * there are parts that could be implemented more efficiently (in C, for example), or make better use of parallelism (multiple machines cores)
-# * new algorithms are published all the time; help gensim keep up by `discussing them <http://groups.google.com/group/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
+# * new algorithms are published all the time; help gensim keep up by `discussing them <https://groups.google.com/g/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
 # * your **feedback is most welcome** and appreciated (and it's not just the code!):
 #   `bug reports <https://github.com/piskvorky/gensim/issues>`_ or
-#   `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
+#   `user stories and general questions <https://groups.google.com/g/gensim>`_.
 #
 # Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
 # Its mission is to help NLP practitioners try out popular topic modelling algorithms

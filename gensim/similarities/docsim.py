@@ -52,7 +52,7 @@ If you have more query documents, you can submit them all at once, in a batch
 
 The benefit of this batch (aka "chunked") querying is a much better performance.
 To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
-(compare to my results `here <http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?>`_).
+(compare to my results `here <https://groups.google.com/g/gensim/c/9rg5zqoWyDQ/m/yk-ehhoXb08J>`_).
 
 There is also a special syntax for when you need similarity of documents in the index
 to the index itself (i.e. queries = the indexed documents themselves). This special syntax

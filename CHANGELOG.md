@@ -486,7 +486,7 @@ This is the direction we'll keep going forward: less kitchen-sink of "latest aca
 
 ### Why pre-release?
 
-This 4.0.0beta pre-release is for users who want the **cutting edge performance and bug fixes**. Plus users who want to help out, by **testing and providing feedback**: code, documentation, workflows… Please let us know on the [mailing list](https://groups.google.com/forum/#!forum/gensim)!
+This 4.0.0beta pre-release is for users who want the **cutting edge performance and bug fixes**. Plus users who want to help out, by **testing and providing feedback**: code, documentation, workflows… Please let us know on the [mailing list](https://groups.google.com/g/gensim)!
 
 Install the pre-release with:
 
@@ -2557,7 +2557,7 @@ Tutorial and doc improvements:
 * transactional similarity server: see docs/simserver.html
 * website moved from university hosting to radimrehurek.com
 * much improved speed of lsi[corpus] transformation:
-* accuracy tests of incremental svd: test/svd_error.py and http://groups.google.com/group/gensim/browse_thread/thread/4b605b72f8062770
+* accuracy tests of incremental svd: test/svd_error.py and https://groups.google.com/g/gensim/c/S2BbcvgGJ3A
 * further improvements to memory-efficiency of LDA and LSA
 * improved wiki preprocessing (thx to Luca de Alfaro)
 * model.print_topics() debug fncs now support std output, in addition to logging (thx to Homer Strong)

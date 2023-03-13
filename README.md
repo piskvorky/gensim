@@ -11,7 +11,7 @@ https://github.com/RaRe-Technologies/gensim/issues/2805
 [![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
 [![Downloads](https://img.shields.io/pypi/dm/gensim?color=blue)](https://pepy.tech/project/gensim/)
 [![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
-[![Mailing List](https://img.shields.io/badge/-Mailing%20List-blue.svg)](https://groups.google.com/forum/#!forum/gensim)
+[![Mailing List](https://img.shields.io/badge/-Mailing%20List-blue.svg)](https://groups.google.com/g/gensim)
 [![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&style=flat&logo=twitter&label=Follow&color=blue)](https://twitter.com/gensim_py)
 
 Gensim is a Python library for *topic modelling*, *document indexing*
@@ -109,7 +109,7 @@ Support
 
 For commercial support, please see [Gensim sponsorship](https://github.com/sponsors/piskvorky).
 
-Ask open-ended questions on the public [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+Ask open-ended questions on the public [Gensim Mailing List](https://groups.google.com/g/gensim).
 
 Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but please **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to provide the requested details will be closed without inspection.
 

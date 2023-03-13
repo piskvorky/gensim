@@ -9,7 +9,7 @@ Support
 Open source support
 -------------------
 
-The main communication channel is the free `Gensim mailing list <https://groups.google.com/group/gensim>`_.
+The main communication channel is the free `Gensim mailing list <https://groups.google.com/g/gensim>`_.
 
 This is the preferred way to ask for help, report problems and share insights with the community. Newbie questions are perfectly fine, as long as you've read the :ref:`tutorials <gallery_top>` and `FAQ <https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ>`_.
 
@@ -35,6 +35,6 @@ For developers
 
 Developers who want to contribute to Gensim are welcome – Gensim is an open source project.
 
-First propose your feature / fix on the `Gensim mailing list <https://groups.google.com/group/gensim>`_ and if there is consensus for accepting your contribution, read the `Developer page <https://github.com/RARE-Technologies/gensim/wiki/Developer-page>`_ and implement it. Thanks!
+First propose your feature / fix on the `Gensim mailing list <https://groups.google.com/g/gensim>`_ and if there is consensus for accepting your contribution, read the `Developer page <https://github.com/RARE-Technologies/gensim/wiki/Developer-page>`_ and implement it. Thanks!
 
-Note that Github is not a medium for asking open-ended questions. Please use the `Gensim mailing list <https://groups.google.com/group/gensim>`_ for that.
+Note that Github is not a medium for asking open-ended questions. Please use the `Gensim mailing list <https://groups.google.com/g/gensim>`_ for that.
