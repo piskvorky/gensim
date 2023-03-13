@@ -290,7 +290,7 @@ Gensim 4.0 is a major release with lots of performance & robustness improvements
 * Dropped Python 2. Gensim 4.0 is Py3.6+. Read our [Python version support policy](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
   - If you still need Python 2 for some reason, stay at [Gensim 3.8.3](https://github.com/RaRe-Technologies/gensim/releases/tag/3.8.3).
 
-* A new [Gensim website](https://radimrehurek.com/gensim) – finally! 🙃
+* A new [Gensim website](https://radimrehurek.com/gensim/) – finally! 🙃
 
 So, a major clean-up release overall. We're happy with this **tighter, leaner and faster Gensim**.
 

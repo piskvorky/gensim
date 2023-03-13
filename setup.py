@@ -365,7 +365,7 @@ setup(
     author=u'Radim Rehurek',
     author_email='me@radimrehurek.com',
 
-    url='http://radimrehurek.com/gensim',
+    url='https://radimrehurek.com/gensim/',
     project_urls={
         'Source': 'https://github.com/RaRe-Technologies/gensim',
     },
