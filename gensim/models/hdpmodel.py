@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2012 Jonathan Esterhazy <jonathan.esterhazy at gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 #
 # HDP inference code is adapted from the onlinehdp.py script by
 # Chong Wang (chongw at cs.princeton.edu).

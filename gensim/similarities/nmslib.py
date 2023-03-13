@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2019 Radim Rehurek <me@radimrehurek.com>
 # Copyright (C) 2019 Masahiro Kazama <kazama.masa@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 This module integrates `NMSLIB <https://github.com/nmslib/nmslib>`_ fast similarity

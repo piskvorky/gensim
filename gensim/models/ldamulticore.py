@@ -3,7 +3,7 @@
 #
 # Author: Jan Zikes, Radim Rehurek
 # Copyright (C) 2014 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Online Latent Dirichlet Allocation (LDA) in Python, using all CPU cores to parallelize and speed up model training.
 
