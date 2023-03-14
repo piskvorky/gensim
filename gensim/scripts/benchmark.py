@@ -30,6 +30,6 @@ if __name__ == "__main__":
         print(globals()['__doc__'] % locals())
         sys.exit(1)
 
-    corpus = Text8Corpus(sys.argv[1])  # text8/text9 format from http://mattmahoney.net/dc/textdata.html
+    corpus = Text8Corpus(sys.argv[1])  # text8/text9 format from https://mattmahoney.net/dc/textdata.html
     cls = FastText
     cls(corpus, workers=12, epochs=1).save(f'/tmp/{cls.__name__}.gensim{__version__}')
