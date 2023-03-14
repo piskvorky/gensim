@@ -244,7 +244,7 @@ class Word2Vec(utils.SaveLoad):
             max_vocab_size=None, sample=1e-3, seed=1, workers=3, min_alpha=0.0001,
             sg=0, hs=0, negative=5, ns_exponent=0.75, cbow_mean=1, hashfxn=hash, epochs=5, null_word=0,
             trim_rule=None, sorted_vocab=1, batch_words=MAX_WORDS_IN_BATCH, compute_loss=False, callbacks=(),
-            comment=None, max_final_vocab=None, shrink_windows=True,
+            comment=None, max_final_vocab=None, shrink_windows=True, window_alignment=0,
         ):
         """Train, use and evaluate neural networks described in https://code.google.com/p/word2vec/.
 
@@ -355,6 +355,12 @@ class Word2Vec(utils.SaveLoad):
             for each target word during training, to match the original word2vec algorithm's
             approximate weighting of context words by distance. Otherwise, the effective
             window size is always fixed to `window` words to either side.
+        window_alignment: int, optional
+            When window parameter is set to -1, only the left context of the current word is used for training.
+            For instance, if the `window` is set to 10, only the first 10 words on the left of the current
+            word will be used. On the other hand, when `window` is set to 1, only the right context of the current
+            word will be used. If window is set to 0, both the left and right context of the current word is used,
+            that is, if `window` is set to 5, 5 words are used from both the left and right contexts, totaling 10 words.
 
         Examples
         --------
@@ -388,6 +394,7 @@ class Word2Vec(utils.SaveLoad):
 
         self.window = int(window)
         self.shrink_windows = bool(shrink_windows)
+        self.window_alignment = int(window_alignment)
         self.random = np.random.RandomState(seed)
 
         self.hs = int(hs)
@@ -952,7 +959,7 @@ class Word2Vec(utils.SaveLoad):
         work, neu1 = inits
         tally = 0
         if self.sg:
-            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss)
+            tally += train_batch_sg(self, sentences, alpha, work, self.compute_loss, self.window_alignment)
         else:
             tally += train_batch_cbow(self, sentences, alpha, work, neu1, self.compute_loss)
         return tally, self._raw_word_count(sentences)

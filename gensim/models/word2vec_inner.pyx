@@ -467,6 +467,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
     c[0].cbow_mean = model.cbow_mean
     c[0].window = model.window
     c[0].workers = model.workers
+    c[0].window_alignment = model.window_alignment
 
     c[0].compute_loss = (1 if compute_loss else 0)
     c[0].running_training_loss = model.running_training_loss
@@ -494,7 +495,7 @@ cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1
         c[0].neu1 = <REAL_t *>np.PyArray_DATA(_neu1)
 
 
-def train_batch_sg(model, sentences, alpha, _work, compute_loss):
+def train_batch_sg(model, sentences, alpha, _work, compute_loss, window_alignment):
     """Update skip-gram model by training on a batch of sentences.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -511,7 +512,9 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
         Private working memory for each worker.
     compute_loss : bool
         Whether or not the training loss should be computed in this batch.
-
+    window_alignment: int
+        If -1, left-aligned context. If 1, right-aligned context. If 0, centered alignment. 
+        
     Returns
     -------
     int
@@ -575,10 +578,16 @@ def train_batch_sg(model, sentences, alpha, _work, compute_loss):
             idx_start = c.sentence_idx[sent_idx]
             idx_end = c.sentence_idx[sent_idx + 1]
             for i in range(idx_start, idx_end):
-                j = i - c.window + c.reduced_windows[i]
+                if c.window_alignment == 1: # right-aligned window
+                    j = i
+                else: # centered or left-aligned window
+                    j = i - c.window + c.reduced_windows[i]
                 if j < idx_start:
                     j = idx_start
-                k = i + c.window + 1 - c.reduced_windows[i]
+                if c.window_alignment == -1: # left-aligned window
+                    k = i + 1
+                else: # centered or right-aligned window
+                    k = i + c.window + 1 - c.reduced_windows[i] 
                 if k > idx_end:
                     k = idx_end
                 for j in range(j, k):
