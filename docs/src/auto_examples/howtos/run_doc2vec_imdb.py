@@ -100,13 +100,20 @@ def download_dataset(url='http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v
        return fname
 
     # Download the file to local storage first.
-    with smart_open.open(url, "rb", ignore_ext=True) as fin:
-        with smart_open.open(fname, 'wb', ignore_ext=True) as fout:
+    try:
+        kwargs = { 'compression': smart_open.compression.NO_COMPRESSION }
+        fin = smart_open.open(url, "rb", **kwargs)
+    except (AttributeError, TypeError):
+        kwargs = { 'ignore_ext': True }
+        fin = smart_open.open(url, "rb", **kwargs)
+    if fin:
+        with smart_open.open(fname, 'wb', **kwargs) as fout:
             while True:
                 buf = fin.read(io.DEFAULT_BUFFER_SIZE)
                 if not buf:
                     break
                 fout.write(buf)
+        fin.close()
 
     return fname
 
