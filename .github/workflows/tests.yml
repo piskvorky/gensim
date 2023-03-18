@@ -51,6 +51,29 @@ jobs:
         run: |
           python setup.py build_ext --inplace
           make -C docs/src clean html
+
+      - name: Check changes to prebuilt docs
+        run: |
+          git config user.email "noreply@github.com"
+          git config user.name "Gensim Docs Build"
+          if ! git diff --quiet @ ; then
+            git add .
+            branch="$GITHUB_HEAD_REF ($GITHUB_REF_NAME)"
+            git commit -m "Import rebuilt documentation for branch $branch"
+            git format-patch @^
+            git bundle create prebuilt-docs-changes.bundle @^...@
+            git reset --mixed @^
+            git diff --exit-code --stat @
+          fi
+
+      - name: Upload prebuilt docs changes
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: prebuilt-docs-changes
+          path: |
+            *.patch
+            *.bundle
       #
       # FIXME: do we want to store the built documentation somewhere, or is
       # knowing that the docs built successfully enough?
