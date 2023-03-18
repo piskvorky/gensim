@@ -126,6 +126,10 @@ docs = [[token for token in doc if len(token) > 1] for doc in docs]
 # easy to read is very desirable in topic modelling.
 #
 
+# Download the WordNet data
+from nltk import download
+download('wordnet')
+
 # Lemmatize the documents.
 from nltk.stem.wordnet import WordNetLemmatizer
 
