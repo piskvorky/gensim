@@ -323,6 +323,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'memory_profiler',
     'annoy',
     'Pyro4',
+    'scikit-learn',
     'nltk',
     'testfixtures',
     'statsmodels',
