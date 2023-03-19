@@ -154,7 +154,7 @@ print(f'{len(alldocs)} docs: {len(train_docs)} train-sentiment, {len(test_docs)}
 # of Sentences and Documents"
 # <http://cs.stanford.edu/~quocle/paragraph_vector.pdf>`_ with guidance from
 # Mikolov's `example go.sh
-# <https://groups.google.com/d/msg/word2vec-toolkit/Q49FIrNOQRo/J6KG8mUj45sJ>`_::
+# <https://groups.google.com/g/word2vec-toolkit/c/Q49FIrNOQRo/m/J6KG8mUj45sJ>`_::
 #
 #     ./word2vec -train ../alldata-id.txt -output vectors.txt -cbow 0 -size 100 -window 10 -negative 5 -hs 0 -sample 1e-4 -threads 40 -binary 0 -iter 20 -min-count 1 -sentence-vectors 1
 #
