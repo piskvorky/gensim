@@ -19,7 +19,7 @@ and *similarity retrieval* with large corpora. Target audience is the
 *natural language processing* (NLP) and *information retrieval* (IR)
 community.
 
-## ⚠️  Please [sponsor Gensim](https://github.com/sponsors/piskvorky) to help sustain this open source project ❤️
+## ⚠️  Want to help out? [Sponsor Gensim](https://github.com/sponsors/piskvorky) ❤️
 
 
 Features
