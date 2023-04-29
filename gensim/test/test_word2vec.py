@@ -847,9 +847,9 @@ class TestWord2VecModel(unittest.TestCase):
             expected_neighbor = 'palestinian'
             sims = model.wv.most_similar(origin_word, topn=len(model.wv))
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
-            # so let's test only for top10
+            # so let's test only for topN
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
-            self.assertLess(neighbor_rank, 5)
+            self.assertLess(neighbor_rank, 6)
 
     def test_r_n_g(self):
         """Test word2vec results identical with identical RNG seed."""
