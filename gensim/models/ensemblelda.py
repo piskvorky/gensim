@@ -4,7 +4,7 @@
 # Authors: Tobias Brigl <github.com/sezanzeb>, Alex Salles <alex.salles@gmail.com>,
 # Alex Loosley <aloosley@alumni.brown.edu>, Data Reply Munich
 # Copyright (C) 2021 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 
 """Ensemble Latent Dirichlet Allocation (eLDA), an algorithm for extracting reliable topics.

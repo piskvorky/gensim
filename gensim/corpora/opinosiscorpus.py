@@ -3,7 +3,7 @@
 #
 # Author: Tobias B <proxima@sezanzeb.de>
 # Copyright (C) 2021 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 
 """Creates a corpus and dictionary from the Opinosis dataset.

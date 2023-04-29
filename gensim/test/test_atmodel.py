@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 # Copyright (C) 2016 Olavur Mortensen <olavurmortensen@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Automated tests for the author-topic model (AuthorTopicModel class). These tests

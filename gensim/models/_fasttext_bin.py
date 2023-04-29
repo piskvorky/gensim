@@ -3,7 +3,7 @@
 #
 # Authors: Michael Penkov <m@penkov.dev>
 # Copyright (C) 2019 RaRe Technologies s.r.o.
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Load models from the native binary format released by Facebook.
 

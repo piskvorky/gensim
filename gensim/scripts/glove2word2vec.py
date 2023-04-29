@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 # Copyright (C) 2016 Manas Ranjan Kar <manasrkar91@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 
 """This script allows to convert GloVe vectors into the word2vec. Both files are

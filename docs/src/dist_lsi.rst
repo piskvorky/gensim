@@ -57,7 +57,7 @@ ____________
 
 So let's test our setup and run one computation of distributed LSA. Open a Python
 shell on one of the five machines (again, this can be done on any computer
-in the same `broadcast domain <http://en.wikipedia.org/wiki/Broadcast_domain>`_,
+in the same `broadcast domain <https://en.wikipedia.org/wiki/Broadcast_domain>`_,
 our choice is incidental) and try:
 
 .. sourcecode:: pycon

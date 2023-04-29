@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 
 """Module for `Latent Semantic Analysis (aka Latent Semantic Indexing)
@@ -179,7 +179,7 @@ class Projection(utils.SaveLoad):
         docs : {iterable of list of (int, float), scipy.sparse.csc}
             Corpus in BoW format or as sparse matrix.
         use_svdlibc : bool, optional
-            If True - will use `sparsesvd library <https://pypi.python.org/pypi/sparsesvd/>`_,
+            If True - will use `sparsesvd library <https://pypi.org/project/sparsesvd/>`_,
             otherwise - our own version will be used.
         power_iters: int, optional
             Number of power iteration steps to be used. Tune to improve accuracy.

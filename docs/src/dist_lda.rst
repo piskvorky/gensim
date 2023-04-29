@@ -33,7 +33,7 @@ parameter
 In serial mode (no distribution), creating this online LDA :doc:`model of Wikipedia <wiki>`
 takes 10h56m on my laptop (OS X, C2D 2.53GHz, 4GB RAM with `libVec`).
 In distributed mode with four workers (Linux, Xeons of 2Ghz, 4GB RAM
-with `ATLAS <http://math-atlas.sourceforge.net/>`_), the wallclock time taken drops to 3h20m.
+with `ATLAS <https://math-atlas.sourceforge.net/>`_), the wallclock time taken drops to 3h20m.
 
 To run standard batch LDA (no online updates of mini-batches) instead, you would similarly
 call
