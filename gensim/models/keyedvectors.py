@@ -3,7 +3,7 @@
 #
 # Author: Gensim Contributors
 # Copyright (C) 2018 RaRe Technologies s.r.o.
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """This module implements word vectors, and more generally sets of vectors keyed by lookup tokens/ints,
  and various similarity look-ups.

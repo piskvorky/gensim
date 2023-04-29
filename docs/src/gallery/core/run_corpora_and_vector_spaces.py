@@ -72,10 +72,10 @@ pprint(texts)
 # by the features extracted from it, not by its "surface" string form: how you get to
 # the features is up to you. Below I describe one common, general-purpose approach (called
 # :dfn:`bag-of-words`), but keep in mind that different application domains call for
-# different features, and, as always, it's `garbage in, garbage out <http://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
+# different features, and, as always, it's `garbage in, garbage out <https://en.wikipedia.org/wiki/Garbage_In,_Garbage_Out>`_...
 #
 # To convert documents to vectors, we'll use a document representation called
-# `bag-of-words <http://en.wikipedia.org/wiki/Bag_of_words>`_. In this representation,
+# `bag-of-words <https://en.wikipedia.org/wiki/Bag_of_words>`_. In this representation,
 # each document is represented by one vector where each vector element represents
 # a question-answer pair, in the style of:
 #
@@ -223,7 +223,7 @@ corpora.MmCorpus.serialize('/tmp/corpus.mm', corpus)
 ###############################################################################
 # Other formats include `Joachim's SVMlight format <http://svmlight.joachims.org/>`_,
 # `Blei's LDA-C format <https://github.com/blei-lab/lda-c>`_ and
-# `GibbsLDA++ format <http://gibbslda.sourceforge.net/>`_.
+# `GibbsLDA++ format <https://gibbslda.sourceforge.net/>`_.
 
 corpora.SvmLightCorpus.serialize('/tmp/corpus.svmlight', corpus)
 corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
@@ -270,7 +270,7 @@ corpora.BleiCorpus.serialize('/tmp/corpus.lda-c', corpus)
 # Compatibility with NumPy and SciPy
 # ----------------------------------
 #
-# Gensim also contains `efficient utility functions <http://radimrehurek.com/gensim/matutils.html>`_
+# Gensim also contains `efficient utility functions <https://radimrehurek.com/gensim/matutils.html>`_
 # to help converting from/to numpy matrices
 
 import gensim

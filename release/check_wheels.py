@@ -2,7 +2,7 @@
 #
 # Authors: Michael Penkov <m@penkov.dev>
 # Copyright (C) 2019 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 """Check that our wheels are all there."""
 import os
 import os.path

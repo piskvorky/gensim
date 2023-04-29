@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 USAGE: %(program)s LANGUAGE

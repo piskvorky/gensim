@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Automated test to check similarity functions and isbow function.

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
-"""Corpus in `GibbsLda++ format <http://gibbslda.sourceforge.net/>`_."""
+"""Corpus in `GibbsLda++ format <https://gibbslda.sourceforge.net/>`_."""
 
 import logging
 from collections import Counter
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class LowCorpus(IndexedCorpus):
-    """Corpus handles input in `GibbsLda++ format <http://gibbslda.sourceforge.net/>`_.
+    """Corpus handles input in `GibbsLda++ format <https://gibbslda.sourceforge.net/>`_.
 
     **Format description**
 

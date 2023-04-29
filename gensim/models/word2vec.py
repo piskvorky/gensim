@@ -3,7 +3,7 @@
 #
 # Author: Gensim Contributors
 # Copyright (C) 2018 RaRe Technologies s.r.o.
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Introduction
@@ -2041,7 +2041,7 @@ class BrownCorpus:
 
 class Text8Corpus:
     def __init__(self, fname, max_sentence_length=MAX_WORDS_IN_BATCH):
-        """Iterate over sentences from the "text8" corpus, unzipped from http://mattmahoney.net/dc/text8.zip."""
+        """Iterate over sentences from the "text8" corpus, unzipped from https://mattmahoney.net/dc/text8.zip."""
         self.fname = fname
         self.max_sentence_length = max_sentence_length
 

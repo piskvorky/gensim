@@ -17,7 +17,7 @@ Demonstrates using Gensim's implemenation of the WMD.
 #
 # WMD enables us to assess the "distance" between two documents in a meaningful
 # way even when they have no words in common. It uses `word2vec
-# <http://rare-technologies.com/word2vec-tutorial/>`_ [4] vector embeddings of
+# <https://rare-technologies.com/word2vec-tutorial/>`_ [4] vector embeddings of
 # words. It been shown to outperform many of the state-of-the-art methods in
 # k-nearest neighbors classification [3].
 #

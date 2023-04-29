@@ -335,7 +335,7 @@ Here's how to list all resources available in gensim-data:
                 "checksum": "68799af40b6bda07dfa47a32612e5364",
                 "file_name": "text8.gz",
                 "read_more": [
-                    "http://mattmahoney.net/dc/textdata.html"
+                    "https://mattmahoney.net/dc/textdata.html"
                 ],
                 "parts": 1
             },
