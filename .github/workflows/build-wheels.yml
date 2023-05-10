@@ -81,8 +81,14 @@ jobs:
       - name: Install oldest-supported-numpy
         run: python -m pip install oldest-supported-numpy
 
+      #
+      # Avoid checking out the entire gensim repo to get just one file
+      #
+      - name: Download installwheel.py
+        run: curl "https://raw.githubusercontent.com/RaRe-Technologies/gensim/testwheel/.github/workflows/installwheel.py" --output installwheel.py --silent
+
       - name: Install wheel
-        run: python .github/workflows/installwheel.py artifacts/${{ matrix.os }}
+        run: python installwheel.py artifacts/${{ matrix.os }}
 
       #
       # If the wheel was incorrectly built, then this will fail.
