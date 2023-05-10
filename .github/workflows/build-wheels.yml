@@ -54,6 +54,43 @@ jobs:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
 
+  test:
+    name: Test wheel for ${{ matrix.os }} Python ${{ matrix.python }}
+    needs: build_wheels
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macos-11]
+        python: ['3.8', '3.9', '3.10', '3.11']
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Downloads build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      #
+      # We want to make sure our wheels run against older Numpy versions
+      #
+      - name: Install oldest-supported-numpy
+        run: python -m pip install oldest-supported-numpy
+
+      - name: Install wheel
+        run: python .github/workflows/installwheel.py artifacts/${{ matrix.os }}
+
+      #
+      # If the wheel was incorrectly built, then this will fail.
+      # https://github.com/RaRe-Technologies/gensim/issues/3097
+      #
+      - name: Test wheel
+        run: python -c 'import gensim'
+
   upload:
     name: Upload to S3
     if: always()
