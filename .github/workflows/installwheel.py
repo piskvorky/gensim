@@ -13,13 +13,15 @@ def main():
     want = f'-cp{vi.major}{vi.minor}-'
     suffix = f'_{processor}.whl'
 
-    for f in os.listdir(subdir):
+    files = sorted(os.listdir(subdir))
+    for f in files:
         if want in f and f.endswith(suffix):
             command = [sys.executable, '-m', 'pip', 'install', os.path.join(subdir, f)]
             subprocess.check_call(command)
             return 0
 
-    print(f'could not find wheel for {want} in {subdir}')
+    print(f'could not find wheel for {want} / {suffix} in {subdir}:')
+    print('\n'.join(files))
 
     return 1
 
