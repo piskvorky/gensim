@@ -88,7 +88,7 @@ jobs:
         run: curl "https://raw.githubusercontent.com/RaRe-Technologies/gensim/testwheel/.github/workflows/installwheel.py" --output installwheel.py --silent
 
       - name: Install wheel
-        run: python installwheel.py artifacts/${{ matrix.os }}
+        run: python installwheel.py artifacts/wheels-${{ matrix.os }}
 
       #
       # If the wheel was incorrectly built, then this will fail.
