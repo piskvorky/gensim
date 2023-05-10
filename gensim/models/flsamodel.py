@@ -7,15 +7,65 @@
 """
 Fuzzy topic models.
 
+FlsaModel contains three topic modeling algorithms: FLSA, FLSA-W and FLSA-E.
+
+1. FLSA - https://link.springer.com/article/10.1007/s40815-017-0327-9
+2. FLSA-W - https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9660139
+3. FLSA-E - https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=9945594
+
+In experimental work, FLSA-W outperforms other topic modeling algorithms on
+various open datasets in terms of the coherence- and diversity score:
+
+https://pure.tue.nl/ws/portalfiles/portal/222725628/Pure_ExperimentalStudyOfFlsa_wForTopicModeling.pdf
+
+The algorithms go through similar steps:
+
+FLSA-W:
+    1. Create a document-term matrix.
+    2. Calculate global term weights.
+    3. Perform SVD and obtain the V matrix.
+    4. Perform fuzzy clustering (the default is fuzzy C-means) on the V matrix.
+        To obtain the partition matrix.
+    5. Perform various matrix multiplications to obtain the output matrices
+        P(W|T) and P(T|D).
+
+FLSA: Works similar to FLSA-W. However, the U-matrix is used in step 3 and 4 and
+        for this reason the calculations in step 5 are different.
+
+FLSA-E:
+    1: Train a word embedding (currently, only Word2Vec is supported) on the corpus.
+    2: Perform fuzzy clustering on the word embedding to obtain the partition matrix.
+    3. Perform various matrix multiplications to obtain P(W|T) and P(T|D).
+
+Since these algorithms go through similar steps, the FlsaModel object contains
+the operations shared by the algorithms. When one of the models is initialized,
+it goes through the algorithm steps and calls FlsaModel to execute a step.
+
+EXAMPLE:
+    Suppose we have our dataset and id2word, then we can initialize/train a model with:
+
+flsaw = FlsaW(
+    corpus=corpus,
+    id2word=idword)
+
+TOPICS:
+    To see the produced topics:
+
+    topics = flsaw.show_topics()
+
+EVALUATION:
+    To evaluate the produced topics use:
+        coherence = flsaw.get_coherence_score()
+        diversity = flsaw.get_diversity_score()
+        interpretability = flsaw.get_interpretability_score()
+
 WARNING work-in-progress, do not use this module!
-
-FIXME add background info, links: what is this, who should use this and why?
-
 """
 
 from abc import abstractmethod
 from collections import Counter
 import itertools
+import warnings
 
 import numpy as np
 from scipy.sparse.linalg import svds
@@ -23,8 +73,10 @@ from scipy.sparse import dok_matrix
 
 try:
     from pyfume import Clustering
-except ImportError as e:
-    raise ImportError("FlsaModel requires pyfume; please install it with `pip install gensim[flsamodel]`")
+except ImportError as import_error:
+    raise ImportError(
+        "FlsaModel requires pyfume; please install it with `pip install gensim[flsamodel]`"
+        ) from import_error
 
 import gensim.corpora as corpora
 from gensim.models.coherencemodel import CoherenceModel
@@ -37,7 +89,7 @@ class FlsaModel:
 
     Parameters
     ----------
-            corpus : either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
+            corpus: either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
                 The input corpus.
                 FIXME: Accept only BoW = standard Gensim streaming format. No need for "list of list of str".
 
@@ -75,7 +127,6 @@ class FlsaModel:
             min_count=None,
             window=None,
             vector_size=None,
-            workers=None,
         ):
         self.corpus = self._set_corpus(corpus, id2word)
         self.num_topics = num_topics
@@ -88,7 +139,6 @@ class FlsaModel:
         self.min_count = min_count
         self.window = window
         self.vector_size = vector_size
-        self.workers = workers
         self._check_variables()
         self._vocabulary = set(el for lis in corpus for el in lis)
         self._index_to_word = list(self._vocabulary)
@@ -113,7 +163,7 @@ class FlsaModel:
 
         Parameters
         ----------
-            corpus : either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
+            corpus: either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
                 The input corpus.
 
             id2word: :class:`~gensim.corpora.dictionary.Dictionary`
@@ -126,10 +176,11 @@ class FlsaModel:
                 The corpus in FuzzyTM's required input format.
         """
         if self._check_bow(corpus):
-            if is2word is None:
-                raise ValueError("id2word must be specified when using a BoW input corpus.")
+            if id2word is None:
+                raise ValueError("Please feed an id2word.")
             return self._convert_bow(corpus, id2word)
         return corpus
+    #ERijck: this method can be removed once we have bow implemented.
 
     @staticmethod
     def _check_bow(corpus):
@@ -138,7 +189,7 @@ class FlsaModel:
 
         Parameters
         ----------
-            corpus : either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
+            corpus: either a list of list of str (tokens), or a list of list of tuples `(int, int)`.
                 The input corpus.
 
         Returns
@@ -157,6 +208,8 @@ class FlsaModel:
                 if not isinstance(tup[0], int) or not isinstance(tup[1], int):
                     return False
         return True
+    #ERijck: this method can be removed once we have bow implemented.
+    #   We can then just for this in the _check_variables method
 
     @staticmethod
     def _convert_bow(corpus, id2word):
@@ -183,8 +236,8 @@ class FlsaModel:
             str_doc = []
             for wordid, count in doc:
                 str_doc.extend([id2word[wordid]] * count)
-            data_list.append(str_doc)
-        return data_list
+            doc_list.append(str_doc)
+        return doc_list
 
     @abstractmethod
     def _get_matrices(self):
@@ -201,11 +254,12 @@ class FlsaModel:
             if not isinstance(doc, list):
                 raise TypeError(f"corpus variable at index {i} is not a list")
             if not len(doc) > 0:
-                raise ValueError(f"The corpus has an empty list at index {i} and should contain at least one str value")
+                raise ValueError(f"The corpus has an empty list at index {i} and should contain at least one str")
             for j, word in enumerate(doc):
                 if not isinstance(word, str):
                     raise TypeError(f"Word {j} of document {i} is not a str")
-
+        #ERijck: the code above can be removed once we have BOW incorporated.
+        #ERijck: then we should replace it by a check on the BOW and id2word.
         if not isinstance(self.num_topics, int) or self.num_topics < 1:
             raise ValueError(f"Please use a positive int for num_topics, not {self.num_topics}")
         if not isinstance(self.num_words, int) or self.num_words < 1:
@@ -235,9 +289,11 @@ class FlsaModel:
             word_to_index,
         ):
         """
-        Create a sparse matrix showing the frequency of each words in documents.
+        Create a sparse (DOK) document-term matrix.
+        This is step 1 in the FLSA and FLSA-W algorithms.
 
-        See: https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.dok_matrix.html
+        See:
+        https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.dok_matrix.html
 
         Axes:
             rows: documents (size: number of documents in corpus)
@@ -279,7 +335,11 @@ class FlsaModel:
             sum_words=None,
         ):
         """
-        Apply a word_weighting method on the sparse_local_term_weights to create sparse_global_term_weights.
+        Apply a global word_weighting method on the sparse_local_term_weights to create sparse_global_term_weights.
+        This is step 2 in the FLSA and FLSA-W algorithms.
+
+        The best word_weighting method depends on the dataset. Hence, we recommend trying all.
+
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
         Parameters
@@ -309,32 +369,6 @@ class FlsaModel:
                 sparse matrix representation of the global term weights.
         """
         num_documents = len(corpus)
-        if word_weighting in ['entropy', 'normal']:
-            if sparse_local_term_weights is None:
-                raise ValueError(
-                    f"The `sparse_local_term_weights` parameter must be specified when using the"
-                    f" {word_weighting} word weighting."
-                )
-        if word_weighting in ['entropy']:
-            if index_to_word is None:
-                # FIXME How is this different from self.index_to_word? Why is this needed?
-                raise ValueError(f"Please feed the algorithm 'index_to_word'")
-            if sum_words is None:
-                raise ValueError("Please feed the algorithm 'sum_words'")
-        if word_weighting in ['entropy', 'idf', 'probidf']:
-            if vocabulary_size is None:
-                raise ValueError(
-                    f"The `vocabulary_size` parameter must be specified when using the "
-                    f"{word_weighting} word weighting."
-                )
-        if word_weighting in ['idf', 'probidf']:
-            if word_to_index is None:
-                raise ValueError(
-                    f"The `word_to_index` parameter must be specified when using the "
-                    f" {word_weighting} word wighting.")
-        # FIXME is this the right place to check all the above conditions? This is an internal function; can't
-        # we guarantee that some of these invariants are met ourselves??
-
         if word_weighting == 'entropy':
             global_term_weights = self._calculate_entropy(
                 num_documents,
@@ -358,8 +392,6 @@ class FlsaModel:
                 corpus,
                 word_to_index,
             )
-        else:
-            raise ValueError('Invalid word weighting method')
         return sparse_local_term_weights.multiply(global_term_weights).tocsc()
 
     def _calculate_entropy(
@@ -371,7 +403,8 @@ class FlsaModel:
             sum_words,
         ):
         """
-        Use the entropy word weighting method.
+        Use the entropy word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -391,7 +424,7 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
-               FIXME what does this actually do and return?
+               A document-term matrix with globally weighted values.
         """
         p_log_p_ij = self._create_p_log_p_ij(
             num_documents,
@@ -411,7 +444,8 @@ class FlsaModel:
             word_to_index,
         ):
         """
-        Use the IDF word weighting method.
+        Use the IDF word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -429,9 +463,12 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
+               A document-term matrix with globally weighted values.
         """
         # FIXME we already have streamed Bow / IDF methods implementd in Gensim, e.g. in the TfIdf models.
         # What's the overlap – is this really needed?
+        #ERijck: once we have BOW implemented in FlsaModel,
+        #       I suggest we change to implemented Gensim models.
         binary_sparse_dtm = self._create_sparse_binary_dtm(
             num_documents,
             vocabulary_size,
@@ -444,7 +481,8 @@ class FlsaModel:
     @staticmethod
     def _calculate_normal(sparse_local_term_weights):
         """
-        Use the normal word weighting method.
+        Use the normal word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -456,6 +494,7 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
+               A document-term matrix with globally weighted values.
         """
         squared_dtm = sparse_local_term_weights.multiply(sparse_local_term_weights)
         summed_words = squared_dtm.sum(0).tolist()[0]
@@ -469,7 +508,8 @@ class FlsaModel:
             word_to_index,
         ):
         """
-        Use the probidf word weighting method.
+        Use the probidf word weighting method, for the second step in the
+        FLSA-W and FLSA algorithm.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -487,6 +527,7 @@ class FlsaModel:
         Returns
         -------
             numpy.array : float
+               A document-term matrix with globally weighted values.
         """
         binary_sparse_dtm = self._create_sparse_binary_dtm(
             num_documents,
@@ -495,7 +536,6 @@ class FlsaModel:
             word_to_index,
             )
         summed_binary_words_list = binary_sparse_dtm.sum(0).tolist()[0]
-
         return np.array([np.log2((num_documents - binary_word_count) / binary_word_count)
                          for binary_word_count in summed_binary_words_list])
 
@@ -509,6 +549,9 @@ class FlsaModel:
         ):
         """
         Calculate probability of word i in document j, multiplied by its base-2 logarithm.
+
+        This method is only used when 'entropy' is calculated as the
+        word-weighting method.
 
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
@@ -552,6 +595,10 @@ class FlsaModel:
         """
         Create a binary sparse document-term-matrix (used for idf and probidf).
 
+        This method is only used when 'idf' and 'probidf' are calculated as the
+        word-weighting method.
+
+
         See: https://link.springer.com/article/10.1007/s40815-017-0327-9
 
         Parameters
@@ -586,7 +633,9 @@ class FlsaModel:
             svd_factors,
         ):
         """
-        Perform singular decomposition for dimensionality reduction.
+        Perform singular value decomposition for dimensionality reduction.
+
+        This is step 3 in the FLSA and FLSA-W algorithm.
 
         (See: https://web.mit.edu/be.400/www/SVD/Singular_Value_Decomposition.htm)
         For SVD on a sparse matrix, the sparsesvd package is used
@@ -615,6 +664,7 @@ class FlsaModel:
             return svd_v.T
         else:
             raise ValueError(f'Invalid algorithm {algorithm}; must be one of "flsa" or "flsa-w".')
+        #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
 
     @staticmethod
     def _create_partition_matrix(
@@ -623,7 +673,25 @@ class FlsaModel:
             method='fcm',
         ):
         """
-        Cluster the projected data.
+        Use fuzzy clustering on the projected data.
+
+        The three clustering methods are:
+            1. fcm (Fuzzy C-Means)
+                (https://books.google.nl/books?hl=en&lr=&id=z6XqBwAAQBAJ&oi=fnd&pg=PR14&dq=).+Pattern+Recognition+with+
+                Fuzzy+Objective+Function+A&ots=0i1LtXGmKs&sig=2LYrg4sLhlRUYIQrMvKU0QwrGDw&redir_esc=y#v=onepage&q=).
+                %20Pattern%20Recognition%20with%20Fuzzy%20Objective%20Function%20A&f=false)
+            2. gk (Gustafson & Kessel)
+                (https://www.researchgate.net/profile/Donald-Gustafson/publication/224681053_Fuzzy_Clustering_with_a_
+                 Fuzzy_Covariance_Matrix/links/567aa2cf08ae19758380fc22/Fuzzy-Clustering-with-a-Fuzzy-Covariance-Matrix.
+                 pdf)
+            3. fst-pso (Fuzzy self-tuning particle swarm optimization)
+                (https://www.sciencedirect.com/science/article/pii/S2210650216303534)
+
+        The best method depends on the algorithm/dataset. Typically, FST-PSO
+        training times are longer.
+
+        See the following comparative work:
+            https://www.frontiersin.org/articles/10.3389/fdata.2022.846930/full
 
         The pyFUME package is used for clustering: https://pyfume.readthedocs.io/en/latest/Clustering.html
 
@@ -650,7 +718,7 @@ class FlsaModel:
     @staticmethod
     def _create_prob_document_j(sparse_matrix):
         """
-        Get the probability of document j.
+        Get the probability of document j. Used for the last step in all the algoritms.
 
         Parameters
         ----------
@@ -671,7 +739,7 @@ class FlsaModel:
     @staticmethod
     def _create_prob_word_i(sparse_matrix):
         """
-        Get the probability of word i.
+        Get the probability of word i. Used for the last step in all the algoritms.
 
         Parameters
         ----------
@@ -694,7 +762,7 @@ class FlsaModel:
             prob_word_i,
         ):
         """
-        Get the probability of topic k.
+        Get the probability of topic k. Used for the last step in all the algoritms.
 
         Parameters
         ----------
@@ -710,45 +778,6 @@ class FlsaModel:
         """
         return np.matmul(prob_topic_given_word_transpose.T, prob_word_i)
 
-    @staticmethod
-    def _check_passed_variables(
-            algorithm,
-            prob_topic_given_document_transpose,
-            prob_topic_given_word_transpose,
-            local_term_weights,
-            global_term_weights,
-        ):
-        """Check whether the algorithms are being fed the right attributes."""
-        if algorithm in ['flsa']:
-            if prob_topic_given_document_transpose is None:
-                raise ValueError(
-                    "The `prob_topic_given_document_transpose` parameter must be set when using `flsa` algorithm."
-                )
-            if global_term_weights is None:
-                raise ValueError(
-                    "The `global_term_weights` parameter must be set when using `flsa` algorithm."
-                )
-        elif algorithm in ['flsa-w']:
-            if prob_topic_given_word_transpose is None:
-                raise ValueError(
-                    "The `prob_topic_given_word_transpose` parameter must be set when using `flsa-w` algorithm."
-                )
-            if global_term_weights is None:
-                raise ValueError(
-                    "The `global_term_weights` parameter must be set when using `flsa-w` algorithm."
-                )
-        elif algorithm in ['flsa-e']:
-            if prob_topic_given_word_transpose is None:
-                raise ValueError(
-                    "The `prob_topic_given_word_transpose` parameter must be set when using `flsa-e` algorithm."
-                )
-            if local_term_weights is None:
-                raise ValueError(
-                    "The `local_term_weights` parameter must be set when using `flsa-e` algorithm."
-                )
-        else:
-            raise ValueError(f'Unsupported algorithm {algorithm}')
-
     def _create_probability_matrices(
             self,
             algorithm,
@@ -758,12 +787,12 @@ class FlsaModel:
             global_term_weights=None,
         ):
         """
-        FIXME Whole description is useless; rewrite.
+        This method corresponds to FLSA and FLSA-W's step 5 and FLSA-E's step 3.
+        Given an algorithm, it performs the matrix multiplications needed to
+        obtain the P(W|T) and P(T|D) matrices.
 
-        Method that performs matrix multiplications to obtain the output matrices.
-
-        The 'algorithm' parameter is generic and the other ones depend on the selected algorithm.
-        The other parameters passed into this method depend on the used algorithm.
+        The 'algorithm' parameter is needed for all algoriths. Whereas the other
+        parameters depend on the selected algorithm.
 
         Parameters
         ----------
@@ -783,14 +812,6 @@ class FlsaModel:
             numpy.array : float
                 The probability of a topic given a document.
         """
-        # Check whether the right variable are passed into the method.
-        self._check_passed_variables(
-            algorithm,
-            prob_topic_given_document_transpose,
-            prob_topic_given_word_transpose,
-            local_term_weights,
-            global_term_weights,
-            )
 
         # Calculate the initial probabilities
         if algorithm in ['flsa', 'flsa-w']:
@@ -837,89 +858,7 @@ class FlsaModel:
             )
             return self._prob_word_given_topic, prob_topic_given_document
         raise ValueError(f'Unsupported algorithm {algorithm}')
-
-    @staticmethod
-    def _create_dictlist_topn(
-            topn,
-            prob_word_given_topic,
-            index_to_word,
-        ):
-        """
-        Create a list with dictionaries of word probabilities
-        per topic based on the top-n words.
-
-        Parameters
-        ----------
-             topn : int
-                The top-n words to include
-                (needs only to be used when 'method=topn').
-             prob_word_given_topic : numpy.array : float
-                Matrix that gives the probability of a word given a topic.
-             index_to_word : list of str
-                Maps each unique index number to a unique vocabulary word.
-
-        Returns
-        -------
-             list of dicts {int : float}
-                Keys: all the indices of words from prob_word_given_topic
-                with weights amongst the top percentage.
-                Values: the probability associated to a word.
-        """
-        if not isinstance(topn, int) or topn <= 0:
-            raise ValueError(f"`topn` must be a positive integer, not {topn}.")
-        top_dictionaries = []
-        for topic_index in range(prob_word_given_topic.shape[1]):
-            new_dict = dict()
-            highest_weight_indices = prob_word_given_topic[:, topic_index].argsort()[-topn:]
-            for word_index in highest_weight_indices:
-                new_dict[index_to_word[word_index]] = prob_word_given_topic[word_index, topic_index]
-            top_dictionaries.append(new_dict)
-        return top_dictionaries
-
-    @staticmethod
-    def _create_dictlist_percentile(
-            perc,
-            prob_word_given_topic,
-            index_to_word,
-        ):
-        """
-        Create a list with dictionaries of word probabilities per topic based on the percentile.
-         - Keys: all the indices of words from prob_word_given_topic
-             who's weight's are amongst the top percentage.
-         - Values: the probability associated to a word.
-
-        Parameters
-        ----------
-             perc : float
-                The top percentile words to include
-                (needs only to be used when 'method=percentile').
-             prob_word_given_topic : numpy.array : float
-                Matrix that gives the probability of a word given a topic.
-             index_to_word : list of str
-                Maps each unique index number to a unique vocabulary word.
-
-        Returns
-        -------
-             list of dicts {int : float}
-                Keys: all the indices of words from prob_word_given_topic
-                    with weights amongst the top percentage.
-                Values: the probability associated to a word.
-        """
-        if not isinstance(perc, float) and 0 <= perc <= 1:
-            raise ValueError("Please choose a number between 0 and 1 for 'perc'")
-        top_list = []
-        for top in range(prob_word_given_topic.shape[1]):
-            new_dict = dict()
-            count = 0
-            i = 0
-            weights = np.sort(prob_word_given_topic[:, top])[::-1]
-            word_indices = np.argsort(prob_word_given_topic[:, top])[::-1]
-            while count < perc:
-                new_dict[index_to_word[word_indices[i]]] = weights[i]
-                count += weights[i]
-                i += 1
-            top_list.append(new_dict)
-        return top_list
+        #ERijck: This ValueError can be omitted, as it is an internal method. Do you agree?
 
     def show_topics(
             self,
@@ -929,7 +868,7 @@ class FlsaModel:
             index_to_word=None,
         ):
         """
-        Get a representation for topics.
+        Show the top words per topic after training.
 
         Parameters
         ----------
@@ -955,19 +894,18 @@ class FlsaModel:
             num_words = self.num_words
         if index_to_word is None:
             index_to_word = self._index_to_word
-
-        # FIXME fix formatting and message of all these TypeErrors as per methods above.
         if not isinstance(prob_word_given_topic, np.ndarray):
             raise TypeError(
-                "Please feed the algorithm 'prob_word_given_topic' as a np.ndarray"
+                "Please feed a np.ndarray to 'prob_word_given_topic'"
             )
         if not isinstance(index_to_word, dict):
-            raise TypeError("Please feed the algorithm 'index_to_word' as a dict")
+            raise TypeError("Please feed a dict to 'index_to_word'")
         if not isinstance(num_words, int) or num_words <= 0:
             raise TypeError("Please use a positive int for 'num_words'.")
         if prob_word_given_topic.shape[0] < prob_word_given_topic.shape[1]:
-            raise ValueError("'prob_word_given_topic' has more columns then rows,",
-                             " probably you need to take the transpose.")  # FIXME What? Why?
+            warnings.warn("'prob_word_given_topic' has more columns then rows,",
+                             " probably you need to take the transpose.")
+            #ERijck: A model with more topics than words makes no sense.
         if prob_word_given_topic.shape[0] != len(index_to_word.keys()):
             raise ValueError(
                 f"The shape of prob_word_given_topic={prob_word_given_topic.shape} doesn't match "
@@ -995,63 +933,6 @@ class FlsaModel:
                 topic_list.append(word_list)
             return topic_list
 
-    def get_topic_embedding(
-            self,
-            corpus,
-            prob_word_given_topic=None,
-            method='topn',
-            topn=20,
-            perc=0.05,
-        ):
-        """
-        Create a topic embedding for each input document,
-        to be used as input to predictive models.
-
-        Parameters
-        ----------
-            corpus : list of lists of str
-                The input file used to initialize the model.
-            prob_word_given_topic : numpy.array : float
-                Matrix that gives the probability of a word given a topic.
-            method : str
-                Method to select words to be included in the embedding.
-                (choose from 'topn', 'percentile'):
-                    - topn: for each topic the top n words with the highest
-                        probability are included.
-                    - percentile: for each topic all words with highest
-                        probabilities are assigned while the cumulative
-                        probability is lower than the percentile.
-            topn : int
-                The top-n words to include
-                (needs only to be used when 'method=topn').
-            perc: float
-                The benchmark percentile until which words need to be added
-                (between 0 and 1).
-
-        Returns
-        -------
-            numpy.array : float
-                Array in which each row gives the topic embedding for
-                the associated document.
-        """
-        self._check_variables()
-        if prob_word_given_topic is None:
-            prob_word_given_topic = self._prob_word_given_topic
-        top_dist = []
-        if method not in ['topn', 'percentile']:
-            raise ValueError(f"The `method` parameter must be one of {{'topn', 'percentile'}}, not {method}.")
-        if method == 'topn':
-            dictlist = self._create_dictlist_topn(topn, prob_word_given_topic, self._index_to_word)
-        else:
-            dictlist = self._create_dictlist_percentile(perc, prob_word_given_topic, self._index_to_word)
-        for doc in corpus:
-            topic_weights = [0] * prob_word_given_topic.shape[1]
-            for word in doc:
-                for i in range(prob_word_given_topic.shape[1]):
-                    topic_weights[i] += dictlist[i].get(word, 0)
-            top_dist.append(topic_weights)
-        return np.array(top_dist)
-
     def get_coherence_score(
             self,
             corpus=None,
@@ -1059,17 +940,17 @@ class FlsaModel:
             coherence='c_v',
         ):
         """
-        Calculate the coherence score for the generated topic.
-        FIXME What "the generated topic"? What is this referring to?
+        Calculate the coherence score for a set of topics (https://dl.acm.org/doi/10.1145/2684822.2685324).
+        This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
+        In case of the first, the method can be called without passing any variables.
+        In case of the latter, the topics and corpus should be fed to the method.
 
         Parameters
         ----------
              corpus : list of lists of str
                 The input file used to initialize the model.
              topics : list of lists of str
-                 The words per topics,
-                 equivalent to self.show_topics(formatted=True).
-                 FIXME If it's equivalent, why don't we calculate it ourselves?
+                 The words per topics with the same format as produced by self.show_topics(formatted=True).
              coherence : str
                  The type of coherence to be calculated.
                  Choose from: 'u_mass', 'c_v', 'c_uci', 'c_npmi'.
@@ -1097,7 +978,10 @@ class FlsaModel:
 
     def get_diversity_score(self, topics=None):
         """
-        Calculate the diversity score for the generated topic.
+        Calculate the diversity score for a set of topics.
+        This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
+        In case of the first, the method can be called without passing any variables.
+        In case of the latter, the topics and corpus should be fed to the method.
 
         Diversity = number of unique words / number of total words.
         See: https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00325/96463/Topic-Modeling-in-Embedding-Spaces
@@ -1125,7 +1009,10 @@ class FlsaModel:
 
     def get_interpretability_score(self, corpus=None, topics=None, coherence='c_v'):
         """
-        Calculate the interpretability score for the generated topics.
+        Calculate the interpretability score for a set of topics.
+        This method can be called on the topics trained by the FlsaModel and by topics trained elsewhere.
+        In case of the first, the method can be called without passing any variables.
+        In case of the latter, the topics and corpus should be fed to the method.
 
         Interpretability = coherence * diversity.
         See: https://direct.mit.edu/tacl/article/doi/10.1162/tacl_a_00325/96463/Topic-Modeling-in-Embedding-Spaces
@@ -1228,7 +1115,9 @@ class FlsaModel:
 
 class Flsa(FlsaModel):
     """
-    The FLSA algorithm.
+    The FLSA algorithm. Once this object is initialized, it automatically trains
+    a model.
+
     See https://link.springer.com/article/10.1007/s40815-017-0327-9
 
     Parameters
@@ -1282,13 +1171,13 @@ class Flsa(FlsaModel):
         """
         sparse_document_term_matrix = self._create_sparse_local_term_weights(
             self.corpus,
-            len(self.vocabulary),
+            len(self._vocabulary),
             self._word_to_index,
         )
         sparse_global_term_weighting = self._create_sparse_global_term_weights(
             corpus=self.corpus,
             word_weighting=self.word_weighting,
-            vocabulary_size=len(self.vocabulary),
+            vocabulary_size=len(self._vocabulary),
             sparse_local_term_weights=sparse_document_term_matrix,
             index_to_word=self._index_to_word,
             word_to_index=self._word_to_index,
@@ -1313,7 +1202,8 @@ class Flsa(FlsaModel):
 
 class FlsaW(FlsaModel):
     """
-    Train the FLSA-W algorithm.
+    Train the FLSA-W algorithm. Once this object is initialized, it automatically trains
+    a model.
 
     See: https://ieeexplore.ieee.org/abstract/document/9660139
 
@@ -1369,13 +1259,13 @@ class FlsaW(FlsaModel):
         """
         sparse_document_term_matrix = self._create_sparse_local_term_weights(
             self.corpus,
-            len(self.vocabulary),
+            len(self._vocabulary),
             self._word_to_index,
         )
         sparse_global_term_weighting = self._create_sparse_global_term_weights(
             corpus=self.corpus,
             word_weighting=self.word_weighting,
-            vocabulary_size=len(self.vocabulary),
+            vocabulary_size=len(self._vocabulary),
             sparse_local_term_weights=sparse_document_term_matrix,
             index_to_word=self._index_to_word,
             word_to_index=self._word_to_index,
@@ -1400,7 +1290,8 @@ class FlsaW(FlsaModel):
 
 class FlsaE(FlsaModel):
     """
-    Train the FLSA-E algorithm.
+    Train the FLSA-E algorithm. Once this object is initialized, it automatically trains
+    a model.
 
     See: https://research.tue.nl/nl/publications/exploring-embedding-spaces-for-more-coherent-topic-modeling-in-el
 
@@ -1420,9 +1311,6 @@ class FlsaE(FlsaModel):
                 Maximum distance between the current and predicted word within a sentence.
             vector_size : int
                 Dimensionality of the word vectors.
-            workers : int
-                Use these many worker threads to train the model, for faster training on multicore machines.
-                FIXME Where is `workers` actually used? I don't see any threading in this module.
     """
 
     def __init__(
@@ -1434,11 +1322,9 @@ class FlsaE(FlsaModel):
             min_count=1,
             window=5,
             vector_size=20,
-            workers=4,
         ):
 
-        self.model = ...   # FIXME what is this?
-        self.word_embedding = ...  # FIXME what is this?
+        self.word_embedding = None
 
         super().__init__(
             algorithm='flsa-e',
@@ -1449,7 +1335,6 @@ class FlsaE(FlsaModel):
             min_count=min_count,
             window=window,
             vector_size=vector_size,
-            workers=workers,
         )
 
     def get_word_embedding(
@@ -1458,7 +1343,6 @@ class FlsaE(FlsaModel):
             vector_size,
             window,
             min_count,
-            workers,
         ):
         """
             Train a word embedding on the corpus.
@@ -1473,19 +1357,14 @@ class FlsaE(FlsaModel):
                     Maximum distance between the current and predicted word within a sentence.
                 vector_size : int
                     Dimensionality of the word vectors.
-                workers : int
-                    Use these many worker threads to train the model
-                    ( = faster training with multicore machines).
         """
-        self.model = Word2Vec(
+        model = Word2Vec(
             sentences=data,
             vector_size=vector_size,
             window=window,
             min_count=min_count,
-            workers=workers,
         )
-        # FIXME is the whole Word2Vec model really needed? Why are we storing it as an attribute?
-        return self.model.wv.vectors
+        return model.wv.vectors
 
     def _get_matrices(self):
         """
@@ -1500,7 +1379,7 @@ class FlsaE(FlsaModel):
         """
         sparse_document_term_matrix = self._create_sparse_local_term_weights(
             self.corpus,
-            len(self.vocabulary),
+            len(self._vocabulary),
             self._word_to_index,
         )
 
@@ -1509,7 +1388,6 @@ class FlsaE(FlsaModel):
             min_count=self.min_count,
             vector_size=self.vector_size,
             window=self.window,
-            workers=self.workers,
         )
 
         partition_matrix = self._create_partition_matrix(
