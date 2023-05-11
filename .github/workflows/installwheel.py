@@ -8,10 +8,14 @@ import sys
 def main():
     subdir = sys.argv[1]
     vi = sys.version_info
-    processor = platform.processor()
+
+    if platform.system() in ('Linux', 'Darwin'):
+        arch = 'x86_64'
+    else:
+        arch = 'amd64'
 
     want = f'-cp{vi.major}{vi.minor}-'
-    suffix = f'_{processor}.whl'
+    suffix = f'_{arch}.whl'
 
     files = sorted(os.listdir(subdir))
     for f in files:
@@ -20,7 +24,7 @@ def main():
             subprocess.check_call(command)
             return 0
 
-    print(f'could not find wheel for {want} / {suffix} in {subdir}:')
+    print(f'no matches for {want} / {suffix} in {subdir}:')
     print('\n'.join(files))
 
     return 1
