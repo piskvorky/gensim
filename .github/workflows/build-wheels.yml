@@ -40,12 +40,12 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: x86_64 aarch64
           CIBW_ARCHS_MACOS: x86_64 arm64
-          CIBW_ARCHS_WINDOWS: AMD64 x86
+          CIBW_ARCHS_WINDOWS: AMD64 x86 ARM64
+          CIBW_BEFORE_BUILD: pip install numpy scipy
           CIBW_SKIP: pp* cp36-* cp37-* *-win32 *_i686 *-musllinux_*
           CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
           CIBW_TEST_REQUIRES: pytest testfixtures mock
           CIBW_TEST_SKIP: cp38* cp39* cp310* *_aarch64 *_arm64 *_universal2
-          CIBW_BUILD_VERBOSITY: 3
 
       - name: Upload wheels as artifacts
         if: always()
