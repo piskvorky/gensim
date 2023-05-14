@@ -90,6 +90,12 @@ jobs:
       - name: Install wheel
         run: python installwheel.py artifacts/wheels-${{ matrix.os }}
 
+      - name: Debug test environment
+        run: |
+          pip freeze
+          python -c 'import numpy;print(numpy.__file__)'
+          python -c 'from numpy.core import setup_common;print("0x%02x" % setup_common.C_API_VERSION)'
+
       #
       # If the wheel was incorrectly built, then this will fail.
       # https://github.com/RaRe-Technologies/gensim/issues/3097
