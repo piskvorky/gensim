@@ -35,15 +35,12 @@ jobs:
         with:
           platforms: all
 
-      - run: mkdir pip-freeze
-
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.12.0
         env:
           CIBW_ARCHS_LINUX: x86_64 aarch64
           CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_ARCHS_WINDOWS: AMD64 x86
-          CIBW_BEFORE_TEST: python .github/workflows/pipfreezedammit.py
           CIBW_SKIP: pp* cp36-* cp37-* *-win32 *_i686 *-musllinux_*
           CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
           CIBW_TEST_REQUIRES: pytest testfixtures mock
@@ -56,8 +53,6 @@ jobs:
         with:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
-
-      - run: tail -n +1 pip-freeze/*
 
   test:
     name: Test wheel for ${{ matrix.os }} Python ${{ matrix.python }}
