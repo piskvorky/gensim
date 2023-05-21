@@ -346,11 +346,8 @@ install_requires = [
     'smart_open >= 1.8.1',
 ]
 
-setup_requires = [NUMPY_STR]
-
 if need_cython():
     install_requires.append(CYTHON_STR)
-    setup_requires.append(CYTHON_STR)
 
 setup(
     name='gensim',
@@ -399,7 +396,6 @@ setup(
 
     test_suite="gensim.test",
     python_requires='>=3.8',
-    setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={

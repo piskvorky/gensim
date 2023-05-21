@@ -40,12 +40,12 @@ jobs:
         env:
           CIBW_ARCHS_LINUX: x86_64 aarch64
           CIBW_ARCHS_MACOS: x86_64 arm64
-          CIBW_ARCHS_WINDOWS: AMD64 x86 ARM64
-          CIBW_BEFORE_BUILD: pip install numpy scipy
+          CIBW_ARCHS_WINDOWS: AMD64 x86
           CIBW_SKIP: pp* cp36-* cp37-* *-win32 *_i686 *-musllinux_*
           CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
           CIBW_TEST_REQUIRES: pytest testfixtures mock
           CIBW_TEST_SKIP: cp38* cp39* cp310* *_aarch64 *_arm64 *_universal2
+          CIBW_BUILD_VERBOSITY: 3
 
       - name: Upload wheels as artifacts
         if: always()
@@ -53,6 +53,55 @@ jobs:
         with:
           name: wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
+
+  test:
+    name: Test wheel for ${{ matrix.os }} Python ${{ matrix.python }}
+    needs: build_wheels
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, windows-2019, macos-11]
+        python: ['3.8', '3.9', '3.10', '3.11']
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Downloads build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+
+      #
+      # We want to make sure our wheels run against older Numpy versions
+      #
+      - name: Install oldest-supported-numpy
+        run: python -m pip install oldest-supported-numpy
+
+      #
+      # Avoid checking out the entire gensim repo to get just one file
+      #
+      - name: Download installwheel.py
+        run: curl "https://raw.githubusercontent.com/RaRe-Technologies/gensim/testwheel/.github/workflows/installwheel.py" --output installwheel.py --silent
+
+      - name: Install wheel
+        run: python installwheel.py artifacts/wheels-${{ matrix.os }}
+
+      - name: Debug test environment
+        run: |
+          pip freeze
+          python -c 'import numpy;print(numpy.__file__)'
+          python -c 'import numpy;print(numpy.__version__)'
+
+      #
+      # If the wheel was incorrectly built, then this will fail.
+      # https://github.com/RaRe-Technologies/gensim/issues/3097
+      #
+      - name: Test wheel
+        run: python -c 'import gensim'
 
   upload:
     name: Upload to S3
