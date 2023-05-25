@@ -51,10 +51,6 @@ jobs:
         run: |
           python setup.py build_ext --inplace
           make -C docs/src clean html
-      #
-      # FIXME: do we want to store the built documentation somewhere, or is
-      # knowing that the docs built successfully enough?
-      #
 
   tests:
     name: test ${{ matrix.os }} python ${{ matrix.python }}

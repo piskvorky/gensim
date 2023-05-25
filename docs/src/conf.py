@@ -254,10 +254,11 @@ def sort_key(source_dir):
         'run_word2vec.py',
         'run_doc2vec_lee.py',
         'run_fasttext.py',
+        'run_ensemblelda.py',
         'run_annoy.py',
         'run_lda.py',
         'run_wmd.py',
-        'run_summarization.py',
+        'run_scm.py',
     ]
 
     howto_order = [
