@@ -93,9 +93,12 @@ import queue
 from multiprocessing import Pool, Queue, cpu_count
 
 import numpy as np
+from collections import defaultdict
+
 
 from gensim import utils
 from gensim.models.ldamodel import LdaModel, LdaState
+from gensim.models.callbacks import Callback
 
 
 logger = logging.getLogger(__name__)
@@ -110,7 +113,7 @@ class LdaMulticore(LdaModel):
                  chunksize=2000, passes=1, batch=False, alpha='symmetric',
                  eta=None, decay=0.5, offset=1.0, eval_every=10, iterations=50,
                  gamma_threshold=0.001, random_state=None, minimum_probability=0.01,
-                 minimum_phi_value=0.01, per_word_topics=False, dtype=np.float32):
+                 minimum_phi_value=0.01, per_word_topics=False, callbacks=None, dtype=np.float32):
         """
 
         Parameters
@@ -173,6 +176,8 @@ class LdaMulticore(LdaModel):
         per_word_topics : bool
             If True, the model also computes a list of topics, sorted in descending order of most likely topics for
             each word, along with their phi values multiplied by the feature length (i.e. word count).
+        callbacks : list of :class:`~gensim.models.callbacks.Callback`
+            Metric callbacks to log evaluation metrics of the model at every training epoch.
         dtype : {numpy.float16, numpy.float32, numpy.float64}, optional
             Data-type to use during calculations inside model. All inputs are also converted.
 
@@ -188,7 +193,8 @@ class LdaMulticore(LdaModel):
             id2word=id2word, chunksize=chunksize, passes=passes, alpha=alpha, eta=eta,
             decay=decay, offset=offset, eval_every=eval_every, iterations=iterations,
             gamma_threshold=gamma_threshold, random_state=random_state, minimum_probability=minimum_probability,
-            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, dtype=dtype,
+            minimum_phi_value=minimum_phi_value, per_word_topics=per_word_topics, callbacks=callbacks,
+            dtype=dtype,
         )
 
     def update(self, corpus, chunks_as_numpy=False):
@@ -264,6 +270,13 @@ class LdaMulticore(LdaModel):
         def rho():
             return pow(self.offset + pass_ + (self.num_updates / self.chunksize), -self.decay)
 
+        if self.callbacks:
+            # pass the list of input callbacks to Callback class
+            callback = Callback(self.callbacks)
+            callback.set_model(self)
+            # initialize metrics list to store metric values after every epoch
+            self.metrics = defaultdict(list)
+
         def process_result_queue(force=False):
             """
             Clear the result queue, merging all intermediate results, and update the
@@ -309,6 +322,12 @@ class LdaMulticore(LdaModel):
                         process_result_queue()
 
                 process_result_queue()
+                
+            # append current epoch's metric values
+            if self.callbacks:
+                current_metrics = callback.on_epoch_end(pass_)
+                for metric, value in current_metrics.items():
+                    self.metrics[metric].append(value)
             # endfor single corpus pass
 
             # wait for all outstanding jobs to finish
