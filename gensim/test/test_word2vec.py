@@ -173,7 +173,7 @@ class TestWord2VecModel(unittest.TestCase):
     def test_online_learning_from_file(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
-        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
@@ -198,7 +198,7 @@ class TestWord2VecModel(unittest.TestCase):
     def test_online_learning_after_save_from_file(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
-        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)

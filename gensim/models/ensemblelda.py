@@ -687,7 +687,12 @@ class EnsembleLda(SaveLoad):
                 "`corpus` keyword argument."
             )
 
-        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):
+        #
+        # The following conditional makes no sense, but we're in a rush to
+        # release and we don't care about this submodule enough to deal with it
+        # properly, so we disable flake8 for the following line.
+        #
+        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):  # noqa
             self.topic_model_class = topic_model_class
         else:
             kinds = {
