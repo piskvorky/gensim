@@ -918,7 +918,7 @@ def init():
     -------
     {0, 1, 2}
         Enumeration to signify underlying data type returned by the BLAS dot product calculation.
-        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
+        0 signifies double, 1 signifies float, and 2 signifies that custom cython loops were used
         instead of BLAS.
 
     """
