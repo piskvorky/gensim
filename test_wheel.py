@@ -24,9 +24,9 @@ curr_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def run(*command, **kwargs):
-    print("-" * 70)
+    print("-" * 70, file=sys.stderr)
     print(" ".join(command), file=sys.stderr)
-    print("-" * 70)
+    print("-" * 70, file=sys.stderr)
     subprocess.check_call(command, **kwargs)
 
 
