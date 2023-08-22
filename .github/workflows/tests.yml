@@ -127,6 +127,7 @@ jobs:
 
       - name: Show libraries packaged by numpy
         run: python -c 'import numpy;import os;print(os.listdir(os.path.dirname(numpy.__file__)+"/../numpy.libs"))'
+        if: matrix.os != 'windows'
 
       - name: Build
         run: |
