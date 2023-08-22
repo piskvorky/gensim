@@ -120,6 +120,14 @@ jobs:
         if: matrix.os == 'windows'
         run: pip install -e .[test-win]
 
+      - run: pip freeze
+
+      - name: Show numpy configuration
+        run: python -c 'import numpy;numpy.show_config()'
+
+      - name: Show libraries packaged by numpy
+        run: python -c 'import numpy;import os;print(os.listdir(os.path.dirname(numpy.__file__)+"/../numpy.libs"))'
+
       - name: Build
         run: |
           python --version
