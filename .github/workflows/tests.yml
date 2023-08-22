@@ -126,7 +126,7 @@ jobs:
         run: python -c 'import numpy;numpy.show_config()'
 
       - name: Show libraries packaged by numpy
-        run: python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"..","numpy.libs")))'
+        run: python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"..","numpy.libs")))' || echo "failed"
 
       - name: Build
         run: |
