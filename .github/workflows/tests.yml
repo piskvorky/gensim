@@ -132,7 +132,7 @@ jobs:
       - name: Run tests (without coverage)
         if: matrix.coverage != true
         # run: pytest -v gensim/test --durations 0
-        run: pytest -v gensim/test/test_word2vec.py gensim/test/test_doc2vec.py gensim/test/test_fasttext.py --durations 0
+        run: pytest -v gensim/test/test_word2vec.py gensim/test/test_keyedvectors.py --durations 0
 
       - name: Run tests (with coverage)
         if: matrix.coverage == true
