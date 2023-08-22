@@ -63,15 +63,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: '3.8', os: ubuntu-20.04, numpy: '1.24.3', scipy: '1.10.1'}
-          - {python: '3.9', os: ubuntu-20.04, numpy: '1.24.3', scipy: '1.10.1'}
-          - {python: '3.10', os: ubuntu-20.04, numpy: '1.24.3', scipy: '1.10.1'}
-          - {python: '3.11', os: ubuntu-20.04, numpy: '1.24.3', scipy: '1.10.1'}
+          - {python: '3.8', os: ubuntu-20.04}
+          - {python: '3.9', os: ubuntu-20.04}
+          - {python: '3.10', os: ubuntu-20.04}
+          - {python: '3.11', os: ubuntu-20.04}
 
-          - {python: '3.8', os: windows-2019, numpy: '1.24.3', scipy: '1.10.1'}
-          - {python: '3.9', os: windows-2019, numpy: '1.24.3', scipy: '1.10.1'}
-          - {python: '3.10', os: windows-2019, numpy: '1.24.3', scipy: '1.10.1'}
-          - {python: '3.11', os: windows-2019, numpy: '1.24.3', scipy: '1.10.1'}
+          - {python: '3.8', os: windows-2019}
+          - {python: '3.9', os: windows-2019}
+          - {python: '3.10', os: windows-2019}
+          - {python: '3.11', os: windows-2019}
 
     #
     # Don't run this job unless the linters have succeeded.
@@ -109,8 +109,8 @@ jobs:
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
 
-      - name: Install our pre-approved numpy and scipy versions
-        run: pip install numpy==${{ matrix.numpy}} scipy==${{ matrix.scipy }}
+      - name: Install our pre-approved numpy, scipy and cython
+        run: pip install numpy==1.24.3 scipy==1.10.1 cython==0.29.35
 
       - name: Install gensim and its dependencies
         if: matrix.os != 'windows'
