@@ -109,14 +109,6 @@ jobs:
           sudo apt-get install -y gdb
           ulimit -c unlimited -S  # enable core dumps
 
-      - name: Install our pre-approved numpy, scipy and cython
-        run: pip install numpy==1.24.3 scipy==1.10.1 cython==0.29.32
-
-      - name: Check Misha's sanity
-        run: |
-          cython --version
-          ls -lh gensim/models/*.c gensim/models/*.cpp || echo
-
       - name: Install gensim and its dependencies
         if: matrix.os != 'windows'
         run: pip install -e .[test]
@@ -124,6 +116,20 @@ jobs:
       - name: Install gensim and its dependencies (Windows)
         if: matrix.os == 'windows'
         run: pip install -e .[test-win]
+
+      #
+      # pip 23.2.1 and newer will quietly run build_ext using Cython 3.0.0
+      # (regardless of what cython version is currently installed!) as part
+      # of pip install.  We don't want that, because we run build_ext ourselves
+      # a little bit later, with a specific cython version.
+      #
+      # Deleting the *.c and *.cpp files is sufficient, no need to worry about
+      # *.so, *.dylib, *.dll, etc.
+      #
+      - name: Clean up after pip install
+        run: |
+          head gensim/models/*.c gensim/models/*.cpp || true
+          rm -rf gensim/models/*.c gensim/models/*.cpp
 
       - run: pip freeze
 
@@ -136,29 +142,19 @@ jobs:
           python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.libs")))' || echo
           python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.dylibs")))' || echo
 
-      - name: Check Misha's sanity
-        run: |
-          cython --version
-          ls -lh gensim/models/*.c gensim/models/*.cpp
-          head gensim/models/*.c gensim/models/*.cpp
-
       - name: Build
         run: |
-          rm -rf gensim/models/*.c gensim/models/*.cpp
           python --version
           pip --version
+          cython --version
           python setup.py build_ext --inplace
 
+      #
+      # It's helpful to know what cython version was actually used to build the
+      # extensions: it'll be in the file headers.
+      #
       - name: Examine Cython output
         run: head gensim/models/*.c gensim/models/*.cpp
-
-      - name: Upload Cython output as artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: cython_output-${{ matrix.os }}-py${{ matrix.python }}
-          path: |
-            gensim/models/*.c
-            gensim/models/*.cpp
 
       - name: Output FAST_VERSION
         run: python -c 'from gensim import models;print(models.FAST_VERSION)'
