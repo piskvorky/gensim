@@ -2,7 +2,7 @@
 #
 # Authors: Michael Penkov <m@penkov.dev>
 # Copyright (C) 2019 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 """Check that our wheels are all there."""
 import os
 import os.path
@@ -20,36 +20,29 @@ dist_path = os.path.abspath(dist_path)
 assert os.path.isdir(dist_path), 'expected %r to be an existing subdirectory' % dist_path
 
 expected = [
-    'gensim-%(release)s-cp27-cp27m-win32.whl',
-    'gensim-%(release)s-cp27-cp27m-win_amd64.whl',
-    'gensim-%(release)s-cp35-cp35m-win32.whl',
-    'gensim-%(release)s-cp35-cp35m-win_amd64.whl',
-    'gensim-%(release)s-cp36-cp36m-win32.whl',
-    'gensim-%(release)s-cp36-cp36m-win_amd64.whl',
-    'gensim-%(release)s-cp37-cp37m-win32.whl',
-    'gensim-%(release)s-cp37-cp37m-win_amd64.whl',
-    'gensim-%(release)s.win32-py2.7.exe',
-    'gensim-%(release)s.win32-py3.5.exe',
-    'gensim-%(release)s.win32-py3.6.exe',
-    'gensim-%(release)s.win32-py3.7.exe',
-    'gensim-%(release)s.win-amd64-py2.7.exe',
-    'gensim-%(release)s.win-amd64-py3.5.exe',
-    'gensim-%(release)s.win-amd64-py3.6.exe',
-    'gensim-%(release)s.win-amd64-py3.7.exe',
-    'gensim-%(release)s-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl',
-    'gensim-%(release)s-cp27-cp27m-manylinux1_i686.whl',
-    'gensim-%(release)s-cp27-cp27m-manylinux1_x86_64.whl',
-    'gensim-%(release)s-cp27-cp27mu-manylinux1_i686.whl',
-    'gensim-%(release)s-cp27-cp27mu-manylinux1_x86_64.whl',
-    'gensim-%(release)s-cp35-cp35m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl',
-    'gensim-%(release)s-cp35-cp35m-manylinux1_i686.whl',
-    'gensim-%(release)s-cp35-cp35m-manylinux1_x86_64.whl',
-    'gensim-%(release)s-cp36-cp36m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl',
-    'gensim-%(release)s-cp36-cp36m-manylinux1_i686.whl',
-    'gensim-%(release)s-cp36-cp36m-manylinux1_x86_64.whl',
-    'gensim-%(release)s-cp37-cp37m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl',
-    'gensim-%(release)s-cp37-cp37m-manylinux1_i686.whl',
-    'gensim-%(release)s-cp37-cp37m-manylinux1_x86_64.whl',
+    'gensim-%(release)s-cp310-cp310-macosx_10_9_x86_64.whl',
+    'gensim-%(release)s-cp310-cp310-macosx_11_0_arm64.whl',
+    'gensim-%(release)s-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl',
+    'gensim-%(release)s-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    'gensim-%(release)s-cp310-cp310-win_amd64.whl',
+    'gensim-%(release)s-cp310-cp310-win_arm64.whl',
+    'gensim-%(release)s-cp311-cp311-macosx_10_9_x86_64.whl',
+    'gensim-%(release)s-cp311-cp311-macosx_11_0_arm64.whl',
+    'gensim-%(release)s-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl',
+    'gensim-%(release)s-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    'gensim-%(release)s-cp311-cp311-win_amd64.whl',
+    'gensim-%(release)s-cp311-cp311-win_arm64.whl',
+    'gensim-%(release)s-cp38-cp38-macosx_10_9_x86_64.whl',
+    'gensim-%(release)s-cp38-cp38-macosx_11_0_arm64.whl',
+    'gensim-%(release)s-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl',
+    'gensim-%(release)s-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    'gensim-%(release)s-cp38-cp38-win_amd64.whl',
+    'gensim-%(release)s-cp39-cp39-macosx_10_9_x86_64.whl',
+    'gensim-%(release)s-cp39-cp39-macosx_11_0_arm64.whl',
+    'gensim-%(release)s-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl',
+    'gensim-%(release)s-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl',
+    'gensim-%(release)s-cp39-cp39-win_amd64.whl',
+    'gensim-%(release)s-cp39-cp39-win_arm64.whl',
     'gensim-%(release)s.tar.gz',
 ]
 

@@ -28,7 +28,7 @@ Check out the following:
 
 ## Questions
 
-If you have a general question about Gensim, please ask on the [mailing list](https://groups.google.com/forum/#!forum/gensim).
+If you have a general question about Gensim, please ask on the [mailing list](https://groups.google.com/g/gensim).
 If you have a question a about a specific issue or PR, just ask there directly, and we'll get back to you as soon as we can.
 Otherwise, ping @mpenkov on [Twitter](https://twitter.com/mpenkov) or [Telegram](https://t.me/mpenkov).
 

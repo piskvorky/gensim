@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 # Based on Copyright (C) 2016 Radim Rehurek <radimrehurek@seznam.cz>
 
 """Lda Sequence model, inspired by
@@ -22,7 +22,7 @@ TODO: The next steps to take this forward would be:
 Examples
 --------
 
-Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third
+Set up a model using 9 documents, with 2 in the first time-slice, 4 in the second, and 3 in the third
 
 .. sourcecode:: pycon
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2013 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Compute similarities across a collection of documents in the Vector Space Model.
 
@@ -52,7 +52,7 @@ If you have more query documents, you can submit them all at once, in a batch
 
 The benefit of this batch (aka "chunked") querying is a much better performance.
 To see the speed-up on your machine, run ``python -m gensim.test.simspeed``
-(compare to my results `here <http://groups.google.com/group/gensim/msg/4f6f171a869e4fca?>`_).
+(compare to my results `here <https://groups.google.com/g/gensim/c/9rg5zqoWyDQ/m/yk-ehhoXb08J>`_).
 
 There is also a special syntax for when you need similarity of documents in the index
 to the index itself (i.e. queries = the indexed documents themselves). This special syntax

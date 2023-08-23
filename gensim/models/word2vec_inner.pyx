@@ -7,7 +7,7 @@
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Optimized cython functions for training :class:`~gensim.models.word2vec.Word2Vec` model."""
 
@@ -918,7 +918,7 @@ def init():
     -------
     {0, 1, 2}
         Enumeration to signify underlying data type returned by the BLAS dot product calculation.
-        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
+        0 signifies double, 1 signifies float, and 2 signifies that custom cython loops were used
         instead of BLAS.
 
     """

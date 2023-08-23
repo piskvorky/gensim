@@ -260,7 +260,7 @@ def info(name=None, show_only_latest=True, name_only=False):
          u'description': u'Cleaned small sample from wikipedia',
          u'file_name': u'text8.gz',
          u'parts': 1,
-         u'source': u'http://mattmahoney.net/dc/text8.zip'}
+         u'source': u'https://mattmahoney.net/dc/text8.zip'}
         >>>
         >>> api.info()  # retrieve information about all available datasets and models
 

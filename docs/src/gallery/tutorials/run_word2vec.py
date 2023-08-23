@@ -126,7 +126,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 #   below.
 #
 # You may also check out an `online word2vec demo
-# <http://radimrehurek.com/2014/02/word2vec-tutorial/#app>`_ where you can try
+# <https://radimrehurek.com/2014/02/word2vec-tutorial/#app>`_ where you can try
 # this vector algebra for yourself. That demo runs ``word2vec`` on the
 # **entire** Google News dataset, of **about 100 billion words**.
 #
@@ -309,7 +309,7 @@ model = gensim.models.Word2Vec(sentences, vector_size=200)
 # -------
 #
 # ``workers`` , the last of the major parameters (full list `here
-# <http://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec>`_)
+# <https://radimrehurek.com/gensim/models/word2vec.html#gensim.models.word2vec.Word2Vec>`_)
 # is for training parallelization, to speed up training:
 #
 
@@ -322,7 +322,7 @@ model = gensim.models.Word2Vec(sentences, workers=4)
 # one core because of the `GIL
 # <https://wiki.python.org/moin/GlobalInterpreterLock>`_ (and ``word2vec``
 # training will be `miserably slow
-# <http://rare-technologies.com/word2vec-in-python-part-two-optimizing/>`_\ ).
+# <https://rare-technologies.com/word2vec-in-python-part-two-optimizing/>`_\ ).
 #
 
 ###############################################################################
@@ -372,7 +372,7 @@ model.wv.evaluate_word_analogies(datapath('questions-words.txt'))
 ###############################################################################
 #
 # This ``evaluate_word_analogies`` method takes an `optional parameter
-# <http://radimrehurek.com/gensim/models/keyedvectors.html#gensim.models.keyedvectors.KeyedVectors.evaluate_word_analogies>`_
+# <https://radimrehurek.com/gensim/models/keyedvectors.html#gensim.models.keyedvectors.KeyedVectors.evaluate_word_analogies>`_
 # ``restrict_vocab`` which limits which test examples are to be considered.
 #
 

@@ -96,10 +96,10 @@ vec_lsi = lsi[vec_bow]  # convert the query to LSI space
 print(vec_lsi)
 
 ###############################################################################
-# In addition, we will be considering `cosine similarity <http://en.wikipedia.org/wiki/Cosine_similarity>`_
+# In addition, we will be considering `cosine similarity <https://en.wikipedia.org/wiki/Cosine_similarity>`_
 # to determine the similarity of two vectors. Cosine similarity is a standard measure
 # in Vector Space Modeling, but wherever the vectors represent probability distributions,
-# `different similarity measures <http://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Symmetrised_divergence>`_
+# `different similarity measures <https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence#Symmetrised_divergence>`_
 # may be more appropriate.
 #
 # Initializing query structures
@@ -177,10 +177,10 @@ for doc_position, doc_score in sims:
 # That doesn't mean it's perfect though:
 #
 # * there are parts that could be implemented more efficiently (in C, for example), or make better use of parallelism (multiple machines cores)
-# * new algorithms are published all the time; help gensim keep up by `discussing them <http://groups.google.com/group/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
+# * new algorithms are published all the time; help gensim keep up by `discussing them <https://groups.google.com/g/gensim>`_ and `contributing code <https://github.com/piskvorky/gensim/wiki/Developer-page>`_
 # * your **feedback is most welcome** and appreciated (and it's not just the code!):
 #   `bug reports <https://github.com/piskvorky/gensim/issues>`_ or
-#   `user stories and general questions <http://groups.google.com/group/gensim/topics>`_.
+#   `user stories and general questions <https://groups.google.com/g/gensim>`_.
 #
 # Gensim has no ambition to become an all-encompassing framework, across all NLP (or even Machine Learning) subfields.
 # Its mission is to help NLP practitioners try out popular topic modelling algorithms

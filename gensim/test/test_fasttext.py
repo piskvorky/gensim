@@ -627,7 +627,7 @@ class TestFastTextModel(unittest.TestCase):
         model.train(terro, total_examples=len(terro), epochs=model.epochs)
         self.assertFalse(np.allclose(model.wv.vectors_ngrams, orig0_all))
         sim = model.wv.n_similarity(['war'], ['terrorism'])
-        self.assertLess(0., sim)
+        assert abs(sim) > 0.6
 
     def test_sg_hs_online(self):
         model = FT_gensim(sg=1, window=2, hs=1, negative=0, min_count=3, epochs=1, seed=42, workers=1, bucket=BUCKET)

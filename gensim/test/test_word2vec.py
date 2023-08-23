@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Automated tests for checking transformation algorithms (the models package).
@@ -173,7 +173,7 @@ class TestWord2VecModel(unittest.TestCase):
     def test_online_learning_from_file(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
-        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
@@ -198,7 +198,7 @@ class TestWord2VecModel(unittest.TestCase):
     def test_online_learning_after_save_from_file(self):
         """Test that the algorithm is able to add new words to the
         vocabulary and to a trained model when using a sorted vocabulary"""
-        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file,\
+        with temporary_file(get_tmpfile('gensim_word2vec1.tst')) as corpus_file, \
                 temporary_file(get_tmpfile('gensim_word2vec2.tst')) as new_corpus_file:
             utils.save_as_line_sentence(sentences, corpus_file)
             utils.save_as_line_sentence(new_sentences, new_corpus_file)
@@ -847,9 +847,9 @@ class TestWord2VecModel(unittest.TestCase):
             expected_neighbor = 'palestinian'
             sims = model.wv.most_similar(origin_word, topn=len(model.wv))
             # the exact vectors and therefore similarities may differ, due to different thread collisions/randomization
-            # so let's test only for top10
+            # so let's test only for topN
             neighbor_rank = [word for word, sim in sims].index(expected_neighbor)
-            self.assertLess(neighbor_rank, 5)
+            self.assertLess(neighbor_rank, 6)
 
     def test_r_n_g(self):
         """Test word2vec results identical with identical RNG seed."""

@@ -29,6 +29,9 @@ import gensim.downloader as api
 from gensim.corpora import Dictionary
 from nltk.stem.wordnet import WordNetLemmatizer
 
+from nltk import download
+download('wordnet')
+
 lemmatizer = WordNetLemmatizer()
 docs = api.load('text8')
 

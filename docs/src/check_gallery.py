@@ -20,12 +20,17 @@ def different(path1, path2):
 
 
 curr_dir = os.path.dirname(__file__)
+docs_dir = os.path.dirname(curr_dir)
+src_dir = os.path.dirname(docs_dir)
 stale = []
 for root, dirs, files in os.walk(os.path.join(curr_dir, 'gallery')):
     for f in files:
         if f.endswith('.py'):
             source_path = os.path.join(root, f)
             cache_path = source_path.replace('docs/src/gallery/', 'docs/src/auto_examples/')
+
+            rel_source_path = os.path.relpath(source_path, src_dir)
+            rel_cache_path = os.path.relpath(cache_path, src_dir)
 
             #
             # We check two things:
@@ -40,7 +45,7 @@ for root, dirs, files in os.walk(os.path.join(curr_dir, 'gallery')):
             # but we run them both because it's trivial.
             #
             if different(source_path, cache_path):
-                stale.append(cache_path)
+                stale.append(f"{rel_source_path} != {rel_cache_path}")
                 continue
 
             actual_md5 = hashlib.md5()
@@ -52,9 +57,10 @@ for root, dirs, files in os.walk(os.path.join(curr_dir, 'gallery')):
                 expected_md5 = fin.read()
 
             if actual_md5.hexdigest() != expected_md5:
-                stale.append(cache_path)
+                stale.append(f"{rel_source_path} md5 != {rel_cache_path}.md5")
 
 if stale:
+    stale = '\n'.join(stale)
     print(f"""The gallery cache appears stale.
 
 Rebuild the documentation using the following commands from the gensim root subdirectory:
@@ -64,6 +70,7 @@ Rebuild the documentation using the following commands from the gensim root subd
 
 and then run `git add docs/src/auto_examples` to update the cache.
 
-Stale files: {stale}
+Stale files:
+{stale}
 """, file=sys.stderr)
     sys.exit(1)

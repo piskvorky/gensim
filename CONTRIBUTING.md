@@ -4,7 +4,7 @@ First, please see [contribution-guide.org](http://www.contribution-guide.org/) f
 
 Also, please check the [Gensim FAQ](https://github.com/RaRe-Technologies/gensim/wiki/Recipes-&-FAQ) page before posting.
 
-**The proper place for open-ended questions is the [Gensim mailing list](https://groups.google.com/forum/#!forum/gensim).** Github is not the right place for research discussions or feature requests.
+**The proper place for open-ended questions is the [Gensim mailing list](https://groups.google.com/g/gensim).** Github is not the right place for research discussions or feature requests.
 
 # How to add a new feature or create a pull request?
 

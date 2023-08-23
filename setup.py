@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2014 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Run with::
@@ -170,9 +170,9 @@ gensim -- Topic Modelling in Python
 .. |Wheel| image:: https://img.shields.io/pypi/wheel/gensim.svg
 
 .. _GA: https://github.com/RaRe-Technologies/gensim/actions
-.. _Downloads: https://pypi.python.org/pypi/gensim
-.. _License: http://radimrehurek.com/gensim/about.html
-.. _Wheel: https://pypi.python.org/pypi/gensim
+.. _Downloads: https://pypi.org/project/gensim/
+.. _License: https://radimrehurek.com/gensim/intro.html#licensing
+.. _Wheel: https://pypi.org/project/gensim/
 
 Gensim is a Python library for *topic modelling*, *document indexing* and *similarity retrieval* with large corpora.
 Target audience is the *natural language processing* (NLP) and *information retrieval* (IR) community.
@@ -193,29 +193,29 @@ Features
 
 
 If this feature list left you scratching your head, you can first read more about the `Vector
-Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
-document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
+Space Model <https://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
+document analysis <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 Installation
 ------------
 
-This software depends on `NumPy and Scipy <http://www.scipy.org/Download>`_, two Python packages for scientific computing.
+This software depends on `NumPy and Scipy <https://scipy.org/install/>`_, two Python packages for scientific computing.
 You must have them installed prior to installing `gensim`.
 
-It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <http://math-atlas.sourceforge.net/>`_ or `OpenBLAS <http://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
+It is also recommended you install a fast BLAS library before installing NumPy. This is optional, but using an optimized BLAS such as MKL, `ATLAS <https://math-atlas.sourceforge.net/>`_ or `OpenBLAS <https://xianyi.github.io/OpenBLAS/>`_ is known to improve performance by as much as an order of magnitude. On OSX, NumPy picks up its vecLib BLAS automatically, so you don't need to do anything special.
 
 Install the latest version of gensim::
 
     pip install --upgrade gensim
 
-Or, if you have instead downloaded and unzipped the `source tar.gz <http://pypi.python.org/pypi/gensim>`_ package::
+Or, if you have instead downloaded and unzipped the `source tar.gz <https://pypi.org/project/gensim/>`_ package::
 
     python setup.py install
 
 
-For alternative modes of installation, see the `documentation <http://radimrehurek.com/gensim/#install>`_.
+For alternative modes of installation, see the `documentation <https://radimrehurek.com/gensim/#install>`_.
 
-Gensim is being `continuously tested <http://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
+Gensim is being `continuously tested <https://radimrehurek.com/gensim/#testing>`_ under all `supported Python versions <https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility>`_.
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
 
@@ -224,7 +224,7 @@ How come gensim is so fast and memory efficient? Isn't it pure Python, and isn't
 
 Many scientific algorithms can be expressed in terms of large matrix operations (see the BLAS note above). Gensim taps into these low-level BLAS libraries, by means of its dependency on NumPy. So while gensim-the-top-level-code is pure Python, it actually executes highly optimized Fortran/C under the hood, including multithreading (if your BLAS is so configured).
 
-Memory-wise, gensim makes heavy use of Python's built-in generators and iterators for streamed data processing. Memory efficiency was one of gensim's `design goals <http://radimrehurek.com/gensim/about.html>`_, and is a central feature of gensim, rather than something bolted on as an afterthought.
+Memory-wise, gensim makes heavy use of Python's built-in generators and iterators for streamed data processing. Memory efficiency was one of gensim's `design goals <https://radimrehurek.com/gensim/intro.html#design-principles>`_, and is a central feature of gensim, rather than something bolted on as an afterthought.
 
 Documentation
 -------------
@@ -254,14 +254,14 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 
 ----------------
 
-Gensim is open source software released under the `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
+Gensim is open source software released under the `GNU LGPLv2.1 license <https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 Copyright (c) 2009-now Radim Rehurek
 
 |Analytics|_
 
 .. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
 .. _Analytics: https://github.com/igrigorik/ga-beacon
-.. _Official Documentation and Walkthrough: http://radimrehurek.com/gensim/
+.. _Official Documentation and Walkthrough: https://radimrehurek.com/gensim/
 .. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
 .. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
 .. _QuickStart: https://radimrehurek.com/gensim/gensim_numfocus/auto_examples/core/run_core_concepts.html
@@ -277,7 +277,6 @@ core_testenv = [
     'pytest',
     'pytest-cov',
     'mock',
-    'cython',
     'testfixtures',
 ]
 
@@ -323,6 +322,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'memory_profiler',
     'annoy',
     'Pyro4',
+    'scikit-learn',
     'nltk',
     'testfixtures',
     'statsmodels',
@@ -330,15 +330,6 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
 ]
 
 NUMPY_STR = 'numpy >= 1.18.5'
-#
-# We pin the Cython version for reproducibility.  We expect our extensions
-# to build with any sane version of Cython, so we should update this pin
-# periodically.
-#
-CYTHON_STR = 'Cython==0.29.32'
-
-# Allow overriding the Cython version requirement
-CYTHON_STR = os.environ.get('GENSIM_CYTHON_REQUIRES', CYTHON_STR)
 
 install_requires = [
     NUMPY_STR,
@@ -346,15 +337,9 @@ install_requires = [
     'smart_open >= 1.8.1',
 ]
 
-setup_requires = [NUMPY_STR]
-
-if need_cython():
-    install_requires.append(CYTHON_STR)
-    setup_requires.append(CYTHON_STR)
-
 setup(
     name='gensim',
-    version='4.3.1',
+    version='4.3.2',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -365,11 +350,11 @@ setup(
     author=u'Radim Rehurek',
     author_email='me@radimrehurek.com',
 
-    url='http://radimrehurek.com/gensim',
+    url='https://radimrehurek.com/gensim/',
     project_urls={
         'Source': 'https://github.com/RaRe-Technologies/gensim',
     },
-    download_url='http://pypi.python.org/pypi/gensim',
+    download_url='https://pypi.org/project/gensim/',
 
     license='LGPL-2.1-only',
 
@@ -382,7 +367,7 @@ setup(
 
     zip_safe=False,
 
-    classifiers=[  # from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[  # from https://pypi.org/classifiers/
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
@@ -399,7 +384,6 @@ setup(
 
     test_suite="gensim.test",
     python_requires='>=3.8',
-    setup_requires=setup_requires,
     install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={

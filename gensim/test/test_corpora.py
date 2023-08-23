@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Automated tests for checking corpus I/O formats (the corpora package).
@@ -418,7 +418,7 @@ class TestBleiCorpus(CorpusTestCase):
         self.corpus_class.save_corpus(test_file, corpus)
         with open(test_file) as f:
             for line in f:
-                # unique_word_count index1:count1 index2:count2 ... indexn:counnt
+                # unique_word_count index1:count1 index2:count2 ... indexn:count
                 tokens = line.split()
                 words_len = int(tokens[0])
                 if words_len > 0:

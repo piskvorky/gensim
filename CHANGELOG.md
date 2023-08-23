@@ -1,5 +1,32 @@
 Changes
 =======
+## 4.3.2, 2023-08-23
+
+### :red_circle: Bug fixes
+
+* Fix incorrect conversion of cosine distance to cosine similarity (__[monash849](https://github.com/monash849)__, [#3441](https://github.com/RaRe-Technologies/gensim/pull/3441))
+
+### :books: Tutorial and doc improvements
+
+* Fix inconsistent documentation for LdaSeqModel #3474 (__[rsokolewicz](https://github.com/rsokolewicz)__, [#3475](https://github.com/RaRe-Technologies/gensim/pull/3475))
+* Update the licence link to  LGPLv2.1 (__[ERijck](https://github.com/ERijck)__, [#3471](https://github.com/RaRe-Technologies/gensim/pull/3471))
+* Replace HTTP with HTTPS in enwiki URLs (__[Holmes5](https://github.com/Holmes5)__, [#3459](https://github.com/RaRe-Technologies/gensim/pull/3459))
+* Update broken/redirecting/unencrypted links (__[pabs3](https://github.com/pabs3)__, [#3456](https://github.com/RaRe-Technologies/gensim/pull/3456))
+* Update Python version in docs (__[gliptak](https://github.com/gliptak)__, [#3446](https://github.com/RaRe-Technologies/gensim/pull/3446))
+
+### :+1: Improvements
+
+* Remove unused dependency, handle ImportError (__[mpenkov](https://github.com/mpenkov)__, [#3447](https://github.com/RaRe-Technologies/gensim/pull/3447))
+* Sanity check for `hs` and `negative` in Word2Vec (__[gau-nernst](https://github.com/gau-nernst)__, [#3443](https://github.com/RaRe-Technologies/gensim/pull/3443))
+
+### 🔮 Testing, CI, housekeeping
+
+* Fix CI test and wheel building workflow (__[mpenkov](https://github.com/mpenkov)__, [#3488](https://github.com/RaRe-Technologies/gensim/pull/3488))
+* Build wheels with oldest supported numpy (__[PrimozGodec](https://github.com/PrimozGodec)__, [#3467](https://github.com/RaRe-Technologies/gensim/pull/3467))
+* Bump pypa/cibuildwheel from 2.12.1 to 2.13.1 (__[dependabot[bot]](https://github.com/apps/dependabot)__, [#3483](https://github.com/RaRe-Technologies/gensim/pull/3483))
+* Doc fixes and separate workflow for building docs via CI (__[pabs3](https://github.com/pabs3)__, [#3462](https://github.com/RaRe-Technologies/gensim/pull/3462))
+* Move wheels upload into its own job (__[nikaro](https://github.com/nikaro)__, [#3454](https://github.com/RaRe-Technologies/gensim/pull/3454))
+* Enable arm64/aarch64 wheel builds (__[nikaro](https://github.com/nikaro)__, [#3448](https://github.com/RaRe-Technologies/gensim/pull/3448))
 
 ## 4.3.1, 2022-03-09
 
@@ -290,7 +317,7 @@ Gensim 4.0 is a major release with lots of performance & robustness improvements
 * Dropped Python 2. Gensim 4.0 is Py3.6+. Read our [Python version support policy](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
   - If you still need Python 2 for some reason, stay at [Gensim 3.8.3](https://github.com/RaRe-Technologies/gensim/releases/tag/3.8.3).
 
-* A new [Gensim website](https://radimrehurek.com/gensim) – finally! 🙃
+* A new [Gensim website](https://radimrehurek.com/gensim/) – finally! 🙃
 
 So, a major clean-up release overall. We're happy with this **tighter, leaner and faster Gensim**.
 
@@ -486,7 +513,7 @@ This is the direction we'll keep going forward: less kitchen-sink of "latest aca
 
 ### Why pre-release?
 
-This 4.0.0beta pre-release is for users who want the **cutting edge performance and bug fixes**. Plus users who want to help out, by **testing and providing feedback**: code, documentation, workflows… Please let us know on the [mailing list](https://groups.google.com/forum/#!forum/gensim)!
+This 4.0.0beta pre-release is for users who want the **cutting edge performance and bug fixes**. Plus users who want to help out, by **testing and providing feedback**: code, documentation, workflows… Please let us know on the [mailing list](https://groups.google.com/g/gensim)!
 
 Install the pre-release with:
 
@@ -2557,7 +2584,7 @@ Tutorial and doc improvements:
 * transactional similarity server: see docs/simserver.html
 * website moved from university hosting to radimrehurek.com
 * much improved speed of lsi[corpus] transformation:
-* accuracy tests of incremental svd: test/svd_error.py and http://groups.google.com/group/gensim/browse_thread/thread/4b605b72f8062770
+* accuracy tests of incremental svd: test/svd_error.py and https://groups.google.com/g/gensim/c/S2BbcvgGJ3A
 * further improvements to memory-efficiency of LDA and LSA
 * improved wiki preprocessing (thx to Luca de Alfaro)
 * model.print_topics() debug fncs now support std output, in addition to logging (thx to Homer Strong)
@@ -2683,3 +2710,4 @@ Tutorial and doc improvements:
 ## 0.2.0
 
 * First version
+

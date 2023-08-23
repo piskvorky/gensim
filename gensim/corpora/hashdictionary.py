@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2012 Homer Strong, Radim Rehurek
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
-"""Implements the `"hashing trick" <http://en.wikipedia.org/wiki/Hashing-Trick>`_ -- a mapping between words
+"""Implements the `"hashing trick" <https://en.wikipedia.org/wiki/Hashing-Trick>`_ -- a mapping between words
 and their integer ids using a fixed, static mapping (hash function).
 
 Notes
