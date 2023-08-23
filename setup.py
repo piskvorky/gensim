@@ -120,6 +120,7 @@ class CustomBuildExt(build_ext):
 
         if need_cython():
             import Cython.Build
+            print("CustomBuildExt Cython version: %s" % Cython.__version__)
             Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language_level=3)
             Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)), language_level=3)
 
