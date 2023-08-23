@@ -105,7 +105,7 @@ jobs:
       # Avoid checking out the entire gensim repo to get just one file
       #
       - name: Download installwheel.py
-        run: curl "https://raw.githubusercontent.com/RaRe-Technologies/gensim/testwheel/.github/workflows/installwheel.py" --output installwheel.py --silent
+        run: curl "https://raw.githubusercontent.com/RaRe-Technologies/gensim/develop/.github/workflows/installwheel.py" --output installwheel.py --silent
 
       - name: Install wheel
         run: python installwheel.py artifacts/wheels-${{ matrix.os }}
