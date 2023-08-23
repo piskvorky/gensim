@@ -134,6 +134,14 @@ jobs:
           pip --version
           python setup.py build_ext --inplace
 
+      - name: Upload Cython output as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: cython_output-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            gensim/models/*.c
+            gensim/models/*.cpp
+
       - name: Output FAST_VERSION
         run: python -c 'from gensim import models;print(models.FAST_VERSION)'
 
