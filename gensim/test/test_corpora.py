@@ -418,7 +418,7 @@ class TestBleiCorpus(CorpusTestCase):
         self.corpus_class.save_corpus(test_file, corpus)
         with open(test_file) as f:
             for line in f:
-                # unique_word_count index1:count1 index2:count2 ... indexn:counnt
+                # unique_word_count index1:count1 index2:count2 ... indexn:count
                 tokens = line.split()
                 words_len = int(tokens[0])
                 if words_len > 0:

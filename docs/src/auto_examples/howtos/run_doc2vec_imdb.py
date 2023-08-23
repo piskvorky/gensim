@@ -229,7 +229,7 @@ models_by_name['dbow+dmc'] = ConcatenatedDoc2Vec([simple_models[0], simple_model
 #
 # Given a document, our ``Doc2Vec`` models output a vector representation of the document.
 # How useful is a particular model?
-# In case of sentiment analysis, we want the ouput vector to reflect the sentiment in the input document.
+# In case of sentiment analysis, we want the output vector to reflect the sentiment in the input document.
 # So, in vector space, positive documents should be distant from negative documents.
 #
 # We train a logistic regression from the training set:
