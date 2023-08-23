@@ -22,7 +22,7 @@ TODO: The next steps to take this forward would be:
 Examples
 --------
 
-Set up a model using have 30 documents, with 5 in the first time-slice, 10 in the second, and 15 in the third
+Set up a model using 9 documents, with 2 in the first time-slice, 4 in the second, and 3 in the third
 
 .. sourcecode:: pycon
 
