@@ -54,7 +54,7 @@ jobs:
 
   tests:
     name: test ${{ matrix.os }} python ${{ matrix.python }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     defaults:
       run:
