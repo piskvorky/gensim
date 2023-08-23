@@ -140,14 +140,14 @@ jobs:
         run: |
           cython --version
           ls -lh gensim/models/*.c gensim/models/*.cpp
+          head gensim/models/*.c gensim/models/*.cpp
 
       - name: Build
         run: |
+          rm -rf gensim/models/*.c gensim/models/*.cpp
           python --version
           pip --version
           python setup.py build_ext --inplace
-        env:
-          NEED_CYTHON: 1
 
       - name: Examine Cython output
         run: head gensim/models/*.c gensim/models/*.cpp

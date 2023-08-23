@@ -44,8 +44,6 @@ def need_cython():
     to install Cython and perform the translation.
 
     """
-    if os.environ.get("NEED_CYTHON", "") == "1":
-        return True
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
     return any([not os.path.isfile(f) for f in expected])
 
