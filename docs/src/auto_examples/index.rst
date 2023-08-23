@@ -348,7 +348,7 @@ Blog posts, tutorial videos, hackathons and other useful Gensim resources, from 
 - *Use FastText or Word2Vec?* Comparison of embedding quality and performance. `Jupyter Notebook <https://github.com/RaRe-Technologies/gensim/blob/ba1ce894a5192fc493a865c535202695bb3c0424/docs/notebooks/Word2Vec_FastText_Comparison.ipynb>`__
 - Multiword phrases extracted from *How I Met Your Mother*. `Blog post by Mark Needham <http://www.markhneedham.com/blog/2015/02/12/pythongensim-creating-bigrams-over-how-i-met-your-mother-transcripts/>`__
 - *Using Gensim LDA for hierarchical document clustering*. `Jupyter notebook by Brandon Rose <http://brandonrose.org/clustering#Latent-Dirichlet-Allocation>`__
-- *Evolution of Voldemort topic through the 7 Harry Potter books*. `Blog post <http://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__
+- *Evolution of Voldemort topic through the 7 Harry Potter books*. `Blog post <https://rare-technologies.com/understanding-and-coding-dynamic-topic-models/>`__
 - *Movie plots by genre*: Document classification using various techniques: TF-IDF, word2vec averaging, Deep IR, Word Movers Distance and doc2vec. `Github repo <https://github.com/RaRe-Technologies/movie-plots-by-genre>`__
 - *Word2vec: Faster than Google? Optimization lessons in Python*, talk by Radim Řehůřek at PyData Berlin 2014. `Youtube video <https://www.youtube.com/watch?v=vU4TlwZzTfU>`__
 - *Word2vec & friends*, talk by Radim Řehůřek at MLMU.cz 7.1.2015. `Youtube video <https://www.youtube.com/watch?v=wTp3P2UnTfQ>`__

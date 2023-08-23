@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**34:13.660** total execution time for **auto_examples_howtos** files:
+**56:58.813** total execution time for **auto_examples_howtos** files:
 
 +----------------------------------------------------------------------------------------+-----------+-----------+
-| :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py` (``run_doc2vec_imdb.py``)     | 34:13.660 | 3757.5 MB |
+| :ref:`sphx_glr_auto_examples_howtos_run_doc2vec_imdb.py` (``run_doc2vec_imdb.py``)     | 56:58.813 | 3772.5 MB |
 +----------------------------------------------------------------------------------------+-----------+-----------+
 | :ref:`sphx_glr_auto_examples_howtos_run_compare_lda.py` (``run_compare_lda.py``)       | 00:00.000 | 0.0 MB    |
 +----------------------------------------------------------------------------------------+-----------+-----------+
