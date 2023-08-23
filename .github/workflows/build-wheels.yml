@@ -129,9 +129,7 @@ jobs:
     needs: build_wheels
     runs-on: ubuntu-latest
     steps:
-
-      - name: Install wheel uploading tool
-        run: python -m pip install wheelhouse-uploader
+      - run: python -m pip install awscli
 
       - name: Downloads build artifacts
         uses: actions/download-artifact@v3
@@ -141,17 +139,15 @@ jobs:
       - name: Check files
         run: tree artifacts/
 
-      - name: Move all wheels into one folder
-        run: mkdir wheelhouse ; find artifacts/ -name '*.whl' -exec mv -v {} wheelhouse/ \;
-
       - name: Upload wheels to s3://gensim-wheels
         #
         # Only do this if the credentials are set.
         # This means that PRs will still build wheels, but not upload them.
         # (PRs do not have access to secrets).
         #
-        if: ${{ env.WHEELHOUSE_UPLOADER_USERNAME && env.WHEELHOUSE_UPLOADER_SECRET }}
-        run: python -m wheelhouse_uploader upload --local-folder wheelhouse/ --no-ssl-check gensim-wheels --provider S3 --no-enable-cdn
+        if: ${{ env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY }}
+        run: find artifacts/ -name '*.whl' -exec aws s3 cp --quiet {} s3://gensim-wheels/{} \;
         env:
-          WHEELHOUSE_UPLOADER_USERNAME: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          WHEELHOUSE_UPLOADER_SECRET: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
