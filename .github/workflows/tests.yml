@@ -139,7 +139,7 @@ jobs:
       #
       #
       - name: Examine build output
-        run:
+        run: |
           ls gensim/models/*.so gensim/models/*.dylib gensim/models/*.dll || true
           head gensim/models/*.c gensim/models/*.cpp || true
 
