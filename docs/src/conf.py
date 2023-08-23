@@ -61,7 +61,7 @@ copyright = u'2009-now'
 # built documents.
 #
 # The short X.Y version.
-version = '4.3.1.dev0'
+version = '4.3'
 # The full version, including alpha/beta/rc tags.
 release = '4.3.2'
 
@@ -121,7 +121,7 @@ html_theme_options = {
 # "stickysidebar": "true",
 # "bodyfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
 # "headfont": "'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'",
-# "sidebarbgcolor": "fuckyou",
+# "sidebarbgcolor": "#ababab",
 # "footerbgcolor": "#771111",
 # "relbarbgcolor": "#993333",
 # "sidebartextcolor": "#000000",
