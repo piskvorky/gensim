@@ -112,6 +112,11 @@ jobs:
       - name: Install our pre-approved numpy, scipy and cython
         run: pip install numpy==1.24.3 scipy==1.10.1 cython==0.29.32
 
+      - name: Check Misha's sanity
+        run: |
+          cython --version
+          ls -lh gensim/models/*.c gensim/models/*.cpp || echo
+
       - name: Install gensim and its dependencies
         if: matrix.os != 'windows'
         run: pip install -e .[test]
@@ -141,6 +146,8 @@ jobs:
           python --version
           pip --version
           python setup.py build_ext --inplace
+        env:
+          NEED_CYTHON: 1
 
       - name: Examine Cython output
         run: head gensim/models/*.c gensim/models/*.cpp
