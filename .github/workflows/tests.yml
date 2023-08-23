@@ -117,20 +117,6 @@ jobs:
         if: matrix.os == 'windows'
         run: pip install -e .[test-win]
 
-      #
-      # pip 23.2.1 and newer will quietly run build_ext using Cython 3.0.0
-      # (regardless of what cython version is currently installed!) as part
-      # of pip install.  We don't want that, because we run build_ext ourselves
-      # a little bit later, with a specific cython version.
-      #
-      # Deleting the *.c and *.cpp files is sufficient, no need to worry about
-      # *.so, *.dylib, *.dll, etc.
-      #
-      - name: Clean up after pip install
-        run: |
-          head gensim/models/*.c gensim/models/*.cpp || true
-          rm -rf gensim/models/*.c gensim/models/*.cpp
-
       - run: pip freeze
 
       - name: Show numpy configuration
@@ -142,19 +128,20 @@ jobs:
           python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.libs")))' || echo
           python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.dylibs")))' || echo
 
-      - name: Build
-        run: |
-          python --version
-          pip --version
-          cython --version
-          python setup.py build_ext --inplace
 
+      #
+      # Nb. pip 23.2.1 and newer will quietly run build_ext using the Cython
+      # version specified in pyproject.toml, so we don't need to run build_ext
+      # ourselves.
       #
       # It's helpful to know what cython version was actually used to build the
       # extensions: it'll be in the file headers.
       #
-      - name: Examine Cython output
-        run: head gensim/models/*.c gensim/models/*.cpp
+      #
+      - name: Examine build output
+        run:
+          ls gensim/models/*.so gensim/models/*.dylib gensim/models/*.dll || true
+          head gensim/models/*.c gensim/models/*.cpp || true
 
       - name: Output FAST_VERSION
         run: python -c 'from gensim import models;print(models.FAST_VERSION)'
