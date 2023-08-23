@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 This module integrates Spotify's `Annoy <https://github.com/spotify/annoy>`_ (Approximate Nearest Neighbors Oh Yeah)
@@ -185,4 +185,4 @@ class AnnoyIndexer():
         ids, distances = self.index.get_nns_by_vector(
             vector, num_neighbors, include_distances=True)
 
-        return [(self.labels[ids[i]], 1 - distances[i] / 2) for i in range(len(ids))]
+        return [(self.labels[ids[i]], 1 - distances[i] ** 2 / 2) for i in range(len(ids))]

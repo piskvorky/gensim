@@ -6,30 +6,9 @@ on:
     branches: [ develop ]
 
 jobs:
+
   linters:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python }}
-
-      - name: Update pip
-        run: python -m pip install -U pip
-
-      - name: Install dependencies
-        run: python -m pip install flake8 flake8-rst
-
-      - name: Run flake8 linter (source)
-        run: flake8 --ignore E12,W503 --max-line-length 120 --show-source gensim
-
-      # - name: Run flake8 linter (documentation)
-      #   run: flake8 --ignore E202,E402,E302,E305,F821 --max-line-length 120 --filename '*.py,*.rst' docs
-
-      - name: Check Sphinx Gallery cache
-        run: python docs/src/check_gallery.py
+    uses: ./.github/workflows/linters.yml
 
   docs:
     name: build documentation
@@ -47,9 +26,9 @@ jobs:
     needs: [linters]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           #
           # We use Py3.8 here for historical reasons.
@@ -65,7 +44,6 @@ jobs:
           sudo apt-get -yq remove texlive-binaries --purge
           sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
           sudo apt-get -yq install build-essential python3.8-dev
-
       - name: Install gensim and its dependencies
         run: pip install -e .[docs]
 
@@ -74,14 +52,9 @@ jobs:
           python setup.py build_ext --inplace
           make -C docs/src clean html
 
-      #
-      # FIXME: do we want to store the built documentation somewhere, or is
-      # knowing that the docs built successfully enough?
-      #
-
   tests:
     name: test ${{ matrix.os }} python ${{ matrix.python }}
-    timeout-minutes: 30
+    timeout-minutes: 20
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -90,15 +63,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: 3.7, os: ubuntu-20.04}
-          - {python: 3.8, os: ubuntu-20.04}
-          - {python: 3.9, os: ubuntu-20.04}
+          - {python: '3.8', os: ubuntu-20.04}
+          - {python: '3.9', os: ubuntu-20.04}
           - {python: '3.10', os: ubuntu-20.04}
+          - {python: '3.11', os: ubuntu-20.04}
 
-          - {python: 3.7, os: windows-2019}
-          - {python: 3.8, os: windows-2019}
-          - {python: 3.9, os: windows-2019}
+          - {python: '3.8', os: windows-2019}
+          - {python: '3.9', os: windows-2019}
           - {python: '3.10', os: windows-2019}
+          - {python: '3.11', os: windows-2019}
 
     #
     # Don't run this job unless the linters have succeeded.
@@ -108,9 +81,9 @@ jobs:
     needs: [linters]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Update pip
@@ -129,7 +102,6 @@ jobs:
           curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo apt-key add
           sudo apt-get update -y
           sudo apt-get install -y sbt
-
       - name: Install GDB & enable core dumps
         if: matrix.os == 'ubuntu-20.04'
         run: |
@@ -145,26 +117,49 @@ jobs:
         if: matrix.os == 'windows'
         run: pip install -e .[test-win]
 
-      - name: Build
+      - run: pip freeze
+
+      - name: Show numpy configuration
+        run: python -c 'import numpy;numpy.show_config()'
+
+      - name: Show libraries packaged by numpy
         run: |
-          python --version
-          pip --version
-          python setup.py build_ext --inplace
+          python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"..","numpy.libs")))' || echo
+          python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.libs")))' || echo
+          python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.dylibs")))' || echo
+
+
+      #
+      # Nb. pip 23.2.1 and newer will quietly run build_ext using the Cython
+      # version specified in pyproject.toml, so we don't need to run build_ext
+      # ourselves.
+      #
+      # It's helpful to know what cython version was actually used to build the
+      # extensions: it'll be in the file headers.
+      #
+      #
+      - name: Examine build output
+        run: |
+          ls gensim/models/*.so gensim/models/*.dylib gensim/models/*.dll || true
+          head gensim/models/*.c gensim/models/*.cpp || true
+
+      - name: Output FAST_VERSION
+        run: python -c 'from gensim import models;print(models.FAST_VERSION)'
 
       #
       # Some of our tests are hanging, and I strongly suspect it's because of the coverage plugin.
       #
       - name: Run tests (without coverage)
         if: matrix.coverage != true
-        run: pytest -v gensim/test
+        run: pytest -v gensim/test --durations 0
 
       - name: Run tests (with coverage)
         if: matrix.coverage == true
-        run: pytest -v gensim/test --cov=gensim/ --cov-report=xml
+        run: pytest -v gensim/test --cov=gensim/ --cov-report=xml --durations 0
 
       - name: Upload coverage to Codecov
         if: matrix.coverage == true
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           files: ./coverage.xml

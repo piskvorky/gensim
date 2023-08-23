@@ -1,5 +1,6 @@
 #!/usr/bin/env cython
 # distutils: language = c++
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -7,7 +8,7 @@
 # coding: utf-8
 #
 # Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Optimized cython functions for file-based training :class:`~gensim.models.fasttext.FastText` model."""
 

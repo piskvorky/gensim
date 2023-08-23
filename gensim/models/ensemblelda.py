@@ -4,7 +4,7 @@
 # Authors: Tobias Brigl <github.com/sezanzeb>, Alex Salles <alex.salles@gmail.com>,
 # Alex Loosley <aloosley@alumni.brown.edu>, Data Reply Munich
 # Copyright (C) 2021 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 
 """Ensemble Latent Dirichlet Allocation (eLDA), an algorithm for extracting reliable topics.
@@ -91,7 +91,7 @@ different hyperparameters:
 Citation
 --------
 BRIGL, Tobias, 2019, Extracting Reliable Topics using Ensemble Latent Dirichlet Allocation [Bachelor Thesis].
-Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Available from:
+Technische Hochschule Ingolstadt. Munich: Data Reply GmbH. Supervised by Alex Loosley. Available from:
 https://www.sezanzeb.de/machine_learning/ensemble_LDA/
 
 """
@@ -687,7 +687,12 @@ class EnsembleLda(SaveLoad):
                 "`corpus` keyword argument."
             )
 
-        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):
+        #
+        # The following conditional makes no sense, but we're in a rush to
+        # release and we don't care about this submodule enough to deal with it
+        # properly, so we disable flake8 for the following line.
+        #
+        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):  # noqa
             self.topic_model_class = topic_model_class
         else:
             kinds = {

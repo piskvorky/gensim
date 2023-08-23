@@ -11,7 +11,7 @@ https://github.com/RaRe-Technologies/gensim/issues/2805
 [![GitHub release](https://img.shields.io/github/release/rare-technologies/gensim.svg?maxAge=3600)](https://github.com/RaRe-Technologies/gensim/releases)
 [![Downloads](https://img.shields.io/pypi/dm/gensim?color=blue)](https://pepy.tech/project/gensim/)
 [![DOI](https://zenodo.org/badge/DOI/10.13140/2.1.2393.1847.svg)](https://doi.org/10.13140/2.1.2393.1847)
-[![Mailing List](https://img.shields.io/badge/-Mailing%20List-blue.svg)](https://groups.google.com/forum/#!forum/gensim)
+[![Mailing List](https://img.shields.io/badge/-Mailing%20List-blue.svg)](https://groups.google.com/g/gensim)
 [![Follow](https://img.shields.io/twitter/follow/gensim_py.svg?style=social&style=flat&logo=twitter&label=Follow&color=blue)](https://twitter.com/gensim_py)
 
 Gensim is a Python library for *topic modelling*, *document indexing*
@@ -19,8 +19,9 @@ and *similarity retrieval* with large corpora. Target audience is the
 *natural language processing* (NLP) and *information retrieval* (IR)
 community.
 
-## ⚠️  Please [sponsor Gensim](https://github.com/sponsors/piskvorky) to help sustain this open source project ❤️
+## ⚠️ Want to help out? [Sponsor Gensim](https://github.com/sponsors/piskvorky) ❤️
 
+## ⚠️ Gensim is in stable maintenance mode: we are not accepting new features, but bug and documentation fixes are still welcome! ⚠️
 
 Features
 --------
@@ -73,7 +74,7 @@ package:
 
 For alternative modes of installation, see the [documentation].
 
-Gensim is being [continuously tested](http://radimrehurek.com/gensim/#testing) under all
+Gensim is being [continuously tested](https://radimrehurek.com/gensim/#testing) under all
 [supported Python versions](https://github.com/RaRe-Technologies/gensim/wiki/Gensim-And-Compatibility).
 Support for Python 2.7 was dropped in gensim 4.0.0 – install gensim 3.8.3 if you must use Python 2.7.
 
@@ -101,15 +102,15 @@ Documentation
 
   [QuickStart]: https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
-  [Official Documentation and Walkthrough]: http://radimrehurek.com/gensim/
-  [Official API Documentation]: http://radimrehurek.com/gensim/apiref.html
+  [Official Documentation and Walkthrough]: https://radimrehurek.com/gensim/
+  [Official API Documentation]: https://radimrehurek.com/gensim/apiref.html
 
 Support
 -------
 
 For commercial support, please see [Gensim sponsorship](https://github.com/sponsors/piskvorky).
 
-Ask open-ended questions on the public [Gensim Mailing List](https://groups.google.com/forum/#!forum/gensim).
+Ask open-ended questions on the public [Gensim Mailing List](https://groups.google.com/g/gensim).
 
 Raise bugs on [Github](https://github.com/RaRe-Technologies/gensim/blob/develop/CONTRIBUTING.md) but please **make sure you follow the [issue template](https://github.com/RaRe-Technologies/gensim/blob/develop/ISSUE_TEMPLATE.md)**. Issues that are not bugs or fail to provide the requested details will be closed without inspection.
 
@@ -121,7 +122,7 @@ Adopters
 
 | Company | Logo | Industry | Use of Gensim |
 |---------|------|----------|---------------|
-| [RARE Technologies](http://rare-technologies.com) | ![rare](docs/src/readme_images/rare.png) | ML & NLP consulting | Creators of Gensim – this is us! |
+| [RARE Technologies](https://rare-technologies.com/) | ![rare](docs/src/readme_images/rare.png) | ML & NLP consulting | Creators of Gensim – this is us! |
 | [Amazon](http://www.amazon.com/) |  ![amazon](docs/src/readme_images/amazon.png) | Retail |  Document similarity. |
 | [National Institutes of Health](https://github.com/NIHOPA/pipeline_word2vec) | ![nih](docs/src/readme_images/nih.png) | Health | Processing grants and publications with word2vec. |
 | [Cisco Security](http://www.cisco.com/c/en/us/products/security/index.html) | ![cisco](docs/src/readme_images/cisco.png) | Security |  Large-scale fraud detection. |
@@ -132,7 +133,7 @@ Adopters
 | [Tailwind](https://www.tailwindapp.com/) | ![tailwind](docs/src/readme_images/tailwind.png) | Media | Post interesting and relevant content to Pinterest. |
 | [Issuu](https://issuu.com/) | ![issuu](docs/src/readme_images/issuu.png) | Media | Gensim's LDA module lies at the very core of the analysis we perform on each uploaded publication to figure out what it's all about. |
 | [Search Metrics](http://www.searchmetrics.com/) | ![search-metrics](docs/src/readme_images/search-metrics.png) | Content Marketing | Gensim word2vec used for entity disambiguation in Search Engine Optimisation. |
-| [12K Research](https://12k.co/) | ![12k](docs/src/readme_images/12k.png)| Media |   Document similarity analysis on media articles. |
+| [12K Research](https://12k.com/) | ![12k](docs/src/readme_images/12k.png)| Media |   Document similarity analysis on media articles. |
 | [Stillwater Supercomputing](http://www.stillwater-sc.com/) | ![stillwater](docs/src/readme_images/stillwater.png) | Hardware | Document comprehension and association with word2vec. |
 | [SiteGround](https://www.siteground.com/) |  ![siteground](docs/src/readme_images/siteground.png) | Web hosting | An ensemble search engine which uses different embeddings models and similarities, including word2vec, WMD, and LDA. |
 | [Capital One](https://www.capitalone.com/) | ![capitalone](docs/src/readme_images/capitalone.png) | Finance | Topic modeling for customer complaints exploration. |
@@ -162,17 +163,17 @@ BibTeX entry:
 
   [citing gensim in academic papers and theses]: https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C
 
-  [design goals]: http://radimrehurek.com/gensim/about.html
-  [RaRe Technologies]: http://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
+  [design goals]: https://radimrehurek.com/gensim/intro.html#design-principles
+  [RaRe Technologies]: https://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
   [rare\_tech]: //rare-technologies.com
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
 
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
-  [Vector Space Model]: http://en.wikipedia.org/wiki/Vector_space_model
-  [unsupervised document analysis]: http://en.wikipedia.org/wiki/Latent_semantic_indexing
-  [NumPy and Scipy]: http://www.scipy.org/Download
-  [ATLAS]: http://math-atlas.sourceforge.net/
-  [OpenBLAS]: http://xianyi.github.io/OpenBLAS/
-  [source tar.gz]: http://pypi.python.org/pypi/gensim
-  [documentation]: http://radimrehurek.com/gensim/install.html
+  [Vector Space Model]: https://en.wikipedia.org/wiki/Vector_space_model
+  [unsupervised document analysis]: https://en.wikipedia.org/wiki/Latent_semantic_indexing
+  [NumPy and Scipy]: https://scipy.org/install/
+  [ATLAS]: https://math-atlas.sourceforge.net/
+  [OpenBLAS]: https://xianyi.github.io/OpenBLAS/
+  [source tar.gz]: https://pypi.org/project/gensim/
+  [documentation]: https://radimrehurek.com/gensim/#install

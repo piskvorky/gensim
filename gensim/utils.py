@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Various general utility functions."""
 
@@ -1160,7 +1160,7 @@ def safe_unichr(intval):
 def decode_htmlentities(text):
     """Decode all HTML entities in text that are encoded as hex, decimal or named entities.
     Adapted from `python-twitter-ircbot/html_decode.py
-    <http://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py>`_.
+    <https://github.com/sku/python-twitter-ircbot/blob/321d94e0e40d0acc92f5bf57d126b57369da70de/html_decode.py>`_.
 
     Parameters
     ----------

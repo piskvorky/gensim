@@ -1,5 +1,6 @@
 #!/usr/bin/env cython
 # distutils: language = c++
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -10,12 +11,12 @@
 # used from doc2vec_corpusfile
 #
 # Copyright (C) 2018 Dmitry Persiyanov <dmitry.persiyanov@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 import numpy as np
 cimport numpy as np
 
-from word2vec_inner cimport REAL_t
+from gensim.models.word2vec_inner cimport REAL_t
 
 DEF MAX_DOCUMENT_LEN = 10000
 

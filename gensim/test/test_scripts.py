@@ -3,7 +3,7 @@
 #
 # Copyright (C) 2018 Vimig Socrates <vimig.socrates@gmail.com> heavily influenced from @AakaashRao
 # Copyright (C) 2018 Manos Stergiadis <em.stergiadis@gmail.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Automated tests for checking the output of gensim.scripts.

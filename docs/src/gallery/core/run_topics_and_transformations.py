@@ -130,7 +130,7 @@ lsi_model = models.LsiModel(corpus_tfidf, id2word=dictionary, num_topics=2)  # i
 corpus_lsi = lsi_model[corpus_tfidf]  # create a double wrapper over the original corpus: bow->tfidf->fold-in-lsi
 
 ###############################################################################
-# Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
+# Here we transformed our Tf-Idf corpus via `Latent Semantic Indexing <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 # into a latent 2-D space (2-D because we set ``num_topics=2``). Now you're probably wondering: what do these two latent
 # dimensions stand for? Let's inspect with :func:`models.LsiModel.print_topics`:
 
@@ -175,7 +175,7 @@ os.unlink(tmp.name)
 #
 # Gensim implements several popular Vector Space Model algorithms:
 #
-# * `Term Frequency * Inverse Document Frequency, Tf-Idf <http://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_
+# * `Term Frequency * Inverse Document Frequency, Tf-Idf <https://en.wikipedia.org/wiki/Tf%E2%80%93idf>`_
 #   expects a bag-of-words (integer values) training corpus during initialization.
 #   During transformation, it will take a vector and return another vector of the
 #   same dimensionality, except that features which were rare in the training corpus
@@ -188,7 +188,21 @@ os.unlink(tmp.name)
 #
 #     model = models.TfidfModel(corpus, normalize=True)
 #
-# * `Latent Semantic Indexing, LSI (or sometimes LSA) <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
+# * `Okapi Best Matching, Okapi BM25 <https://en.wikipedia.org/wiki/Okapi_BM25>`_
+#   expects a bag-of-words (integer values) training corpus during initialization.
+#   During transformation, it will take a vector and return another vector of the
+#   same dimensionality, except that features which were rare in the training corpus
+#   will have their value increased. It therefore converts integer-valued
+#   vectors into real-valued ones, while leaving the number of dimensions intact.
+#
+#   Okapi BM25 is the standard ranking function used by search engines to estimate
+#   the relevance of documents to a given search query.
+#
+#  .. sourcecode:: pycon
+#
+#     model = models.OkapiBM25Model(corpus)
+#
+# * `Latent Semantic Indexing, LSI (or sometimes LSA) <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_
 #   transforms documents from either bag-of-words or (preferrably) TfIdf-weighted space into
 #   a latent space of a lower dimensionality. For the toy corpus above we used only
 #   2 latent dimensions, but on real corpora, target dimensionality of 200--500 is recommended
@@ -233,7 +247,7 @@ os.unlink(tmp.name)
 #
 #     model = models.RpModel(tfidf_corpus, num_topics=500)
 #
-# * `Latent Dirichlet Allocation, LDA <http://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
+# * `Latent Dirichlet Allocation, LDA <https://en.wikipedia.org/wiki/Latent_Dirichlet_allocation>`_
 #   is yet another transformation from bag-of-words counts into a topic space of lower
 #   dimensionality. LDA is a probabilistic extension of LSA (also called multinomial PCA),
 #   so LDA's topics can be interpreted as probability distributions over words. These distributions are,

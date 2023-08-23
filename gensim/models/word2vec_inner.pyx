@@ -1,4 +1,5 @@
 #!/usr/bin/env cython
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -6,7 +7,7 @@
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Optimized cython functions for training :class:`~gensim.models.word2vec.Word2Vec` model."""
 
@@ -19,12 +20,7 @@ from libc.math cimport exp
 from libc.math cimport log
 from libc.string cimport memset
 
-# scipy <= 0.15
-try:
-    from scipy.linalg.blas import fblas
-except ImportError:
-    # in scipy > 0.15, fblas function has been removed
-    import scipy.linalg.blas as fblas
+import scipy.linalg.blas as fblas
 
 REAL = np.float32
 
@@ -126,7 +122,7 @@ cdef void w2v_fast_sentence_sg_hs(
 
         if _compute_loss == 1:
             sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
-            lprob = -1*sgn*f_dot
+            lprob = sgn*f_dot
             if lprob <= -MAX_EXP or lprob >= MAX_EXP:
                 continue
             lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
@@ -326,7 +322,7 @@ cdef void w2v_fast_sentence_cbow_hs(
 
         if _compute_loss == 1:
             sgn = (-1)**word_code[b]  # ch function: 0-> 1, 1 -> -1
-            lprob = -1*sgn*f_dot
+            lprob = sgn*f_dot
             if lprob <= -MAX_EXP or lprob >= MAX_EXP:
                 continue
             lprob = LOG_TABLE[<int>((lprob + MAX_EXP) * (EXP_TABLE_SIZE / MAX_EXP / 2))]
@@ -922,7 +918,7 @@ def init():
     -------
     {0, 1, 2}
         Enumeration to signify underlying data type returned by the BLAS dot product calculation.
-        0 signifies double, 1 signifies double, and 2 signifies that custom cython loops were used
+        0 signifies double, 1 signifies float, and 2 signifies that custom cython loops were used
         instead of BLAS.
 
     """

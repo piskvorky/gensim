@@ -1,0 +1,68 @@
+#
+# This workflow rebuilds documentation and stores the resulting patch as a
+# workflow artifact.  We can then download the artifact, apply the patch, and
+# then push the changes.
+#
+# It's possible to do all this locally on a developer's machine, but it's not
+# trivial, because it requires many pre-requisites.
+#
+name: Rebuild documentation
+on: workflow_dispatch
+jobs:
+  docs:
+    name: Rebuild documentation
+    timeout-minutes: 180
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup up Python ${{ matrix.python }}
+        uses: actions/setup-python@v4
+        with:
+          #
+          # We use Py3.8 here for historical reasons.
+          #
+          python-version: "3.8"
+
+      - name: Update pip
+        run: python -m pip install -U pip
+
+      - name: Install apt packages for LaTeX rendering
+        run: |
+          sudo apt-get -yq update
+          sudo apt-get -yq remove texlive-binaries --purge
+          sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
+          sudo apt-get -yq install build-essential python3.8-dev
+      - name: Install gensim and its dependencies
+        run: pip install -e .[docs]
+
+      - name: Build documentation
+        run: |
+          python setup.py build_ext --inplace
+          make -C docs/src clean html
+
+      - name: Check changes to prebuilt docs
+        run: |
+          git config user.email "noreply@github.com"
+          git config user.name "Gensim Docs Build"
+          if ! git diff --quiet @ ; then
+            git add .
+            branch="$GITHUB_HEAD_REF ($GITHUB_REF_NAME)"
+            git commit -m "Import rebuilt documentation for branch $branch"
+            git format-patch @^
+            git bundle create prebuilt-docs-changes.bundle @^...@
+            git reset --mixed @^
+            git diff --exit-code --stat @
+          fi
+
+      - name: Upload prebuilt docs changes
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: prebuilt-docs-changes
+          path: |
+            *.patch
+            *.bundle

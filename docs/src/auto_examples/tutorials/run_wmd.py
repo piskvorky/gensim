@@ -17,7 +17,7 @@ Demonstrates using Gensim's implemenation of the WMD.
 #
 # WMD enables us to assess the "distance" between two documents in a meaningful
 # way even when they have no words in common. It uses `word2vec
-# <http://rare-technologies.com/word2vec-tutorial/>`_ [4] vector embeddings of
+# <https://rare-technologies.com/word2vec-tutorial/>`_ [4] vector embeddings of
 # words. It been shown to outperform many of the state-of-the-art methods in
 # k-nearest neighbors classification [3].
 #
@@ -53,7 +53,7 @@ plt.show()
 # ``WmdSimilarity`` class for corpus based similarity queries.
 #
 # .. Important::
-#    If you use Gensim's WMD functionality, please consider citing [1], [2] and [3].
+#    If you use Gensim's WMD functionality, please consider citing [1] and [2].
 #
 # Computing the Word Mover's Distance
 # -----------------------------------
@@ -118,8 +118,7 @@ print('distance = %.4f' % distance)
 # References
 # ----------
 #
-# 1. Ofir Pele and Michael Werman, *A linear time histogram metric for improved SIFT matching*, 2008.
-# 2. Ofir Pele and Michael Werman, *Fast and robust earth mover's distances*, 2009.
-# 3. Matt Kusner et al. *From Embeddings To Document Distances*, 2015.
-# 4. Tomáš Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
+# 1. Rémi Flamary et al. *POT: Python Optimal Transport*, 2021.
+# 2. Matt Kusner et al. *From Embeddings To Document Distances*, 2015.
+# 3. Tomáš Mikolov et al. *Efficient Estimation of Word Representations in Vector Space*, 2013.
 #

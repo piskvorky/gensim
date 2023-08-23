@@ -24,8 +24,8 @@ Once these statistical patterns are found, any plain text documents (sentence, p
 
 .. note::
    If the previous paragraphs left you confused, you can read more about the `Vector
-   Space Model <http://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
-   document analysis <http://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
+   Space Model <https://en.wikipedia.org/wiki/Vector_space_model>`_ and `unsupervised
+   document analysis <https://en.wikipedia.org/wiki/Latent_semantic_indexing>`_ on Wikipedia.
 
 .. _design:
 
@@ -53,7 +53,7 @@ To install gensim, simply run::
   pip install --upgrade gensim
 
 Alternatively, you can download the source code from `Github <https://github.com/RARE-Technologies/gensim/>`__
-or the `Python Package Index <http://pypi.python.org/pypi/gensim>`_.
+or the `Python Package Index <https://pypi.org/project/gensim/>`_.
 
 After installation, learn how to use Gensim from its :ref:`sphx_glr_auto_examples_core_run_core_concepts.py` tutorials.
 
@@ -63,7 +63,7 @@ After installation, learn how to use Gensim from its :ref:`sphx_glr_auto_example
 Licensing
 ----------
 
-Gensim is licensed under the OSI-approved `GNU LGPLv2.1 license <http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
+Gensim is licensed under the OSI-approved `GNU LGPLv2.1 license <https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 This means that it's free for both personal and commercial use, but if you make any
 modification to Gensim that you distribute to other people, you have to disclose
 the source code of these modifications.
@@ -104,9 +104,9 @@ Historically, Gensim started off as a collection of Python scripts for the Czech
 
 I (Radim) also wanted to try these fancy "Latent Semantic Methods", but the libraries that realized the necessary computation were `not much fun to work with <http://soi.stanford.edu/~rmunk/PROPACK/>`_.
 
-Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <http://radimrehurek.com/lrec2010_final.pdf>`_ describes the initial design decisions behind Gensim: **clarity, efficiency and scalability**. It is fairly representative of how Gensim works even today.
+Naturally, I set out to reinvent the wheel. Our `2010 LREC publication <https://radimrehurek.com/lrec2010_final.pdf>`_ describes the initial design decisions behind Gensim: **clarity, efficiency and scalability**. It is fairly representative of how Gensim works even today.
 
-Later versions of Gensim improved this efficiency and scalability tremendously. In fact, I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <http://radimrehurek.com/phd_rehurek.pdf>`_.
+Later versions of Gensim improved this efficiency and scalability tremendously. In fact, I made algorithmic scalability of distributional semantics the topic of my `PhD thesis <https://radimrehurek.com/phd_rehurek.pdf>`_.
 
 By now, Gensim is---to my knowledge---the most robust, efficient and hassle-free piece
 of software to realize unsupervised semantic modelling from plain text. It stands

@@ -5,7 +5,7 @@ memory-profiler==0.55.0
 nltk==3.4.5
 nmslib==2.1.1
 pandas==1.2.3
-pyemd==0.5.1
+POT==0.8.1
 scikit-learn==0.24.1
 sphinx-gallery==0.8.2
 sphinxcontrib-napoleon==0.7

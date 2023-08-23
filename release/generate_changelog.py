@@ -3,15 +3,17 @@
 #
 # Author: Gensim Contributors
 # Copyright (C) 2020 RaRe Technologies s.r.o.
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Generate changelog entries for all PRs merged since the last release."""
 import re
 import requests
+import sys
 import time
 
 
 def throttle_get(*args, seconds=10, **kwargs):
+    print(args, kwargs, file=sys.stderr)
     result = requests.get(*args, **kwargs)
     result.raise_for_status()
 
@@ -39,12 +41,15 @@ def iter_merged_prs(since=release_timestamp):
         )
 
         pulls = get.json()
-        if not pulls:
-            break
 
+        count = 0
         for i, pr in enumerate(pulls):
             if pr['merged_at'] and pr['merged_at'] > since:
+                count += 1
                 yield pr
+
+        if count == 0:
+            break
 
         page += 1
 
@@ -60,12 +65,18 @@ def iter_closed_issues(since=release_timestamp):
         if not issues:
             break
 
+        count = 0
         for i, issue in enumerate(issues):
             #
             # In the github API, all pull requests are issues, but not vice versa.
             #
             if 'pull_request' not in issue and issue['closed_at'] > since:
+                count += 1
                 yield issue
+
+        if count == 0:
+            break
+
         page += 1
 
 

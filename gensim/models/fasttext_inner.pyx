@@ -1,4 +1,5 @@
 #!/usr/bin/env cython
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -55,7 +56,7 @@ from libc.string cimport memset
 #
 # The versions are as chosen in word2vec_inner.pyx, and aliased to `our_` functions
 
-from word2vec_inner cimport bisect_left, random_int32, scopy, sscal, \
+from gensim.models.word2vec_inner cimport bisect_left, random_int32, scopy, sscal, \
      REAL_t, our_dot, our_saxpy
 
 DEF MAX_SENTENCE_LEN = 10000

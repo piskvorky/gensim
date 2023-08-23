@@ -1,4 +1,5 @@
 #!/usr/bin/env cython
+# cython: language_level=3
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: cdivision=True
@@ -6,7 +7,7 @@
 # coding: utf-8
 #
 # Copyright (C) 2013 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Optimized cython functions for training :class:`~gensim.models.doc2vec.Doc2Vec` model."""
 
@@ -24,7 +25,7 @@ except ImportError:
     # in scipy > 0.15, fblas function has been removed
     import scipy.linalg.blas as fblas
 
-from word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
+from gensim.models.word2vec_inner cimport bisect_left, random_int32, sscal, REAL_t, EXP_TABLE, our_dot, our_saxpy
 
 DEF MAX_DOCUMENT_LEN = 10000
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2010 Radim Rehurek <radimrehurek@seznam.cz>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """
 Automated tests for checking transformation algorithms (the models package).
@@ -304,6 +304,12 @@ class TestCoherenceModel(unittest.TestCase):
         self.assertAlmostEqual(np.mean(coherence_topics1), coherence1, 4)
         self.assertAlmostEqual(np.mean(coherence_topics2), coherence2, 4)
         self.assertAlmostEqual(coherence1, coherence2, places=4)
+
+    def testEmptyList(self):
+        """Test if CoherenceModel works with document without tokens"""
+        texts = self.texts + [[]]
+        cm = CoherenceModel(model=self.ldamodel, texts=texts, coherence="c_v", processes=1)
+        cm.get_coherence()
 
 
 if __name__ == '__main__':

@@ -3,7 +3,7 @@
 #
 # Author: Jan Zikes, Radim Rehurek
 # Copyright (C) 2014 Radim Rehurek <me@radimrehurek.com>
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """Online Latent Dirichlet Allocation (LDA) in Python, using all CPU cores to parallelize and speed up model training.
 
@@ -17,7 +17,7 @@ The training algorithm:
 * runs in **constant memory** w.r.t. the number of documents: size of the
   training corpus does not affect memory footprint, can process corpora larger than RAM
 
-Wall-clock `performance on the English Wikipedia <http://radimrehurek.com/gensim/wiki.html>`_ (2G corpus positions,
+Wall-clock `performance on the English Wikipedia <https://radimrehurek.com/gensim/wiki.html>`_ (2G corpus positions,
 3.5M documents, 100K features, 0.54G non-zero entries in the final bag-of-words matrix), requesting 100 topics:
 
 

@@ -126,6 +126,10 @@ docs = [[token for token in doc if len(token) > 1] for doc in docs]
 # easy to read is very desirable in topic modelling.
 #
 
+# Download the WordNet data
+from nltk import download
+download('wordnet')
+
 # Lemmatize the documents.
 from nltk.stem.wordnet import WordNetLemmatizer
 
@@ -268,14 +272,14 @@ model = LdaModel(
 # Note that we use the "Umass" topic coherence measure here (see
 # :py:func:`gensim.models.ldamodel.LdaModel.top_topics`), Gensim has recently
 # obtained an implementation of the "AKSW" topic coherence measure (see
-# accompanying blog post, http://rare-technologies.com/what-is-topic-coherence/).
+# accompanying blog post, https://rare-technologies.com/what-is-topic-coherence/).
 #
 # If you are familiar with the subject of the articles in this dataset, you can
 # see that the topics below make a lot of sense. However, they are not without
 # flaws. We can see that there is substantial overlap between some topics,
 # others are hard to interpret, and most of them have at least some terms that
 # seem out of place. If you were able to do better, feel free to share your
-# methods on the blog at http://rare-technologies.com/lda-training-tips/ !
+# methods on the blog at https://rare-technologies.com/lda-training-tips/ !
 #
 
 top_topics = model.top_topics(corpus)
@@ -299,7 +303,7 @@ pprint(top_topics)
 # Where to go from here
 # ---------------------
 #
-# * Check out a RaRe blog post on the AKSW topic coherence measure (http://rare-technologies.com/what-is-topic-coherence/).
+# * Check out a RaRe blog post on the AKSW topic coherence measure (https://rare-technologies.com/what-is-topic-coherence/).
 # * pyLDAvis (https://pyldavis.readthedocs.io/en/latest/index.html).
 # * Read some more Gensim tutorials (https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials).
 # * If you haven't already, read [1] and [2] (see references).

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
+# Licensed under the GNU LGPL v2.1 - https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html
 
 """This module allows simple Bag of Words (BoW) represented corpus to be transformed into log entropy space.
 It implements Log Entropy Model that produces entropy-weighted logarithmic term frequency representation.
