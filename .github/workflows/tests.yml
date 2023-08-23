@@ -110,7 +110,7 @@ jobs:
           ulimit -c unlimited -S  # enable core dumps
 
       - name: Install our pre-approved numpy, scipy and cython
-        run: pip install numpy==1.24.3 scipy==1.10.1 cython==0.29.35
+        run: pip install numpy==1.24.3 scipy==1.10.1 cython==0.29.32
 
       - name: Install gensim and its dependencies
         if: matrix.os != 'windows'
