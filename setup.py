@@ -99,6 +99,7 @@ class CustomBuildExt(build_ext):
     importing them at module level, because they may not be available at that time.
     """
     def finalize_options(self):
+        print("CustomBuildExt.finalize_options: called")
         build_ext.finalize_options(self)
 
         import builtins
@@ -120,9 +121,11 @@ class CustomBuildExt(build_ext):
 
         if need_cython():
             import Cython.Build
-            print("CustomBuildExt Cython version: %s" % Cython.__version__)
+            print("CustomBuildExt.finalize_options: Cython version: %s" % Cython.__version__)
             Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language_level=3)
             Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)), language_level=3)
+        else:
+            print("CustomBuildExt.finalize_options: skipping cythonization")
 
 
 class CleanExt(distutils.cmd.Command):

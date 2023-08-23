@@ -131,11 +131,19 @@ jobs:
           python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.libs")))' || echo
           python -c 'import numpy;import os;print(os.listdir(os.path.join(os.path.dirname(numpy.__file__),"/.dylibs")))' || echo
 
+      - name: Check Misha's sanity
+        run: |
+          cython --version
+          ls -lh gensim/models/*.c gensim/models/*.cpp
+
       - name: Build
         run: |
           python --version
           pip --version
           python setup.py build_ext --inplace
+
+      - name: Examine Cython output
+        run: head gensim/models/*.c gensim/models/*.cpp
 
       - name: Upload Cython output as artifacts
         uses: actions/upload-artifact@v3
