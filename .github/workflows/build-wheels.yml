@@ -153,9 +153,9 @@ jobs:
         #
         if: ${{ env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY }}
         run: |
-          find artifacts/ -name '*.whl' -print -exec aws s3 cp {} s3://gensim-wheels/{} \;
+          find artifacts/ -name '*.whl' -print -exec aws s3 cp --no-progress {} s3://gensim-wheels/ \;
           python update_index.py gensim-wheels "" > index.html
-          aws s3 cp index.html s3://gensim-wheels/index.html
+          aws s3 cp --no-progress index.html s3://gensim-wheels/index.html
         env:
           AWS_REGION: us-east-1
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
