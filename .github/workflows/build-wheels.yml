@@ -15,7 +15,7 @@ jobs:
 
   build_wheels:
     needs: linters
-    name: Build wheels on ${{ matrix.os }}
+    name: Build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -55,7 +55,7 @@ jobs:
           path: wheelhouse/*.whl
 
   test:
-    name: Test wheel for ${{ matrix.os }} Python ${{ matrix.python }}
+    name: Test ${{ matrix.os }} Py${{ matrix.python }}
     needs: build_wheels
     strategy:
       fail-fast: false
@@ -74,13 +74,7 @@ jobs:
           - {python: '3.8', os: windows-2019}
           - {python: '3.9', os: windows-2019}
 
-          #
-          # We know that the Windows Py3.10 wheels are broken.  Don't test them,
-          # because it will fail the entire workflow.
-          #
-          # https://github.com/RaRe-Technologies/gensim/issues/3489
-          #
-          # - {python: '3.10', os: windows-2019}
+          - {python: '3.10', os: windows-2019}
           - {python: '3.11', os: windows-2019}
 
     runs-on: ${{ matrix.os }}
@@ -100,6 +94,19 @@ jobs:
       #
       - name: Install oldest-supported-numpy
         run: python -m pip install oldest-supported-numpy
+
+      #
+      # We know that the Windows Py3.10 wheels are broken: they won't work
+      # with older numpy versions.  We still want to test the wheel somehow,
+      # so we use a newer numpy version.
+      #
+      # https://github.com/RaRe-Technologies/gensim/issues/3489
+      #
+      - name: Install newest numpy
+        if: {{ matrix.os }} == "windows-2019" && {{ matrix.python }} == "3.10"
+        run: |
+          python -m pip uninstall oldest-supported-numpy
+          python -m pip install numpy
 
       #
       # Avoid checking out the entire gensim repo to get just one file
