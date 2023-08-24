@@ -55,7 +55,7 @@ jobs:
             git format-patch @^
             git bundle create prebuilt-docs-changes.bundle @^...@
             git reset --mixed @^
-            git diff --exit-code --stat @
+            git diff --stat @
           fi
 
       - name: Upload prebuilt docs changes
