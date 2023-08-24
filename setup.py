@@ -257,10 +257,6 @@ When `citing gensim in academic papers and theses <https://scholar.google.cz/cit
 Gensim is open source software released under the `GNU LGPLv2.1 license <https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html>`_.
 Copyright (c) 2009-now Radim Rehurek
 
-|Analytics|_
-
-.. |Analytics| image:: https://ga-beacon.appspot.com/UA-24066335-5/your-repo/page-name
-.. _Analytics: https://github.com/igrigorik/ga-beacon
 .. _Official Documentation and Walkthrough: https://radimrehurek.com/gensim/
 .. _Tutorials: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#tutorials
 .. _Tutorial Videos: https://github.com/RaRe-Technologies/gensim/blob/develop/tutorials.md#videos
