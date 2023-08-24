@@ -103,7 +103,7 @@ jobs:
       # https://github.com/RaRe-Technologies/gensim/issues/3489
       #
       - name: Install newest numpy
-        if: ${{ matrix.os == "windows-2019" && matrix.python == "3.10"}}
+        if: ${{ (matrix.os == "windows-2019") && (matrix.python == "3.10") }}
         run: |
           python -m pip uninstall oldest-supported-numpy
           python -m pip install numpy
