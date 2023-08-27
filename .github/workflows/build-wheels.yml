@@ -106,7 +106,7 @@ jobs:
         if: ${{ (matrix.os == 'windows-2019') && (matrix.python == '3.10') }}
         run: |
           python -m pip uninstall --yes oldest-supported-numpy
-          python -m pip install numpy
+          python -m pip install --upgrade numpy
 
       #
       # Avoid checking out the entire gensim repo to get just one file
