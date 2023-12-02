@@ -103,7 +103,7 @@ Documentation
   [QuickStart]: https://radimrehurek.com/gensim/auto_examples/core/run_core_concepts.html
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
   [Official Documentation and Walkthrough]: https://radimrehurek.com/gensim/
-  [Official API Documentation]: https://radimrehurek.com/gensim/apiref.html
+  [Official API Documentation]: https://radimrehurek.com/gensim/auto_examples/index.html#documentation
 
 Support
 -------
