@@ -80,6 +80,8 @@ RE_P17 = re.compile(
     r'(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
     re.UNICODE
 )
+"""Remove headings """
+RE_P18 = re.compile(r'(#{1,6}) +|^\s*=*|\=*$|^\s*-*|\-*$', re.UNICODE)
 """Table markup"""
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
@@ -181,7 +183,7 @@ def find_interlinks(raw):
     return legit_interlinks
 
 
-def filter_wiki(raw, promote_remaining=True, simplify_links=True):
+def filter_wiki(raw, promote_remaining=True, simplify_links=True, retain_heading_markup=True):
     """Filter out wiki markup from `raw`, leaving only text.
 
     Parameters
@@ -192,6 +194,8 @@ def filter_wiki(raw, promote_remaining=True, simplify_links=True):
         Whether uncaught markup should be promoted to plain text.
     simplify_links : bool
         Whether links should be simplified keeping only their description text.
+    retain_heading_markup: bool
+        Whether heading markups should be preserved or removed. The heading text itself is retained in either case.
 
     Returns
     -------
@@ -203,10 +207,10 @@ def filter_wiki(raw, promote_remaining=True, simplify_links=True):
     # contributions to improving this code are welcome :)
     text = utils.to_unicode(raw, 'utf8', errors='ignore')
     text = utils.decode_htmlentities(text)  # '&amp;nbsp;' --> '\xa0'
-    return remove_markup(text, promote_remaining, simplify_links)
+    return remove_markup(text, promote_remaining, simplify_links, retain_heading_markup)
 
 
-def remove_markup(text, promote_remaining=True, simplify_links=True):
+def remove_markup(text, promote_remaining=True, simplify_links=True, retain_heading_markup=True):
     """Filter out wiki markup from `text`, leaving only text.
 
     Parameters
@@ -217,6 +221,8 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         Whether uncaught markup should be promoted to plain text.
     simplify_links : bool
         Whether links should be simplified keeping only their description text.
+    retain_heading_markup: bool
+        Whether heading markups should be preserved or removed. The heading text itself is retained in either case.
 
     Returns
     -------
@@ -252,6 +258,9 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         text = text.replace('||', '\n|')  # each table cell on a separate line
         text = re.sub(RE_P13, '\n', text)  # leave only cell content
         text = re.sub(RE_P17, '\n', text)  # remove formatting lines
+
+        if not retain_heading_markup:
+            text = re.sub(RE_P18, '', text)  # remove headings
 
         # remove empty mark-up
         text = text.replace('[]', '')
