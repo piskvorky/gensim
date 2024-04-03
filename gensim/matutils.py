@@ -17,7 +17,7 @@ from gensim import utils
 import numpy as np
 import scipy.sparse
 from scipy.stats import entropy
-from scipy.linalg import get_blas_funcs, triu
+from scipy.linalg import get_blas_funcs
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.special import psi  # gamma function utils
 
@@ -1127,7 +1127,7 @@ def qr_destroy(la):
     qr, tau, work, info = geqrf(a, lwork=work[0], overwrite_a=True)
     del a  # free up mem
     assert info >= 0
-    r = triu(qr[:n, :n])
+    r = np.triu(qr[:n, :n])
     if m < n:  # rare case, #features < #topics
         qr = qr[:, :m]  # retains fortran order
     gorgqr, = get_lapack_funcs(('orgqr',), (qr,))
