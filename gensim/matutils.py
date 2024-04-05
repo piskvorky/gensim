@@ -21,9 +21,9 @@ from scipy.linalg import get_blas_funcs
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.special import psi  # gamma function utils
 try:
-    from numpy import triu
+    from scipy.sparse import triu
 except ImportError:
-    from scipy.linalg import triu
+    from numpy import triu
 
 
 logger = logging.getLogger(__name__)
