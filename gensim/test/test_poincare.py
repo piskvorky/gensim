@@ -13,10 +13,7 @@ import logging
 import os
 import tempfile
 import unittest
-try:
-    from mock import Mock
-except ImportError:
-    from unittest.mock import Mock
+from unittest.mock import Mock
 
 import numpy as np
 try:

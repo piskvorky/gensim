@@ -17,8 +17,6 @@ using SGD, which usually involves heavy matrix multiplication).
 
 """
 
-from __future__ import print_function
-
 import logging
 import os
 import math
