@@ -322,7 +322,7 @@ class LdaMulticore(LdaModel):
                         process_result_queue()
 
                 process_result_queue()
-                
+
             # append current epoch's metric values
             if self.callbacks:
                 current_metrics = callback.on_epoch_end(pass_)

@@ -687,7 +687,7 @@ class EnsembleLda(SaveLoad):
                 "`corpus` keyword argument."
             )
 
-        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):
+        if type(topic_model_class) == type and issubclass(topic_model_class, ldamodel.LdaModel):  # noqa
             self.topic_model_class = topic_model_class
         else:
             kinds = {
