@@ -7,8 +7,8 @@ Automated tests for the parsing module.
 
 import logging
 import unittest
+from unittest import mock
 
-import mock
 import numpy as np
 
 from gensim.parsing.preprocessing import (

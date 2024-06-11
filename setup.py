@@ -272,7 +272,6 @@ visdom_req = ['visdom >= 0.1.8, != 0.1.8.7']
 core_testenv = [
     'pytest',
     'pytest-cov',
-    'mock',
     'testfixtures',
 ]
 

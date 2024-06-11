@@ -6,7 +6,6 @@
 
 """Various general utility functions."""
 
-from __future__ import with_statement
 from contextlib import contextmanager
 import collections.abc
 import logging
