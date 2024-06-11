@@ -762,7 +762,7 @@ class KeyedVectors(utils.SaveLoad):
 
         Parameters
         ----------
-        fname : str
+        fname_or_handle : str
             Path to the output file.
 
         See Also
