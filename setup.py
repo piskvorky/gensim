@@ -324,7 +324,10 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.18.5'
+#
+# see https://github.com/piskvorky/gensim/pull/3535
+#
+NUMPY_STR = 'numpy >= 1.18.5, < 2.0'
 
 install_requires = [
     NUMPY_STR,
