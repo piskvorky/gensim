@@ -324,7 +324,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy >= 1.18.5'
+NUMPY_STR = 'numpy == 2.0.0rc2'
 
 install_requires = [
     NUMPY_STR,
@@ -334,7 +334,7 @@ install_requires = [
 
 setup(
     name='gensim',
-    version='4.3.2.dev0',
+    version='4.4.0a0.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
