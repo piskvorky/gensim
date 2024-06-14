@@ -49,8 +49,8 @@ on Wikipedia.
 Installation
 ------------
 
-This software depends on [NumPy and Scipy], two Python packages for
-scientific computing. You must have them installed prior to installing
+This software depends on [NumPy], a Python package for
+scientific computing. You must have it installed prior to installing
 gensim.
 
 It is also recommended you install a fast BLAS library before installing
@@ -69,7 +69,9 @@ Or, if you have instead downloaded and unzipped the [source tar.gz]
 package:
 
 ```bash
-    python setup.py install
+    tar -xvzf gensim-X.X.X.tar.gz
+    cd gensim-X.X.X/
+    pip install .
 ```
 
 For alternative modes of installation, see the [documentation].
@@ -172,7 +174,7 @@ BibTeX entry:
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: https://en.wikipedia.org/wiki/Vector_space_model
   [unsupervised document analysis]: https://en.wikipedia.org/wiki/Latent_semantic_indexing
-  [NumPy and Scipy]: https://scipy.org/install/
+  [NumPy]: https://numpy.org/install/
   [ATLAS]: https://math-atlas.sourceforge.net/
   [OpenBLAS]: https://xianyi.github.io/OpenBLAS/
   [source tar.gz]: https://pypi.org/project/gensim/
