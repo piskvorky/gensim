@@ -5,10 +5,9 @@ requires = [
     # order of magnitude slower, so avoid it for now.
     #
     "Cython>=0.29.32,<3.0.0",
-    # oldest supported Numpy for non-'arm64|aarch64' architectures is 1.17.*
-    # as well as for 'Windows' on arm64. The oldest supported Numpy by Gensim
-    # is 1.18.5. Remove below line when they increase the oldest supported Numpy for those platforms
-    "numpy==1.18.5; python_version=='3.8' and platform_machine != 'aarch64' and (platform_machine != 'arm64' or platform_system == 'Windows')",
+    # oldest supported Numpy for this platform is 1.17 but the oldest supported by Gensim
+    # is 1.18.5, remove the line when they increase oldest supported Numpy for this platform
+    "numpy==1.18.5; python_version=='3.8' and platform_machine not in 'arm64|aarch64'",
     "oldest-supported-numpy; python_version>'3.8' or platform_machine in 'arm64|aarch64'",
     "setuptools",
     "wheel",
