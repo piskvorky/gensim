@@ -36,6 +36,10 @@ logger = logging.getLogger(__name__)
 # ignore articles shorter than ARTICLE_MIN_WORDS characters (after full preprocessing)
 ARTICLE_MIN_WORDS = 50
 
+# default thresholds for lengths of individual tokens
+TOKEN_MIN_LEN = 2
+TOKEN_MAX_LEN = 15
+
 
 RE_P0 = re.compile('<!--.*?-->', re.DOTALL | re.UNICODE)  # comments
 RE_P1 = re.compile('<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)  # footnotes
@@ -57,9 +61,11 @@ RE_P15 = re.compile('\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 
 # MediaWiki namespaces (https://www.mediawiki.org/wiki/Manual:Namespace) that
 # ought to be ignored
-IGNORED_NAMESPACES = ['Wikipedia', 'Category', 'File', 'Portal', 'Template',
-                      'MediaWiki', 'User', 'Help', 'Book', 'Draft',
-                      'WikiProject', 'Special', 'Talk']
+IGNORED_NAMESPACES = [
+    'Wikipedia', 'Category', 'File', 'Portal', 'Template',
+    'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
+    'Special', 'Talk', 'Wikinews'
+]
 
 
 def filter_wiki(raw):
@@ -143,10 +149,7 @@ def remove_template(s):
         prev_c = c
 
     # Remove all the templates
-    s = ''.join([s[end + 1:start] for start, end in
-                 zip(starts + [None], [-1] + ends)])
-
-    return s
+    return ''.join([s[end + 1:start] for start, end in zip(starts + [None], [-1] + ends)])
 
 
 def remove_file(s):
@@ -164,25 +167,26 @@ def remove_file(s):
     return s
 
 
-def tokenize(content, tokenizer=utils.tokenize, min_len=2, max_len=15, filter_starts_with='_',
-             lowercase=False, to_lower=False, lower=False, deacc=False):
+def tokenize(content, tokenizer_func=utils.tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, \
+             deacc=False, filter_starts_with='_'):
     """
     Tokenize a piece of text from wikipedia. The input string `content` is assumed
     to be mark-up free (see `filter_wiki()`).
 
-    Return list of tokens as utf8 bytestrings. Ignore words shorted than 2 or longer
-    that 15 characters (not bytes!).
+    Set `token_min_len`, `token_max_len` as character length (not bytes!) thresholds for individual tokens.
+
+    Return list of tokens as utf8 bytestrings.
     """
     # TODO maybe ignore tokens with non-latin characters? (no chinese, arabic, russian etc.)
     filter_starts_with = tuple(filter_starts_with)
     content = utils.to_unicode(content, errors='replace')
-    if lowercase or to_lower or lower:
+    if lower:
         content = content.lower()
     if deacc:
         content = utils.deaccent(content)
     return [
-        utils.to_unicode(token) for token in tokenizer(content) \
-        if min_len <= len(token) <= max_len and not token.startswith(filter_starts_with)
+        utils.to_unicode(token) for token in tokenizer_func(content) \
+        if token_min_len <= len(token) <= token_max_len and not token.startswith(filter_starts_with)
     ]
 
 
@@ -191,9 +195,10 @@ def get_namespace(tag):
     m = re.match("^{(.*?)}", tag)
     namespace = m.group(1) if m else ""
     if not namespace.startswith("http://www.mediawiki.org/xml/export-"):
-        raise ValueError("%s not recognized as MediaWiki dump namespace"
-                         % namespace)
+        raise ValueError("%s not recognized as MediaWiki dump namespace" % namespace)
     return namespace
+
+
 _get_namespace = get_namespace
 
 
@@ -230,7 +235,7 @@ def extract_pages(f, filter_namespaces=False):
                     text = None
 
             pageid = elem.find(pageid_path).text
-            yield title, text or "", pageid  # empty page will yield None
+            yield title, text or "", pageid     # empty page will yield None
 
             # Prune the element tree, as per
             # http://www.ibm.com/developerworks/xml/library/x-hiperfparse/
@@ -240,23 +245,29 @@ def extract_pages(f, filter_namespaces=False):
             # ./revision/text element. The pages comprise the bulk of the
             # file, so in practice we prune away enough.
             elem.clear()
+
+
 _extract_pages = extract_pages  # for backward compatibility
 
 
-def process_article(args):
+def process_article(args, tokenizer_func=utils.tokenize, token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True,
+                    deacc=False, filter_starts_with='_'):
     """
     Parse a wikipedia article, returning its content as a list of tokens
     (utf8-encoded strings).
+
+    Set `tokenizer_func` (defaults to `utils.tokenize`) parameter for languages like japanese or thai to perform better
+    tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower).
     """
-    text, title, pageid, lemmatize, tokenizer, lower, deacc, min_len, max_len, filter_starts_with, fields = args
+    text, lemmatize, title, pageid, fields = args
     text_content = filter_wiki(text) if (fields is None) or ('desc' in fields) else ""
     text_content = f"{title}. {text_content}" if ('title' in fields) else text_content
     text_content = text_content.strip()
     if lemmatize:
         result = utils.lemmatize(text_content)
     else:
-        result = tokenize(text_content, tokenizer=tokenizer, lower=lower, deacc=deacc, \
-                          min_len=min_len, max_len=max_len, filter_starts_with=filter_starts_with)
+        result = tokenize(text_content, tokenizer_func=tokenizer_func, token_min_len=token_min_len, token_max_len=token_max_len, \
+                          lower=lower, deacc=deacc, filter_starts_with=filter_starts_with)
     return result, title, pageid
 
 
@@ -265,20 +276,38 @@ def init_to_ignore_interrupt():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
 
+def _process_article(args):
+    """Should not be called explicitly. Use `process_article` instead."""
+
+    tokenizer_func, token_min_len, token_max_len, lower, deacc, filter_starts_with = args[-1]
+    args = args[:-1]
+
+    return process_article(
+        args, tokenizer_func=tokenizer_func, token_min_len=token_min_len,
+        token_max_len=token_max_len, lower=lower,
+        deacc=deacc, filter_starts_with=filter_starts_with
+    )
+
+
 class WikiCorpus(TextCorpus):
     """
-    Treat a wikipedia articles dump (\*articles.xml.bz2) as a (read-only) corpus.
+    Treat a wikipedia articles dump (<LANG>wiki-<YYYYMMDD>-pages-articles.xml.bz2 or <LANG>wiki-latest-pages-articles.xml.bz2) as a (read-only) corpus.
 
     The documents are extracted on-the-fly, so that the whole (massive) dump
     can stay compressed on disk.
+
+    **Note:** "multistream" archives are *not* supported in Python 2 due to
+    `limitations in the core bz2 library
+    <https://docs.python.org/2/library/bz2.html#de-compression-of-files>`_.
 
     >>> wiki = WikiCorpus('enwiki-20100622-pages-articles.xml.bz2') # create word->word_id mapping, takes almost 8h
     >>> MmCorpus.serialize('wiki_en_vocab200k.mm', wiki) # another 8h, creates a file in MatrixMarket format plus file with id->word
 
     """
     def __init__(self, fname, processes=None, lemmatize=utils.has_pattern(), dictionary=None,
-                 tokenizer=utils.tokenize, filter_namespaces=('0',), lower=False, deacc=False,
-                 min_len=2, max_len=15, filter_starts_with='_', fields = None):
+                 filter_namespaces=('0',), tokenizer_func=utils.tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
+                 token_min_len=TOKEN_MIN_LEN, token_max_len=TOKEN_MAX_LEN, lower=True, deacc=False,
+                 filter_starts_with='_', fields = None):
         """
         Initialize the corpus. Unless a dictionary is provided, this scans the
         corpus once, to determine its vocabulary.
@@ -288,21 +317,35 @@ class WikiCorpus(TextCorpus):
         this automatic logic by forcing the `lemmatize` parameter explicitly.
         self.metadata if set to true will ensure that serialize will write out article titles to a pickle file.
 
+        Set `article_min_tokens` as a min threshold for article token count (defaults to 50). Any article below this is
+        ignored.
+
+        Set `tokenizer_func` (defaults to `tokenize`) with a custom function reference to control tokenization else use
+        the default regexp tokenization. Set this parameter for languages like japanese or thai to perform better
+        tokenization. The `tokenizer_func` needs to take 4 parameters: (text, token_min_len, token_max_len, lower). The
+        parameter values are as configured on the class instance by default.
+
+        Set `lower` to control if everything should be converted to lowercase or not (default True).
+
+        Set `token_min_len`, `token_max_len` as thresholds for token lengths that are returned (default to 2 and 15).
+
         """
         self.fname = fname
-        self.filter_namespaces = filter_namespaces
-        self.fields = fields
+        self.filter_namespaces = filter_namespaces        
         self.metadata = False
         if processes is None:
             processes = max(1, multiprocessing.cpu_count() - 1)
         self.processes = processes
         self.lemmatize = lemmatize
-        self.tokenizer = tokenizer
+        self.tokenizer_func = tokenizer_func
+        self.article_min_tokens = article_min_tokens
+        self.token_min_len = token_min_len
+        self.token_max_len = token_max_len
         self.lower = lower
         self.deacc = deacc
-        self.min_len = min_len
-        self.max_len = max_len
         self.filter_starts_with = filter_starts_with
+        self.fields = fields
+        
         if dictionary is None:
             self.dictionary = Dictionary(self.get_texts())
         else:
@@ -314,7 +357,7 @@ class WikiCorpus(TextCorpus):
         of tokens.
 
         Only articles of sufficient length are returned (short articles & redirects
-        etc are ignored).
+        etc are ignored). This is control by `article_min_tokens` on the class instance.
 
         Note that this iterates over the **texts**; if you want vectors, just use
         the standard corpus interface instead of this function::
@@ -322,12 +365,13 @@ class WikiCorpus(TextCorpus):
         >>> for vec in wiki_corpus:
         >>>     print(vec)
         """
+
         articles, articles_all = 0, 0
         positions, positions_all = 0, 0
+
+        tokenization_params = (self.tokenizer_func, self.token_min_len, self.token_max_len, self.lower, self.deacc, self.filter_starts_with)
         texts = \
-            ((text, title, pageid, self.lemmatize, self.tokenizer, \
-              self.lower, self.deacc, self.min_len, self.max_len, self.filter_starts_with, \
-              self.fields)
+            ((text, self.lemmatize, title, pageid, self.fields, tokenization_params)
              for title, text, pageid
              in extract_pages(bz2.BZ2File(self.fname), self.filter_namespaces))
         pool = multiprocessing.Pool(self.processes, init_to_ignore_interrupt)
@@ -336,11 +380,12 @@ class WikiCorpus(TextCorpus):
             # process the corpus in smaller chunks of docs, because multiprocessing.Pool
             # is dumb and would load the entire input into RAM at once...
             for group in utils.chunkize(texts, chunksize=10 * self.processes, maxsize=1):
-                for tokens, title, pageid in pool.imap(process_article, group):
+                for tokens, title, pageid in pool.imap(_process_article, group):
                     articles_all += 1
                     positions_all += len(tokens)
                     # article redirects and short stubs are pruned here
-                    if len(tokens) < ARTICLE_MIN_WORDS or any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
+                    if len(tokens) < self.article_min_tokens or \
+                            any(title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):
                         continue
                     articles += 1
                     positions += len(tokens)
@@ -350,15 +395,16 @@ class WikiCorpus(TextCorpus):
                         yield tokens
         except KeyboardInterrupt:
             logger.warn(
-                "user terminated iteration over Wikipedia corpus after %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+                "user terminated iteration over Wikipedia corpus after %i documents with %i positions "
+                "(total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+            )
         else:
             logger.info(
-                "finished iterating over Wikipedia corpus of %i documents with %i positions"
-                " (total %i articles, %i positions before pruning articles shorter than %i words)",
-                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS)
+                "finished iterating over Wikipedia corpus of %i documents with %i positions "
+                "(total %i articles, %i positions before pruning articles shorter than %i words)",
+                articles, positions, articles_all, positions_all, ARTICLE_MIN_WORDS
+            )
             self.length = articles  # cache corpus length
         finally:
             pool.terminate()
-# endclass WikiCorpus
