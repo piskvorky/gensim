@@ -331,7 +331,7 @@ NUMPY_STR = 'numpy >= 1.18.5, < 2.0'
 
 install_requires = [
     NUMPY_STR,
-    'scipy >= 1.7.0',
+    'scipy >= 1.7.0, <= 1.13.1',
     'smart_open >= 1.8.1',
 ]
 
