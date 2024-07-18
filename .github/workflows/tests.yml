@@ -13,7 +13,7 @@ jobs:
   docs:
     name: build documentation
     timeout-minutes: 10
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
@@ -63,17 +63,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: '3.8', os: ubuntu-20.04}
-          - {python: '3.9', os: ubuntu-20.04}
-          - {python: '3.10', os: ubuntu-20.04}
-          - {python: '3.11', os: ubuntu-20.04}
-          - {python: '3.12', os: ubuntu-20.04}
+          - {python: '3.8', os: ubuntu-latest}
+          - {python: '3.9', os: ubuntu-latest}
+          - {python: '3.10', os: ubuntu-latest}
+          - {python: '3.11', os: ubuntu-latest}
+          - {python: '3.12', os: ubuntu-latest}
 
-          - {python: '3.8', os: windows-2019}
-          - {python: '3.9', os: windows-2019}
-          - {python: '3.10', os: windows-2019}
-          - {python: '3.11', os: windows-2019}
-          - {python: '3.12', os: windows-2019}
+          - {python: '3.8', os: windows-latest}
+          - {python: '3.9', os: windows-latest}
+          - {python: '3.10', os: windows-latest}
+          - {python: '3.11', os: windows-latest}
+          - {python: '3.12', os: windows-latest}
 
     #
     # Don't run this job unless the linters have succeeded.
@@ -97,7 +97,7 @@ jobs:
       # https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html
       #
       - name: Update sbt
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
           echo "deb https://repo.scala-sbt.org/scalasbt/debian /" | sudo tee /etc/apt/sources.list.d/sbt_old.list
@@ -105,7 +105,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y sbt
       - name: Install GDB & enable core dumps
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update -y
           sudo apt-get install -y gdb
@@ -168,7 +168,7 @@ jobs:
           verbose: true
 
       - name: Collect corefile
-        if: ${{ failure() }} && matrix.os == 'ubuntu-20.04'
+        if: ${{ failure() }} && matrix.os == 'ubuntu-latest'
         run: |
           pwd
           COREFILE=$(find . -maxdepth 1 -name "core*" | head -n 1)
