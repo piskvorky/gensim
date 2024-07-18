@@ -9,10 +9,6 @@ requires = [
     # is 1.18.5, remove the line when they increase oldest supported Numpy for this platform
     "numpy==1.18.5; python_version=='3.8' and platform_machine not in 'arm64|aarch64'",
     "oldest-supported-numpy; python_version>'3.8' or platform_machine in 'arm64|aarch64'",
-    #
-    # SciPy 1.14.0 onwards removed the deprecated sparsetools submodule needed by gensim.models.lsimodel
-    #
-    "scipy<=1.13.1",
     "setuptools",
     "wheel",
 ]

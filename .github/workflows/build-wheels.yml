@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-11]
+        os: [ubuntu-20.04, windows-2019, macos-12]
     steps:
 
       - name: Checkout
@@ -61,11 +61,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: '3.8', os: macos-11}
-          - {python: '3.9', os: macos-11}
-          - {python: '3.10', os: macos-11}
-          - {python: '3.11', os: macos-11}
-          - {python: '3.12', os: macos-11}
+          - {python: '3.8', os: macos-12}
+          - {python: '3.9', os: macos-12}
+          - {python: '3.10', os: macos-12}
+          - {python: '3.11', os: macos-12}
+          - {python: '3.12', os: macos-12}
 
           - {python: '3.8', os: ubuntu-20.04}
           - {python: '3.9', os: ubuntu-20.04}
