@@ -12,7 +12,7 @@ jobs:
   docs:
     name: Rebuild documentation
     timeout-minutes: 180
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
