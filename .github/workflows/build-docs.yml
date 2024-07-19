@@ -18,9 +18,9 @@ jobs:
         shell: bash
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           #
           # We use Py3.8 here for historical reasons.
@@ -55,12 +55,12 @@ jobs:
             git format-patch @^
             git bundle create prebuilt-docs-changes.bundle @^...@
             git reset --mixed @^
-            git diff --exit-code --stat @
+            git diff --stat @
           fi
 
       - name: Upload prebuilt docs changes
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: prebuilt-docs-changes
           path: |

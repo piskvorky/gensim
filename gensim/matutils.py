@@ -17,9 +17,13 @@ from gensim import utils
 import numpy as np
 import scipy.sparse
 from scipy.stats import entropy
-from scipy.linalg import get_blas_funcs, triu
+from scipy.linalg import get_blas_funcs
 from scipy.linalg.lapack import get_lapack_funcs
 from scipy.special import psi  # gamma function utils
+try:
+    from numpy import triu
+except ImportError:
+    from scipy.linalg import triu
 
 
 logger = logging.getLogger(__name__)

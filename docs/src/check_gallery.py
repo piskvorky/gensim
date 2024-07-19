@@ -63,7 +63,12 @@ if stale:
     stale = '\n'.join(stale)
     print(f"""The gallery cache appears stale.
 
-Rebuild the documentation using the following commands from the gensim root subdirectory:
+Use Github Actions to rebuild the documentation.  See the following links for more info:
+
+    https://github.com/RaRe-Technologies/gensim/actions/workflows/build-docs.yml
+    https://github.com/RaRe-Technologies/gensim/wiki/Rebuilding-documentation
+
+Alternatively, rebuild the documentation locally using the following commands from the gensim root subdirectory:
 
     pip install -e .[docs]
     make -C docs/src html

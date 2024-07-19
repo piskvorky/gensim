@@ -26,9 +26,9 @@ jobs:
     needs: [linters]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           #
           # We use Py3.8 here for historical reasons.
@@ -67,11 +67,13 @@ jobs:
           - {python: '3.9', os: ubuntu-20.04}
           - {python: '3.10', os: ubuntu-20.04}
           - {python: '3.11', os: ubuntu-20.04}
+          - {python: '3.12', os: ubuntu-20.04}
 
           - {python: '3.8', os: windows-2019}
           - {python: '3.9', os: windows-2019}
           - {python: '3.10', os: windows-2019}
           - {python: '3.11', os: windows-2019}
+          - {python: '3.12', os: windows-2019}
 
     #
     # Don't run this job unless the linters have succeeded.
@@ -81,9 +83,9 @@ jobs:
     needs: [linters]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Update pip
@@ -159,7 +161,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.coverage == true
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           fail_ci_if_error: true
           files: ./coverage.xml

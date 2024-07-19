@@ -360,16 +360,16 @@ class TfidfModel(interfaces.TransformationABC):
         self.pivot = pivot
         self.eps = 1e-12
 
-        if smartirs:
+        if smartirs is not None:
             n_tf, n_df, n_n = self.smartirs
             self.wlocal = partial(smartirs_wlocal, local_scheme=n_tf)
             self.wglobal = partial(smartirs_wglobal, global_scheme=n_df)
 
-        if dictionary:
+        if dictionary is not None:
             # user supplied a Dictionary object, which already contains all the
             # statistics we need to construct the IDF mapping. we can skip the
             # step that goes through the corpus (= an optimization).
-            if corpus:
+            if corpus is not None:
                 logger.warning(
                     "constructor received both corpus and explicit inverse document frequencies; ignoring the corpus"
                 )
@@ -378,9 +378,9 @@ class TfidfModel(interfaces.TransformationABC):
             self.dfs = dictionary.dfs.copy()
             self.term_lens = {termid: len(term) for termid, term in dictionary.items()}
             self.idfs = precompute_idfs(self.wglobal, self.dfs, self.num_docs)
-            if not id2word:
+            if id2word is None:
                 self.id2word = dictionary
-        elif corpus:
+        elif corpus is not None:
             self.initialize(corpus)
         else:
             # NOTE: everything is left uninitialized; presumably the model will
@@ -388,7 +388,7 @@ class TfidfModel(interfaces.TransformationABC):
             pass
 
         # If smartirs is not None, override pivot and normalize
-        if not smartirs:
+        if smartirs is None:
             return
         if self.pivot is not None:
             if n_n in 'ub':
