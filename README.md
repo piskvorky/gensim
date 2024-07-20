@@ -49,13 +49,12 @@ on Wikipedia.
 Installation
 ------------
 
-This software depends on [NumPy and Scipy], two Python packages for
-scientific computing. You must have them installed prior to installing
-gensim.
-
-It is also recommended you install a fast BLAS library before installing
-NumPy. This is optional, but using an optimized BLAS such as MKL, [ATLAS] or
-[OpenBLAS] is known to improve performance by as much as an order of
+This software depends on [NumPy], a Python package for
+scientific computing. Please bear in mind that building NumPy from source
+(e.g. by installing gensim on a platform which lacks NumPy .whl distribution)
+is a non-trivial task involving [linking NumPy to a BLAS library].  
+It is recommended to provide a fast one (such as MKL, [ATLAS] or
+[OpenBLAS]) which can improve performance by as much as an order of
 magnitude. On OSX, NumPy picks up its vecLib BLAS automatically,
 so you don’t need to do anything special.
 
@@ -69,7 +68,9 @@ Or, if you have instead downloaded and unzipped the [source tar.gz]
 package:
 
 ```bash
-    python setup.py install
+    tar -xvzf gensim-X.X.X.tar.gz
+    cd gensim-X.X.X/
+    pip install .
 ```
 
 For alternative modes of installation, see the [documentation].
@@ -172,7 +173,8 @@ BibTeX entry:
   [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
   [Vector Space Model]: https://en.wikipedia.org/wiki/Vector_space_model
   [unsupervised document analysis]: https://en.wikipedia.org/wiki/Latent_semantic_indexing
-  [NumPy and Scipy]: https://scipy.org/install/
+  [NumPy]: https://numpy.org/install/
+  [linking NumPy to a BLAS library]: https://numpy.org/devdocs/building/blas_lapack.html
   [ATLAS]: https://math-atlas.sourceforge.net/
   [OpenBLAS]: https://xianyi.github.io/OpenBLAS/
   [source tar.gz]: https://pypi.org/project/gensim/
