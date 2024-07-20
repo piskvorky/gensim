@@ -618,7 +618,15 @@ class TestTextCorpus(CorpusTestCase):
         pass
 
 
-# Needed for the test_custom_tokenizer is the TestWikiCorpus class.
+# Needed for the test_simple_tokenizer and test_list_tokenizers are the TestWikiCorpus class.
+# Cannot be nested due to serializing.
+def simple_tokenizer(content, token_min_len=2, token_max_len=15, lower=True):
+    return [
+        token for token in (content.lower() if lower else content).split()
+        if token_min_len <= len(token) <= token_max_len]
+
+
+# Needed for the test_custom_tokenizer and test_list_tokenizers are the TestWikiCorpus class.
 # Cannot be nested due to serializing.
 def custom_tokenizer(content, token_min_len=2, token_max_len=15, lower=True):
     return [
@@ -694,11 +702,38 @@ class TestWikiCorpus(TestTextCorpus):
         texts = corpus.get_texts()
         self.assertTrue(u'папа' in next(texts))
 
+    def test_simple_tokenizer(self):
+        """
+        define a simple tokenizer function and use it
+        """
+        wc = self.corpus_class(self.enwiki, processes=1, tokenizer_func=simple_tokenizer,
+                        token_max_len=16, token_min_len=1, lower=False)
+        row = wc.get_texts()
+        list_tokens = next(row)
+        self.assertTrue(u'Anarchism' in list_tokens)
+        self.assertTrue(u'collectivization' in list_tokens)
+        self.assertTrue(u'a' in list_tokens)
+        self.assertTrue(u'i.e.' in list_tokens)
+
     def test_custom_tokenizer(self):
         """
         define a custom tokenizer function and use it
         """
         wc = self.corpus_class(self.enwiki, processes=1, tokenizer_func=custom_tokenizer,
+                        token_max_len=16, token_min_len=1, lower=False)
+        row = wc.get_texts()
+        list_tokens = next(row)
+        self.assertTrue(u'Anarchism' in list_tokens)
+        self.assertTrue(u'collectivization' in list_tokens)
+        self.assertTrue(u'a' in list_tokens)
+        self.assertTrue(u'i.e.' in list_tokens)
+
+    def test_list_tokenizers(self):
+        """
+        define a list containing two tokenizers functions (simple and custom) and use it
+        """
+        wc = self.corpus_class(self.enwiki, processes=1,
+                        tokenizer_func=[simple_tokenizer, custom_tokenizer],
                         token_max_len=16, token_min_len=1, lower=False)
         row = wc.get_texts()
         list_tokens = next(row)
