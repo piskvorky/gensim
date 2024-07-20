@@ -25,12 +25,10 @@ from pickle import PicklingError
 # LXML isn't faster, so let's go with the built-in solution
 from xml.etree.ElementTree import iterparse
 
-
 from gensim import utils
 # cannot import whole gensim.corpora, because that imports wikicorpus...
 from gensim.corpora.dictionary import Dictionary
 from gensim.corpora.textcorpus import TextCorpus
-
 
 logger = logging.getLogger(__name__)
 
@@ -468,9 +466,9 @@ def process_article(
     ----------
     args : (str, str, int)
         Article text, article title, page identificator.
-    tokenizer_func : function
+    tokenizer_func : function OR list of function
         Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
-        Needs to have interface:
+        Each function needs to have interface:
         tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
     token_min_len : int
         Minimal token length.
@@ -487,7 +485,11 @@ def process_article(
     """
     text, title, pageid = args
     text = filter_wiki(text)
-    result = tokenizer_func(text, token_min_len, token_max_len, lower)
+    tokenizers = [] if (tokenizer_func is None) \
+                    else (list(tokenizer_func) if isinstance(tokenizer_func, (list, tuple)) else [tokenizer_func])
+    for tokenizer in tokenizers:
+        text = " ".join(tokenizer(text, token_min_len, token_max_len, lower))
+    result = text.split()
     return result, title, pageid
 
 
@@ -569,6 +571,7 @@ class WikiCorpus(TextCorpus):
         >>> MmCorpus.serialize(corpus_path, wiki)  # another 8h, creates a file in MatrixMarket format and mapping
 
     """
+
     def __init__(
             self, fname, processes=None, lemmatize=None, dictionary=None, metadata=False,
             filter_namespaces=('0',), tokenizer_func=tokenize, article_min_tokens=ARTICLE_MIN_WORDS,
