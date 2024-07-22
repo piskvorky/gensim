@@ -1,5 +1,26 @@
 Changes
 =======
+
+## 4.3.3, 2024-07-19
+
+### :star2: New Features
+
+### :red_circle: Bug fixes
+
+* Correct file argument name in KeyedVectors.save docstring (__[hammad7](https://github.com/hammad7)__, [#3532](https://github.com/piskvorky/gensim/pull/3532))
+* Import deprecated scipy.linalg.triu from numpy.triu instead (__[Luffy610](https://github.com/Luffy610)__, [#3524](https://github.com/piskvorky/gensim/pull/3524))
+
+### :books: Tutorial and doc improvements
+
+* Updated the broken Documentation Link on the README.md (__[wittyicon29](https://github.com/wittyicon29)__, [#3505](https://github.com/piskvorky/gensim/pull/3505))
+
+### :+1: Improvements
+
+* Add support for python3.12 wheels (__[YoungMind1](https://github.com/YoungMind1)__, [#3531](https://github.com/piskvorky/gensim/pull/3531))
+* Removed scipy from build-only dependencies (__[filip-komarzyniec](https://github.com/filip-komarzyniec)__, [#3538](https://github.com/piskvorky/gensim/pull/3538))
+* Use newer unittest.mock everwhere (__[a-detiste](https://github.com/a-detiste)__, [#3529](https://github.com/piskvorky/gensim/pull/3529))
+* Handle optional parameters without implicit bool cast (__[nk-fouque](https://github.com/nk-fouque)__, [#3502](https://github.com/piskvorky/gensim/pull/3502))
+
 ## 4.3.2, 2023-08-23
 
 ### :red_circle: Bug fixes
