@@ -84,6 +84,18 @@ def make_cpp_ext(use_cython=False):
         )
 
 
+def get_long_description():
+    long_description = Path("README.md").read_text(encoding="utf-8")
+    #
+    # We update the image paths in the README to a GitHub URL so that they render correctly on PyPI.
+    # https://stackoverflow.com/questions/41983209/how-do-i-add-images-to-a-pypi-readme-that-works-on-github
+    #
+    docs_path = "docs/src/readme_images/"
+    raw_github_url = "https://raw.githubusercontent.com/piskvorky/gensim/master/" + docs_path
+    long_description = long_description.replace(docs_path, raw_github_url)
+    return long_description
+
+
 #
 # We use use_cython=False here for two reasons:
 #
@@ -237,7 +249,7 @@ setup(
     name='gensim',
     version='4.3.2.dev0',
     description='Python framework for fast Vector Space Modelling',
-    long_description=Path("README.md").read_text(),
+    long_description=get_long_description(),
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
     cmdclass=cmdclass,
