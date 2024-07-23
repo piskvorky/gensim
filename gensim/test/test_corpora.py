@@ -620,7 +620,7 @@ class TestTextCorpus(CorpusTestCase):
 
 # Needed for the test_simple_tokenizer and test_list_tokenizers are the TestWikiCorpus class.
 # Cannot be nested due to serializing.
-def simple_tokenize(content, token_min_len=2, token_max_len=15, lower=True):
+def simple_tokenizer(content, token_min_len=2, token_max_len=15, lower=True):
     return [
         token for token in (content.lower() if lower else content).split()
         if token_min_len <= len(token) <= token_max_len]
@@ -732,7 +732,8 @@ class TestWikiCorpus(TestTextCorpus):
         """
         define a list containing two tokenizers functions (simple and custom) and use it
         """
-        wc = self.corpus_class(self.enwiki, processes=1, tokenizer_func=[simple_tokenizer, custom_tokenizer],
+        wc = self.corpus_class(self.enwiki, processes=1,
+                        tokenizer_func=[simple_tokenizer, custom_tokenizer],
                         token_max_len=16, token_min_len=1, lower=False)
         row = wc.get_texts()
         list_tokens = next(row)
