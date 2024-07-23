@@ -466,10 +466,10 @@ def process_article(
     ----------
     args : (str, str, int)
         Article text, article title, page identificator.
-    tokenizer_func : function OR list of function
-        Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
-        Each function needs to have interface:
-        tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.
+    tokenizer_func : function OR list of function, optional
+            Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
+            Each function needs to have interface:
+            `tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.`
     token_min_len : int
         Minimal token length.
     token_max_len : int
@@ -593,10 +593,10 @@ class WikiCorpus(TextCorpus):
             **IMPORTANT: this needs a really long time**.
         filter_namespaces : tuple of str, optional
             Namespaces to consider.
-        tokenizer_func : function, optional
-            Function that will be used for tokenization. By default, use :func:`~gensim.corpora.wikicorpus.tokenize`.
-            If you inject your own tokenizer, it must conform to this interface:
-            `tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str`
+        tokenizer_func : function OR list of function, optional
+            Function for tokenization (defaults is :func:`~gensim.corpora.wikicorpus.tokenize`).
+            Each function needs to have interface:
+            `tokenizer_func(text: str, token_min_len: int, token_max_len: int, lower: bool) -> list of str.`
         article_min_tokens : int, optional
             Minimum tokens in article. Article will be ignored if number of tokens is less.
         token_min_len : int, optional
