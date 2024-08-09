@@ -21,7 +21,13 @@ def main():
     for page in paginator.paginate(Bucket=bucket, Delimiter='/', Prefix=prefix):
         for content in page.get('Contents', []):
             key = content['Key']
-            print(f"<li><a href='{key}'>{key}</a></li>")
+            #
+            # NB. use double quotes in href because that's that
+            # wheelhouse_uploader expects.
+            #
+            # https://github.com/ogrisel/wheelhouse-uploader/blob/eb32a7bb410769bb4212a9aa7fb3bfa3cef1aaec/wheelhouse_uploader/fetch.py#L15
+            #
+            print(f"""<li><a href="{key}">{key}</a></li>""")
     print("</ul></body></html>")
 
 
