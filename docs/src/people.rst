@@ -48,6 +48,11 @@ Silver Sponsors
 Bronze Sponsors
 ---------------
 
+.. figure:: _static/images/route4me-logo.png
+   :target: https://route4me.com
+   :width: 50%
+   :alt: Route Optimizer and Route Planner Software
+
 .. figure:: _static/images/eaccidents-logo.png
    :target: https://eaccidents.com/
    :width: 50%
