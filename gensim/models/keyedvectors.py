@@ -1977,7 +1977,7 @@ def _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unic
 
 def _word2vec_line_to_vector(line, datatype, unicode_errors, encoding):
     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-    word, weights = parts[0], [datatype(x) for x in parts[1:]]
+    word, weights = parts[0], [datatype(x).item() for x in parts[1:]]
     return word, weights
 
 
