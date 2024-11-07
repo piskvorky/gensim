@@ -370,7 +370,6 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
@@ -382,7 +381,7 @@ setup(
     ],
 
     test_suite="gensim.test",
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={
