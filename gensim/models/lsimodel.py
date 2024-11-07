@@ -959,7 +959,7 @@ def stochastic_svd(
         m, n = corpus.shape
         assert num_terms == m, f"mismatch in number of features: {m} in sparse matrix vs. {num_terms} parameter"
         o = random_state.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
-        y = corpus.dot(o) # y = corpus * o
+        y = corpus.dot(o)  # y = corpus * o
 
         del o
 
