@@ -327,7 +327,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
 #
 # see https://github.com/piskvorky/gensim/pull/3535
 #
-NUMPY_STR = 'numpy >= 1.25.0, < 2.0'
+NUMPY_STR = 'numpy >= 1.26.0, < 2.0'
 
 install_requires = [
     NUMPY_STR,
