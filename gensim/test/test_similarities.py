@@ -625,7 +625,7 @@ class TestWord2VecAnnoyIndexer(unittest.TestCase):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         index.save(fname)
         self.assertTrue(os.path.exists(fname))
-        self.assertTrue(os.path.exists(fname + '.d'))
+        self.assertTrue(os.path.exists(fname + ".dict"))
 
     def assertLoadedIndexEqual(self, index, model):
         from gensim.similarities.annoy import AnnoyIndexer
@@ -676,7 +676,7 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         fname = get_tmpfile('gensim_similarities.tst.pkl')
         self.index.save(fname)
         self.assertTrue(os.path.exists(fname))
-        self.assertTrue(os.path.exists(fname + '.d'))
+        self.assertTrue(os.path.exists(fname + ".dict"))
 
     def test_load_not_exist(self):
         from gensim.similarities.annoy import AnnoyIndexer
