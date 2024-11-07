@@ -324,7 +324,7 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-NUMPY_STR = 'numpy == 2.0.0rc2'
+NUMPY_STR = 'numpy == 2.0.0'
 
 install_requires = [
     NUMPY_STR,
