@@ -39,7 +39,7 @@ cdef void fast_document_dbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *context_vectors, REAL_t *syn1, const int size,
     const np.uint32_t context_index, const REAL_t alpha, REAL_t *work, int learn_context, int learn_hidden,
-    REAL_t *contexts_lockf, const np.uint32_t contexts_lockf_len) nogil:
+    REAL_t *contexts_lockf, const np.uint32_t contexts_lockf_len) noexcept nogil:
 
     cdef long long a, b
     cdef long long row1 = context_index * size, row2
@@ -66,7 +66,7 @@ cdef unsigned long long fast_document_dbow_neg(
     REAL_t *context_vectors, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t context_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, int learn_context, int learn_hidden, REAL_t *contexts_lockf,
-    const np.uint32_t contexts_lockf_len) nogil:
+    const np.uint32_t contexts_lockf_len) noexcept nogil:
 
     cdef long long a
     cdef long long row1 = context_index * size, row2
@@ -106,7 +106,7 @@ cdef unsigned long long fast_document_dbow_neg(
 cdef void fast_document_dm_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int word_code_len,
     REAL_t *neu1, REAL_t *syn1, const REAL_t alpha, REAL_t *work,
-    const int size, int learn_hidden) nogil:
+    const int size, int learn_hidden) noexcept nogil:
 
     cdef long long b
     cdef long long row2
@@ -129,7 +129,7 @@ cdef void fast_document_dm_hs(
 cdef unsigned long long fast_document_dm_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
-    const int size, int learn_hidden) nogil:
+    const int size, int learn_hidden) noexcept nogil:
 
     cdef long long row2
     cdef unsigned long long modulo = 281474976710655ULL
@@ -165,7 +165,7 @@ cdef unsigned long long fast_document_dm_neg(
 cdef void fast_document_dmc_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int word_code_len,
     REAL_t *neu1, REAL_t *syn1, const REAL_t alpha, REAL_t *work,
-    const int layer1_size, const int vector_size, int learn_hidden) nogil:
+    const int layer1_size, const int vector_size, int learn_hidden) noexcept nogil:
 
     cdef long long a, b
     cdef long long row2
@@ -189,7 +189,7 @@ cdef void fast_document_dmc_hs(
 cdef unsigned long long fast_document_dmc_neg(
     const int negative, np.uint32_t *cum_table, unsigned long long cum_table_len, unsigned long long next_random,
     REAL_t *neu1, REAL_t *syn1neg, const int predict_word_index, const REAL_t alpha, REAL_t *work,
-    const int layer1_size, const int vector_size, int learn_hidden) nogil:
+    const int layer1_size, const int vector_size, int learn_hidden) noexcept nogil:
 
     cdef long long a
     cdef long long row2

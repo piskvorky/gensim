@@ -323,11 +323,11 @@ class TestWmdSimilarity(_TestSimilarityABC):
             # Sparse array.
             for i, sim in sims:
                 # Note that similarities are bigger than zero, as they are the 1/ 1 + distances.
-                self.assertTrue(numpy.alltrue(sim > 0.0))
+                self.assertTrue(numpy.all(sim > 0.0))
         else:
             self.assertTrue(sims[0] == 1.0)  # Similarity of a document with itself is 0.0.
-            self.assertTrue(numpy.alltrue(sims[1:] > 0.0))
-            self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
+            self.assertTrue(numpy.all(sims[1:] > 0.0))
+            self.assertTrue(numpy.all(sims[1:] < 1.0))
 
     @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_non_increasing(self):
@@ -354,15 +354,15 @@ class TestWmdSimilarity(_TestSimilarityABC):
         sims = index[query]
 
         for i in range(3):
-            self.assertTrue(numpy.alltrue(sims[i, i] == 1.0))  # Similarity of a document with itself is 0.0.
+            self.assertTrue(numpy.all(sims[i, i] == 1.0))  # Similarity of a document with itself is 0.0.
 
         # test the same thing but with num_best
         index.num_best = 3
         sims = index[query]
         for sims_temp in sims:
             for i, sim in sims_temp:
-                self.assertTrue(numpy.alltrue(sim > 0.0))
-                self.assertTrue(numpy.alltrue(sim <= 1.0))
+                self.assertTrue(numpy.all(sim > 0.0))
+                self.assertTrue(numpy.all(sim <= 1.0))
 
     @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_iter(self):
@@ -370,8 +370,8 @@ class TestWmdSimilarity(_TestSimilarityABC):
 
         index = self.cls(TEXTS, self.w2v_model)
         for sims in index:
-            self.assertTrue(numpy.alltrue(sims >= 0.0))
-            self.assertTrue(numpy.alltrue(sims <= 1.0))
+            self.assertTrue(numpy.all(sims >= 0.0))
+            self.assertTrue(numpy.all(sims <= 1.0))
 
     @unittest.skipIf(POT_EXT is False, "POT not installed")
     def test_str(self):
@@ -399,12 +399,12 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
         if num_best is not None:
             # Sparse array.
             for i, sim in sims:
-                self.assertTrue(numpy.alltrue(sim <= 1.0))
-                self.assertTrue(numpy.alltrue(sim >= 0.0))
+                self.assertTrue(numpy.all(sim <= 1.0))
+                self.assertTrue(numpy.all(sim >= 0.0))
         else:
             self.assertAlmostEqual(1.0, sims[0])  # Similarity of a document with itself is 1.0.
-            self.assertTrue(numpy.alltrue(sims[1:] >= 0.0))
-            self.assertTrue(numpy.alltrue(sims[1:] < 1.0))
+            self.assertTrue(numpy.all(sims[1:] >= 0.0))
+            self.assertTrue(numpy.all(sims[1:] < 1.0))
 
         # Corpora
         for query in (
@@ -416,15 +416,15 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
                 # Sparse array.
                 for result in sims:
                     for i, sim in result:
-                        self.assertTrue(numpy.alltrue(sim <= 1.0))
-                        self.assertTrue(numpy.alltrue(sim >= 0.0))
+                        self.assertTrue(numpy.all(sim <= 1.0))
+                        self.assertTrue(numpy.all(sim >= 0.0))
             else:
                 for i, result in enumerate(sims):
                     self.assertAlmostEqual(1.0, result[i])  # Similarity of a document with itself is 1.0.
-                    self.assertTrue(numpy.alltrue(result[:i] >= 0.0))
-                    self.assertTrue(numpy.alltrue(result[:i] < 1.0))
-                    self.assertTrue(numpy.alltrue(result[i + 1:] >= 0.0))
-                    self.assertTrue(numpy.alltrue(result[i + 1:] < 1.0))
+                    self.assertTrue(numpy.all(result[:i] >= 0.0))
+                    self.assertTrue(numpy.all(result[:i] < 1.0))
+                    self.assertTrue(numpy.all(result[i + 1:] >= 0.0))
+                    self.assertTrue(numpy.all(result[i + 1:] < 1.0))
 
     def test_non_increasing(self):
         """ Check that similarities are non-increasing when `num_best` is not `None`."""
@@ -445,7 +445,7 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
         sims = index[query]
 
         for i in range(3):
-            self.assertTrue(numpy.alltrue(sims[i, i] == 1.0))  # Similarity of a document with itself is 1.0.
+            self.assertTrue(numpy.all(sims[i, i] == 1.0))  # Similarity of a document with itself is 1.0.
 
         # test the same thing but with num_best
         index.num_best = 5
@@ -459,8 +459,8 @@ class TestSoftCosineSimilarity(_TestSimilarityABC):
     def test_iter(self):
         index = self.cls(CORPUS, self.similarity_matrix)
         for sims in index:
-            self.assertTrue(numpy.alltrue(sims >= 0.0))
-            self.assertTrue(numpy.alltrue(sims <= 1.0))
+            self.assertTrue(numpy.all(sims >= 0.0))
+            self.assertTrue(numpy.all(sims <= 1.0))
 
 
 class TestSparseMatrixSimilarity(_TestSimilarityABC):

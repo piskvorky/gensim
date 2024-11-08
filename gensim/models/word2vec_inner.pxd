@@ -20,12 +20,12 @@ cdef extern from "voidptr.h":
 ctypedef np.float32_t REAL_t
 
 # BLAS routine signatures
-ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
-ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) nogil
-ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) nogil
+ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil
+ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil
+ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
+ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
+ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) noexcept nogil
+ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) noexcept nogil
 
 cdef scopy_ptr scopy
 cdef saxpy_ptr saxpy
@@ -42,8 +42,8 @@ cdef REAL_t[EXP_TABLE_SIZE] EXP_TABLE
 DEF MAX_SENTENCE_LEN = 10000
 
 # function implementations swapped based on BLAS detected in word2vec_inner.pyx init()
-ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
+ctypedef REAL_t (*our_dot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
+ctypedef void (*our_saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil
 
 cdef our_dot_ptr our_dot
 cdef our_saxpy_ptr our_saxpy
@@ -78,26 +78,26 @@ cdef struct Word2VecConfig:
 
 
 # for when fblas.sdot returns a double
-cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
+cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
 
 # for when fblas.sdot returns a float
-cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
+cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
 
 # for when no blas available
-cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil
-cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil
+cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
+cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil
 
 # to support random draws from negative-sampling cum_table
-cdef unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil
+cdef unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) noexcept nogil
 
-cdef unsigned long long random_int32(unsigned long long *next_random) nogil
+cdef unsigned long long random_int32(unsigned long long *next_random) noexcept nogil
 
 
 cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil
 
 
 cdef unsigned long long w2v_fast_sentence_sg_neg(
@@ -105,7 +105,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil
 
 
 cdef void w2v_fast_sentence_cbow_hs(
@@ -113,7 +113,7 @@ cdef void w2v_fast_sentence_cbow_hs(
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil
 
 
 cdef unsigned long long w2v_fast_sentence_cbow_neg(
@@ -121,7 +121,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil
 
 
 cdef init_w2v_config(Word2VecConfig *c, model, alpha, compute_loss, _work, _neu1=*)

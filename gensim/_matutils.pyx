@@ -42,7 +42,7 @@ def mean_absolute_difference(a, b):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:
+cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) noexcept nogil:
     """Mean absolute difference between two arrays.
 
     Parameters
@@ -103,7 +103,7 @@ def logsumexp(x):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:
+cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) noexcept nogil:
     """Log of sum of exponentials.
 
     Parameters
@@ -223,7 +223,7 @@ def dirichlet_expectation_1d(alpha):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:
+cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) noexcept nogil:
     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
 
     Parameters
@@ -251,7 +251,7 @@ cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:
+cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) noexcept nogil:
     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
 
     Parameters
@@ -298,7 +298,7 @@ def digamma(DTYPE_t x):
 
 
 @cython.cdivision(True)
-cdef inline DTYPE_t _digamma(DTYPE_t x,) nogil:
+cdef inline DTYPE_t _digamma(DTYPE_t x,) noexcept nogil:
     """Digamma function for positive floats.
 
     Parameters

@@ -62,7 +62,7 @@ cdef class CythonVocab:
 
             self.vocab[token] = word
 
-    cdef cvocab_t* get_vocab_ptr(self) nogil except *:
+    cdef cvocab_t* get_vocab_ptr(self) except * nogil:
         return &self.vocab
 
 
@@ -92,17 +92,17 @@ cdef class CythonLineSentence:
         if self._thisptr != NULL:
             del self._thisptr
 
-    cpdef bool_t is_eof(self) nogil:
+    cpdef bool_t is_eof(self) noexcept nogil:
         return self._thisptr.IsEof()
 
-    cpdef vector[string] read_sentence(self) nogil except *:
+    cpdef vector[string] read_sentence(self) except * nogil:
         return self._thisptr.ReadSentence()
 
-    cpdef vector[vector[string]] _read_chunked_sentence(self) nogil except *:
+    cpdef vector[vector[string]] _read_chunked_sentence(self) except * nogil:
         cdef vector[string] sent = self.read_sentence()
         return self._chunk_sentence(sent)
 
-    cpdef vector[vector[string]] _chunk_sentence(self, vector[string] sent) nogil:
+    cpdef vector[vector[string]] _chunk_sentence(self, vector[string] sent) noexcept nogil:
         cdef vector[vector[string]] res
         cdef vector[string] chunk
         cdef size_t cur_idx = 0
@@ -120,7 +120,7 @@ cdef class CythonLineSentence:
 
         return res
 
-    cpdef void reset(self) nogil:
+    cpdef void reset(self) noexcept nogil:
         self._thisptr.Reset()
 
     def __iter__(self):
@@ -135,7 +135,7 @@ cdef class CythonLineSentence:
         # This function helps pickle to correctly serialize objects of this class.
         return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)
 
-    cpdef vector[vector[string]] next_batch(self) nogil except *:
+    cpdef vector[vector[string]] next_batch(self) except * nogil:
         cdef:
             vector[vector[string]] job_batch
             vector[vector[string]] chunked_sentence
@@ -235,13 +235,13 @@ cdef void prepare_c_structures_for_batch(
             reduced_windows[i] = 0
 
 
-cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) nogil:
+cdef REAL_t get_alpha(REAL_t alpha, REAL_t end_alpha, int cur_epoch, int num_epochs) noexcept nogil:
     return alpha - ((alpha - end_alpha) * (<REAL_t> cur_epoch) / num_epochs)
 
 
 cdef REAL_t get_next_alpha(
         REAL_t start_alpha, REAL_t end_alpha, long long total_examples, long long total_words,
-        long long expected_examples, long long expected_words, int cur_epoch, int num_epochs) nogil:
+        long long expected_examples, long long expected_words, int cur_epoch, int num_epochs) noexcept nogil:
     cdef REAL_t epoch_progress
 
     if expected_examples != -1:

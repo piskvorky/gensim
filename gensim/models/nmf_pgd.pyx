@@ -10,10 +10,10 @@
 from libc.math cimport sqrt
 from cython.parallel import prange
 
-cdef double fmin(double x, double y) nogil:
+cdef double fmin(double x, double y) noexcept nogil:
     return x if x < y else y
 
-cdef double fmax(double x, double y) nogil:
+cdef double fmax(double x, double y) noexcept nogil:
     return x if x > y else y
 
 def solve_h(double[:, ::1] h, double[:, :] Wtv, double[:, ::1] WtW, int[::1] permutation, double kappa):
