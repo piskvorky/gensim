@@ -189,11 +189,12 @@ os.unlink(tmp.name)
 #     model = models.TfidfModel(corpus, normalize=True)
 #
 # * `Okapi Best Matching, Okapi BM25 <https://en.wikipedia.org/wiki/Okapi_BM25>`_
-#   expects a bag-of-words (integer values) training corpus during initialization.
-#   During transformation, it will take a vector and return another vector of the
-#   same dimensionality, except that features which were rare in the training corpus
-#   will have their value increased. It therefore converts integer-valued
-#   vectors into real-valued ones, while leaving the number of dimensions intact.
+#   operates on a bag-of-words (integer values) representation of the corpus during initialization.
+#   BM25 does not transform vectors but rather computes a relevance score for each document 
+#   relative to a specific query. This score is derived using a formula that incorporates term 
+#   frequency, inverse document frequency, and length normalization of the documents.
+#   The function calculates a single score per document, indicating its relevance to the query,
+#   without altering the dimensionality or converting the integer-valued vectors into real-valued ones.
 #
 #   Okapi BM25 is the standard ranking function used by search engines to estimate
 #   the relevance of documents to a given search query.
