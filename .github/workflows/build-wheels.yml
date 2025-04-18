@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-latest]
+        os: [ubuntu-22.04, windows-2019, macos-latest]
     steps:
 
       - name: Checkout
@@ -68,12 +68,12 @@ jobs:
           - {python: '3.12', os: macos-latest}
           - {python: '3.13', os: macos-latest}
 
-          - {python: '3.8', os: ubuntu-20.04}
-          - {python: '3.9', os: ubuntu-20.04}
-          - {python: '3.10', os: ubuntu-20.04}
-          - {python: '3.11', os: ubuntu-20.04}
-          - {python: '3.12', os: ubuntu-20.04}
-          - {python: '3.13', os: ubuntu-20.04}
+          - {python: '3.8', os: ubuntu-22.04}
+          - {python: '3.9', os: ubuntu-22.04}
+          - {python: '3.10', os: ubuntu-22.04}
+          - {python: '3.11', os: ubuntu-22.04}
+          - {python: '3.12', os: ubuntu-22.04}
+          - {python: '3.13', os: ubuntu-22.04}
 
           - {python: '3.8', os: windows-2019}
           - {python: '3.9', os: windows-2019}
