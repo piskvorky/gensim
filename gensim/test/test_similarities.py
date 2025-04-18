@@ -37,6 +37,7 @@ from gensim.similarities.fastss import editdist
 
 try:
     from ot import emd2  # noqa:F401
+
     POT_EXT = True
 except (ImportError, ValueError):
     POT_EXT = False
@@ -354,7 +355,7 @@ class TestWmdSimilarity(_TestSimilarityABC):
         sims = index[query]
 
         for i in range(3):
-            self.assertTrue(numpy.all(sims[i, i] == 1.0)) # Similarity of a document with itself is 0.0.
+            self.assertTrue(numpy.all(sims[i, i] == 1.0))  # Similarity of a document with itself is 0.0.
 
         # test the same thing but with num_best
         index.num_best = 3
@@ -1499,7 +1500,7 @@ class TestSparseTermSimilarityMatrix(unittest.TestCase):
         expected_result *= math.sqrt(self.identity_matrix.inner_product(self.vec2, self.vec2))
         expected_result = numpy.full((3, 2), expected_result)
         result = self.uniform_matrix.inner_product([self.vec1] * 3, [self.vec2] * 2,
-            normalized=('maintain', 'maintain'))
+                                                   normalized=('maintain', 'maintain'))
         self.assertTrue(isinstance(result, scipy.sparse.csr_matrix))
         self.assertTrue(numpy.allclose(expected_result, result.todense()))
 
@@ -1634,7 +1635,7 @@ class TestWordEmbeddingSimilarityIndex(unittest.TestCase):
         first_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
         index = WordEmbeddingSimilarityIndex(self.vectors, exponent=2.0)
         second_similarities = numpy.array([similarity for term, similarity in index.most_similar(u"holiday", topn=10)])
-        self.assertTrue(numpy.allclose(first_similarities**2.0, second_similarities))
+        self.assertTrue(numpy.allclose(first_similarities ** 2.0, second_similarities))
 
 
 class TestFastSS(unittest.TestCase):
