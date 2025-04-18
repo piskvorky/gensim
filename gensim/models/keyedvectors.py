@@ -495,9 +495,9 @@ class KeyedVectors(utils.SaveLoad):
         if len(keys) == 0:
             raise ValueError("cannot compute mean with no input")
         if isinstance(weights, list):
-            weights = np.array(weights)
+            weights = np.array(weights, dtype=self.vectors.dtype)
         if weights is None:
-            weights = np.ones(len(keys))
+            weights = np.ones(len(keys), dtype=self.vectors.dtype)
         if len(keys) != weights.shape[0]:  # weights is a 1-D numpy array
             raise ValueError(
                 "keys and weights array must have same number of elements"
