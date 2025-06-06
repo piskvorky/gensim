@@ -746,7 +746,9 @@ class KeyedVectors(utils.SaveLoad):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if not len(self):
             return  # noop if empty
-        count_sorted_indexes = np.argsort(self.expandos['count'])[::-1]
+        counts = np.asarray(self.expandos['count'], dtype=np.int64)
+        indices = np.arange(len(counts))
+        count_sorted_indexes = np.lexsort((-indices, -counts))
         self.index_to_key = [self.index_to_key[idx] for idx in count_sorted_indexes]
         self.allocate_vecattrs()
         for k in self.expandos:
