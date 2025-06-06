@@ -1669,7 +1669,7 @@ class KeyedVectors(utils.SaveLoad):
                 if binary:
                     fout.write(f"{prefix}{key} ".encode('utf8') + key_vector.astype(REAL).tobytes())
                 else:
-                    fout.write(f"{prefix}{key} {' '.join(repr(val) for val in key_vector.tolist())}\n".encode('utf8'))
+                    fout.write(f"{prefix}{key} {' '.join(str(val) for val in key_vector)}\n".encode('utf8'))
 
     @classmethod
     def load_word2vec_format(
