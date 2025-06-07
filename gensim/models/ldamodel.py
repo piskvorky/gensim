@@ -111,33 +111,33 @@ from gensim.models.callbacks import Callback
 logger = logging.getLogger(__name__)
 
 
-def update_dir_prior(prior, N, logphat, rho):
+def update_dir_prior(prior: np.ndarray, N: float, logphat: np.ndarray, rho: float) -> np.ndarray:
     """Update a given prior using Newton's method, described in
     `J. Huang: "Maximum Likelihood Estimation of Dirichlet Distribution Parameters"
     <http://jonathan-huang.org/research/dirichlet/dirichlet.pdf>`_.
 
     Parameters
     ----------
-    prior : list of float
+    prior : ndarray
         The prior for each possible outcome at the previous iteration (to be updated).
-    N : int
+    N : float
         Number of observations.
-    logphat : list of float
+    logphat : ndarray
         Log probabilities for the current estimation, also called "observed sufficient statistics".
     rho : float
         Learning rate.
 
     Returns
     -------
-    list of float
+    ndarray
         The updated prior.
 
     """
-    dtype = logphat.dtype
+    dtype = prior.dtype
     gradf = N * (psi(np.sum(prior)) - psi(prior) + logphat)
 
-    c = N * polygamma(1, np.sum(prior)).astype(dtype)
-    q = -N * polygamma(1, prior).astype(dtype)
+    c = N * np.array(polygamma(1, np.sum(prior, dtype=dtype)), dtype=dtype)
+    q = -N * np.array(polygamma(1, prior), dtype=dtype)
 
     b = np.sum(gradf / q) / (1 / c + np.sum(1 / q))
 
