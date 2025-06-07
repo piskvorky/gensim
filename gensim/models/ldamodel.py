@@ -1082,7 +1082,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # only update if this isn't an additional pass
             self.num_updates += other.numdocs
 
-    def bound(self, corpus, gamma=None, subsample_ratio=1.0):
+    def bound(self, corpus, gamma=None, subsample_ratio=1.0) -> float:
         """Estimate the variational bound of documents from the corpus as E_q[log p(corpus)] - E_q[log q(corpus)].
 
         Parameters
@@ -1099,11 +1099,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        numpy.ndarray
+        float
             The variational bound score calculated for each document.
 
         """
-        score = 0.0
+        score = np.float64(0.0)
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
 
