@@ -99,7 +99,7 @@ Changes
 * Switched to Cython language level 3 (__[pabs3](https://github.com/pabs3)__, [#3344](https://github.com/RaRe-Technologies/gensim/pull/3344))
 * Declare variables prior to for loop in fastss.pyx for ANSI C compatibility (__[hstk30](https://github.com/hstk30)__, [#3378](https://github.com/RaRe-Technologies/gensim/pull/3378))
 * Implement numpy hack in setup.py to enable install under Poetry (__[jaymegordo](https://github.com/jaymegordo)__, [#3363](https://github.com/RaRe-Technologies/gensim/pull/3363))
-* Replaceed np.multiply with np.square and copyedit in translation_matrix.py (__[dymil](https://github.com/dymil)__, [#3374](https://github.com/RaRe-Technologies/gensim/pull/3374))
+* Replaced np.multiply with np.square and copyedit in translation_matrix.py (__[dymil](https://github.com/dymil)__, [#3374](https://github.com/RaRe-Technologies/gensim/pull/3374))
 
 ### 🔮 Testing, CI, housekeeping
 
