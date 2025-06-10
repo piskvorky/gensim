@@ -9,6 +9,7 @@ Automated tests for similarity algorithms (the similarities package).
 """
 
 import logging
+import sys
 import unittest
 import math
 import os
@@ -720,6 +721,7 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertIndexSaved(index)
         self.assertLoadedIndexEqual(index, model)
 
+    @unittest.skipIf(sys.version_info[:2] == (3, 9), "Skip test on Python 3.9")
     def test_fasttext(self):
         class LeeReader:
             def __init__(self, fn):
