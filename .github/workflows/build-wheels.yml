@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-latest]
+        os: [ubuntu-24.04, windows-2025, macos-latest]
     steps:
 
       - name: Checkout
@@ -41,10 +41,10 @@ jobs:
           CIBW_ARCHS_LINUX: x86_64 aarch64
           CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_ARCHS_WINDOWS: AMD64 x86
-          CIBW_SKIP: pp* cp36-* cp37-* *-win32 *_i686 *-musllinux_*
+          CIBW_SKIP: pp* cp36-* cp37-* cp313-* *-win32 *_i686 *-musllinux_*
           CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
           CIBW_TEST_REQUIRES: pytest testfixtures mock
-          CIBW_TEST_SKIP: cp38* cp39* cp310* cp311* *_aarch64 *_arm64 *_universal2
+          CIBW_TEST_SKIP: cp38* cp39* cp310* cp311* cp313* *_aarch64 *_arm64 *_universal2
           CIBW_BUILD_VERBOSITY: 3
 
       - name: Upload wheels as artifacts
@@ -68,19 +68,19 @@ jobs:
           - {python: '3.12', os: macos-latest}
           - {python: '3.13', os: macos-latest}
 
-          - {python: '3.8', os: ubuntu-20.04}
-          - {python: '3.9', os: ubuntu-20.04}
-          - {python: '3.10', os: ubuntu-20.04}
-          - {python: '3.11', os: ubuntu-20.04}
-          - {python: '3.12', os: ubuntu-20.04}
-          - {python: '3.13', os: ubuntu-20.04}
+          - {python: '3.8', os: ubuntu-24.04}
+          - {python: '3.9', os: ubuntu-24.04}
+          - {python: '3.10', os: ubuntu-24.04}
+          - {python: '3.11', os: ubuntu-24.04}
+          - {python: '3.12', os: ubuntu-24.04}
+          - {python: '3.13', os: ubuntu-24.04}
 
-          - {python: '3.8', os: windows-2019}
-          - {python: '3.9', os: windows-2019}
-          - {python: '3.10', os: windows-2019}
-          - {python: '3.11', os: windows-2019}
-          - {python: '3.12', os: windows-2019}
-          - {python: '3.13', os: windows-2019}
+          - {python: '3.8', os: windows-2025}
+          - {python: '3.9', os: windows-2025}
+          - {python: '3.10', os: windows-2025}
+          - {python: '3.11', os: windows-2025}
+          - {python: '3.12', os: windows-2025}
+          - {python: '3.13', os: windows-2025}
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -108,7 +108,7 @@ jobs:
       # https://github.com/RaRe-Technologies/gensim/issues/3489
       #
       - name: Install newest numpy (windows py3.10 only)
-        if: ${{ (matrix.os == 'windows-2019') && (matrix.python == '3.10') }}
+        if: ${{ (matrix.os == 'windows-2025') && (matrix.python == '3.10') }}
         run: |
           python -m pip uninstall --yes oldest-supported-numpy
           python -m pip install --upgrade numpy
