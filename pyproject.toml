@@ -7,9 +7,13 @@ requires = [
     "Cython>=0.29.32,<3.0.0",
     # oldest supported Numpy for this platform is 1.17 but the oldest supported by Gensim
     # is 1.18.5, remove the line when they increase oldest supported Numpy for this platform
-    "numpy==1.18.5; python_version=='3.8' and platform_machine not in 'arm64|aarch64'",
-    "numpy; sys_platform == 'win32' and platform_machine in 'arm64|aarch64'",
-    "oldest-supported-numpy; python_version>'3.8' or platform_machine in 'arm64|aarch64'",
+    # Use latest NumPy for Windows ARM64 builds
+    "numpy>=1.19.0; (python_version > '3.10' and sys_platform == 'win32' and platform_machine == 'ARM64')",
+    # Gensim specific numpy constraint on CPython 3.8 non-ARM platforms
+    "numpy==1.18.5; python_version == '3.8' and platform_machine != 'arm64' and platform_machine != 'aarch64'",
+    # Use oldest-supported-numpy for other cases
+    "oldest-supported-numpy; (python_version > '3.8' or platform_machine == 'arm64' or platform_machine == 'aarch64') and sys_platform != 'win32'",
+    "oldest-supported-numpy; python_version > '3.8' and sys_platform == 'win32' and platform_machine=='AMD64'",
     "setuptools",
     "wheel",
 ]
