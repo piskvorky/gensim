@@ -82,9 +82,8 @@ jobs:
           - {python: '3.12', os: windows-2025}
           - {python: '3.13', os: windows-2025}
 
-          - {python: '3.11', os: windows-11-arm}
-          - {python: '3.12', os: windows-11-arm}
-          - {python: '3.13', os: windows-11-arm}
+          # - {python: '3.11', os: windows-11-arm} installwheel.py doesn't contains a logic for Win-ARM64
+          # - {python: '3.12', os: windows-11-arm}
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -102,6 +101,7 @@ jobs:
       # We want to make sure our wheels run against older Numpy versions
       #
       - name: Install oldest-supported-numpy
+        if: matrix.os != 'windows-11-arm'
         run: python -m pip install oldest-supported-numpy
 
       #
@@ -111,8 +111,8 @@ jobs:
       #
       # https://github.com/RaRe-Technologies/gensim/issues/3489
       #
-      - name: Install newest numpy (windows py3.10 only)
-        if: ${{ (matrix.os == 'windows-2025') && (matrix.python == '3.10') }}
+      - name: Install newest numpy (windows-x64 py3.10 only and windows-arm64)
+        if: ${{ (matrix.os == 'windows-2025') && (matrix.python == '3.10') || matrix.os == 'windows-11-arm'}}
         run: |
           python -m pip uninstall --yes oldest-supported-numpy
           python -m pip install --upgrade numpy
