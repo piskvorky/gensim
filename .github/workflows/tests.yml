@@ -36,14 +36,14 @@ jobs:
           python-version: "3.9"
 
       - name: Update pip
-        run: python -m pip install -U pip
+        run: python -m pip install -U pip setuptools
 
       - name: Install apt packages for LaTeX rendering
         run: |
           sudo apt-get -yq update
           sudo apt-get -yq remove texlive-binaries --purge
           sudo apt-get -yq --no-install-suggests --no-install-recommends --force-yes install dvipng texlive-latex-base texlive-latex-extra texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended latexmk
-          sudo apt-get -yq install build-essential python3.9-dev
+          sudo apt-get -yq install build-essential
       - name: Install gensim and its dependencies
         run: pip install -e .[docs]
 
