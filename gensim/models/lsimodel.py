@@ -64,8 +64,12 @@ import sys
 import time
 
 import numpy as np
+try:
+    from scipy.sparse import csc_matvecs
+except ImportError:
+    # the function is no longer public in scipy 1.14+
+    from scipy.sparse._sparsetools import csc_matvecs
 import scipy.linalg
-import scipy.sparse
 
 from gensim import interfaces, matutils, utils
 from gensim.models import basemodel
@@ -959,7 +963,10 @@ def stochastic_svd(
         m, n = corpus.shape
         assert num_terms == m, f"mismatch in number of features: {m} in sparse matrix vs. {num_terms} parameter"
         o = random_state.normal(0.0, 1.0, (n, samples)).astype(y.dtype)  # draw a random gaussian matrix
-        y = corpus.dot(o)  # y = corpus * o
+        csc_matvecs(
+            m, n, samples, corpus.indptr, corpus.indices,
+            corpus.data, o.ravel(), y.ravel(),
+        )  # y = corpus * o
 
         del o
 
@@ -991,7 +998,10 @@ def stochastic_svd(
             num_docs += n
             logger.debug("multiplying chunk * gauss")
             o = random_state.normal(0.0, 1.0, (n, samples), ).astype(dtype)  # draw a random gaussian matrix
-            y = y + chunk * o
+            csc_matvecs(
+                m, n, samples, chunk.indptr, chunk.indices,  # y = y + chunk * o
+                chunk.data, o.ravel(), y.ravel(),
+            )
             del chunk, o
         y = [y]
         q, _ = matutils.qr_destroy(y)  # orthonormalize the range
