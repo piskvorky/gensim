@@ -61,21 +61,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: '3.8', os: macos-latest}
           - {python: '3.9', os: macos-latest}
           - {python: '3.10', os: macos-latest}
           - {python: '3.11', os: macos-latest}
           - {python: '3.12', os: macos-latest}
           - {python: '3.13', os: macos-latest}
 
-          - {python: '3.8', os: ubuntu-24.04}
           - {python: '3.9', os: ubuntu-24.04}
           - {python: '3.10', os: ubuntu-24.04}
           - {python: '3.11', os: ubuntu-24.04}
           - {python: '3.12', os: ubuntu-24.04}
           - {python: '3.13', os: ubuntu-24.04}
 
-          - {python: '3.8', os: windows-2025}
           - {python: '3.9', os: windows-2025}
           - {python: '3.10', os: windows-2025}
           - {python: '3.11', os: windows-2025}
