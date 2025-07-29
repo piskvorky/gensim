@@ -15,6 +15,7 @@ import math
 import os
 
 import numpy
+import pytest
 import scipy
 
 from gensim import utils
@@ -701,6 +702,10 @@ class TestDoc2VecAnnoyIndexer(unittest.TestCase):
         self.assertEqual(self.index.num_trees, self.index2.num_trees)
 
 
+@pytest.mark.skipif(
+    sys.version_info[:2] != (3, 9) or int(numpy.__version__.split('.')[0]) != 1,
+    reason="NMSLib works only with Python 3.9 and NumPy 1.x"
+)
 class TestWord2VecNmslibIndexer(unittest.TestCase):
 
     def setUp(self):
@@ -793,6 +798,10 @@ class TestWord2VecNmslibIndexer(unittest.TestCase):
         self.assertEqual(index.query_time_params, index2.query_time_params)
 
 
+@pytest.mark.skipif(
+    sys.version_info[:2] != (3, 9) or int(numpy.__version__.split('.')[0]) != 1,
+    reason="NMSLib works only with Python 3.9 and NumPy 1.x"
+)
 class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
     def setUp(self):
@@ -846,6 +855,23 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
         self.assertEqual(self.index.labels, self.index2.labels)
         self.assertEqual(self.index.index_params, self.index2.index_params)
         self.assertEqual(self.index.query_time_params, self.index2.query_time_params)
+
+
+@pytest.mark.skipif(
+    sys.version_info[:2] != (3, 9) or int(numpy.__version__.split('.')[0]) != 2,
+    reason="Check "
+)
+class TestNmslibIndexer(unittest.TestCase):
+    def setUp(self):
+        try:
+            import nmslib  # noqa: F401
+        except ImportError as e:
+            raise unittest.SkipTest(f"NMSLIB library is not available: {e}")
+
+    def test_nmslib_numpy2_incompat(self):
+        from gensim.similarities.nmslib import NmslibIndexer
+        with pytest.raises(RuntimeError, match="nmslib requires NumPy < 2.0"):
+            NmslibIndexer(model=None)
 
 
 class TestUniformTermSimilarityIndex(unittest.TestCase):
