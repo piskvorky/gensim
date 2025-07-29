@@ -859,7 +859,7 @@ class TestDoc2VecNmslibIndexer(unittest.TestCase):
 
 @pytest.mark.skipif(
     sys.version_info[:2] != (3, 9) or int(numpy.__version__.split('.')[0]) != 2,
-    reason="Check "
+    reason="Skip if not on Python 3.9 or numpy 2.x"
 )
 class TestNmslibIndexer(unittest.TestCase):
     def setUp(self):
