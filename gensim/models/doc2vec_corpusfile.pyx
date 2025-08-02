@@ -61,7 +61,7 @@ cdef void prepare_c_structures_for_batch(
         np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
         np.uint32_t *reduced_windows, int *document_len, int train_words,
         int docvecs_count, int doc_tag, int shrink_windows,
-    ) nogil:
+    ) noexcept nogil:
     cdef VocabItem predict_word
     cdef string token
     cdef int i = 0
