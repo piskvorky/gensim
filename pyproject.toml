@@ -1,11 +1,6 @@
 [build-system]
 requires = [
-    #
-    # If we build our extensions with Cython 3.0.0, then they will be an
-    # order of magnitude slower, so avoid it for now.
-    #
-    'Cython>=0.29.32,<3.0.0; python_version<"3.13"',
-    'Cython>=3.1.2; python_version>="3.13"',
+    "Cython>=3.1.3",
     # oldest supported Numpy for this platform is 1.17 but the oldest supported by Gensim
     # is 1.18.5, remove the line when they increase oldest supported Numpy for this platform
     # 20240604 GM: testing numpy-2.0.0 which requires python >= 3.9 (to 3.12)
