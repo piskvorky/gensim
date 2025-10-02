@@ -5,6 +5,10 @@ on:
   pull_request:
     branches: [ develop ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
 
   linters:
