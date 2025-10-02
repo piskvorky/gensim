@@ -337,6 +337,8 @@ class HdpModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             corresponding lda model from :meth:`~gensim.models.hdpmodel.HdpModel.suggested_lda_model`
 
         """
+        if len(corpus) == 0:
+            raise RuntimeError("cannot initialize model with empty corpus")
         self.corpus = corpus
         self.id2word = id2word
         self.chunksize = chunksize
