@@ -376,7 +376,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         passes : int, optional
             Number of passes through the corpus during training.
         update_every : int, optional
-            Number of documents to be iterated through for each update.
+            Number of chunks to be iterated through before each M step of EM.
             Set to 0 for batch learning, > 1 for online iterative learning.
         alpha : {float, numpy.ndarray of float, list of float, str}, optional
             A-priori belief on document-topic distribution, this can be:
@@ -934,11 +934,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         self.state.numdocs += lencorpus
 
         if update_every:
-            updatetype = "online"
-            if passes == 1:
-                updatetype += " (single-pass)"
-            else:
-                updatetype += " (multi-pass)"
+            updatetype = "online (single-pass)" if self.passes == 1 else "online (multi-pass)"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
@@ -1055,7 +1051,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
         ----------
         rho : float
             Learning rate.
-        other : :class:`~gensim.models.ldamodel.LdaModel`
+        other : :class:`~gensim.models.ldamodel.LdaState`
             The model whose sufficient statistics will be used to update the topics.
         extra_pass : bool, optional
             Whether this step required an additional pass over the corpus.
