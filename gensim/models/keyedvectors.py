@@ -495,9 +495,9 @@ class KeyedVectors(utils.SaveLoad):
         if len(keys) == 0:
             raise ValueError("cannot compute mean with no input")
         if isinstance(weights, list):
-            weights = np.array(weights)
+            weights = np.array(weights, dtype=self.vectors.dtype)
         if weights is None:
-            weights = np.ones(len(keys))
+            weights = np.ones(len(keys), dtype=self.vectors.dtype)
         if len(keys) != weights.shape[0]:  # weights is a 1-D numpy array
             raise ValueError(
                 "keys and weights array must have same number of elements"
@@ -746,7 +746,9 @@ class KeyedVectors(utils.SaveLoad):
         """Sort the vocabulary so the most frequent words have the lowest indexes."""
         if not len(self):
             return  # noop if empty
-        count_sorted_indexes = np.argsort(self.expandos['count'])[::-1]
+        counts = np.asarray(self.expandos['count'], dtype=np.int64)
+        indices = np.arange(len(counts))
+        count_sorted_indexes = np.lexsort((-indices, -counts))
         self.index_to_key = [self.index_to_key[idx] for idx in count_sorted_indexes]
         self.allocate_vecattrs()
         for k in self.expandos:
@@ -1667,7 +1669,7 @@ class KeyedVectors(utils.SaveLoad):
                 if binary:
                     fout.write(f"{prefix}{key} ".encode('utf8') + key_vector.astype(REAL).tobytes())
                 else:
-                    fout.write(f"{prefix}{key} {' '.join(repr(val) for val in key_vector)}\n".encode('utf8'))
+                    fout.write(f"{prefix}{key} {' '.join(str(val) for val in key_vector)}\n".encode('utf8'))
 
     @classmethod
     def load_word2vec_format(
@@ -1977,7 +1979,7 @@ def _word2vec_read_text(fin, kv, counts, vocab_size, vector_size, datatype, unic
 
 def _word2vec_line_to_vector(line, datatype, unicode_errors, encoding):
     parts = utils.to_unicode(line.rstrip(), encoding=encoding, errors=unicode_errors).split(" ")
-    word, weights = parts[0], [datatype(x) for x in parts[1:]]
+    word, weights = parts[0], [datatype(x).item() for x in parts[1:]]
     return word, weights
 
 

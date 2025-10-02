@@ -324,23 +324,17 @@ docs_testenv = core_testenv + distributed_env + visdom_req + [
     'pandas',
 ]
 
-#
-# see https://github.com/piskvorky/gensim/pull/3535
-#
-NUMPY_STR = 'numpy >= 1.18.5, < 2.0'
+NUMPY_STR = 'numpy >= 1.18.5'
 
 install_requires = [
     NUMPY_STR,
-    #
-    # scipy 1.14.0 and onwards removes deprecated sparsetools submodule
-    #
-    'scipy >= 1.7.0, <1.14.0',
+    'scipy >= 1.7.0',
     'smart_open >= 1.8.1',
 ]
 
 setup(
     name='gensim',
-    version='4.3.3',
+    version='4.4.0a0.dev0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
@@ -373,7 +367,6 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
@@ -385,7 +378,7 @@ setup(
     ],
 
     test_suite="gensim.test",
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     install_requires=install_requires,
     tests_require=linux_testenv,
     extras_require={

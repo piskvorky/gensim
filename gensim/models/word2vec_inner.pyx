@@ -26,12 +26,12 @@ REAL = np.float32
 
 DEF MAX_SENTENCE_LEN = 10000
 
-cdef scopy_ptr scopy=<scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
-cdef saxpy_ptr saxpy=<saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
-cdef sdot_ptr sdot=<sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float = dot(x, y)
-cdef dsdot_ptr dsdot=<dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
-cdef snrm2_ptr snrm2=<snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
-cdef sscal_ptr sscal=<sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
+cdef scopy_ptr scopy = <scopy_ptr>PyCObject_AsVoidPtr(fblas.scopy._cpointer)  # y = x
+cdef saxpy_ptr saxpy = <saxpy_ptr>PyCObject_AsVoidPtr(fblas.saxpy._cpointer)  # y += alpha * x
+cdef sdot_ptr sdot = <sdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # float = dot(x, y)
+cdef dsdot_ptr dsdot = <dsdot_ptr>PyCObject_AsVoidPtr(fblas.sdot._cpointer)  # double = dot(x, y)
+cdef snrm2_ptr snrm2 = <snrm2_ptr>PyCObject_AsVoidPtr(fblas.snrm2._cpointer)  # sqrt(x^2)
+cdef sscal_ptr sscal = <sscal_ptr>PyCObject_AsVoidPtr(fblas.sscal._cpointer) # x = alpha * x
 
 DEF EXP_TABLE_SIZE = 1000
 DEF MAX_EXP = 6
@@ -44,15 +44,15 @@ cdef REAL_t ONEF = <REAL_t>1.0
 
 
 # for when fblas.sdot returns a double
-cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
+cdef REAL_t our_dot_double(const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil:
     return <REAL_t>dsdot(N, X, incX, Y, incY)
 
 # for when fblas.sdot returns a float
-cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
+cdef REAL_t our_dot_float(const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil:
     return <REAL_t>sdot(N, X, incX, Y, incY)
 
 # for when no blas available
-cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) nogil:
+cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil:
     # not a true full dot()-implementation: just enough for our cases
     cdef int i
     cdef REAL_t a
@@ -62,7 +62,7 @@ cdef REAL_t our_dot_noblas(const int *N, const float *X, const int *incX, const 
     return a
 
 # for when no blas available
-cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) nogil:
+cdef void our_saxpy_noblas(const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil:
     cdef int i
     for i from 0 <= i < N[0] by 1:
         Y[i * (incY[0])] = (alpha[0]) * X[i * (incX[0])] + Y[i * (incY[0])]
@@ -71,7 +71,7 @@ cdef void w2v_fast_sentence_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil:
     """Train on a single effective word from the current batch, using the Skip-Gram model.
 
     In this model we are using a given word to predict a context word (a word that is
@@ -135,7 +135,7 @@ cdef void w2v_fast_sentence_sg_hs(
 
 
 # to support random draws from negative-sampling cum_table
-cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) nogil:
+cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x, unsigned long long lo, unsigned long long hi) noexcept nogil:
     cdef unsigned long long mid
     while hi > lo:
         mid = (lo + hi) >> 1
@@ -147,7 +147,7 @@ cdef inline unsigned long long bisect_left(np.uint32_t *a, unsigned long long x,
 
 # this quick & dirty RNG apparently matches Java's (non-Secure)Random
 # note this function side-effects next_random to set up the next number
-cdef inline unsigned long long random_int32(unsigned long long *next_random) nogil:
+cdef inline unsigned long long random_int32(unsigned long long *next_random) noexcept nogil:
     cdef unsigned long long this_random = next_random[0] >> 16
     next_random[0] = (next_random[0] * <unsigned long long>25214903917ULL + 11) & 281474976710655ULL
     return this_random
@@ -157,7 +157,7 @@ cdef unsigned long long w2v_fast_sentence_sg_neg(
     REAL_t *syn0, REAL_t *syn1neg, const int size, const np.uint32_t word_index,
     const np.uint32_t word2_index, const REAL_t alpha, REAL_t *work,
     unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil:
     """Train on a single effective word from the current batch, using the Skip-Gram model.
 
     In this model we are using a given word to predict a context word (a word that is
@@ -248,7 +248,7 @@ cdef void w2v_fast_sentence_cbow_hs(
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, REAL_t *words_lockf, const np.uint32_t lockf_len,
-    const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil:
     """Train on a single effective word from the current batch, using the CBOW method.
 
     Using this method we train the trainable neural network by attempting to predict a
@@ -346,7 +346,7 @@ cdef unsigned long long w2v_fast_sentence_cbow_neg(
     REAL_t *neu1,  REAL_t *syn0, REAL_t *syn1neg, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], const REAL_t alpha, REAL_t *work,
     int i, int j, int k, int cbow_mean, unsigned long long next_random, REAL_t *words_lockf,
-    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) nogil:
+    const np.uint32_t lockf_len, const int _compute_loss, REAL_t *_running_training_loss_param) noexcept nogil:
     """Train on a single effective word from the current batch, using the CBOW method.
 
     Using this method we train the trainable neural network by attempting to predict a
@@ -785,7 +785,7 @@ def score_sentence_sg(model, sentence, _work):
 cdef void score_pair_sg_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, const int codelen,
     REAL_t *syn0, REAL_t *syn1, const int size,
-    const np.uint32_t word2_index, REAL_t *work) nogil:
+    const np.uint32_t word2_index, REAL_t *work) noexcept nogil:
 
     cdef long long b
     cdef long long row1 = <long long>word2_index * <long long>size, row2, sgn
@@ -879,7 +879,7 @@ cdef void score_pair_cbow_hs(
     const np.uint32_t *word_point, const np.uint8_t *word_code, int codelens[MAX_SENTENCE_LEN],
     REAL_t *neu1, REAL_t *syn0, REAL_t *syn1, const int size,
     const np.uint32_t indexes[MAX_SENTENCE_LEN], REAL_t *work,
-    int i, int j, int k, int cbow_mean) nogil:
+    int i, int j, int k, int cbow_mean) noexcept nogil:
 
     cdef long long a, b
     cdef long long row2

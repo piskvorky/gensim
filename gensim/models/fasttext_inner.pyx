@@ -72,7 +72,7 @@ cdef int ONE = 1
 cdef REAL_t ONEF = <REAL_t>1.0
 
 
-cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
+cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) noexcept nogil:
     """Perform skipgram training with negative sampling.
 
     Parameters
@@ -145,7 +145,7 @@ cdef void fasttext_fast_sentence_sg_neg(FastTextConfig *c, int i, int j) nogil:
                   c.work, &ONE, &c.syn0_ngrams[subwords_index[d]*c.size], &ONE)
 
 
-cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
+cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) noexcept nogil:
     """Perform skipgram training with hierarchical sampling.
 
     Parameters
@@ -221,7 +221,7 @@ cdef void fasttext_fast_sentence_sg_hs(FastTextConfig *c, int i, int j) nogil:
             &c.syn0_ngrams[row2], &ONE)
 
 
-cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) nogil:
+cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k) noexcept nogil:
     """Perform CBOW training with negative sampling.
 
     Parameters
@@ -306,7 +306,7 @@ cdef void fasttext_fast_sentence_cbow_neg(FastTextConfig *c, int i, int j, int k
                 &c.syn0_ngrams[c.subwords_idx[m][d]*c.size], &ONE)
 
 
-cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) nogil:
+cdef void fasttext_fast_sentence_cbow_hs(FastTextConfig *c, int i, int j, int k) noexcept nogil:
     """Perform CBOW training with hierarchical sampling.
 
     Parameters
@@ -510,7 +510,7 @@ cdef object populate_ft_config(FastTextConfig *c, wv, buckets_word, sentences):
     return effective_words, effective_sentences
 
 
-cdef void fasttext_train_any(FastTextConfig *c, int num_sentences) nogil:
+cdef void fasttext_train_any(FastTextConfig *c, int num_sentences) noexcept nogil:
     """Performs training on a fully initialized and populated configuration.
 
     Parameters

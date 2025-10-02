@@ -48,7 +48,7 @@ cdef void prepare_c_structures_for_batch(
         int *effective_words, int *effective_sentences, unsigned long long *next_random, cvocab_t *vocab,
         int *sentence_idx, np.uint32_t *indexes, int *codelens, np.uint8_t **codes, np.uint32_t **points,
         np.uint32_t *reduced_windows, int *subwords_idx_len, np.uint32_t **subwords_idx, int shrink_windows,
-    ) nogil:
+    ) noexcept nogil:
     cdef VocabItem word
     cdef string token
     cdef vector[string] sent

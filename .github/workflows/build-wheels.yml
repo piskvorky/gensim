@@ -36,15 +36,15 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.22.0
+        uses: pypa/cibuildwheel@v3.1.4
         env:
           CIBW_ARCHS_LINUX: x86_64 aarch64
           CIBW_ARCHS_MACOS: x86_64 arm64
           CIBW_ARCHS_WINDOWS: AMD64 x86
-          CIBW_SKIP: pp* cp36-* cp37-* cp313-* *-win32 *_i686 *-musllinux_*
+          CIBW_SKIP: pp* cp38-* cp314* *-win32 *_i686 *-musllinux_*
           CIBW_TEST_COMMAND: pytest -rfxEXs --durations=20 --disable-warnings --showlocals --pyargs gensim
           CIBW_TEST_REQUIRES: pytest testfixtures mock
-          CIBW_TEST_SKIP: cp38* cp39* cp310* cp311* cp313* *_aarch64 *_arm64 *_universal2
+          CIBW_TEST_SKIP: cp38* cp39* cp310* cp311* cp314* *_aarch64 *_arm64 *_universal2
           CIBW_BUILD_VERBOSITY: 3
 
       - name: Upload wheels as artifacts
@@ -61,21 +61,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {python: '3.8', os: macos-latest}
           - {python: '3.9', os: macos-latest}
           - {python: '3.10', os: macos-latest}
           - {python: '3.11', os: macos-latest}
           - {python: '3.12', os: macos-latest}
           - {python: '3.13', os: macos-latest}
 
-          - {python: '3.8', os: ubuntu-24.04}
           - {python: '3.9', os: ubuntu-24.04}
           - {python: '3.10', os: ubuntu-24.04}
           - {python: '3.11', os: ubuntu-24.04}
           - {python: '3.12', os: ubuntu-24.04}
           - {python: '3.13', os: ubuntu-24.04}
 
-          - {python: '3.8', os: windows-2025}
           - {python: '3.9', os: windows-2025}
           - {python: '3.10', os: windows-2025}
           - {python: '3.11', os: windows-2025}
