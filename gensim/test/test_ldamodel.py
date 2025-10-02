@@ -531,6 +531,37 @@ class TestLdaMulticore(TestLdaModel):
 # endclass TestLdaMulticore
 
 
+class TestLdaIterableTraining(unittest.TestCase, basetmtests.TestBaseTopicModel):
+    """Class for testing infinite generators,
+    for case when size of processed documents
+    goes beyond corpus length."""
+
+    class ProblematicIterable:
+        def __init__(self):
+            self.bag_of_words = [(0, 2), (3, 1), (6, 1), (100, 2)]
+            self.cursor = 0
+
+        def __iter__(self):
+            self.cursor = 0
+            logging.info('TestIterable() __iter__ was called')
+            return self
+
+        def __next__(self):
+            if self.cursor < 11:
+                self.cursor += 1
+                return self.bag_of_words
+            else:
+                logging.info('TestIterable() returned StopIteration')
+                raise StopIteration
+
+    def setUp(self) -> None:
+        self.corpus = self.ProblematicIterable()
+        self.class_ = ldamodel.LdaModel
+
+    def testDoesntTrainBeyondCorpusSize(self):
+        with self.assertRaises(RuntimeError):
+            self.model = self.class_(self.corpus, num_topics=2)
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
