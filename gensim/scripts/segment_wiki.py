@@ -64,13 +64,14 @@ import sys
 from xml.etree import ElementTree
 from functools import partial
 
-from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_interlinks, get_namespace, utils
+from gensim.corpora.wikicorpus import IGNORED_NAMESPACES, WikiCorpus, filter_wiki, find_categories, find_interlinks, get_namespace, utils
 import gensim.utils
 
 logger = logging.getLogger(__name__)
 
 
-def segment_all_articles(file_path, min_article_character=200, workers=None, include_interlinks=False):
+def segment_all_articles(file_path, min_article_character=200, workers=None, include_interlinks=False,
+                         include_categories=False):
     """Extract article titles and sections from a MediaWiki bz2 database dump.
 
     Parameters
@@ -98,7 +99,7 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
     with gensim.utils.open(file_path, 'rb') as xml_fileobj:
         wiki_sections_corpus = _WikiSectionsCorpus(
             xml_fileobj, min_article_character=min_article_character, processes=workers,
-            include_interlinks=include_interlinks)
+            include_interlinks=include_interlinks, include_categories=include_categories)
         wiki_sections_corpus.metadata = True
         wiki_sections_text = wiki_sections_corpus.get_texts_with_sections()
 
@@ -107,7 +108,7 @@ def segment_all_articles(file_path, min_article_character=200, workers=None, inc
 
 
 def segment_and_write_all_articles(file_path, output_file, min_article_character=200, workers=None,
-                                   include_interlinks=False):
+                                   include_interlinks=False, include_categories=False):
     """Write article title and sections to `output_file` (or stdout, if output_file is None).
 
     The output format is one article per line, in json-line format with 4 fields::
@@ -142,11 +143,10 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
 
     try:
         article_stream = segment_all_articles(file_path, min_article_character, workers=workers,
-                                              include_interlinks=include_interlinks)
+                                              include_interlinks=include_interlinks,
+                                              include_categories=include_categories)
         for idx, article in enumerate(article_stream):
-            article_title, article_sections = article[0], article[1]
-            if include_interlinks:
-                interlinks = article[2]
+            article_title, article_sections, interlinks, categories = article
 
             output_data = {
                 "title": article_title,
@@ -155,6 +155,9 @@ def segment_and_write_all_articles(file_path, output_file, min_article_character
             }
             if include_interlinks:
                 output_data["interlinks"] = interlinks
+
+            if include_categories:
+                output_data['categories'] = categories
 
             for section_heading, section_content in article_sections:
                 output_data["section_titles"].append(section_heading)
@@ -203,7 +206,7 @@ def extract_page_xmls(f):
             elem.clear()
 
 
-def segment(page_xml, include_interlinks=False):
+def segment(page_xml, include_interlinks=False, include_categories=False):
     """Parse the content inside a page tag
 
     Parameters
@@ -241,22 +244,24 @@ def segment(page_xml, include_interlinks=False):
     if text is not None:
         if include_interlinks:
             interlinks = find_interlinks(text)
+        
+        if include_categories:
+            categories = find_categories(text)
+
         section_contents = re.split(top_level_heading_regex, text)
         section_headings = [lead_section_heading] + re.findall(top_level_heading_regex_capture, text)
         section_headings = [heading.strip() for heading in section_headings]
         assert len(section_contents) == len(section_headings)
     else:
         interlinks = []
+        categories = []
         section_contents = []
         section_headings = []
 
     section_contents = [filter_wiki(section_content) for section_content in section_contents]
     sections = list(zip(section_headings, section_contents))
 
-    if include_interlinks:
-        return title, sections, interlinks
-    else:
-        return title, sections
+    return title, sections, interlinks, categories
 
 
 class _WikiSectionsCorpus(WikiCorpus):
@@ -268,7 +273,8 @@ class _WikiSectionsCorpus(WikiCorpus):
     """
 
     def __init__(self, fileobj, min_article_character=200, processes=None,
-                 lemmatize=None, filter_namespaces=('0',), include_interlinks=False):
+                 lemmatize=None, filter_namespaces=('0',), include_interlinks=False,
+                 include_categories=False):
         """
         Parameters
         ----------
@@ -299,6 +305,7 @@ class _WikiSectionsCorpus(WikiCorpus):
         self.processes = processes
         self.min_article_character = min_article_character
         self.include_interlinks = include_interlinks
+        self.include_categories = include_categories
 
     def get_texts_with_sections(self):
         """Iterate over the dump, returning titles and text versions of all sections of articles.
@@ -330,9 +337,9 @@ class _WikiSectionsCorpus(WikiCorpus):
         # process the corpus in smaller chunks of docs, because multiprocessing.Pool
         # is dumb and would load the entire input into RAM at once...
         for group in utils.chunkize(page_xmls, chunksize=10 * self.processes, maxsize=1):
-            for article in pool.imap(partial(segment, include_interlinks=self.include_interlinks),
+            for article in pool.imap(partial(segment, include_interlinks=self.include_interlinks, include_categories=self.include_categories),
                                      group):  # chunksize=10): partial(merge_names, b='Sons')
-                article_title, sections = article[0], article[1]
+                article_title, sections, interlinks, categories = article
 
                 # article redirects are pruned here
                 if any(article_title.startswith(ignore + ':') for ignore in IGNORED_NAMESPACES):  # filter non-articles
@@ -348,11 +355,8 @@ class _WikiSectionsCorpus(WikiCorpus):
                 total_articles += 1
                 total_sections += len(sections)
 
-                if self.include_interlinks:
-                    interlinks = article[2]
-                    yield (article_title, sections, interlinks)
-                else:
-                    yield (article_title, sections)
+                yield (article_title, sections, interlinks, categories)
+
 
         logger.info(
             "finished processing %i articles with %i sections (skipped %i redirects, %i stubs, %i ignored namespaces)",
@@ -388,6 +392,11 @@ if __name__ == "__main__":
              '"interlinks": [("article_title_1", "interlink_text_1"), ("article_title_2", "interlink_text_2"), ...]',
         action='store_true'
     )
+    parser.add_argument(
+        '-c', '--include-categories',
+        help='Include a mapping for categories to other articles in the dump.',
+        action='store_true'
+    )
     args = parser.parse_args()
 
     logger.info("running %s", " ".join(sys.argv))
@@ -395,7 +404,8 @@ if __name__ == "__main__":
         args.file, args.output,
         min_article_character=args.min_article_character,
         workers=args.workers,
-        include_interlinks=args.include_interlinks
+        include_interlinks=args.include_interlinks,
+        include_categories=args.include_categories
     )
 
     logger.info("finished running %s", sys.argv[0])
