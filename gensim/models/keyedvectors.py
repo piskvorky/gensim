@@ -613,6 +613,8 @@ class KeyedVectors(utils.SaveLoad):
             for attr, extra in extras:
                 self.expandos[attr][in_vocab_idxs] = extra[in_vocab_mask]
 
+        self.fill_norms()
+
     def __setitem__(self, keys, weights):
         """Add keys and theirs vectors in a manual way.
         If some key is already in the vocabulary, old vector is replaced with the new one.
@@ -704,7 +706,7 @@ class KeyedVectors(utils.SaveLoad):
         either recalculated or 'None', to trigger a full recalculation later on-request.
 
         """
-        if self.norms is None or force:
+        if self.norms is None or len(self) != len(self.norms) or force:
             self.norms = np.linalg.norm(self.vectors, axis=1)
 
     @property
