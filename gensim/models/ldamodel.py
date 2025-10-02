@@ -38,6 +38,7 @@ Train an LDA model using a Gensim corpus
 
     >>> from gensim.test.utils import common_texts
     >>> from gensim.corpora.dictionary import Dictionary
+    >>> from gensim.models import LdaModel
     >>>
     >>> # Create a corpus from a list of texts
     >>> common_dictionary = Dictionary(common_texts)
@@ -86,6 +87,13 @@ A lot of parameters can be tuned to optimize training for your specific case
 .. sourcecode:: pycon
 
     >>> lda = LdaModel(common_corpus, num_topics=50, alpha='auto', eval_every=5)  # learn asymmetric alpha from data
+
+All topic probability distributions can be obtained by setting minimum_probability param to 0.0. This might be
+used for implementing custom distance algorithm.
+
+.. sourcecode:: pycon
+
+    >>> lda = LdaModel(common_corpus, num_topics=50, minimum_probability=0.0)
 
 """
 
