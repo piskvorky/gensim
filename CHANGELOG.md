@@ -1,6 +1,27 @@
 Changes
 =======
 
+## 4.4.0, 2024-10-03
+
+### :star2: New Features
+* Added support for **NumPy 2.0** (compatible with both NumPy 1.x and 2.0). (__[gojomo](https://github.com/gojomo)__, __[hechth](https://github.com/hechth)__, __[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+
+### :red_circle: Bug fixes
+ 
+* Fixed type conversion issues in `keyedvectors.py` (e.g., `get_mean_vector`, `sort_by_descending_frequency`, `save_word2vec_format`). (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Fixed type issues in `ldamodel.py` `update_dir_prior()`. (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Removed deprecated usage of `scipy.sparsetools` to e.g., `scipy.sparse.csc_matvecs`, `scipy.sparse.csc_matrix`. (__[hechth](https://github.com/hechth)__, __[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Corrected sorting behavior and dtype compatibility problems. (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Fixed issues in internal Cython 3 modules (`nogil`, `noexcept`, type definitions). (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+
+### :books: Tutorial and doc improvements
+
+
+### :+1: Improvements
+* Add support for **python3.13** wheels (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Removed support for **python3.8** wheels (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Removed NMSLib support for Python >=3.10 and numPy >=2 (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+
 ## 4.3.3, 2024-07-19
 
 ### :star2: New Features
