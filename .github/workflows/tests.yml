@@ -68,12 +68,14 @@ jobs:
           - {python: '3.11', os: ubuntu-24.04}
           - {python: '3.12', os: ubuntu-24.04}
           - {python: '3.13', os: ubuntu-24.04}
+          - {python: '3.14', os: ubuntu-24.04}
 
           - {python: '3.9', os: windows-2025}
           - {python: '3.10', os: windows-2025}
           - {python: '3.11', os: windows-2025}
           - {python: '3.12', os: windows-2025}
           - {python: '3.13', os: windows-2025}
+          - {python: '3.14', os: windows-2025}
 
     #
     # Don't run this job unless the linters have succeeded.
