@@ -1,7 +1,7 @@
 Changes
 =======
 
-## 4.4.0, 2024-10-13
+## 4.4.0, 2025-10-13
 
 ### :star2: New Features
 * Added support for **NumPy 2.0** (compatible with both NumPy 1.x and 2.0). (__[gojomo](https://github.com/gojomo)__, __[hechth](https://github.com/hechth)__, __[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
