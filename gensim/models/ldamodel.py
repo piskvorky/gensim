@@ -111,32 +111,33 @@ from gensim.models.callbacks import Callback
 logger = logging.getLogger(__name__)
 
 
-def update_dir_prior(prior, N, logphat, rho):
+def update_dir_prior(prior: np.ndarray, N: float, logphat: np.ndarray, rho: float) -> np.ndarray:
     """Update a given prior using Newton's method, described in
     `J. Huang: "Maximum Likelihood Estimation of Dirichlet Distribution Parameters"
     <http://jonathan-huang.org/research/dirichlet/dirichlet.pdf>`_.
 
     Parameters
     ----------
-    prior : list of float
+    prior : ndarray
         The prior for each possible outcome at the previous iteration (to be updated).
-    N : int
+    N : float
         Number of observations.
-    logphat : list of float
+    logphat : ndarray
         Log probabilities for the current estimation, also called "observed sufficient statistics".
     rho : float
         Learning rate.
 
     Returns
     -------
-    list of float
+    ndarray
         The updated prior.
 
     """
+    dtype = prior.dtype
     gradf = N * (psi(np.sum(prior)) - psi(prior) + logphat)
 
-    c = N * polygamma(1, np.sum(prior))
-    q = -N * polygamma(1, prior)
+    c = N * np.array(polygamma(1, np.sum(prior, dtype=dtype)), dtype=dtype)
+    q = -N * np.array(polygamma(1, prior), dtype=dtype)
 
     b = np.sum(gradf / q) / (1 / c + np.sum(1 / q))
 
@@ -1081,7 +1082,7 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
             # only update if this isn't an additional pass
             self.num_updates += other.numdocs
 
-    def bound(self, corpus, gamma=None, subsample_ratio=1.0):
+    def bound(self, corpus, gamma=None, subsample_ratio=1.0) -> float:
         """Estimate the variational bound of documents from the corpus as E_q[log p(corpus)] - E_q[log q(corpus)].
 
         Parameters
@@ -1098,11 +1099,11 @@ class LdaModel(interfaces.TransformationABC, basemodel.BaseTopicModel):
 
         Returns
         -------
-        numpy.ndarray
+        float
             The variational bound score calculated for each document.
 
         """
-        score = 0.0
+        score = np.float64(0.0)
         _lambda = self.state.get_lambda()
         Elogbeta = dirichlet_expectation(_lambda)
 

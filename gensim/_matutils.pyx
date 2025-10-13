@@ -31,6 +31,9 @@ def mean_absolute_difference(a, b):
     if a.shape != b.shape:
         raise ValueError("a and b must have same shape")
 
+    if a.size == 0:
+        return 0.0
+
     if a.dtype == np.float64:
         return _mean_absolute_difference[double](a, b)
     elif a.dtype == np.float32:
@@ -42,7 +45,7 @@ def mean_absolute_difference(a, b):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) nogil:
+cdef DTYPE_t _mean_absolute_difference(DTYPE_t[:] a, DTYPE_t[:] b) noexcept nogil:
     """Mean absolute difference between two arrays.
 
     Parameters
@@ -86,11 +89,21 @@ def logsumexp(x):
     float
         log of sum of exponentials of elements in `x`.
 
+    Raises
+    ------
+    ValueError
+        If `x` is not a 2D array or if it is empty.
+
     Warnings
     --------
     By performance reasons, doesn't support NaNs or 1d, 3d, etc arrays like :func:`scipy.special.logsumexp`.
 
     """
+
+    if x.ndim != 2:
+        raise ValueError("Input must be a 2D array.")
+    if x.shape[0] == 0 or x.shape[1] == 0:
+        raise ValueError("Input must not be empty.")
 
     if x.dtype == np.float64:
         return _logsumexp_2d[double](x)
@@ -103,7 +116,7 @@ def logsumexp(x):
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.cdivision(True)
-cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) nogil:
+cdef DTYPE_t _logsumexp_2d(DTYPE_t[:, :] data) noexcept nogil:
     """Log of sum of exponentials.
 
     Parameters
@@ -156,6 +169,9 @@ def dirichlet_expectation(alpha):
         Log of expected values, dimension same as `alpha.ndim`.
 
     """
+    if not isinstance(alpha, np.ndarray):
+        raise ValueError("alpha must be a numpy.ndarray")
+
     if alpha.ndim == 2:
         return dirichlet_expectation_2d(alpha)
     else:
@@ -223,7 +239,7 @@ def dirichlet_expectation_1d(alpha):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:
+cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) noexcept nogil:
     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
 
     Parameters
@@ -251,7 +267,7 @@ cdef void _dirichlet_expectation_1d(DTYPE_t[:] alpha, DTYPE_t[:] out) nogil:
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) nogil:
+cdef void _dirichlet_expectation_2d(DTYPE_t[:, :] alpha, DTYPE_t[:, :] out) noexcept nogil:
     """Expected value of log(theta) where theta is drawn from a Dirichlet distribution.
 
     Parameters
@@ -298,7 +314,7 @@ def digamma(DTYPE_t x):
 
 
 @cython.cdivision(True)
-cdef inline DTYPE_t _digamma(DTYPE_t x,) nogil:
+cdef inline DTYPE_t _digamma(DTYPE_t x,) noexcept nogil:
     """Digamma function for positive floats.
 
     Parameters
