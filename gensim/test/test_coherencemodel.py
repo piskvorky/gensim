@@ -148,7 +148,7 @@ class TestCoherenceModel(unittest.TestCase):
             topics=self.topics1, corpus=self.corpus, dictionary=self.dictionary, coherence='u_mass'
         )
 
-        model, used_cpus = get_model(), mp.cpu_count() - 1
+        model, used_cpus = get_model(),  max(1, mp.cpu_count() - 1)
         self.assertEqual(model.processes, used_cpus)
         for p in range(-2, 1):
             self.assertEqual(get_model(processes=p).processes, used_cpus)
