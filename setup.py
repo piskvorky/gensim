@@ -334,7 +334,7 @@ install_requires = [
 
 setup(
     name='gensim',
-    version='4.4.0a0.dev0',
+    version='4.4.0',
     description='Python framework for fast Vector Space Modelling',
     long_description=LONG_DESCRIPTION,
 
