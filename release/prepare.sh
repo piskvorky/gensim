@@ -10,7 +10,10 @@
 
 set -euxo pipefail
 
-previous_version=$(python -c 'import gensim;print(gensim.__version__)')
+#
+# HACK
+#
+previous_version=3.4.3
 
 RELEASE=$1
 export RELEASE="$RELEASE"
