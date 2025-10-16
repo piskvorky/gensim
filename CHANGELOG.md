@@ -1,6 +1,20 @@
 Changes
 =======
 
+## 4.4.0, 2025-10-16
+
+### :+1: Improvements
+
+* Release 4.4.0 __(julianpollmann](https://github.com/julianpollmann)__, [#3629](https://github.com/piskvorky/gensim/pull/3629)
+* Migration numPy 2.0 and remove deprecated scipy sparsetools functions __(julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615)
+* Numpy 2.0.0 update and removing deprecated scipy modules __(hechth](https://github.com/hechth)__, [#3562](https://github.com/piskvorky/gensim/pull/3562)
+* Fixes gh actions deprecated runners and macOS arch issue __(julianpollmann](https://github.com/julianpollmann)__, [#3608](https://github.com/piskvorky/gensim/pull/3608)
+
+### :books: Tutorial and doc improvements
+
+* CHANGELOG: fix typo 'Replaceed' → 'Replaced' __(nakanoh](https://github.com/nakanoh)__, [#3613](https://github.com/piskvorky/gensim/pull/3613)
+* add route4me.com as bronze sponsor __(mpenkov](https://github.com/mpenkov)__, [#3558](https://github.com/piskvorky/gensim/pull/3558)
+
 ## 4.3.3, 2024-07-19
 
 ### :star2: New Features
