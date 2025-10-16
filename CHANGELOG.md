@@ -1,26 +1,19 @@
 Changes
 =======
 
-## 4.4.0, 2025-10-13
+## 4.4.0, 2025-10-16
 
-### :star2: New Features
-* Added support for **NumPy 2.0** (compatible with both NumPy 1.x and 2.0). (__[gojomo](https://github.com/gojomo)__, __[hechth](https://github.com/hechth)__, __[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+### :+1: Improvements
 
-### :red_circle: Bug fixes
- 
-* Fixed type conversion issues in `keyedvectors.py` (e.g., `get_mean_vector`, `sort_by_descending_frequency`, `save_word2vec_format`). (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
-* Fixed type issues in `ldamodel.py` `update_dir_prior()`. (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
-* Removed deprecated usage of `scipy.sparsetools` to e.g., `scipy.sparse.csc_matvecs`, `scipy.sparse.csc_matrix`. (__[hechth](https://github.com/hechth)__, __[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
-* Corrected sorting behavior and dtype compatibility problems. (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
-* Fixed issues in internal Cython 3 modules (`nogil`, `noexcept`, type definitions). (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* Release 4.4.0 __(julianpollmann](https://github.com/julianpollmann)__, [#3629](https://github.com/piskvorky/gensim/pull/3629)
+* Migration numPy 2.0 and remove deprecated scipy sparsetools functions __(julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615)
+* Numpy 2.0.0 update and removing deprecated scipy modules __(hechth](https://github.com/hechth)__, [#3562](https://github.com/piskvorky/gensim/pull/3562)
+* Fixes gh actions deprecated runners and macOS arch issue __(julianpollmann](https://github.com/julianpollmann)__, [#3608](https://github.com/piskvorky/gensim/pull/3608)
 
 ### :books: Tutorial and doc improvements
 
-
-### :+1: Improvements
-* Add support for **python3.13** wheels (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
-* Removed support for **python3.8** wheels (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
-* Removed NMSLib support for Python >=3.10 and numPy >=2 (__[julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615))
+* CHANGELOG: fix typo 'Replaceed' → 'Replaced' __(nakanoh](https://github.com/nakanoh)__, [#3613](https://github.com/piskvorky/gensim/pull/3613)
+* add route4me.com as bronze sponsor __(mpenkov](https://github.com/mpenkov)__, [#3558](https://github.com/piskvorky/gensim/pull/3558)
 
 ## 4.3.3, 2024-07-19
 
