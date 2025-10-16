@@ -3,19 +3,17 @@ Changes
 
 ## 4.4.0, 2025-10-16
 
-* [#3615](https://github.com/piskvorky/gensim/pull/3615): Migration numPy 2.0 and remove deprecated scipy sparsetools functions, by [@julianpollmann](https://github.com/julianpollmann)
-* [#3613](https://github.com/piskvorky/gensim/pull/3613): CHANGELOG: fix typo 'Replaceed' → 'Replaced', by [@nakanoh](https://github.com/nakanoh)
-* [#3608](https://github.com/piskvorky/gensim/pull/3608): Fixes gh actions deprecated runners and macOS arch issue, by [@julianpollmann](https://github.com/julianpollmann)
-* [#3562](https://github.com/piskvorky/gensim/pull/3562): Numpy 2.0.0 update and removing deprecated scipy modules, by [@hechth](https://github.com/hechth)
-* [#3558](https://github.com/piskvorky/gensim/pull/3558): add route4me.com as bronze sponsor, by [@mpenkov](https://github.com/mpenkov)
+### :+1: Improvements
 
-### :question: Closed issues
+* Release 4.4.0 __(julianpollmann](https://github.com/julianpollmann)__, [#3629](https://github.com/piskvorky/gensim/pull/3629)
+* Migration numPy 2.0 and remove deprecated scipy sparsetools functions __(julianpollmann](https://github.com/julianpollmann)__, [#3615](https://github.com/piskvorky/gensim/pull/3615)
+* Numpy 2.0.0 update and removing deprecated scipy modules __(hechth](https://github.com/hechth)__, [#3562](https://github.com/piskvorky/gensim/pull/3562)
+* Fixes gh actions deprecated runners and macOS arch issue __(julianpollmann](https://github.com/julianpollmann)__, [#3608](https://github.com/piskvorky/gensim/pull/3608)
 
-* [#3624](https://github.com/piskvorky/gensim/issues/3624): Documentation site led to another site?
-* [#3619](https://github.com/piskvorky/gensim/issues/3619): Detail in `gensim/models/fasttext.py`
-* [#3606](https://github.com/piskvorky/gensim/issues/3606): ValueError while Importing Word2Vec from gensim.models
-* [#3555](https://github.com/piskvorky/gensim/issues/3555):  Always, each row of  word2vec model  txt format file  starts with word and the rest is vector. But the function save_word2vec_format of the code  make  it starting with index. Is it a Bug?
-* [#2515](https://github.com/piskvorky/gensim/issues/2515): poincare model does not work when workers > 1
+### :books: Tutorial and doc improvements
+
+* CHANGELOG: fix typo 'Replaceed' → 'Replaced' __(nakanoh](https://github.com/nakanoh)__, [#3613](https://github.com/piskvorky/gensim/pull/3613)
+* add route4me.com as bronze sponsor __(mpenkov](https://github.com/mpenkov)__, [#3558](https://github.com/piskvorky/gensim/pull/3558)
 
 ## 4.3.3, 2024-07-19
 

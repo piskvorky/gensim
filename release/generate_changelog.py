@@ -13,7 +13,7 @@ import time
 
 
 def throttle_get(*args, seconds=10, **kwargs):
-    print(args, kwargs, file=sys.stderr)
+    # print(args, kwargs, file=sys.stderr)
     result = requests.get(*args, **kwargs)
     result.raise_for_status()
 
@@ -27,9 +27,13 @@ def throttle_get(*args, seconds=10, **kwargs):
 # The releases get sorted in reverse chronological order, so the first release
 # in the list is the most recent.
 #
-get = throttle_get('https://api.github.com/repos/RaRe-Technologies/gensim/releases')
-most_recent_release = get.json()[0]
-release_timestamp = most_recent_release['published_at']
+# get = throttle_get('https://api.github.com/repos/RaRe-Technologies/gensim/releases')
+# most_recent_release = get.json()[0]
+# release_timestamp = most_recent_release['published_at']
+#
+# Fix release date for the previous release, 4.3.3
+#
+release_timestamp = '2024-07-19T00:00:00Z'
 
 
 def iter_merged_prs(since=release_timestamp):
@@ -84,7 +88,7 @@ fixed_issue_numbers = set()
 for pr in iter_merged_prs(since=release_timestamp):
     pr['user_login'] = pr['user']['login']
     pr['user_html_url'] = pr['user']['html_url']
-    print('* [#%(number)d](%(html_url)s): %(title)s, by [@%(user_login)s](%(user_html_url)s)' % pr)
+    print('* %(title)s __(%(user_login)s](%(user_html_url)s)__, [#%(number)d](%(html_url)s)' % pr)
 
     #
     # Unfortunately, the GitHub API doesn't link PRs to issues that they fix,
