@@ -88,8 +88,8 @@ base_dir = BASE_DIR  # for backward compatibility with some of our test data
 
 logger = logging.getLogger(__name__)
 
-DATA_LIST_URL = "https://raw.githubusercontent.com/RaRe-Technologies/gensim-data/master/list.json"
-DOWNLOAD_BASE_URL = "https://github.com/RaRe-Technologies/gensim-data/releases/download"
+DATA_LIST_URL = "https://raw.githubusercontent.com/piskvorky/gensim-data/refs/heads/master/list.json"
+DOWNLOAD_BASE_URL = "https://github.com/piskvorky/gensim-data/releases/download"
 
 
 def _progress(chunks_downloaded, chunk_size, total_size, part=1, total_parts=1):
