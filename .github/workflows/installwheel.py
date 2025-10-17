@@ -13,15 +13,11 @@ def main():
     machine = platform.machine().lower()
 
     if system == 'Darwin':
-        if machine == 'arm64':
-            arch = 'arm64'
-        else:
-            arch = 'x86_64'
+        arch = 'arm64' if machine == 'arm64' else 'x86_64'
     elif system == 'Linux':
-        if machine in ('x86_64', 'amd64'):
-            arch = 'x86_64'
-        elif machine in ('aarch64', 'arm64'):
-            arch = 'aarch64'
+        arch = 'x86_64' if machine in ('x86_64', 'amd64') else 'aarch64' if machine in ('aarch64', 'arm64') else 'amd64'
+    elif system == 'Windows':
+        arch = 'amd64' if machine in ('x86_64', 'amd64') else 'arm64' if machine in ('arm64', 'aarch64') else 'amd64'
     else:
         arch = 'amd64'
 
