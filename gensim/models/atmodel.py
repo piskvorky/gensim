@@ -213,7 +213,8 @@ class AuthorTopicModel(LdaModel):
                 * 'symmetric': (default) Uses a fixed symmetric prior of `1.0 / num_topics`,
                 * 'auto': Learns an asymmetric prior from the corpus.
         update_every : int, optional
-            Make updates in topic probability for latest mini-batch.
+            Number of chunks to be iterated through before each M step of EM.
+            Set to 0 for batch learning, > 1 for online iterative learning.
         eval_every : int, optional
             Calculate and estimate log perplexity for latest mini-batch.
         gamma_threshold : float, optional
@@ -803,7 +804,7 @@ class AuthorTopicModel(LdaModel):
         self.state.numdocs += lencorpus
 
         if update_every:
-            updatetype = "online"
+            updatetype = "online (single-pass)" if self.passes == 1 else "online (multi-pass)"
             updateafter = min(lencorpus, update_every * self.numworkers * chunksize)
         else:
             updatetype = "batch"
