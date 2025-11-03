@@ -81,6 +81,8 @@ RE_P17 = re.compile(
     re.UNICODE
 )
 """Table markup"""
+RE_P18 = re.compile(r'\[{2}Category\:(.*?)\]{2}', re.UNICODE)
+"""Capture category text and category name"""
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
     'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
@@ -179,6 +181,35 @@ def find_interlinks(raw):
 
     legit_interlinks = [(i, j) for i, j in interlinks if '[' not in i and ']' not in i]
     return legit_interlinks
+
+
+def find_categories(text):
+    """Find all categories assigned to the article
+
+    Parameters
+    ----------
+    raw : str
+        Unicode or utf-8 encoded string.
+
+    Returns
+    -------
+    list
+        List of tuples in format [(category title, category name), ...].
+
+    """
+    result = re.findall(RE_P18, text)
+    categories = []
+    for parts in [i.split('|') for i in result]:
+        actual_title = parts[0]
+        try:
+            category_text = parts[1]
+        except IndexError:
+            category_text = actual_title
+        category_tuple = (actual_title, category_text.strip())
+        categories.append(category_tuple)
+
+    legit_categories = [(i, j) for i, j in categories if '[' not in i and ']' not in i]
+    return legit_categories
 
 
 def filter_wiki(raw, promote_remaining=True, simplify_links=True):
