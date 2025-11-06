@@ -105,6 +105,8 @@ Documentation
   [Tutorials]: https://radimrehurek.com/gensim/auto_examples/
   [Official Documentation and Walkthrough]: https://radimrehurek.com/gensim/
   [Official API Documentation]: https://radimrehurek.com/gensim/auto_examples/index.html#documentation
+  
+  
 
 Support
 -------
@@ -162,7 +164,7 @@ BibTeX entry:
           language={English}
     }
 
-  [citing gensim in academic papers and theses]: https://scholar.google.com/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:NaGl4SEjCO4C
+  
 
   [design goals]: https://radimrehurek.com/gensim/intro.html#design-principles
   [RaRe Technologies]: https://rare-technologies.com/wp-content/uploads/2016/02/rare_image_only.png%20=10x20
@@ -170,7 +172,7 @@ BibTeX entry:
   [Talentpair]: https://avatars3.githubusercontent.com/u/8418395?v=3&s=100
   [citing gensim in academic papers and theses]: https://scholar.google.cz/citations?view_op=view_citation&hl=en&user=9vG_kV0AAAAJ&citation_for_view=9vG_kV0AAAAJ:u-x6o8ySG0sC
 
-  [documentation and Jupyter Notebook tutorials]: https://github.com/RaRe-Technologies/gensim/#documentation
+  [documentation and Jupyter Notebook tutorials]: https://radimrehurek.com/gensim/auto_examples/
   [Vector Space Model]: https://en.wikipedia.org/wiki/Vector_space_model
   [unsupervised document analysis]: https://en.wikipedia.org/wiki/Latent_semantic_indexing
   [NumPy]: https://numpy.org/install/
