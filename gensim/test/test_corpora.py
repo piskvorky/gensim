@@ -10,7 +10,6 @@ Automated tests for checking corpus I/O formats (the corpora package).
 
 from __future__ import unicode_literals
 
-import codecs
 import itertools
 import logging
 import os
@@ -559,7 +558,7 @@ class TestTextCorpus(CorpusTestCase):
 
     def corpus_from_lines(self, lines):
         fpath = tempfile.mktemp()
-        with codecs.open(fpath, 'w', encoding='utf8') as f:
+        with open(fpath, 'w', encoding='utf8') as f:
             f.write('\n'.join(lines))
 
         return self.corpus_class(fpath)

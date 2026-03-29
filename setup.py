@@ -285,11 +285,13 @@ if not sys.platform.lower().startswith("win") and sys.version_info[:2] < (3, 10)
     core_testenv.append('nmslib')
 
 # Add additional requirements for testing on Linux that are skipped on Windows.
-linux_testenv = core_testenv[:] + visdom_req
-# Skip problematic/uninstallable  packages (& thus related conditional tests) in Windows builds.
 # We still test them in Linux via Travis, see linux_testenv above.
 # See https://github.com/RaRe-Technologies/gensim/pull/2814
+# Note: visdom is NOT included because it uses deprecated pkg_resources which was removed in setuptools 82.0.0.
+# The visdom functionality is optional and handled via try/except in callbacks.py.
 win_testenv = core_testenv[:]
+
+linux_testenv = core_testenv[:]
 
 #
 # This list partially duplicates requirements_docs.txt.

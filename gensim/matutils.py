@@ -311,7 +311,7 @@ def scipy2scipy_clipped(matrix, topn, eps=1e-9):
         matrix_indices = np.concatenate(matrix_indices).ravel()
         matrix_data = np.concatenate(matrix_data).ravel()
         # Instantiate and return a sparse csr_matrix which preserves the order of indices/data.
-        return scipy.sparse.csr.csr_matrix(
+        return scipy.sparse.csr_matrix(
             (matrix_data, matrix_indices, matrix_indptr),
             shape=(matrix.shape[0], np.max(matrix_indices) + 1)
         )
