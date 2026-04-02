@@ -61,6 +61,34 @@ logger = logging.getLogger(__name__)
 _FASTTEXT_VERSION = np.int32(12)
 _FASTTEXT_FILEFORMAT_MAGIC = np.int32(793712314)
 
+# FastText model type constants (from fastText args.h)
+# https://github.com/facebookresearch/fastText/blob/master/src/args.h
+_MODEL_CBOW = 1
+_MODEL_SKIPGRAM = 2
+_MODEL_SUPERVISED = 3
+
+_SUPPORTED_MODEL_TYPES = {_MODEL_CBOW, _MODEL_SKIPGRAM}
+
+_MODEL_TYPE_NAMES = {
+    _MODEL_CBOW: 'cbow',
+    _MODEL_SKIPGRAM: 'skipgram',
+    _MODEL_SUPERVISED: 'supervised',
+}
+
+# FastText loss function constants (from fastText args.h)
+_LOSS_HS = 1       # hierarchical softmax
+_LOSS_NS = 2       # negative sampling
+_LOSS_SOFTMAX = 3  # softmax (supervised)
+_LOSS_OVA = 4      # one-vs-all (supervised)
+
+_SUPPORTED_LOSS_TYPES = {_LOSS_HS, _LOSS_NS}
+
+_LOSS_TYPE_NAMES = {
+    _LOSS_HS: 'hs (hierarchical softmax)',
+    _LOSS_NS: 'ns (negative sampling)',
+    _LOSS_SOFTMAX: 'softmax',
+    _LOSS_OVA: 'ova (one-vs-all)',
+}
 
 # _NEW_HEADER_FORMAT is constructed on the basis of args::save method, see
 # https://github.com/facebookresearch/fastText/blob/master/src/args.cc
@@ -310,6 +338,31 @@ def _fromfile(fin, dtype, count):
     """Reimplementation of numpy.fromfile."""
     return np.fromiter(_batched_generator(fin, count), dtype=dtype)
 
+def _check_supported_model(header):
+    """Raise NotImplementedError for FastText model types or loss functions not supported by gensim."""
+    model_type = header.get('model')
+    loss_type = header.get('loss')
+
+    if model_type not in _SUPPORTED_MODEL_TYPES:
+        model_name = _MODEL_TYPE_NAMES.get(model_type, 'unknown (model=%d)' % model_type)
+        supported = sorted(_MODEL_TYPE_NAMES[k] for k in _SUPPORTED_MODEL_TYPES)
+        raise NotImplementedError(
+            "FastText model type '%s' (model=%d) is not supported by gensim. "
+            "Only unsupervised models (%s) can be loaded. "
+            "See https://github.com/piskvorky/gensim/issues/3179"
+            % (model_name, model_type, ', '.join(supported))
+        )
+
+    if loss_type not in _SUPPORTED_LOSS_TYPES:
+        loss_name = _LOSS_TYPE_NAMES.get(loss_type, 'unknown (loss=%d)' % loss_type)
+        supported = sorted(_LOSS_TYPE_NAMES[k] for k in _SUPPORTED_LOSS_TYPES)
+        raise NotImplementedError(
+            "FastText model uses loss function '%s' (loss=%d), which is not supported by gensim. "
+            "Supported loss functions are: %s. "
+            "Models trained with 'softmax' or 'ova' loss are typically supervised models. "
+            "See https://github.com/piskvorky/gensim/issues/3179"
+            % (loss_name, loss_type, ', '.join(supported))
+        )
 
 def load(fin, encoding='utf-8', full_model=True):
     """Load a model from a binary stream.
@@ -338,11 +391,14 @@ def load(fin, encoding='utf-8', full_model=True):
 
     header_spec = _NEW_HEADER_FORMAT if new_format else _OLD_HEADER_FORMAT
     model = {name: _struct_unpack(fin, fmt)[0] for (name, fmt) in header_spec}
-
+    
     if not new_format:
         model.update(dim=magic, ws=version)
 
+    _check_supported_model(model)
+
     raw_vocab, vocab_size, nwords, ntokens = _load_vocab(fin, new_format, encoding=encoding)
+
     model.update(raw_vocab=raw_vocab, vocab_size=vocab_size, nwords=nwords, ntokens=ntokens)
 
     vectors_ngrams = _load_matrix(fin, new_format=new_format)
