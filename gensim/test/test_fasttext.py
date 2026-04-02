@@ -307,6 +307,31 @@ class TestFastTextModel(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             gensim.models.fasttext.load_facebook_model(datapath('pang_lee_polarity_fasttext.bin'))
 
+    def test_check_supported_model_raises_for_supervised(self):
+        from gensim.models._fasttext_bin import _check_supported_model
+        with self.assertRaises(NotImplementedError) as ctx:
+            _check_supported_model({'model': 3, 'loss': 2})
+        self.assertIn('supervised', str(ctx.exception))
+
+    def test_check_supported_model_raises_for_softmax_loss(self):
+        from gensim.models._fasttext_bin import _check_supported_model
+        with self.assertRaises(NotImplementedError) as ctx:
+            _check_supported_model({'model': 1, 'loss': 3})
+        self.assertIn('softmax', str(ctx.exception))
+
+    def test_check_supported_model_raises_for_ova_loss(self):
+        from gensim.models._fasttext_bin import _check_supported_model
+        with self.assertRaises(NotImplementedError) as ctx:
+            _check_supported_model({'model': 1, 'loss': 4})
+        self.assertIn('ova', str(ctx.exception))
+
+    def test_check_supported_model_passes_for_valid_configs(self):
+        from gensim.models._fasttext_bin import _check_supported_model
+        _check_supported_model({'model': 1, 'loss': 1})  # cbow + hs
+        _check_supported_model({'model': 1, 'loss': 2})  # cbow + ns
+        _check_supported_model({'model': 2, 'loss': 1})  # skipgram + hs
+        _check_supported_model({'model': 2, 'loss': 2})  # skipgram + ns
+
     def test_load_model_with_non_ascii_vocab(self):
         model = gensim.models.fasttext.load_facebook_model(datapath('non_ascii_fasttext.bin'))
         self.assertTrue(u'který' in model.wv)
