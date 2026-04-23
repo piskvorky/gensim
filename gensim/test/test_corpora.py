@@ -769,6 +769,13 @@ class TestWikiCorpus(TestTextCorpus):
             for word in table_markup:
                 self.assertTrue(word not in text)
 
+    def test_removed_heading_markup(self):
+        result = wikicorpus.remove_markup("== History ==\nsome text\n=== Early years ===\nmore text")
+        self.assertNotIn("==", result)
+        self.assertIn("History", result)
+        self.assertIn("Early years", result)
+        self.assertIn("some text", result)
+
     def test_get_stream(self):
         wiki = self.corpus_class(self.enwiki)
         sample_text_wiki = next(wiki.getstream()).decode()[1:14]
