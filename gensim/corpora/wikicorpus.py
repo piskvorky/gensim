@@ -81,6 +81,8 @@ RE_P17 = re.compile(
     re.UNICODE
 )
 """Table markup"""
+RE_P18 = re.compile(r'^(={2,6})\s*(.*?)\s*\1\s*$', re.MULTILINE | re.UNICODE)
+"""Heading markup (== Heading ==, === Sub ===, etc)."""
 IGNORED_NAMESPACES = [
     'Wikipedia', 'Category', 'File', 'Portal', 'Template',
     'MediaWiki', 'User', 'Help', 'Book', 'Draft', 'WikiProject',
@@ -240,6 +242,7 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         text = re.sub(RE_P10, '', text)  # remove math content
         text = re.sub(RE_P11, '', text)  # remove all remaining tags
         text = re.sub(RE_P14, '', text)  # remove categories
+        text = re.sub(RE_P18, r'\2', text)  # remove heading markup, keep text
         text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
 
         if simplify_links:
