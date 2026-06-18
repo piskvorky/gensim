@@ -30,6 +30,7 @@ Disadvantages:
 import logging
 import itertools
 import zlib
+from collections import Counter, defaultdict
 
 from gensim import utils
 
@@ -231,13 +232,19 @@ class HashDictionary(utils.SaveLoad, dict):
             [(1721, 1), (5280, 1), (22493, 1)]
 
         """
-        result = {}
+        # materialize the document (original used sorted(document) just to make a plain list for grouping)
+        document = list(document)
+
+        # count occurrences of each normalized word in the document
+        word_counts = Counter(document)
+
+        # map tokenid -> summed frequency (several different words may hash to same id)
+        result = defaultdict(int)
         missing = {}
-        document = sorted(document)  # convert the input to plain list (needed below)
-        for word_norm, group in itertools.groupby(document):
-            frequency = len(list(group))  # how many times does this word appear in the input document
+
+        for word_norm, frequency in word_counts.items():
             tokenid = self.restricted_hash(word_norm)
-            result[tokenid] = result.get(tokenid, 0) + frequency
+            result[tokenid] += frequency
             if self.debug:
                 # increment document count for each unique token that appeared in the document
                 self.dfs_debug[word_norm] = self.dfs_debug.get(word_norm, 0) + 1
