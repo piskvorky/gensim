@@ -6,7 +6,7 @@
 
 """This module implements the concept of a Dictionary -- a mapping between words and their integer ids."""
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Mapping
 import logging
 import itertools
@@ -754,6 +754,7 @@ class Dictionary(utils.SaveLoad, Mapping):
         """
         result = Dictionary()
         max_id = -1
+        dfs = Counter()
         for docno, document in enumerate(corpus):
             if docno % 10000 == 0:
                 logger.info("adding document #%i to %s", docno, result)
@@ -762,7 +763,8 @@ class Dictionary(utils.SaveLoad, Mapping):
             for wordid, word_freq in document:
                 max_id = max(wordid, max_id)
                 result.num_pos += word_freq
-                result.dfs[wordid] = result.dfs.get(wordid, 0) + 1
+                dfs[wordid] += 1
+        result.dfs = dict(dfs)
 
         if id2word is None:
             # make sure length(result) == get_max_id(corpus) + 1
