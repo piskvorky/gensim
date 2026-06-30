@@ -323,6 +323,26 @@ class TestDictionary(unittest.TestCase):
         dictionary = Dictionary.from_corpus(bow)
         self.assertEqual(dictionary.num_docs, 100)
 
+    def test_from_corpus_initializes_id2token(self):
+        """`from_corpus` should populate `id2token`, not leave it empty."""
+        corpus = [[(1, 1.0)], [], [(0, 5.0), (2, 1.0)], []]
+
+        # without an id=>word map
+        dictionary = Dictionary.from_corpus(corpus)
+        # read the attribute directly (do not go through __getitem__, which
+        # lazily rebuilds id2token and would mask the bug)
+        self.assertEqual(len(dictionary.id2token), len(dictionary.token2id))
+        self.assertEqual(
+            dictionary.id2token,
+            {idx: token for token, idx in dictionary.token2id.items()})
+
+        # with an id=>word map
+        dictionary = Dictionary.from_corpus(corpus, id2word={0: 'cat', 1: 'dog', 2: 'fish'})
+        self.assertEqual(len(dictionary.id2token), len(dictionary.token2id))
+        self.assertEqual(
+            dictionary.id2token,
+            {idx: token for token, idx in dictionary.token2id.items()})
+
     def test_dict_interface(self):
         """Test Python 2 dict-like interface in both Python 2 and 3."""
         d = Dictionary(self.texts)

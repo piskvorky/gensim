@@ -773,6 +773,9 @@ class Dictionary(utils.SaveLoad, Mapping):
         for idx in result.token2id.values():
             # make sure all token ids have a valid `dfs` entry
             result.dfs[idx] = result.dfs.get(idx, 0)
+        # build the reverse mapping so `id2token` is usable directly, not only
+        # after a lazy rebuild via `__getitem__`
+        result.id2token = utils.revdict(result.token2id)
 
         logger.info(
             "built %s from %i documents (total %i corpus positions)",
