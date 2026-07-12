@@ -13,9 +13,9 @@ Also, please check the [Gensim FAQ](https://github.com/RaRe-Technologies/gensim/
 3. Create a new branch based on `develop`: `git checkout -b my-feature develop`
 4. Setup your Python enviroment
    - Create a new [virtual environment](https://virtualenv.pypa.io/en/stable/): `pip install virtualenv; virtualenv gensim_env` and activate it:
-      - For linux: `source gensim_env/bin/activate` 
+      - For linux: `source gensim_env/bin/activate`
       - For windows: `gensim_env\Scripts\activate`
-   - Install Gensim and its test dependencies in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs): 
+   - Install Gensim and its test dependencies in [editable mode](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs):
       - For linux: `pip install -e .[test]`
       - For windows: `pip install -e .[test-win]`
 5. Implement your changes

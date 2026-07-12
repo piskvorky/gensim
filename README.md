@@ -52,7 +52,7 @@ Installation
 This software depends on [NumPy], a Python package for
 scientific computing. Please bear in mind that building NumPy from source
 (e.g. by installing gensim on a platform which lacks NumPy .whl distribution)
-is a non-trivial task involving [linking NumPy to a BLAS library].  
+is a non-trivial task involving [linking NumPy to a BLAS library].
 It is recommended to provide a fast one (such as MKL, [ATLAS] or
 [OpenBLAS]) which can improve performance by as much as an order of
 magnitude. On OSX, NumPy picks up its vecLib BLAS automatically,

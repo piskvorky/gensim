@@ -237,7 +237,7 @@ In each **annotation[i][j]** cell you'll find **[tokens from intersection, token
                 >>> mdiff, annotation = m1.diff(m2)
                 >>> topic_diff = mdiff  # get matrix with difference for each topic pair from `m1` and `m2`
 
-        
+
 
 
 

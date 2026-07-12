@@ -143,16 +143,16 @@ with the rest of this tutorial.
  .. code-block:: none
 
     1740
-    387 
-    Neural Net and Traditional Classifiers  
-    William Y. Huang and Richard P. Lippmann 
-    MIT Lincoln Laboratory 
-    Lexington, MA 02173, USA 
+    387
+    Neural Net and Traditional Classifiers 
+    William Y. Huang and Richard P. Lippmann
+    MIT Lincoln Laboratory
+    Lexington, MA 02173, USA
     Abstract
-    Previous work on nets with continuous-valued inputs led to generative 
-    procedures to construct convex decision regions with two-layer percepttons (one hidden 
-    layer) and arbitrary decision regions with three-layer percepttons (two hidden layers). 
-    Here we demonstrate that two-layer perceptton classifiers trained with back propagation 
+    Previous work on nets with continuous-valued inputs led to generative
+    procedures to construct convex decision regions with two-layer percepttons (one hidden
+    layer) and arbitrary decision regions with three-layer percepttons (two hidden layers).
+    Here we demonstrate that two-layer perceptton classifiers trained with back propagation
     can form both c
 
 

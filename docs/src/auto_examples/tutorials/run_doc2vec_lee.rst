@@ -378,13 +378,13 @@ For example, to see how many times ``penalty`` appeared in the training corpus:
 
 Next, train the model on the corpus.
 In the usual case, where Gensim installation found a BLAS library for optimized
-bulk vector operations, this training on this tiny 300 document, ~60k word corpus 
+bulk vector operations, this training on this tiny 300 document, ~60k word corpus
 should take just a few seconds. (More realistic datasets of tens-of-millions
-of words or more take proportionately longer.) If for some reason a BLAS library 
-isn't available, training uses a fallback approach that takes 60x-120x longer, 
-so even this tiny training will take minutes rather than seconds. (And, in that 
-case, you should also notice a warning in the logging letting you know there's 
-something worth fixing.) So, be sure your installation uses the BLAS-optimized 
+of words or more take proportionately longer.) If for some reason a BLAS library
+isn't available, training uses a fallback approach that takes 60x-120x longer,
+so even this tiny training will take minutes rather than seconds. (And, in that
+case, you should also notice a warning in the logging letting you know there's
+something worth fixing.) So, be sure your installation uses the BLAS-optimized
 Gensim if you value your time.
 
 
