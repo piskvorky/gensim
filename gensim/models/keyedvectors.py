@@ -235,6 +235,23 @@ class KeyedVectors(utils.SaveLoad):
             another type is provided here.
         mapfile_path : string, optional
             Currently unused.
+
+        Attributes
+        ----------
+        key_to_index : dict of ({str, int}, int)
+            Mapping from each vector key to the row containing its vector in `vectors`.
+        index_to_key : list of {str, int}
+            Vector keys in row-index order. This is the inverse mapping of `key_to_index`.
+        vectors : numpy.ndarray
+            Matrix containing one vector per row. Retrieve individual vectors through indexed access where possible,
+            for example ``keyed_vectors.vectors[keyed_vectors.key_to_index["cat"]]`` is equivalent to
+            ``keyed_vectors["cat"]``.
+        vector_size : int
+            Number of dimensions in each vector.
+        expandos : dict of (str, numpy.ndarray)
+            Additional per-key attributes. Use :meth:`set_vecattr` and :meth:`get_vecattr` instead of modifying this
+            mapping directly.
+
         """
         self.vector_size = vector_size
         # pre-allocating `index_to_key` to full size helps avoid redundant re-allocations, esp for `expandos`
