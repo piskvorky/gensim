@@ -1373,7 +1373,13 @@ else:
         """
         assert chunksize > 0
 
-        if maxsize > 0:
+        if maxsize > 0 and inspect.isgenerator(corpus):
+            # Python 3.14 uses forkserver by default on POSIX. Generators cannot
+            # be pickled for the worker process, so preserve streaming semantics
+            # by chunking this input in the current process.
+            for chunk in chunkize_serial(corpus, chunksize, as_numpy=as_numpy):
+                yield chunk
+        elif maxsize > 0:
             q = multiprocessing.Queue(maxsize=maxsize)
             worker = InputQueue(q, corpus, chunksize, maxsize=maxsize, as_numpy=as_numpy)
             worker.daemon = True

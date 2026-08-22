@@ -16,6 +16,14 @@ from gensim import utils
 from gensim.test.utils import datapath, get_tmpfile
 
 
+def test_chunkize_generator_with_parallel_buffering():
+    corpus = (value for value in range(5))
+
+    chunks = list(utils.chunkize(corpus, chunksize=2, maxsize=1))
+
+    assert chunks == [[0, 1], [2, 3], [4]]
+
+
 class TestIsCorpus(unittest.TestCase):
     def test_None(self):
         # test None
