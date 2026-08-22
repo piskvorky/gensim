@@ -75,6 +75,8 @@ RE_P15 = re.compile(r'\[\[([fF]ile:|[iI]mage)[^]]*(\]\])', re.UNICODE)
 """Remove File and Image templates."""
 RE_P16 = re.compile(r'\[{2}(.*?)\]{2}', re.UNICODE)
 """Capture interlinks text and article linked"""
+RE_P18 = re.compile(r'^={1,6}\s*(.*?)\s*={1,6}$', re.UNICODE | re.MULTILINE)
+"""Headings, keep title text."""
 RE_P17 = re.compile(
     r'(\n.{0,4}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=)|(scope=))(.*))|'
     r'(^.{0,2}((bgcolor)|(\d{0,1}[ ]?colspan)|(rowspan)|(style=)|(class=)|(align=))(.*))',
@@ -241,6 +243,7 @@ def remove_markup(text, promote_remaining=True, simplify_links=True):
         text = re.sub(RE_P11, '', text)  # remove all remaining tags
         text = re.sub(RE_P14, '', text)  # remove categories
         text = re.sub(RE_P5, '\\3', text)  # remove urls, keep description
+        text = re.sub(RE_P18, '\\1', text)  # remove heading markup, keep title text
 
         if simplify_links:
             text = re.sub(RE_P6, '\\2', text)  # simplify links, keep description only
