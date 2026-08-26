@@ -37,21 +37,43 @@ cpp_extensions = OrderedDict([
 ])
 
 
+def cython_source(source):
+    """Return the .pyx path that `source` (a .c or .cpp path) is translated from."""
+    return os.path.splitext(source)[0] + '.pyx'
+
+
+def have_cython():
+    """Return True if Cython is importable."""
+    try:
+        import Cython.Build  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def need_cython():
     """Return True if we need Cython to translate any of the extensions.
 
-    If the extensions have already been translated to C/C++, then we don't need
-    to install Cython and perform the translation.
+    We prefer translating from the .pyx sources whenever we can, because
+    generated C/C++ is tied to the CPython and NumPy C APIs of the Cython
+    version that produced it: a stale file silently fails to compile on newer
+    interpreters.  We only fall back to a pre-generated file when the .pyx is
+    unavailable or Cython is not installed.
 
     """
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
-    return any([not os.path.isfile(f) for f in expected])
+    missing = [f for f in expected if not os.path.isfile(f)]
+    if missing:
+        return True
+
+    pyx_available = all(os.path.isfile(cython_source(f)) for f in expected)
+    return pyx_available and have_cython()
 
 
 def make_c_ext(use_cython=False):
     for module, source in c_extensions.items():
         if use_cython:
-            source = source.replace('.c', '.pyx')
+            source = cython_source(source)
         extra_args = []
 #        extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
         yield Extension(
@@ -73,7 +95,7 @@ def make_cpp_ext(use_cython=False):
 #    extra_args.extend(['-g', '-O0'])  # uncomment if optimization limiting crash info
     for module, source in cpp_extensions.items():
         if use_cython:
-            source = source.replace('.cpp', '.pyx')
+            source = cython_source(source)
         yield Extension(
             module,
             sources=[source],
@@ -119,6 +141,13 @@ class CustomBuildExt(build_ext):
         self.include_dirs.append(numpy.get_include())
 
         if need_cython():
+            if not have_cython():
+                raise RuntimeError(
+                    'Cython is required to build gensim from these sources, but it is '
+                    'not installed.  It is declared in pyproject.toml, so a standard '
+                    '`pip install .` will pull it in; if you are building with '
+                    '--no-build-isolation, install it yourself first: pip install Cython'
+                )
             import Cython.Build
             Cython.Build.cythonize(list(make_c_ext(use_cython=True)), language_level=3)
             Cython.Build.cythonize(list(make_cpp_ext(use_cython=True)), language_level=3)
