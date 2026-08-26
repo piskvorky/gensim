@@ -7,30 +7,26 @@ include gensim/models/voidptr.h
 include gensim/models/stdint_wrapper.h
 include gensim/models/fast_line_sentence.h
 
-include gensim/models/word2vec_inner.c
-include gensim/models/word2vec_inner.pyx
-include gensim/models/word2vec_inner.pxd
-include gensim/models/word2vec_corpusfile.cpp
-include gensim/models/word2vec_corpusfile.pyx
-include gensim/models/word2vec_corpusfile.pxd
+#
+# Ship the Cython sources, not the C/C++ they translate to.  Generated C is tied
+# to the CPython (and NumPy) C API of whatever Cython version produced it, so a
+# pre-generated file goes stale and stops compiling on newer interpreters.  The
+# build requires Cython (see pyproject.toml) and regenerates it instead.
+#
+recursive-include gensim *.pyx *.pxd
 
-include gensim/models/doc2vec_inner.cpp
-include gensim/models/doc2vec_inner.pyx
-include gensim/models/doc2vec_inner.pxd
-include gensim/models/doc2vec_corpusfile.cpp
-include gensim/models/doc2vec_corpusfile.pyx
-
-include gensim/models/fasttext_inner.c
-include gensim/models/fasttext_inner.pyx
-include gensim/models/fasttext_inner.pxd
-include gensim/models/fasttext_corpusfile.cpp
-include gensim/models/fasttext_corpusfile.pyx
-
-include gensim/corpora/_mmreader.c
-include gensim/corpora/_mmreader.pyx
-include gensim/_matutils.c
-include gensim/_matutils.pyx
-
-include gensim/models/nmf_pgd.c
-include gensim/models/nmf_pgd.pyx
-
+#
+# setuptools' sdist automatically adds every ext_modules source, and those are
+# the .c/.cpp paths, so they have to be excluded explicitly.  MANIFEST.in is
+# processed after those defaults, so these exclusions win.
+#
+exclude gensim/_matutils.c
+exclude gensim/corpora/_mmreader.c
+exclude gensim/models/doc2vec_corpusfile.cpp
+exclude gensim/models/doc2vec_inner.cpp
+exclude gensim/models/fasttext_corpusfile.cpp
+exclude gensim/models/fasttext_inner.c
+exclude gensim/models/nmf_pgd.c
+exclude gensim/models/word2vec_corpusfile.cpp
+exclude gensim/models/word2vec_inner.c
+exclude gensim/similarities/fastss.c
