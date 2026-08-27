@@ -43,7 +43,7 @@ TOKEN_MAX_LEN = 15
 
 RE_P0 = re.compile(r'<!--.*?-->', re.DOTALL | re.UNICODE)
 """Comments."""
-RE_P1 = re.compile(r'<ref([> ].*?)(</ref>|/>)', re.DOTALL | re.UNICODE)
+RE_P1 = re.compile(r'<ref(\s[^>]*?)?/>|<ref(\s[^>]*?)?>.*?</ref>', re.DOTALL | re.UNICODE)
 """Footnotes."""
 RE_P2 = re.compile(r'(\n\[\[[a-z][a-z][\w-]*:[^:\]]+\]\])+$', re.UNICODE)
 """Links to languages."""

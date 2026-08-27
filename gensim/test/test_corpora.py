@@ -640,6 +640,17 @@ class TestWikiCorpus(TestTextCorpus):
         first_text = next(corpus.get_texts())
         self.assertEqual(expected, first_text)
 
+    def test_filter_wiki_ref_with_nested_self_closing_tag(self):
+        # Regression test for #3520: a <ref>...</ref> footnote that contains a nested
+        # self-closing tag (e.g. <nowiki/> or <br/>) must be removed entirely, not
+        # truncated at the nested tag's "/>", which used to leak the rest of the footnote.
+        text = "total<ref>note<nowiki/>https://example.com/x</ref>end"
+        self.assertEqual(wikicorpus.filter_wiki(text), "totalend")
+
+        # Self-closing and plain paired refs are still removed.
+        self.assertEqual(wikicorpus.filter_wiki('a<ref name="r"/>b'), "ab")
+        self.assertEqual(wikicorpus.filter_wiki("a<ref>note</ref>b"), "ab")
+
     def test_len(self):
         # When there is no min_token limit all 9 articles must be registered.
         corpus = self.corpus_class(self.fname, article_min_tokens=0)
