@@ -292,7 +292,7 @@ class _PhrasesTransformation(interfaces.TransformationABC):
             Sentence with phrase tokens joined by ``self.delimiter``, if input was a single sentence.
             A generator of such sentences if input was a corpus.
 
-s        """
+        """
         is_single, sentence = _is_single(sentence)
         if not is_single:
             # If the input is an entire corpus (rather than a single sentence),

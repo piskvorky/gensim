@@ -681,7 +681,7 @@ def load_facebook_model(path, encoding='utf-8'):
 
     Parameters
     ----------
-    model_file : str
+    path : str
         Path to the FastText output files.
         FastText outputs two model files - `/path/to/model.vec` and `/path/to/model.bin`
         Expected value for this example: `/path/to/model` or `/path/to/model.bin`,

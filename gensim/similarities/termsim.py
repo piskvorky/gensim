@@ -518,15 +518,15 @@ class SparseTermSimilarityMatrix(SaveLoad):
     def inner_product(self, X, Y, normalized=(False, False)):
         """Get the inner product(s) between real vectors / corpora X and Y.
 
-        Return the inner product(s) between real vectors / corpora vec1 and vec2 expressed in a
+        Return the inner product(s) between real vectors / corpora X and Y expressed in a
         non-orthogonal normalized basis, where the dot product between the basis vectors is given by
         the sparse term similarity matrix.
 
         Parameters
         ----------
-        vec1 : list of (int, float) or iterable of list of (int, float)
+        X : list of (int, float) or iterable of list of (int, float)
             A query vector / corpus in the sparse bag-of-words format.
-        vec2 : list of (int, float) or iterable of list of (int, float)
+        Y : list of (int, float) or iterable of list of (int, float)
             A document vector / corpus in the sparse bag-of-words format.
         normalized : tuple of {True, False, 'maintain'}, optional
             First/second value specifies whether the query/document vectors in the inner product
