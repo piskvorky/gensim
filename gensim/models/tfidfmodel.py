@@ -157,7 +157,7 @@ def smartirs_wlocal(tf, local_scheme):
     ----------
     tf : int
         Term frequency.
-    local : {'b', 'n', 'a', 'l', 'd', 'L'}
+    local_scheme : {'b', 'n', 'a', 'l', 'd', 'L'}
         Local transformation scheme.
 
     Returns

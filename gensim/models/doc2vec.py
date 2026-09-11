@@ -1019,7 +1019,7 @@ class Doc2Vec(Word2Vec):
 
         Parameters
         ----------
-        documents : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
+        corpus_iterable : iterable of :class:`~gensim.models.doc2vec.TaggedDocument`, optional
             The tagged documents used to create the vocabulary. Their tags can be either str tokens or ints (faster).
         corpus_file : str, optional
             Path to a corpus file in :class:`~gensim.models.word2vec.LineSentence` format.
