@@ -3,6 +3,8 @@ import unittest
 import os
 import gensim.downloader as api
 import shutil
+import tempfile
+from unittest import mock
 import numpy as np
 
 
@@ -11,6 +13,14 @@ import numpy as np
     "Skip network-related tests (probably SSL problems on this CI/OS)"
 )
 class TestApi(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory()
+        self.addCleanup(directory.cleanup)
+        cache = os.path.join(directory.name, 'gensim-data')
+        paths = mock.patch.multiple(api, BASE_DIR=cache, base_dir=cache, _PARENT_DIR=directory.name)
+        paths.start()
+        self.addCleanup(paths.stop)
+
     def test_base_dir_creation(self):
         if os.path.isdir(api.BASE_DIR):
             shutil.rmtree(api.BASE_DIR)
