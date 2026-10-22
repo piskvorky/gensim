@@ -455,7 +455,7 @@ class SaveLoad:
 
         Parameters
         ----------
-        fname : str
+        fname : str or os.PathLike
             Path to file that contains needed object.
         mmap : str, optional
             Memory-map option.  If the object was saved with large arrays stored separately, you can load these arrays
@@ -478,6 +478,9 @@ class SaveLoad:
             When called on an object instance instead of class (this is a class method).
 
         """
+        if isinstance(fname, os.PathLike):
+            fname = os.fsdecode(fname)
+
         logger.info("loading %s object from %s", cls.__name__, fname)
 
         compress, subname = SaveLoad._adapt_by_suffix(fname)
@@ -728,7 +731,7 @@ class SaveLoad:
 
         Parameters
         ----------
-        fname_or_handle : str or file-like
+        fname_or_handle : str or os.PathLike or file-like
             Path to output file or already opened file-like object. If the object is a file handle,
             no special array handling will be performed, all attributes will be saved to the same file.
         separately : list of str or None, optional
@@ -752,6 +755,9 @@ class SaveLoad:
             Load object from file.
 
         """
+        if isinstance(fname_or_handle, os.PathLike):
+            fname_or_handle = os.fsdecode(fname_or_handle)
+
         self.add_lifecycle_event(
             "saving",
             fname_or_handle=str(fname_or_handle),
