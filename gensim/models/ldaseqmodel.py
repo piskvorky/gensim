@@ -119,7 +119,8 @@ class LdaSeqModel(utils.SaveLoad):
         em_max_iter : int, optional
             Maximum number of iterations until converge of the Expectation-Maximization algorithm.
         chunksize : int, optional
-            Number of documents in the corpus do be processed in in a chunk.
+            Number of documents to process in each chunk, including the initial
+            LDA training when `initialize == 'gensim'`.
 
         """
         self.id2word = id2word
@@ -178,7 +179,7 @@ class LdaSeqModel(utils.SaveLoad):
                 lda_model = ldamodel.LdaModel(
                     corpus, id2word=self.id2word, num_topics=self.num_topics,
                     passes=passes, alpha=self.alphas, random_state=random_state,
-                    dtype=np.float64
+                    dtype=np.float64, chunksize=chunksize
                 )
                 self.sstats = np.transpose(lda_model.state.sstats)
             if initialize == 'ldamodel':
