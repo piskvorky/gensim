@@ -19,11 +19,11 @@ cdef extern from "voidptr.h":
 
 ctypedef np.float32_t REAL_t
 
-# BLAS routine signatures
+# BLAS routines cannot raise Python exceptions; -1 is a valid dot product.
 ctypedef void (*scopy_ptr) (const int *N, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil
 ctypedef void (*saxpy_ptr) (const int *N, const float *alpha, const float *X, const int *incX, float *Y, const int *incY) noexcept nogil
-ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) except -1 nogil
-ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) except -1 nogil
+ctypedef float (*sdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
+ctypedef double (*dsdot_ptr) (const int *N, const float *X, const int *incX, const float *Y, const int *incY) noexcept nogil
 ctypedef double (*snrm2_ptr) (const int *N, const float *X, const int *incX) noexcept nogil
 ctypedef void (*sscal_ptr) (const int *N, const float *alpha, const float *X, const int *incX) noexcept nogil
 
