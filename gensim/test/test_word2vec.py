@@ -540,6 +540,28 @@ class TestWord2VecModel(unittest.TestCase):
         scores = model.score(sentences, len(sentences))
         self.assertEqual(len(scores), len(sentences))
 
+    def test_scoring_negative_dot_product(self):
+        for sg in (0, 1):
+            for vector_size in (1, 4):
+                model = word2vec.Word2Vec(
+                    vector_size=vector_size, min_count=1, hs=1, negative=0,
+                    sg=sg, workers=1, window=1,
+                )
+                model.build_vocab([['a', 'b']])
+                model.wv.vectors[:] = 0
+                model.wv.vectors[:, 0] = 1
+                model.syn1[:] = 0
+                zero_score = model.score([['a', 'b']], total_sentences=1)
+                for dot in (0.5, 1.0, 2.0):
+                    with self.subTest(sg=sg, vector_size=vector_size, dot=dot):
+                        model.syn1[:, 0] = dot
+                        positive_score = model.score([['a', 'b']], total_sentences=1)
+                        model.syn1[:, 0] = -dot
+                        negative_score = model.score([['a', 'b']], total_sentences=1)
+                        # The two leaves have opposite Huffman codes, so swapping signs preserves the score.
+                        np.testing.assert_allclose(negative_score, positive_score)
+                        self.assertLess(negative_score[0], zero_score[0])
+
     def test_locking(self):
         """Test word2vec training doesn't change locked vectors."""
         corpus = LeeCorpus()
