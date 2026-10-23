@@ -66,7 +66,7 @@ class BM25ABC(interfaces.TransformationABC, metaclass=ABCMeta):
             num_tokens = 0
             num_docs = 0
             for bow in corpus:
-                num_tokens += len(bow)
+                num_tokens += sum(freq for _, freq in bow)
                 for term_id in set(term_id for term_id, _ in bow):
                     dfs[term_id] += 1
                 num_docs += 1

@@ -9,6 +9,7 @@ from gensim.models.bm25model import BM25ABC
 from gensim.models import OkapiBM25Model, LuceneBM25Model, AtireBM25Model
 
 from gensim.corpora import Dictionary
+from gensim.similarities import SparseMatrixSimilarity
 
 
 class BM25Stub(BM25ABC):
@@ -39,6 +40,63 @@ class BM25ABCTest(unittest.TestCase):
         model = BM25Stub(dictionary=self.dictionary)
         actual_avgdl = model.avgdl
         self.assertAlmostEqual(self.expected_avgdl, actual_avgdl)
+
+
+class BM25CorpusLengthTest(unittest.TestCase):
+    def setUp(self):
+        self.documents = [
+            ['cat', 'cat', 'cat', 'dog'],
+            ['dog', 'mouse'],
+            ['cat', 'mouse', 'mouse'],
+            [],
+            ['lion'],
+        ]
+        self.dictionary = Dictionary(self.documents)
+        self.corpus = [self.dictionary.doc2bow(document) for document in self.documents]
+
+    def test_avgdl_counts_repeated_terms(self):
+        expected_avgdl = sum(map(len, self.documents)) / len(self.documents)
+        for model_class in (OkapiBM25Model, LuceneBM25Model, AtireBM25Model):
+            for streaming in (False, True):
+                with self.subTest(model=model_class.__name__, streaming=streaming):
+                    corpus = iter(self.corpus) if streaming else self.corpus
+                    model = model_class(corpus=corpus)
+                    self.assertAlmostEqual(model.avgdl, expected_avgdl)
+
+    def test_corpus_weights_match_dictionary_weights(self):
+        for model_class in (OkapiBM25Model, LuceneBM25Model, AtireBM25Model):
+            with self.subTest(model=model_class.__name__):
+                corpus_model = model_class(corpus=self.corpus)
+                dictionary_model = model_class(dictionary=self.dictionary)
+                self.assertEqual(corpus_model.idfs, dictionary_model.idfs)
+                for bow in self.corpus:
+                    actual = corpus_model[bow]
+                    expected = dictionary_model[bow]
+                    self.assertEqual([term for term, _ in actual], [term for term, _ in expected])
+                    for (_, actual_weight), (_, expected_weight) in zip(actual, expected):
+                        self.assertAlmostEqual(actual_weight, expected_weight)
+
+    def test_corpus_retrieval_scores(self):
+        documents = [
+            ['neural', 'search'],
+            ['neural', 'neural', 'search', 'search', 'search'],
+            ['audio', 'audio', 'audio', 'audio', 'audio'],
+        ]
+        dictionary = Dictionary(documents)
+        corpus = [dictionary.doc2bow(document) for document in documents]
+        model = LuceneBM25Model(corpus=corpus)
+        index = SparseMatrixSimilarity(
+            model[corpus], num_features=len(dictionary), normalize_queries=False, normalize_documents=False,
+        )
+        scores = index[dictionary.doc2bow(['neural'])]
+
+        avgdl = sum(map(len, documents)) / len(documents)
+        idf = math.log(1.0 + (len(documents) - 2 + 0.5) / (2 + 0.5))
+        for document, score in zip(documents, scores):
+            frequency = document.count('neural')
+            expected = idf * frequency / (frequency + model.k1 * (1 - model.b + model.b * len(document) / avgdl))
+            self.assertAlmostEqual(score, expected, places=6)
+        self.assertEqual(scores.argmax(), 1)
 
 
 class OkapiBM25ModelTest(unittest.TestCase):
