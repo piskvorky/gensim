@@ -1039,6 +1039,7 @@ class KeyedVectors(utils.SaveLoad):
             Optional integer which limits the range of vectors which are searched for most-similar values.
             For example, restrict_vocab=10000 would only check the first 10000 node vectors in the vocabulary order.
             This may be meaningful if vocabulary is sorted by descending frequency.
+            Input words may be outside this range. If `topn` is None, only scores for this range are returned.
 
 
         Returns
@@ -1085,8 +1086,10 @@ class KeyedVectors(utils.SaveLoad):
 
         # equation (4) of Levy & Goldberg "Linguistic Regularities...",
         # with distances shifted to [0,1] per footnote (7)
-        pos_dists = [((1 + dot(self.vectors, term) / self.norms) / 2) for term in positive]
-        neg_dists = [((1 + dot(self.vectors, term) / self.norms) / 2) for term in negative]
+        vectors = self.vectors[:restrict_vocab] if restrict_vocab else self.vectors
+        norms = self.norms[:restrict_vocab] if restrict_vocab else self.norms
+        pos_dists = [((1 + dot(vectors, term) / norms) / 2) for term in positive]
+        neg_dists = [((1 + dot(vectors, term) / norms) / 2) for term in negative]
         dists = prod(pos_dists, axis=0) / (prod(neg_dists, axis=0) + 0.000001)
 
         if not topn:
