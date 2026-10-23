@@ -496,6 +496,60 @@ class LoadWord2VecFormatTest(unittest.TestCase):
         self.verify_load2vec_binary_result(w2v_dict, binary_chunk_size=5, limit=1)
 
 
+class TestCosmulRestrictVocab(unittest.TestCase):
+    def setUp(self):
+        self.vectors = KeyedVectors(vector_size=2)
+        self.vectors.add_vectors(
+            ['east', 'north', 'west', 'query', 'negative'],
+            np.array([[3, 0], [0, 2], [-4, 0], [3, 4], [4, -3]], dtype=REAL),
+        )
+
+    def test_restricted_ranking(self):
+        """Restrict candidates even when the query words are outside the prefix."""
+        for limit, expected in [(1, ['east']), (2, ['north', 'east']), (3, ['north', 'west', 'east'])]:
+            with self.subTest(limit=limit):
+                result = self.vectors.most_similar_cosmul(
+                    positive='query', negative='negative', restrict_vocab=limit,
+                )
+                self.assertEqual([word for word, score in result], expected)
+
+    def test_restricted_scores(self):
+        """The score array contains only the requested prefix, in vocabulary order."""
+        scores = self.vectors.most_similar_cosmul(
+            positive='query', negative='negative', restrict_vocab=2, topn=None,
+        )
+        # Shifted cosines are [0.8, 0.9] for query and [0.9, 0.2] for negative.
+        np.testing.assert_allclose(scores, [0.88888790, 4.49997750], rtol=1e-6)
+
+    def test_restricted_vector_query(self):
+        """Vector queries use the same candidate restriction as word queries."""
+        result = self.vectors.most_similar_cosmul(
+            positive=np.array([0.6, 0.8], dtype=REAL), restrict_vocab=2,
+        )
+        self.assertEqual([word for word, score in result], ['north', 'east'])
+
+    def test_restricted_input_words_excluded(self):
+        """Input words inside the prefix must still be excluded from ranked results."""
+        result = self.vectors.most_similar_cosmul(positive='east', negative='north', restrict_vocab=3)
+        self.assertEqual([word for word, score in result], ['west'])
+        self.assertEqual(self.vectors.most_similar_cosmul(positive='east', restrict_vocab=1), [])
+
+    def test_unrestricted_and_oversized_limits(self):
+        """Keep unrestricted behavior and allow limits larger than the vocabulary."""
+        expected = self.vectors.most_similar_cosmul(positive='query', negative='negative')
+        expected_scores = self.vectors.most_similar_cosmul(positive='query', negative='negative', topn=None)
+        for limit in [None, 0, len(self.vectors), len(self.vectors) + 10]:
+            with self.subTest(limit=limit):
+                self.assertEqual(
+                    self.vectors.most_similar_cosmul('query', 'negative', restrict_vocab=limit), expected,
+                )
+                np.testing.assert_allclose(
+                    self.vectors.most_similar_cosmul('query', 'negative', restrict_vocab=limit, topn=None),
+                    expected_scores,
+                )
+        self.assertEqual(self.vectors.most_similar_cosmul('query', restrict_vocab=2, topn=0), [])
+
+
 if __name__ == '__main__':
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     unittest.main()
