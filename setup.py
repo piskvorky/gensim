@@ -16,6 +16,7 @@ import platform
 import shutil
 import sys
 from collections import OrderedDict
+from importlib.util import find_spec
 
 from setuptools import Extension, find_packages, setup, distutils
 from setuptools.command.build_ext import build_ext
@@ -38,12 +39,9 @@ cpp_extensions = OrderedDict([
 
 
 def need_cython():
-    """Return True if we need Cython to translate any of the extensions.
-
-    If the extensions have already been translated to C/C++, then we don't need
-    to install Cython and perform the translation.
-
-    """
+    """Return True if we need Cython to translate any of the extensions."""
+    if find_spec("Cython") is not None:
+        return True
     expected = list(c_extensions.values()) + list(cpp_extensions.values())
     return any([not os.path.isfile(f) for f in expected])
 

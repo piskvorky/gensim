@@ -34,3 +34,6 @@ include gensim/_matutils.pyx
 include gensim/models/nmf_pgd.c
 include gensim/models/nmf_pgd.pyx
 
+include gensim/similarities/fastss.c
+include gensim/similarities/fastss.pyx
+
