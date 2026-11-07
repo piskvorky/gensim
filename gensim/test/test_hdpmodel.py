@@ -42,6 +42,10 @@ class TestHdpModel(unittest.TestCase, basetmtests.TestBaseTopicModel):
 
         return
 
+    def test_show_all_topics(self):
+        topics = self.model.show_topics(num_topics=-1)
+        self.assertEqual([topic_id for topic_id, _ in topics], list(range(self.model.m_T)))
+
     def test_ldamodel(self):
         """
         Create ldamodel object, and check if the corresponding alphas are equal.
