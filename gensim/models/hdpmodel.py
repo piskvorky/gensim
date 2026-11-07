@@ -1040,8 +1040,7 @@ class HdpTopicFormatter:
 
         """
         shown = []
-        num_topics = max(num_topics, 0)
-        num_topics = min(num_topics, len(self.data))
+        num_topics = len(self.data) if num_topics == -1 else min(num_topics, len(self.data))
 
         for k in range(num_topics):
             lambdak = self.data[k, :]
