@@ -66,8 +66,8 @@ cdef class CythonVocab:
         return &self.vocab
 
 
-def rebuild_cython_line_sentence(source, max_sentence_length):
-    return CythonLineSentence(source, max_sentence_length=max_sentence_length)
+def rebuild_cython_line_sentence(source, max_sentence_length, offset=0, end_offset=-1):
+    return CythonLineSentence(source, offset=offset, max_sentence_length=max_sentence_length, end_offset=end_offset)
 
 
 cdef bytes to_bytes(key):
@@ -79,10 +79,15 @@ cdef bytes to_bytes(key):
 
 @cython.final
 cdef class CythonLineSentence:
-    def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
-        self._thisptr = new FastLineSentence(to_bytes(source), offset)
+    """Read line-delimited tokens, optionally within an exact byte range.
 
-    def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN):
+    For bounded streams, offset and end_offset must be physical line starts or
+    EOF positions in the binary file. Negative end_offset reads to physical EOF.
+    """
+    def __cinit__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN, end_offset=-1):
+        self._thisptr = new FastLineSentence(to_bytes(source), offset, end_offset)
+
+    def __init__(self, source, offset=0, max_sentence_length=MAX_SENTENCE_LEN, end_offset=-1):
         self.source = to_bytes(source)
         self.offset = offset
         self.max_sentence_length = max_sentence_length
@@ -93,7 +98,8 @@ cdef class CythonLineSentence:
             del self._thisptr
 
     cpdef bool_t is_eof(self) nogil:
-        return self._thisptr.IsEof()
+        # Physical EOF or the byte boundary does not discard pending sentence chunks.
+        return self._thisptr.IsEof() and self.buf_data.empty()
 
     cpdef vector[string] read_sentence(self) except * nogil:
         return self._thisptr.ReadSentence()
@@ -122,6 +128,7 @@ cdef class CythonLineSentence:
 
     cpdef void reset(self) noexcept nogil:
         self._thisptr.Reset()
+        self.buf_data.clear()
 
     def __iter__(self):
         self.reset()
@@ -133,7 +140,9 @@ cdef class CythonLineSentence:
 
     def __reduce__(self):
         # This function helps pickle to correctly serialize objects of this class.
-        return rebuild_cython_line_sentence, (self.source, self.max_sentence_length)
+        return rebuild_cython_line_sentence, (
+            self.source, self.max_sentence_length, self.offset, self._thisptr.EndOffset(),
+        )
 
     cpdef vector[vector[string]] next_batch(self) except * nogil:
         cdef:
@@ -145,6 +154,10 @@ cdef class CythonLineSentence:
             size_t tmp = 0
             int idx
 
+        if self.max_words_in_batch == 0 or self.max_sentence_length == 0:
+            with gil:
+                raise ValueError("sentence and batch limits must be positive")
+
         # Try to read data from previous calls which was not returned
         if not self.buf_data.empty():
             job_batch = self.buf_data
@@ -153,13 +166,15 @@ cdef class CythonLineSentence:
             for sent in job_batch:
                 batch_size += sent.size()
 
-        while not self.is_eof() and batch_size <= self.max_words_in_batch:
+        while not self.is_eof() and batch_size < self.max_words_in_batch:
             data = self.read_sentence()
 
             chunked_sentence = self._chunk_sentence(data)
             for chunk in chunked_sentence:
-                job_batch.push_back(chunk)
-                batch_size += chunk.size()
+                # Match LineSentence: blank lines and the final failed read are not examples.
+                if not chunk.empty():
+                    job_batch.push_back(chunk)
+                    batch_size += chunk.size()
 
         if batch_size > self.max_words_in_batch:
             # Save data which doesn't fit in batch in order to return it later.
@@ -169,12 +184,17 @@ cdef class CythonLineSentence:
             idx = job_batch.size() - 1
             while idx >= 0:
                 if tmp - job_batch[idx].size() <= self.max_words_in_batch:
-                    last_idx = idx + 1
+                    # Defer the sentence that would exceed the native word buffer.
+                    last_idx = idx
                     break
                 else:
                     tmp -= job_batch[idx].size()
 
                 idx -= 1
+
+            if last_idx == 0:
+                with gil:
+                    raise ValueError("max_words_in_batch is too small for a sentence chunk")
 
             for i in range(last_idx, job_batch.size()):
                 self.buf_data.push_back(job_batch[i])
@@ -257,7 +277,7 @@ cdef REAL_t get_next_alpha(
 
 
 def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                   _neu1, compute_loss,):
+                   _neu1, compute_loss, end_offset=-1):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -268,6 +288,9 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
         The Word2Vec model instance to train.
     corpus_file : str
         Path to corpus file.
+    end_offset : int, optional
+        Exclusive line-aligned byte boundary for this worker. A negative value
+        retains the legacy word-count stopping rule for direct calls.
     _cur_epoch : int
         Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
@@ -294,7 +317,8 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
-    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
+    cdef long long _end_offset = end_offset
+    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset, end_offset=_end_offset)
     cdef CythonVocab vocab = _cython_vocab
 
     cdef int i, j, k
@@ -310,7 +334,9 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
+        while not input_stream.is_eof():
+            if _end_offset < 0 and total_words > expected_words / c.workers:
+                break  # Preserve legacy direct calls without an exact byte boundary.
             effective_sentences = 0
             effective_words = 0
 
@@ -358,7 +384,7 @@ def train_epoch_sg(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expec
 
 
 def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                     _neu1, compute_loss,):
+                     _neu1, compute_loss, end_offset=-1):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.word2vec.Word2Vec.train`.
@@ -369,6 +395,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
         The Word2Vec model instance to train.
     corpus_file : str
         Path to corpus file.
+    end_offset : int, optional
+        Exclusive line-aligned byte boundary for this worker. A negative value
+        retains the legacy word-count stopping rule for direct calls.
     _cur_epoch : int
         Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
@@ -395,7 +424,8 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
-    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
+    cdef long long _end_offset = end_offset
+    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset, end_offset=_end_offset)
     cdef CythonVocab vocab = _cython_vocab
 
     cdef int i, j, k
@@ -411,7 +441,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
+        while not input_stream.is_eof():
+            if _end_offset < 0 and total_words > expected_words / c.workers:
+                break  # Preserve legacy direct calls without an exact byte boundary.
             effective_sentences = 0
             effective_words = 0
 

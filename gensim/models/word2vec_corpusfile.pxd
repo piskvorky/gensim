@@ -26,8 +26,10 @@ cdef extern from "fast_line_sentence.h":
     cdef cppclass FastLineSentence:
         FastLineSentence() except +
         FastLineSentence(string&, size_t) except +
+        FastLineSentence(string&, size_t, long long) except +
         vector[string] ReadSentence() except + nogil
         bool_t IsEof() nogil
+        long long EndOffset() nogil
         void Reset() nogil
 
 
