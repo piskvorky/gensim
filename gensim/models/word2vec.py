@@ -227,13 +227,13 @@ except ImportError:
 
     def train_epoch_sg(
             model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-            _work, _neu1, compute_loss,
+            _work, _neu1, compute_loss, end_offset=-1,
         ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
     def train_epoch_cbow(
             model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words,
-            _work, _neu1, compute_loss,
+            _work, _neu1, compute_loss, end_offset=-1,
         ):
         raise RuntimeError("Training with corpus_file argument is not supported")
 
@@ -914,19 +914,20 @@ class Word2Vec(utils.SaveLoad):
 
     def _do_train_epoch(
             self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-            total_examples=None, total_words=None, **kwargs,
+            total_examples=None, total_words=None, end_offsets=None, **kwargs,
         ):
         work, neu1 = thread_private_mem
+        end_offset = -1 if end_offsets is None else end_offsets[thread_id]
 
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1, self.compute_loss
+                total_examples, total_words, work, neu1, self.compute_loss, end_offset=end_offset,
             )
         else:
             examples, tally, raw_tally = train_epoch_cbow(
                 self, corpus_file, offset, cython_vocab, cur_epoch,
-                total_examples, total_words, work, neu1, self.compute_loss
+                total_examples, total_words, work, neu1, self.compute_loss, end_offset=end_offset,
             )
 
         return examples, tally, raw_tally
@@ -1314,6 +1315,27 @@ class Word2Vec(utils.SaveLoad):
         self.total_train_time += elapsed
         return trained_word_count, raw_word_count, job_tally
 
+    @staticmethod
+    def _get_corpusfile_offsets(corpus_file, workers):
+        """Partition a binary corpus into disjoint, line-aligned byte ranges.
+
+        Round each approximate boundary forward to the next physical line. Reuse
+        repeated boundaries so a long line is assigned to exactly one worker.
+        """
+        size = os.path.getsize(corpus_file)
+        offsets = [0]
+        with open(corpus_file, 'rb') as fin:
+            for worker in range(1, workers):
+                approximate = size * worker // workers
+                if approximate <= offsets[-1]:
+                    offsets.append(offsets[-1])
+                    continue
+                fin.seek(approximate - 1)
+                if fin.read(1) != b'\n':
+                    fin.readline()
+                offsets.append(fin.tell())
+        return offsets, offsets[1:] + [size]
+
     def _train_epoch_corpusfile(
             self, corpus_file, cur_epoch=0, total_examples=None, total_words=None, callbacks=(), **kwargs,
         ):
@@ -1353,7 +1375,11 @@ class Word2Vec(utils.SaveLoad):
 
         progress_queue = Queue()
 
-        corpus_file_size = os.path.getsize(corpus_file)
+        offsets = kwargs.get('offsets')
+        if offsets is None:
+            # Recompute after callbacks, which may rewrite the corpus between epochs.
+            # Doc2Vec supplies its own offsets and document-tag partitioning.
+            offsets, kwargs['end_offsets'] = self._get_corpusfile_offsets(corpus_file, self.workers)
 
         thread_kwargs = copy.copy(kwargs)
         thread_kwargs['cur_epoch'] = cur_epoch
@@ -1363,7 +1389,7 @@ class Word2Vec(utils.SaveLoad):
             threading.Thread(
                 target=self._worker_loop_corpusfile,
                 args=(
-                    corpus_file, thread_id, corpus_file_size / self.workers * thread_id, cython_vocab, progress_queue
+                    corpus_file, thread_id, offsets[thread_id], cython_vocab, progress_queue
                 ),
                 kwargs=thread_kwargs
             ) for thread_id in range(self.workers)

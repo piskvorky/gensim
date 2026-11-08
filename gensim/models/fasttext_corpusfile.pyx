@@ -99,7 +99,7 @@ cdef void prepare_c_structures_for_batch(
 
 
 def train_epoch_sg(
-        model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1):
+        model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work, _l1, end_offset=-1):
     """Train Skipgram model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
@@ -110,6 +110,9 @@ def train_epoch_sg(
         The FastText model instance to train.
     corpus_file : str
         Path to corpus file.
+    end_offset : int, optional
+        Exclusive line-aligned byte boundary for this worker. A negative value
+        retains the legacy word-count stopping rule for direct calls.
     _cur_epoch : int
         Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
@@ -134,7 +137,8 @@ def train_epoch_sg(
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
-    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
+    cdef long long _end_offset = end_offset
+    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset, end_offset=_end_offset)
     cdef CythonVocab vocab = _cython_vocab
 
     cdef int i, j, k
@@ -151,7 +155,9 @@ def train_epoch_sg(
 
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
+        while not input_stream.is_eof():
+            if _end_offset < 0 and total_words > expected_words / c.workers:
+                break  # Preserve legacy direct calls without an exact byte boundary.
             effective_sentences = 0
             effective_words = 0
 
@@ -190,7 +196,7 @@ def train_epoch_sg(
 
 
 def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _expected_examples, _expected_words, _work,
-                     _neu1):
+                     _neu1, end_offset=-1):
     """Train CBOW model for one epoch by training on an input stream. This function is used only in multistream mode.
 
     Called internally from :meth:`~gensim.models.fasttext.FastText.train`.
@@ -201,6 +207,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
         The FastText model instance to train.
     corpus_file : str
         Path to a corpus file.
+    end_offset : int, optional
+        Exclusive line-aligned byte boundary for this worker. A negative value
+        retains the legacy word-count stopping rule for direct calls.
     _cur_epoch : int
         Current epoch number. Used for calculating and decaying learning rate.
     _work : np.ndarray
@@ -225,7 +234,8 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
     cdef REAL_t end_alpha = model.min_alpha
     cdef REAL_t _alpha = get_alpha(model.alpha, end_alpha, cur_epoch, num_epochs)
 
-    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset)
+    cdef long long _end_offset = end_offset
+    cdef CythonLineSentence input_stream = CythonLineSentence(corpus_file, offset, end_offset=_end_offset)
     cdef CythonVocab vocab = _cython_vocab
 
     cdef int i, j, k
@@ -242,7 +252,9 @@ def train_epoch_cbow(model, corpus_file, offset, _cython_vocab, _cur_epoch, _exp
 
     with nogil:
         input_stream.reset()
-        while not (input_stream.is_eof() or total_words > expected_words / c.workers):
+        while not input_stream.is_eof():
+            if _end_offset < 0 and total_words > expected_words / c.workers:
+                break  # Preserve legacy direct calls without an exact byte boundary.
             effective_sentences = 0
             effective_words = 0
 

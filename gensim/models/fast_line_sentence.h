@@ -7,12 +7,11 @@
 
 class FastLineSentence {
 public:
-    explicit FastLineSentence() : is_eof_(false) { }
-	explicit FastLineSentence(const std::string& filename, size_t offset = 0) : filename_(filename),
-                                                                                fs_(filename),
-                                                                                offset_(offset),
-                                                                                is_eof_(false) {
-        fs_.seekg(offset_);
+    explicit FastLineSentence() : offset_(0), end_offset_(-1), is_eof_(false) { }
+    explicit FastLineSentence(const std::string& filename, size_t offset = 0, long long end_offset = -1) :
+            filename_(filename), fs_(filename, std::ios::binary), offset_(offset),
+            end_offset_(end_offset), is_eof_(false) {
+        Reset();
     }
 
 	std::vector<std::string> ReadSentence() {
@@ -28,18 +27,24 @@ public:
             res.push_back(word);
         }
 
-        if (fs_.eof()) {
+        if (fs_.eof() || (end_offset_ >= 0 && fs_.tellg() >= end_offset_)) {
             is_eof_ = true;
         }
         return res;
     }
 
 	inline bool IsEof() const { return is_eof_; }
-	inline void Reset() { fs_.clear(); fs_.seekg(offset_); is_eof_ = false;  }
+	inline long long EndOffset() const { return end_offset_; }
+	inline void Reset() {
+        fs_.clear();
+        fs_.seekg(offset_);
+        is_eof_ = end_offset_ >= 0 && offset_ >= static_cast<size_t>(end_offset_);
+    }
 
 private:
     std::string filename_;
 	std::ifstream fs_;
 	size_t offset_;
+    long long end_offset_;
 	bool is_eof_;
 };

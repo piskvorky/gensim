@@ -498,17 +498,20 @@ class FastText(Word2Vec):
 
     def _do_train_epoch(
             self, corpus_file, thread_id, offset, cython_vocab, thread_private_mem, cur_epoch,
-            total_examples=None, total_words=None, **kwargs,
+            total_examples=None, total_words=None, end_offsets=None, **kwargs,
         ):
         work, neu1 = thread_private_mem
+        end_offset = -1 if end_offsets is None else end_offsets[thread_id]
 
         if self.sg:
             examples, tally, raw_tally = train_epoch_sg(
                 self, corpus_file, offset, cython_vocab, cur_epoch, total_examples, total_words, work, neu1,
+                end_offset=end_offset,
             )
         else:
             examples, tally, raw_tally = train_epoch_cbow(
                 self, corpus_file, offset, cython_vocab, cur_epoch, total_examples, total_words, work, neu1,
+                end_offset=end_offset,
             )
 
         return examples, tally, raw_tally
