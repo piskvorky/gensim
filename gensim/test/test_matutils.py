@@ -215,6 +215,19 @@ class UnitvecTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(unit_vector, man_unit_vector))
         self.assertTrue(np.issubdtype(unit_vector.dtype, np.floating))
 
+    def test_input_is_not_modified(self):
+        for norm in ('l1', 'l2', 'unique'):
+            for dtype in (np.float32, np.float64):
+                dense = np.array([3, 4, 0], dtype=dtype)
+                result, length = matutils.unitvec(dense, norm=norm, return_norm=True)
+                self.assertTrue(np.array_equal(dense, np.array([3, 4, 0], dtype=dtype)), (norm, dtype))
+                self.assertIsNot(result, dense)
+
+                csr = sparse.csr_matrix(np.array([[3, 4, 0]], dtype=dtype))
+                result = matutils.unitvec(csr, norm=norm)
+                self.assertTrue(np.array_equal(csr.toarray(), [[3, 4, 0]]), (norm, dtype))
+                self.assertIsNot(result, csr)
+
     def test_sparse_python_float(self):
         input_vector = sparse.csr_matrix(np.asarray([[1, 0, 0, 0, 3], [0, 0, 4, 3, 0]])).astype(float)
         unit_vector = matutils.unitvec(input_vector)
