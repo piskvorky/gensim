@@ -735,6 +735,8 @@ def unitvec(vec, norm='l2', return_norm=False):
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(float)
+            else:
+                vec = vec.copy()  # `vec /=` below would otherwise modify the caller's matrix
             vec /= veclen
             if return_norm:
                 return vec, veclen
@@ -759,6 +761,8 @@ def unitvec(vec, norm='l2', return_norm=False):
         if veclen > 0.0:
             if np.issubdtype(vec.dtype, np.integer):
                 vec = vec.astype(float)
+            else:
+                vec = vec.copy()  # blas_scal scales in place, don't modify the caller's array
             if return_norm:
                 return blas_scal(1.0 / veclen, vec).astype(vec.dtype), veclen
             else:
