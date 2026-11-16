@@ -265,6 +265,36 @@ class TestKeyedVectors(unittest.TestCase):
         for ent, vector in zip(entities, vectors):
             self.assertTrue(np.allclose(kv[ent], vector))
 
+    def test_add_vectors_keeps_norms_in_sync(self):
+        """Test that add_vectors() keeps `norms` complete (GH #2532).
+
+        Before the fix, adding vectors after the norms had been computed left
+        `norms` shorter than `vectors`, so a later most_similar() or
+        get_vector(norm=True) raised IndexError for the new keys.
+        """
+        kv = KeyedVectors(vector_size=3)
+        kv.add_vectors(['a', 'b'], [np.array([1., 0., 0.]), np.array([0., 1., 0.])])
+        # trigger computing the norms
+        self.assertTrue(np.allclose(kv.get_vector('a', norm=True), [1., 0., 0.]))
+        self.assertEqual(len(kv.norms), 2)
+
+        # adding a new vector must extend `norms`, not leave it stale
+        kv.add_vectors(['c'], [np.array([0., 0., 2.])])
+        self.assertEqual(len(kv.norms), 3)
+        self.assertTrue(np.allclose(kv.get_vector('c', norm=True), [0., 0., 1.]))
+        # most_similar() on the new key must work, and must see all keys
+        self.assertEqual(set(key for key, _ in kv.most_similar('c')), {'a', 'b'})
+
+        # replacing a vector must recompute that row's norm
+        kv.add_vectors(['a'], [np.array([0., 0., 5.])], replace=True)
+        self.assertTrue(np.allclose(kv.get_vector('a', norm=True), [0., 0., 1.]))
+        self.assertEqual(len(kv.norms), 3)
+
+        # norms stay lazy (None) until first needed
+        kv2 = KeyedVectors(vector_size=3)
+        kv2.add_vectors(['a'], [np.array([1., 0., 0.])])
+        self.assertIsNone(kv2.norms)
+
     def test_add_type(self):
         kv = KeyedVectors(2)
         assert kv.vectors.dtype == REAL
