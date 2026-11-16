@@ -560,6 +560,9 @@ class KeyedVectors(utils.SaveLoad):
             self.index_to_key[target_index] = key
             self.key_to_index[key] = target_index
             self.vectors[target_index] = vector
+            # keep `norms` in sync for the overwritten vector (GH #2532)
+            if self.norms is not None:
+                self.norms[target_index] = np.linalg.norm(self.vectors[target_index])
             self.next_index += 1
         return target_index
 
@@ -612,6 +615,17 @@ class KeyedVectors(utils.SaveLoad):
             self.vectors[in_vocab_idxs] = weights[in_vocab_mask]
             for attr, extra in extras:
                 self.expandos[attr][in_vocab_idxs] = extra[in_vocab_mask]
+            # keep `norms` in sync for the replaced vectors (GH #2532)
+            if self.norms is not None:
+                self.norms[in_vocab_idxs] = np.linalg.norm(self.vectors[in_vocab_idxs], axis=1)
+
+        # keep `norms` in sync with the newly added vectors (GH #2532): if norms were
+        # already computed, they must stay complete -- extend them with the norms of the
+        # new vectors, rather than leaving them shorter than `vectors` (which made a
+        # later most_similar()/get_vector(norm=True) raise IndexError).
+        if self.norms is not None:
+            new_norms = np.linalg.norm(weights[~in_vocab_mask].astype(self.vectors.dtype), axis=1)
+            self.norms = np.concatenate((self.norms, new_norms))
 
     def __setitem__(self, keys, weights):
         """Add keys and theirs vectors in a manual way.
