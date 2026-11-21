@@ -1623,11 +1623,20 @@ class KeyedVectors(utils.SaveLoad):
 
         """
         if total_vec is None:
-            total_vec = len(self.index_to_key)
+            total_vec = len(self.index_to_key) - self.index_to_key.count(None)
         mode = 'wb' if not append else 'ab'
 
         if sort_attr in self.expandos:
             store_order_vocab_keys = sorted(self.key_to_index.keys(), key=lambda k: -self.get_vecattr(k, sort_attr))
+            # Doc2Vec stores leading integer tags directly by position, outside key_to_index.
+            implicit_tags = (i for i, key in enumerate(self.index_to_key) if key == i and i not in self.key_to_index)
+            keys_to_write = itertools.chain(implicit_tags, store_order_vocab_keys)
+
+            if fvocab is not None:
+                logger.info("storing vocabulary in %s", fvocab)
+                with utils.open(fvocab, mode) as vout:
+                    for word in store_order_vocab_keys:
+                        vout.write(f"{prefix}{word} {self.get_vecattr(word, sort_attr)}\n".encode('utf8'))
         else:
             # This can happen even for the default `count`: the "native C word2vec" format does not store counts,
             # so models loaded via load_word2vec_format() do not have the "count" attribute set. They have
@@ -1638,27 +1647,10 @@ class KeyedVectors(utils.SaveLoad):
                 "attribute %s not present in %s; will store in internal index_to_key order",
                 sort_attr, self,
             )
-            store_order_vocab_keys = self.index_to_key
-
-        if fvocab is not None:
-            logger.info("storing vocabulary in %s", fvocab)
-            with utils.open(fvocab, mode) as vout:
-                for word in store_order_vocab_keys:
-                    vout.write(f"{prefix}{word} {self.get_vecattr(word, sort_attr)}\n".encode('utf8'))
+            keys_to_write = (key for key in self.index_to_key if key is not None)
 
         logger.info("storing %sx%s projection weights into %s", total_vec, self.vector_size, fname)
         assert (len(self.index_to_key), self.vector_size) == self.vectors.shape
-
-        # After (possibly-empty) initial range of int-only keys in Doc2Vec,
-        # store in sorted order: most frequent keys at the top.
-        # XXX: get rid of this: not used much, too complex and brittle.
-        # See https://github.com/RaRe-Technologies/gensim/pull/2981#discussion_r512969788
-        index_id_count = 0
-        for i, val in enumerate(self.index_to_key):
-            if i != val:
-                break
-            index_id_count += 1
-        keys_to_write = itertools.chain(range(0, index_id_count), store_order_vocab_keys)
 
         # Store the actual vectors to the output file, in the order defined by sort_attr.
         with utils.open(fname, mode) as fout:
