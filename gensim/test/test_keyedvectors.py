@@ -354,6 +354,25 @@ class TestKeyedVectors(unittest.TestCase):
         self.assertEqual(randkv.index_to_key, reloadbinkv.index_to_key)
         self.assertTrue((randkv.vectors == reloadbinkv.vectors).all())
 
+    def test_save_partially_filled_preallocation(self):
+        kv = KeyedVectors(vector_size=2, count=3)
+        kv.add_vector(0, [1, 2])
+        kv.add_vectors(['last'], [[3, 4]])
+        path = gensim.test.utils.get_tmpfile("preallocated.w2v")
+        for binary in (False, True):
+            with self.subTest(binary=binary):
+                kv.save_word2vec_format(path, binary=binary)
+                loaded = KeyedVectors.load_word2vec_format(path, binary=binary)
+                self.assertEqual(loaded.index_to_key, ['0', 'last'])
+                np.testing.assert_array_equal(loaded.vectors, [[1, 2], [3, 4]])
+
+        kv.set_vecattr(0, 'count', 1)
+        kv.set_vecattr('last', 'count', 2)
+        kv.save_word2vec_format(path)
+        loaded = KeyedVectors.load_word2vec_format(path)
+        self.assertEqual(loaded.index_to_key, ['last', '0'])
+        np.testing.assert_array_equal(loaded.vectors, [[3, 4], [1, 2]])
+
     def test_no_header(self):
         randkv = KeyedVectors(vector_size=100)
         count = 20
